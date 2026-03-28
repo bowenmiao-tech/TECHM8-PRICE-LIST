@@ -92,35 +92,35 @@
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 5 (2017) (A1823 A1822)",
+    "model": "iPad 5TH GEN (9.7)",
     "issue": "Battery",
     "price": "129",
     "time": "2 to 4 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 5 (2017) (A1823 A1822)",
+    "model": "iPad 5TH GEN (9.7)",
     "issue": "Charging Socket",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 5 (2017) (A1823 A1822)",
+    "model": "iPad 5TH GEN (9.7)",
     "issue": "Headphone Jack",
     "price": "139",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 5 (2017) (A1823 A1822)",
+    "model": "iPad 5TH GEN (9.7)",
     "issue": "Home Button",
     "price": "119",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 5 (2017) (A1823 A1822)",
+    "model": "iPad 5TH GEN (9.7)",
     "issue": "Power Button Flex",
     "price": "159",
     "time": "1-3 business days"
@@ -134,35 +134,35 @@
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 6 (2018) (A1893 A1954)",
+    "model": "iPad 6TH GEN (9.7)",
     "issue": "Battery",
     "price": "129",
     "time": "2 to 4 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 6 (2018) (A1893 A1954)",
+    "model": "iPad 6TH GEN (9.7)",
     "issue": "Charging Socket",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 6 (2018) (A1893 A1954)",
+    "model": "iPad 6TH GEN (9.7)",
     "issue": "Headphone Jack",
     "price": "139",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 6 (2018) (A1893 A1954)",
+    "model": "iPad 6TH GEN (9.7)",
     "issue": "Home Button",
     "price": "119",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 6 (2018) (A1893 A1954)",
+    "model": "iPad 6TH GEN (9.7)",
     "issue": "Power Button Flex",
     "price": "159",
     "time": "1-3 business days"
@@ -183,35 +183,35 @@
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 7 (2019) (A2197 A2200 A2198)",
+    "model": "iPad 7TH GEN (10.2)",
     "issue": "Battery",
     "price": "149",
     "time": "2 to 4 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 7 (2019) (A2197 A2200 A2198)",
+    "model": "iPad 7TH GEN (10.2)",
     "issue": "Charging Socket",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 7 (2019) (A2197 A2200 A2198)",
+    "model": "iPad 7TH GEN (10.2)",
     "issue": "Headphone Jack",
     "price": "139",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 7 (2019) (A2197 A2200 A2198)",
+    "model": "iPad 7TH GEN (10.2)",
     "issue": "Home Button",
     "price": "119",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 7 (2019) (A2197 A2200 A2198)",
+    "model": "iPad 7TH GEN (10.2)",
     "issue": "Power Button Flex",
     "price": "159",
     "time": "1-3 business days"
@@ -233,34 +233,41 @@
   {
     "brand": "Apple iPad",
     "model": "iPad 8 (2020) (A2270 A2428 A2429 A2430)",
+    "issue": "Touch / Digitizer Replacement",
+    "price": "159",
+    "time": "1 hour to 3 hours"
+  },
+  {
+    "brand": "Apple iPad",
+    "model": "iPad 8TH GEN (10.2)",
     "issue": "Battery",
     "price": "169",
     "time": "2 to 4 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 8 (2020) (A2270 A2428 A2429 A2430)",
+    "model": "iPad 8TH GEN (10.2)",
     "issue": "Charging Socket",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 8 (2020) (A2270 A2428 A2429 A2430)",
+    "model": "iPad 8TH GEN (10.2)",
     "issue": "Headphone Jack",
     "price": "139",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 8 (2020) (A2270 A2428 A2429 A2430)",
+    "model": "iPad 8TH GEN (10.2)",
     "issue": "Home Button",
     "price": "119",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 8 (2020) (A2270 A2428 A2429 A2430)",
+    "model": "iPad 8TH GEN (10.2)",
     "issue": "Power Button Flex",
     "price": "159",
     "time": "1-3 business days"
@@ -274,35 +281,35 @@
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 9 (2021) (A2603 A2604)",
+    "model": "iPad 9TH GEN (10.2)",
     "issue": "Battery",
     "price": "189",
     "time": "2 to 4 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 9 (2021) (A2603 A2604)",
+    "model": "iPad 9TH GEN (10.2)",
     "issue": "Charging Socket",
     "price": "199",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 9 (2021) (A2603 A2604)",
+    "model": "iPad 9TH GEN (10.2)",
     "issue": "Headphone Jack",
     "price": "139",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 9 (2021) (A2603 A2604)",
+    "model": "iPad 9TH GEN (10.2)",
     "issue": "Home Button",
     "price": "149",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 9 (2021) (A2603 A2604)",
+    "model": "iPad 9TH GEN (10.2)",
     "issue": "Power Button Flex",
     "price": "159",
     "time": "1-3 business days"
@@ -323,329 +330,336 @@
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 10 (2022) (A2696 A2757 A2777)",
+    "model": "iPad 10TH GEN (10.9)",
     "issue": "Battery",
     "price": "199",
     "time": "2 to 4 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 10 (2022) (A2696 A2757 A2777)",
+    "model": "iPad 10TH GEN (10.9)",
     "issue": "Charging Socket",
     "price": "229",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 10 (2022) (A2696 A2757 A2777)",
+    "model": "iPad 10TH GEN (10.9)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 10 (2022) (A2696 A2757 A2777)",
+    "model": "iPad 10TH GEN (10.9)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 10 (2022) (A2696 A2757 A2777)",
+    "model": "iPad 10TH GEN (10.9)",
     "issue": "Power Button Flex",
     "price": "189",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 11th Gen (2025)",
+    "model": "iPad 11TH GEN (11\")2025",
     "issue": "Battery",
     "price": "199",
     "time": "2 to 4 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 11th Gen (2025)",
+    "model": "iPad 11TH GEN (11\")2025",
     "issue": "Charging Socket",
     "price": "229",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 11th Gen (2025)",
+    "model": "iPad 11TH GEN (11\")2025",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 11th Gen (2025)",
+    "model": "iPad 11TH GEN (11\")2025",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad 11th Gen (2025)",
+    "model": "iPad 11TH GEN (11\")2025",
     "issue": "Power Button Flex",
     "price": "189",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad A16 (2025)",
+    "model": "IPAD A16 (2025)",
     "issue": "LCD Replacement",
     "price": "319",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad A16 (2025)",
+    "model": "IPAD A16 (2025)",
     "issue": "Touch / Digitizer Replacement",
     "price": "189",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air (2013) (A1474 A1475 A1476)",
+    "model": "iPad AIR (9.7)",
     "issue": "Battery",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air (2013) (A1474 A1475 A1476)",
+    "model": "iPad AIR (9.7)",
     "issue": "Charging Socket",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air (2013) (A1474 A1475 A1476)",
+    "model": "iPad AIR (9.7)",
     "issue": "Headphone Jack",
     "price": "139",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air (2013) (A1474 A1475 A1476)",
+    "model": "iPad AIR (9.7)",
     "issue": "Home Button",
     "price": "129",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air (2013) (A1474 A1475 A1476)",
+    "model": "iPad AIR (9.7)",
     "issue": "Power Button Flex",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air (2013) (A1474 A1475 A1476)",
+    "model": "iPad AIR (2013) (A1474 A1475 A1476)",
     "issue": "LCD Replacement",
     "price": "169",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air (2013) (A1474 A1475 A1476)",
+    "model": "iPad AIR (2013) (A1474 A1475 A1476)",
     "issue": "Touch / Digitizer Replacement",
     "price": "99",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 2 (2014) (A1567 A1566)",
+    "model": "iPad AIR 2",
     "issue": "Battery",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 2 (2014) (A1567 A1566)",
+    "model": "iPad AIR 2",
     "issue": "Charging Socket",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 2 (2014) (A1567 A1566)",
+    "model": "iPad AIR 2",
     "issue": "Headphone Jack",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 2 (2014) (A1567 A1566)",
+    "model": "iPad AIR 2",
     "issue": "Home Button",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 2 (2014) (A1567 A1566)",
+    "model": "iPad AIR 2",
     "issue": "Power Button Flex",
     "price": "129",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 2 (2014) (A1567 A1566)",
+    "model": "iPad AIR 2 (2014) (A1567 A1566)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "229",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 3 (2019) (A2152 A2123 A2153)",
+    "model": "iPad AIR 3",
     "issue": "Battery",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 3 (2019) (A2152 A2123 A2153)",
+    "model": "iPad AIR 3",
     "issue": "Charging Socket",
     "price": "179",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 3 (2019) (A2152 A2123 A2153)",
+    "model": "iPad AIR 3",
     "issue": "Headphone Jack",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 3 (2019) (A2152 A2123 A2153)",
+    "model": "iPad AIR 3",
     "issue": "Home Button",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 3 (2019) (A2152 A2123 A2153)",
+    "model": "iPad AIR 3",
     "issue": "Power Button Flex",
     "price": "179",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 3 (2019) (A2152 A2123 A2153)",
+    "model": "iPad AIR 3 (2019) (A2152 A2123 A2153)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "249",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 4 (2020) (A2324 A2325)",
+    "model": "iPad AIR 4",
     "issue": "Battery",
     "price": "189",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 4 (2020) (A2324 A2325)",
+    "model": "iPad AIR 4",
     "issue": "Charging Socket",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 4 (2020) (A2324 A2325)",
+    "model": "iPad AIR 4",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 4 (2020) (A2324 A2325)",
+    "model": "iPad AIR 4",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 4 (2020) (A2324 A2325)",
+    "model": "iPad AIR 4",
     "issue": "Power Button Flex",
     "price": "199",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 4 (2020) (A2324 A2325)",
+    "model": "iPad AIR 4 (2020) (A2324 A2325)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "329",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 5 (2022) (A2589 A2591 A2588)",
+    "model": "iPad AIR 5",
     "issue": "Battery",
     "price": "199",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 5 (2022) (A2589 A2591 A2588)",
+    "model": "iPad AIR 5",
     "issue": "Charging Socket",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 5 (2022) (A2589 A2591 A2588)",
+    "model": "iPad AIR 5",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 5 (2022) (A2589 A2591 A2588)",
+    "model": "iPad AIR 5",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 5 (2022) (A2589 A2591 A2588)",
+    "model": "iPad AIR 5",
     "issue": "Power Button Flex",
     "price": "199",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 5 (2022) (A2589 A2591 A2588)",
+    "model": "iPad AIR 5 (A2589 A2591 A2588)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "329",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 11 (2024) (A2902 A2903 A2904)",
+    "model": "iPad AIR 6 (2024) (A2786 A2787 A2788)",
+    "issue": "Touch / Digitizer Replacement",
+    "price": "119",
+    "time": "1 hour to 3 hours"
+  },
+  {
+    "brand": "Apple iPad",
+    "model": "iPad AIR 11 (2024) (A2902 A2903 A2904)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "329",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Air 13 (2024) (A2898 A2899)",
+    "model": "iPad AIR 13 (2024) (A2898 A2899)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "529",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad MINI 1/2/3",
+    "model": "iPad Mini (2012) (A1432 A1454 A1455)",
     "issue": "LCD Replacement",
     "price": "129",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad MINI 1/2/3",
+    "model": "iPad Mini (2012) (A1432 A1454 A1455)",
     "issue": "Touch / Digitizer Replacement",
     "price": "99",
     "time": "1 hour to 3 hours"
@@ -715,35 +729,35 @@
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 4 (2015) (A1538 A1550)",
+    "model": "iPad MINI 4",
     "issue": "Battery",
     "price": "179",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 4 (2015) (A1538 A1550)",
+    "model": "iPad MINI 4",
     "issue": "Charging Socket",
     "price": "179",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 4 (2015) (A1538 A1550)",
+    "model": "iPad MINI 4",
     "issue": "Headphone Jack",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 4 (2015) (A1538 A1550)",
+    "model": "iPad MINI 4",
     "issue": "Home Button",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 4 (2015) (A1538 A1550)",
+    "model": "iPad MINI 4",
     "issue": "Power Button Flex",
     "price": "179",
     "time": "1-3 business days"
@@ -757,35 +771,35 @@
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 5 (2019) (A2133 A2124 A2126 A2125)",
+    "model": "iPad MINI 5",
     "issue": "Battery",
     "price": "179",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 5 (2019) (A2133 A2124 A2126 A2125)",
+    "model": "iPad MINI 5",
     "issue": "Charging Socket",
     "price": "179",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 5 (2019) (A2133 A2124 A2126 A2125)",
+    "model": "iPad MINI 5",
     "issue": "Headphone Jack",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 5 (2019) (A2133 A2124 A2126 A2125)",
+    "model": "iPad MINI 5",
     "issue": "Home Button",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 5 (2019) (A2133 A2124 A2126 A2125)",
+    "model": "iPad MINI 5",
     "issue": "Power Button Flex",
     "price": "179",
     "time": "1-3 business days"
@@ -799,35 +813,35 @@
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 6 (2022) (A1893)",
+    "model": "iPad MINI 6",
     "issue": "Battery",
     "price": "269",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 6 (2022) (A1893)",
+    "model": "iPad MINI 6",
     "issue": "Charging Socket",
     "price": "189",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 6 (2022) (A1893)",
+    "model": "iPad MINI 6",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 6 (2022) (A1893)",
+    "model": "iPad MINI 6",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Mini 6 (2022) (A1893)",
+    "model": "iPad MINI 6",
     "issue": "Power Button Flex",
     "price": "269",
     "time": "1-3 business days"
@@ -836,509 +850,509 @@
     "brand": "Apple iPad",
     "model": "iPad Mini 6 (2022) (A1893)",
     "issue": "LCD Replacement (Complete Assembly)",
-    "price": "339",
+    "price": "359",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 9.7 (2015) (A1673 A1674 A1675)",
+    "model": "iPad Pro 9.7",
     "issue": "Battery",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 9.7 (2015) (A1673 A1674 A1675)",
+    "model": "iPad Pro 9.7",
     "issue": "Charging Socket",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 9.7 (2015) (A1673 A1674 A1675)",
+    "model": "iPad Pro 9.7",
     "issue": "Headphone Jack",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 9.7 (2015) (A1673 A1674 A1675)",
+    "model": "iPad Pro 9.7",
     "issue": "Home Button",
     "price": "129",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 9.7 (2015) (A1673 A1674 A1675)",
+    "model": "iPad Pro 9.7",
     "issue": "Power Button Flex",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 9.7 (2015) (A1673 A1674 A1675)",
+    "model": "iPad Pro 9.7in (2015) (A1673 A1674 A1675)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "259",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 10.5 (2017) (A1701 A1709)",
+    "model": "iPad Pro 10.5",
     "issue": "Battery",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 10.5 (2017) (A1701 A1709)",
+    "model": "iPad Pro 10.5",
     "issue": "Charging Socket",
     "price": "189",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 10.5 (2017) (A1701 A1709)",
+    "model": "iPad Pro 10.5",
     "issue": "Headphone Jack",
     "price": "159",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 10.5 (2017) (A1701 A1709)",
+    "model": "iPad Pro 10.5",
     "issue": "Home Button",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 10.5 (2017) (A1701 A1709)",
+    "model": "iPad Pro 10.5",
     "issue": "Power Button Flex",
     "price": "169",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 10.5 (2017) (A1701 A1709)",
+    "model": "iPad Pro 10.5in (2017) (A1701 A1709)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "259",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2018) (A1980 A1934 A2013)",
+    "model": "iPad Pro 11 (1ST GEN)",
     "issue": "Battery",
     "price": "199",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2018) (A1980 A1934 A2013)",
+    "model": "iPad Pro 11 (1ST GEN)",
     "issue": "Charging Socket",
     "price": "229",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2018) (A1980 A1934 A2013)",
+    "model": "iPad Pro 11 (1ST GEN)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2018) (A1980 A1934 A2013)",
+    "model": "iPad Pro 11 (1ST GEN)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2018) (A1980 A1934 A2013)",
+    "model": "iPad Pro 11 (1ST GEN)",
     "issue": "Power Button Flex",
     "price": "179",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2020) (A2228 A2068 A2230 A2231)",
+    "model": "iPad Pro 11 (2ND GEN)",
     "issue": "Battery",
     "price": "199",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2020) (A2228 A2068 A2230 A2231)",
+    "model": "iPad Pro 11 (2ND GEN)",
     "issue": "Charging Socket",
     "price": "229",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2020) (A2228 A2068 A2230 A2231)",
+    "model": "iPad Pro 11 (2ND GEN)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2020) (A2228 A2068 A2230 A2231)",
+    "model": "iPad Pro 11 (2ND GEN)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2020) (A2228 A2068 A2230 A2231)",
+    "model": "iPad Pro 11 (2ND GEN)",
     "issue": "Power Button Flex",
     "price": "189",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2021) (A2377 A2459 A2301)",
+    "model": "iPad Pro 11 (3RD GEN)",
     "issue": "Battery",
     "price": "229",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2021) (A2377 A2459 A2301)",
+    "model": "iPad Pro 11 (3RD GEN)",
     "issue": "Charging Socket",
     "price": "229",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2021) (A2377 A2459 A2301)",
+    "model": "iPad Pro 11 (3RD GEN)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2021) (A2377 A2459 A2301)",
+    "model": "iPad Pro 11 (3RD GEN)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2021) (A2377 A2459 A2301)",
+    "model": "iPad Pro 11 (3RD GEN)",
     "issue": "Power Button Flex",
     "price": "189",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2022) (A2435 A2761 A2759)",
+    "model": "iPad Pro 11 (4TH GEN)",
     "issue": "Battery",
     "price": "229",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2022) (A2435 A2761 A2759)",
+    "model": "iPad Pro 11 (4TH GEN)",
     "issue": "Charging Socket",
     "price": "229",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2022) (A2435 A2761 A2759)",
+    "model": "iPad Pro 11 (4TH GEN)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2022) (A2435 A2761 A2759)",
+    "model": "iPad Pro 11 (4TH GEN)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2022) (A2435 A2761 A2759)",
+    "model": "iPad Pro 11 (4TH GEN)",
     "issue": "Power Button Flex",
     "price": "199",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2018) (A1980 A1934 A2013)",
+    "model": "iPad Pro 11in 1st Gen (2018) (A1980 A1934 A2013)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "349",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2020) (A2228 A2068 A2230 A2231)",
+    "model": "iPad Pro 11in 2nd Gen (2020) (A2228 A2068 A2230 A2231)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "349",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2021) (A2377 A2459 A2301)",
+    "model": "iPad Pro 11in 3rd Gen (2021) (A2377 A2459 A2301)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "349",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 11 (2022) (A2435 A2761 A2759)",
+    "model": "iPad Pro 11in 4th Gen (2022) (A2435 A2761 A2759)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "349",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2015) (A1584 A1652)",
+    "model": "iPad Pro 12.9 (1ST GEN)",
     "issue": "Battery",
     "price": "199",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2015) (A1584 A1652)",
+    "model": "iPad Pro 12.9 (1ST GEN)",
     "issue": "Charging Socket",
     "price": "269",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2015) (A1584 A1652)",
+    "model": "iPad Pro 12.9 (1ST GEN)",
     "issue": "Headphone Jack",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2015) (A1584 A1652)",
+    "model": "iPad Pro 12.9 (1ST GEN)",
     "issue": "Home Button",
     "price": "259",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2015) (A1584 A1652)",
+    "model": "iPad Pro 12.9 (1ST GEN)",
     "issue": "Power Button Flex",
     "price": "269",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2017) (A1670 A1671)",
+    "model": "iPad Pro 12.9 (2ND GEN)",
     "issue": "Battery",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2017) (A1670 A1671)",
+    "model": "iPad Pro 12.9 (2ND GEN)",
     "issue": "Charging Socket",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2017) (A1670 A1671)",
+    "model": "iPad Pro 12.9 (2ND GEN)",
     "issue": "Headphone Jack",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2017) (A1670 A1671)",
+    "model": "iPad Pro 12.9 (2ND GEN)",
     "issue": "Home Button",
     "price": "259",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2017) (A1670 A1671)",
+    "model": "iPad Pro 12.9 (2ND GEN)",
     "issue": "Power Button Flex",
     "price": "289",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2018) (A1876 A1895 A2014 A1983)",
+    "model": "iPad Pro 12.9 (3RD GEN)",
     "issue": "Battery",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2018) (A1876 A1895 A2014 A1983)",
+    "model": "iPad Pro 12.9 (3RD GEN)",
     "issue": "Charging Socket",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2018) (A1876 A1895 A2014 A1983)",
+    "model": "iPad Pro 12.9 (3RD GEN)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2018) (A1876 A1895 A2014 A1983)",
+    "model": "iPad Pro 12.9 (3RD GEN)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2018) (A1876 A1895 A2014 A1983)",
+    "model": "iPad Pro 12.9 (3RD GEN)",
     "issue": "Power Button Flex",
     "price": "289",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2020) (A2229 A2069 A2232 A2233)",
+    "model": "iPad Pro 12.9 (4TH GEN)",
     "issue": "Battery",
     "price": "269",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2020) (A2229 A2069 A2232 A2233)",
+    "model": "iPad Pro 12.9 (4TH GEN)",
     "issue": "Charging Socket",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2020) (A2229 A2069 A2232 A2233)",
+    "model": "iPad Pro 12.9 (4TH GEN)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2020) (A2229 A2069 A2232 A2233)",
+    "model": "iPad Pro 12.9 (4TH GEN)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2020) (A2229 A2069 A2232 A2233)",
+    "model": "iPad Pro 12.9 (4TH GEN)",
     "issue": "Power Button Flex",
     "price": "289",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2021) (A2378 A2461 A2379)",
+    "model": "iPad Pro 12.9 (5TH GEN)",
     "issue": "Battery",
     "price": "289",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2021) (A2378 A2461 A2379)",
+    "model": "iPad Pro 12.9 (5TH GEN)",
     "issue": "Charging Socket",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2021) (A2378 A2461 A2379)",
+    "model": "iPad Pro 12.9 (5TH GEN)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2021) (A2378 A2461 A2379)",
+    "model": "iPad Pro 12.9 (5TH GEN)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2021) (A2378 A2461 A2379)",
+    "model": "iPad Pro 12.9 (5TH GEN)",
     "issue": "Power Button Flex",
     "price": "289",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2022) (A2764 A2437 A2436)",
+    "model": "iPad Pro 12.9 (6TH GEN)",
     "issue": "Battery",
     "price": "289",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2022) (A2764 A2437 A2436)",
+    "model": "iPad Pro 12.9 (6TH GEN)",
     "issue": "Charging Socket",
     "price": "249",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2022) (A2764 A2437 A2436)",
+    "model": "iPad Pro 12.9 (6TH GEN)",
     "issue": "Headphone Jack",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2022) (A2764 A2437 A2436)",
+    "model": "iPad Pro 12.9 (6TH GEN)",
     "issue": "Home Button",
     "price": "N/A",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2022) (A2764 A2437 A2436)",
+    "model": "iPad Pro 12.9 (6TH GEN)",
     "issue": "Power Button Flex",
     "price": "289",
     "time": "1-3 business days"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2015) (A1584 A1652)",
+    "model": "iPad Pro 12.9in 1st Gen(2015) (A1584 A1652)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "419",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2017) (A1670 A1671)",
+    "model": "iPad Pro 12.9in 2nd Gen (2017) (A1670 A1671)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "569",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2018) (A1876 A1895 A2014 A1983)",
+    "model": "iPad Pro 12.9in 3rd Gen (2018) (A1876 A1895 A2014 A1983)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "369",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2020) (A2229 A2069 A2232 A2233)",
+    "model": "iPad Pro 12.9in 4th Gen (2020) (A2229A2069 A2232 A2233)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "389",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2021) (A2378 A2461 A2379)",
+    "model": "iPad Pro 12.9in 5th Gen (2021) (A2378 A2461 A2379)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "449",
     "time": "1 hour to 3 hours"
   },
   {
     "brand": "Apple iPad",
-    "model": "iPad Pro 12.9 (2022) (A2764 A2437 A2436)",
+    "model": "iPad Pro 12.9in 6th Gen (2022) (A2764 A2437 A2436)",
     "issue": "LCD Replacement (Complete Assembly)",
     "price": "449",
     "time": "1 hour to 3 hours"
@@ -4029,6 +4043,62 @@
     "model": "iPhone 16 Pro Max",
     "issue": "Wireless Charging Pad (NFC)",
     "price": "199",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17",
+    "issue": "Screen Replacement (LCD)",
+    "price": "199",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17",
+    "issue": "Screen Replacement (OLED)",
+    "price": "259",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17",
+    "issue": "Screen Replacement (ORI)",
+    "price": "579",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17 Pro",
+    "issue": "Screen Replacement (OLED)",
+    "price": "279",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17 Pro",
+    "issue": "Screen Replacement (ORI)",
+    "price": "659",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17 Pro Max",
+    "issue": "Screen Replacement (LCD)",
+    "price": "199",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17 Pro Max",
+    "issue": "Screen Replacement (OLED)",
+    "price": "299",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17 Pro Max",
+    "issue": "Screen Replacement (ORI)",
+    "price": "679",
     "time": "30 minutes to 2 hours"
   },
   {
