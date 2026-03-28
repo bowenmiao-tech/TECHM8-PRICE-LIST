@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <script>
+  const STAFF_PASSWORD = "888888";
+  const AUTH_KEY = "techm8_staff_auth";
+
+  if (sessionStorage.getItem(AUTH_KEY) !== "ok") {
+    const input = prompt("Enter Password");
+    if (input === STAFF_PASSWORD) {
+      sessionStorage.setItem(AUTH_KEY, "ok");
+    } else {
+      alert("Access Denied");
+      window.location.href = "about:blank";
+    }
+  }
+</script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TECHM8 Repair Price Checker</title>
