@@ -3,231 +3,409 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Repair</title>
-  <!-- 引入Bootstrap图标 -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <!-- 引入Bootstrap样式 -->
+  <title>TECHM8 Repair Price Checker</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Vue CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="https://unpkg.com/vue@2.7.16/dist/vue.js"></script>
-  <!-- 模拟axios用于接口请求 -->
-  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.8/dist/axios.min.js"></script>
   <style>
-    a {
-      text-decoration: none;
-    }
-    /* 禁用状态样式 */
-    .ban-select {
-      background-color: #e9ecef !important;
-      cursor: not-allowed !important;
-      opacity: 0.7;
-    }
-    /* 下拉箭头旋转 */
-    .filter-btn-span-active {
-      transform: rotate(180deg);
-      transition: transform 0.3s ease;
-    }
-    .filter-btn-span {
-      transition: transform 0.3s ease;
-      margin-right: 5px;
+    :root {
+      --tm-dark: #163129;
+      --tm-dark-2: #23453b;
+      --tm-accent: #ef7204;
+      --tm-bg: #f5f7f9;
+      --tm-border: #dde4e8;
+      --tm-muted: #6f7d86;
     }
 
-    .color-white {
-      color: white !important;
-    }
-    .color-333 {
-      color: #333 !important;
-    }
-    .bg-price {
-      background-color: #ef7204 !important;
-    }
-    .cursor-pointer {
-      cursor: pointer;
-      padding: 8px 0;
-      width: 100%;
-    }
-    .cursor-pointer:hover {
-      color: #ef7204 !important;
-    }
-    .isotope-filters-list1 {
-      list-style: none;
-      padding: 0;
+    * { box-sizing: border-box; }
+    body {
       margin: 0;
-      background-color: white;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(239,114,4,0.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(22,49,41,0.16), transparent 28%),
+        var(--tm-bg);
+      color: #142026;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    .isotope-filters-list1 li {
-      padding: 5px 0;
-    }
-    .isotope-filters-list-wrap1 {
-  position: absolute;
-  padding-bottom: 4px;
-  z-index: 20;
-}
-.bg-Primary1 {
-  background-color: #396A3C !important;
-}
 
-.filter-btn {
-  margin-top: 0;
-  vertical-align: middle;
-  flex-direction: row-reverse;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1px 15px;
-  font-size: 12px;
-  line-height: 2;
-  color: #151515;
-  background-color: transparent;
-  border-color: #151515;
-  position: relative;
-  overflow: hidden;
-  border: 2px solid;
-  border-radius: 6px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  text-align: center;
-  user-select: none;
-  transition: all 250ms ease-in-out;
-  outline: none;
-}
-.filter-btn-span {
-  transition: transform 0.25s ease;
-  margin-left: 5px;
-  position: relative;
-  display: inline-block;
-  color: inherit;
-  font-size: 14px;
-  line-height: 1;
-  position: relative;
-  display: inline-block;
-  font-weight: 400;
-  font-style: normal;
-  speak: none;
-  text-transform: none;
-}
-.filter-btn-span-active {
-  transform: rotate(180deg);
-}
-.rq-slide-element {
-  max-height: 200px;
-  overflow-y: auto; /* 确保垂直滚动条在内容溢出时显示 */
-  scrollbar-width: thin; /* 对于支持的浏览器（如Firefox）设置滚动条宽度 */
-}
-/* WebKit浏览器（Chrome、Safari等）的滚动条样式 */
-.rq-slide-element::-webkit-scrollbar {
-  width: 6px; /* 垂直滚动条宽度 */
-}
-.rq-slide-element::-webkit-scrollbar-track {
-  background: #f1f1f1; /* 滚动条轨道背景色 */
-  border-radius: 3px;
-}
-.rq-slide-element::-webkit-scrollbar-thumb {
-  background: #ccc; /* 滚动条滑块颜色 */
-  border-radius: 3px;
-}
-.rq-slide-element::-webkit-scrollbar-thumb:hover {
-  background: #aaa; /* 鼠标悬停时滑块颜色 */
-}
+    .page-wrap {
+      min-height: 100vh;
+      padding: 24px 12px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-card {
+      width: 100%;
+      max-width: 1080px;
+      border: 0;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(10, 20, 30, 0.14);
+      background: #fff;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
+      color: #fff;
+      padding: 28px 28px 20px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .hero-title {
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 18px 0 10px;
+    }
+
+    .hero-title .accent { color: #ff9c46; }
+
+    .hero-text {
+      max-width: 720px;
+      color: rgba(255,255,255,0.82);
+      font-size: 15px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .hero-meta-item {
+      min-width: 160px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-meta-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      opacity: .72;
+      margin-bottom: 6px;
+    }
+
+    .hero-meta-value {
+      font-size: 15px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .body-section {
+      padding: 22px;
+    }
+
+    .panel {
+      border: 1px solid var(--tm-border);
+      border-radius: 24px;
+      background: #fff;
+      padding: 22px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .section-subtitle {
+      color: var(--tm-muted);
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2f3f47;
+      margin-bottom: 8px;
+    }
+
+    .form-select, .form-control {
+      border-radius: 16px;
+      min-height: 54px;
+      border-color: var(--tm-border);
+      padding-left: 16px;
+      padding-right: 16px;
+      box-shadow: none !important;
+    }
+
+    .form-select:focus, .form-control:focus {
+      border-color: rgba(239,114,4,0.55);
+    }
+
+    .quote-card {
+      height: 100%;
+      border-radius: 24px;
+      background: linear-gradient(180deg, #fff8f1 0%, #ffffff 100%);
+      border: 1px solid #ffe1c7;
+      padding: 22px;
+    }
+
+    .quote-price {
+      font-size: clamp(34px, 4vw, 52px);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--tm-accent);
+      margin: 16px 0 10px;
+      word-break: break-word;
+    }
+
+    .quote-issue {
+      font-size: 18px;
+      font-weight: 800;
+      color: #24353c;
+      margin-bottom: 8px;
+    }
+
+    .quote-time,
+    .quote-note {
+      color: #5f6d75;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .mini-note {
+      border-radius: 16px;
+      background: #f8fafb;
+      border: 1px solid var(--tm-border);
+      padding: 14px 16px;
+      color: #5f6d75;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .footer-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    .btn-accent {
+      background: var(--tm-accent);
+      border-color: var(--tm-accent);
+      color: #fff;
+      border-radius: 14px;
+      padding: 10px 18px;
+      font-weight: 700;
+    }
+
+    .btn-soft {
+      border-radius: 14px;
+      padding: 10px 18px;
+      font-weight: 700;
+      border: 1px solid var(--tm-border);
+      background: #fff;
+      color: #22343b;
+    }
+
+    .sync-text {
+      font-size: 12px;
+      color: #728088;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #f4f7f8;
+      color: #314048;
+    }
+
+    .status-pill.live {
+      background: #e9f8ef;
+      color: #166534;
+    }
+
+    .status-pill.warn {
+      background: #fff3e8;
+      color: #9a4b00;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--tm-border);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      color: #6e7b84;
+      background: #fafcfd;
+    }
+
+    @media (max-width: 767.98px) {
+      .hero, .body-section { padding: 18px; }
+      .panel, .quote-card { padding: 18px; }
+      .hero-meta-item { min-width: calc(50% - 6px); }
+    }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div >
-      <div class="container">
-        <div class="position-relative w-100" style="top: 0">
-          <div class="w-100" style="top: 0">
-            <!-- 选择表单页面 -->
-            <div  class="row m-0 align-items-center justify-content-center w-100 m-0 px-0 py-3">
-              <div class="col-xl-5 col-lg-8 col-12 bg-Primary1">
-                <div class="w-100 py-5 " style="border-radius: 1rem !important">
-                  <div class="w-100 text-center">
-                    <div class="h2 alert-link color-white">
-                      <span style="color: #ef7204">FAST</span> REPAIRS
-                    </div>
-                    <div class="h2 alert-link color-white">WHILE YOU WAIT</div>
-                  </div>
-                  
-                  <!-- 大类选择 -->
-                  <button id="index1" class="filter-btn w-100 py-2 bg-white"
-                    style="border-width: 0px;display: block;word-wrap: break-word;word-break: break-all;"
-                    @click="categoryNameClick()">
-                    <span class="bi bi-chevron-down filter-btn-span"
-                      :class="filterCategoryShow ? 'filter-btn-span-active' : ''"></span>
-                    {{ categoryName }}
-                  </button>
-                  <div  id="index2" v-if="filterCategoryShow" class="isotope-filters-list-wrap1 rounded-sm  mt-1 col-xl-5 col-lg-8 col-12" style="padding-right: 24px;">
-                    <ul class="isotope-filters-list1 rounded  rq-slide-element"
-                      :class="filterCategoryShow ? 'filters-active' : ''" style="max-height: 200px;overflow-y: scroll;">
-                      <li v-for="(item, index) in category" :key="index" @click="categoryChange(item)"
-                        class="d-flex justify-content-center">
-                        <a class="cursor-pointer color-333"
-                          style="display: block;word-wrap: break-word;word-break: break-all;padding-left: 20px;">{{ item.name }}</a>
-                      </li>
-                    </ul>
-                  </div>
+  <div id="app" class="page-wrap">
+    <div class="main-card">
+      <div class="hero">
+        <div class="hero-badge">
+          <i class="bi bi-lightning-charge-fill"></i>
+          TECHM8 Price Checker
+        </div>
+        <div class="hero-title"><span class="accent">Fast</span> Repairs While You Wait</div>
+        <p class="hero-text">
+          Select your device brand, model, and repair type to view the latest estimated price.
+          This page checks for new pricing automatically, so once your GitHub update is live the front end can refresh itself without a hard reload.
+        </p>
 
-                  <!-- 小类选择 - 修复1：增加minorCanSelectList非空校验 -->
-                  <button 
-                    class="filter-btn w-100 py-2 bg-white mt-3" 
-                    :class="(categoryId && minorCanSelectList.length) ? '' : 'ban-select'"
-                    style="border-width: 0px;display: block;word-wrap: break-word;word-break: break-all;"
-                    @click="filterMinorCategoryClick()"
-                    :disabled="!(categoryId && minorCanSelectList.length)"
-                  >
-                    <span class="bi bi-chevron-down filter-btn-span" :class="
-                        filterMinorCategoryShow ? 'filter-btn-span-active' : ''
-                      "></span>
-                    {{ minorCategoryName }}
-                  </button>
-                  <div v-if="filterMinorCategoryShow && categoryId && minorCanSelectList.length"
-                    class="isotope-filters-list-wrap1 rounded-sm  mt-1 col-xl-5 col-lg-8 col-12"  style="padding-right: 24px;">
-                    <ul class="isotope-filters-list1 rounded   rq-slide-element"
-                      :class="filterMinorCategoryShow ? 'filters-active' : ''"
-                      style="max-height: 200px;overflow-y: scroll;">
-                      <li v-for="(item, index) in minorCanSelectList" :key="index" @click="minorCategoryChange(item)"
-                        class="d-flex justify-content-center"
-                        style="display: block;word-wrap: break-word;word-break: break-all;">
-                        <a class="cursor-pointer color-333" style="padding-left: 20px;">{{ item.name }}</a>
-                      </li>
-                    </ul>
-                  </div>
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Brand</div>
+            <div class="hero-meta-value">{{ selectedBrand || 'Not selected' }}</div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Model</div>
+            <div class="hero-meta-value">{{ selectedModel || 'Not selected' }}</div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Last Sync</div>
+            <div class="hero-meta-value">{{ lastSyncLabel }}</div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Auto Refresh</div>
+            <div class="hero-meta-value">Every {{ refreshIntervalSeconds }} sec</div>
+          </div>
+        </div>
+      </div>
 
-                  <!-- 问题选择 -->
-                  <button :class="(minorCategoryId && issueList.length) ? '' : 'ban-select'" class="filter-btn w-100 py-2 bg-white mt-3"
-                    style="border-width: 0px;display: block;word-wrap: break-word;word-break: break-all;"
-                    @click="issueListClick()"
-                    :disabled="!(minorCategoryId && issueList.length)"
-                  >
-                    <span class="bi bi-chevron-down filter-btn-span"
-                      :class="issueListShow ? 'filter-btn-span-active' : ''"></span>
-                    {{ issueListName }}
-                  </button>
-                  <div v-if="issueListShow && minorCategoryId && issueList.length" class="isotope-filters-list-wrap1 rounded-sm mt-1  col-xl-5 col-lg-8 col-12"
-                    style="padding-right: 24px;">
-                    <ul class="isotope-filters-list1 rounded   rq-slide-element"
-                      :class="issueListShow ? 'filters-active' : ''" style="max-height: 200px;overflow-y: scroll;">
-                      <li v-for="(item, index) in issueList" :key="index" @click="issueChange(item)"
-                        class="d-flex justify-content-center"
-                        style="display: block;word-wrap: break-word;word-break: break-all;">
-                        <a class="cursor-pointer color-333"  style="padding-left: 20px;">{{ item.name }}</a>
-                      </li>
-                    </ul>
-                  </div>
+      <div class="body-section">
+        <div class="row g-4 align-items-stretch">
+          <div class="col-lg-7">
+            <div class="panel h-100">
+              <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-3">
+                <div>
+                  <div class="section-title">Get an instant quote</div>
+                  <div class="section-subtitle">The page reads from <code>data.json</code> with cache-busting and silent auto-refresh.</div>
+                </div>
+                <div>
+                  <span class="status-pill" :class="statusClass">
+                    <i :class="statusIcon"></i>
+                    {{ statusText }}
+                  </span>
+                </div>
+              </div>
 
-                  <!-- 获取报价按钮 -->
-                  <button class="s-btn rounded-lg w-100 font-weight-bold mt-3 bg-price" 
-                    :disabled="!currentIssue.price"
-                    style="font-size: 1.3rem; color: #fff;    flex-wrap: wrap;border: none;padding: 10px 0;">
-                    (${{ currentIssue.price }})
+              <div v-if="errorMessage" class="alert alert-warning rounded-4 mb-4" role="alert">
+                <div class="fw-bold mb-1">Unable to load latest data</div>
+                <div>{{ errorMessage }}</div>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-12">
+                  <div class="field-label">Select Brand</div>
+                  <select class="form-select" v-model="selectedBrand" @change="handleBrandChange">
+                    <option value="">Choose a brand</option>
+                    <option v-for="brand in brandOptions" :key="brand" :value="brand">{{ brand }}</option>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <div class="field-label">Select Model</div>
+                  <select class="form-select" v-model="selectedModel" :disabled="!selectedBrand" @change="handleModelChange">
+                    <option value="">Choose a model</option>
+                    <option v-for="model in modelOptions" :key="model" :value="model">{{ model }}</option>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <div class="field-label">Select Issue</div>
+                  <select class="form-select" v-model="selectedIssueKey" :disabled="!selectedModel" @change="handleIssueChange">
+                    <option value="">Choose a repair type</option>
+                    <option v-for="issue in issueOptions" :key="issue.key" :value="issue.key">
+                      {{ issue.issue }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="footer-row">
+                <div class="sync-text">
+                  <div><strong>{{ totalRows }}</strong> repair items loaded.</div>
+                  <div v-if="hasSelection">Current selection will be preserved when new data arrives if the same item still exists.</div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-soft" type="button" @click="resetSelection">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                  </button>
+                  <button class="btn btn-accent" type="button" @click="fetchData(false)">
+                    <i class="bi bi-arrow-repeat me-1"></i> Refresh now
                   </button>
                 </div>
               </div>
             </div>
+          </div>
 
+          <div class="col-lg-5">
+            <div class="quote-card">
+              <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                <div>
+                  <div class="section-title mb-1">Quote Result</div>
+                  <div class="section-subtitle mb-0">Latest value from your uploaded price list</div>
+                </div>
+                <div class="text-end">
+                  <div class="small text-muted">Updated</div>
+                  <div class="fw-bold">{{ lastSyncLabel }}</div>
+                </div>
+              </div>
+
+              <template v-if="currentIssue">
+                <div class="quote-price">{{ formattedPrice }}</div>
+                <div class="quote-issue">{{ currentIssue.issue }}</div>
+                <div class="quote-time mb-3">
+                  <i class="bi bi-clock me-1"></i>
+                  {{ currentIssue.time || 'Please confirm repair time in store.' }}
+                </div>
+                <div class="mini-note">
+                  <div><strong>Brand:</strong> {{ currentIssue.brand }}</div>
+                  <div><strong>Model:</strong> {{ currentIssue.model }}</div>
+                  <div class="mt-2">
+                    Prices are shown from the latest deployed <code>data.json</code>. If the value was just changed in GitHub,
+                    this page will pick it up automatically on the next refresh cycle once GitHub Pages serves the new file.
+                  </div>
+                </div>
+              </template>
+
+              <div v-else class="empty-state mt-4">
+                <div class="fs-5 fw-bold mb-2">No repair selected yet</div>
+                <div>Choose a brand, model, and issue to see the quoted price.</div>
+              </div>
+
+              <div class="mt-4 small text-muted">
+                Need a special repair or a price not listed? Please contact your store directly for a manual quote.
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -235,235 +413,249 @@
   </div>
 
   <script>
-    Vue.prototype.$toast = {
-      error: function(msg) {
-        alert(msg);
-      },
-      success: function(msg) {
-        alert(msg);
-      }
-    };
-
-    // 创建Vue实例
     new Vue({
       el: '#app',
       data() {
         return {
-          filterCategoryShow: false,
-          filterMinorCategoryShow: false,
-          categoryName: "Select Brand",
-          minorCategoryName: "Select Model",
-          filterMinorCategoryKey: 0,
-          issueListShow: false,
-          issueListName: "Select Issue",
-          price: 0,
-          category: [],
-          minorCategory: [],
-          minorCanSelectList: [],
-          issueList: [],
-          issueId: null,
-          categoryId: null,
-          minorCategoryId: null,
-          currentIssue: {
-            name:'',
-            price:0,
-            time:''
-          },
-          issueSelectList: [],
-          allList:[],
-          // 原始JSON数据
-          rawData: []
-          
-          // [
-          //   {
-          //     "brand": "Apple iPhone",
-          //     "model": "iPhone SE 3",
-          //     "issue": "Back Glass Replacement",
-          //     "price": "99",
-          //     "time": "30 minutes to 2 hours"
-          //   }, 
-          //   {
-          //     "brand": "Apple iPhone",
-          //     "model": "iPhone 8",
-          //     "issue": "Back Glass Replacement",
-          //     "price": "991",
-          //     "time": "30 minutes to 2 hours"
-          //   }
-          // ]
-        };
+          refreshIntervalSeconds: 30,
+          pollTimer: null,
+          rawData: [],
+          dataSignature: '',
+          brandOptions: [],
+          selectedBrand: '',
+          selectedModel: '',
+          selectedIssueKey: '',
+          currentIssue: null,
+          loading: true,
+          silentRefreshing: false,
+          errorMessage: '',
+          lastSyncAt: null,
+          dataChangedAt: null,
+          latestNotice: ''
+        }
+      },
+      computed: {
+        totalRows() {
+          return this.rawData.length
+        },
+        hasSelection() {
+          return !!(this.selectedBrand || this.selectedModel || this.selectedIssueKey)
+        },
+        modelOptions() {
+          if (!this.selectedBrand) return []
+          const set = new Set(
+            this.rawData
+              .filter(item => item.brand === this.selectedBrand)
+              .map(item => item.model)
+              .filter(Boolean)
+          )
+          return Array.from(set).sort(this.naturalSort)
+        },
+        issueOptions() {
+          if (!this.selectedBrand || !this.selectedModel) return []
+          return this.rawData
+            .filter(item => item.brand === this.selectedBrand && item.model === this.selectedModel)
+            .map(item => ({
+              key: this.makeIssueKey(item),
+              issue: item.issue,
+              price: item.price,
+              time: item.time,
+              brand: item.brand,
+              model: item.model
+            }))
+            .sort((a, b) => this.naturalSort(a.issue, b.issue))
+        },
+        formattedPrice() {
+          if (!this.currentIssue) return '—'
+          const value = this.parsePriceNumber(this.currentIssue.price)
+          if (value !== null) return '$' + value
+          return this.currentIssue.price || 'Contact us'
+        },
+        lastSyncLabel() {
+          if (!this.lastSyncAt) return 'Not synced yet'
+          return this.formatDateTime(this.lastSyncAt)
+        },
+        statusText() {
+          if (this.loading) return 'Loading latest prices'
+          if (this.errorMessage) return 'Showing last available data'
+          if (this.silentRefreshing) return 'Checking for updates'
+          return 'Live auto refresh enabled'
+        },
+        statusClass() {
+          if (this.errorMessage) return 'warn'
+          if (!this.loading) return 'live'
+          return ''
+        },
+        statusIcon() {
+          if (this.errorMessage) return 'bi bi-exclamation-triangle'
+          if (this.silentRefreshing) return 'bi bi-arrow-repeat'
+          if (!this.loading) return 'bi bi-wifi'
+          return 'bi bi-hourglass-split'
+        }
       },
       mounted() {
-        this.initData();
+        this.fetchData(false)
+        this.startPolling()
+        document.addEventListener('visibilitychange', this.handleVisibilityChange)
+      },
+      beforeDestroy() {
+        this.stopPolling()
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange)
       },
       methods: {
-        // 初始化数据
-        initData() {
-          let that = this;
-          fetch('./data.json')
-          .then(res => res.json())
-          .then(data => {
-            this.rawData = data
-            // 处理原始数据，转换为分类结构
-            this.processRawData();
-          }
-          )
-          // this.processRawData();
+        naturalSort(a, b) {
+          return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
         },
-        
-        // 处理原始JSON数据，构建分类、型号、问题的层级结构
-        processRawData() {
-          // 1. 提取所有品牌（大类）
-          const brandMap = {};
-          this.rawData.forEach(item => {
-            if (!brandMap[item.brand]) {
-              brandMap[item.brand] = {
-                id: Date.now() + Math.floor(Math.random() * 1000), // 生成唯一ID
-                name: item.brand,
-                sort: 1
-              };
+        formatDateTime(date) {
+          const d = new Date(date)
+          return d.toLocaleString([], {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          })
+        },
+        parsePriceNumber(value) {
+          if (value === null || value === undefined) return null
+          const text = String(value).trim()
+          if (!text) return null
+          const match = text.match(/\d+(\.\d+)?/)
+          return match ? Number(match[0]) : null
+        },
+        normalizeRow(item) {
+          return {
+            brand: String(item.brand || '').trim(),
+            model: String(item.model || '').trim(),
+            issue: String(item.issue || '').trim(),
+            price: item.price === null || item.price === undefined ? '' : String(item.price).trim(),
+            time: item.time === null || item.time === undefined ? '' : String(item.time).trim()
+          }
+        },
+        sortRows(rows) {
+          return rows.sort((a, b) => {
+            return (
+              this.naturalSort(a.brand, b.brand) ||
+              this.naturalSort(a.model, b.model) ||
+              this.naturalSort(a.issue, b.issue)
+            )
+          })
+        },
+        makeIssueKey(item) {
+          return [item.brand, item.model, item.issue].join('|||')
+        },
+        buildBrandOptions() {
+          const set = new Set(this.rawData.map(item => item.brand).filter(Boolean))
+          this.brandOptions = Array.from(set).sort(this.naturalSort)
+        },
+        refreshCurrentIssue() {
+          if (!this.selectedIssueKey) {
+            this.currentIssue = null
+            return
+          }
+          const found = this.rawData.find(item => this.makeIssueKey(item) === this.selectedIssueKey)
+          this.currentIssue = found || null
+          if (!found) {
+            this.selectedIssueKey = ''
+          }
+        },
+        preserveSelectionsAfterRefresh(previous) {
+          if (!previous) {
+            this.refreshCurrentIssue()
+            return
+          }
+
+          const brandExists = previous.brand && this.brandOptions.includes(previous.brand)
+          this.selectedBrand = brandExists ? previous.brand : ''
+
+          const modelExists = this.selectedBrand && previous.model && this.modelOptions.includes(previous.model)
+          this.selectedModel = modelExists ? previous.model : ''
+
+          const issueExists = this.selectedBrand && this.selectedModel && this.issueOptions.some(item => item.key === previous.issueKey)
+          this.selectedIssueKey = issueExists ? previous.issueKey : ''
+          this.refreshCurrentIssue()
+        },
+        async fetchData(silent) {
+          if (silent) {
+            this.silentRefreshing = true
+          } else {
+            this.loading = true
+          }
+
+          const previousSelection = {
+            brand: this.selectedBrand,
+            model: this.selectedModel,
+            issueKey: this.selectedIssueKey
+          }
+
+          try {
+            const response = await fetch('./data.json?v=' + Date.now(), {
+              cache: 'no-store',
+              headers: { 'Cache-Control': 'no-cache' }
+            })
+            if (!response.ok) throw new Error('HTTP ' + response.status)
+            const data = await response.json()
+            if (!Array.isArray(data)) throw new Error('data.json is not a valid array')
+
+            const normalized = this.sortRows(data.map(this.normalizeRow).filter(item => item.brand && item.model && item.issue))
+            const signature = JSON.stringify(normalized)
+            const changed = signature !== this.dataSignature
+
+            this.rawData = normalized
+            this.dataSignature = signature
+            this.buildBrandOptions()
+            this.preserveSelectionsAfterRefresh(previousSelection)
+            this.lastSyncAt = new Date()
+            if (changed) {
+              this.dataChangedAt = new Date()
             }
-          });
-          this.category = Object.values(brandMap);
-          
-          // 2. 提取所有型号（小类）
-          const modelMap = {};
-          this.rawData.forEach(item => {
-            const brandId = this.category.find(c => c.name === item.brand).id;
-            const modelKey = `${item.brand}_${item.model}`;
-            
-            if (!modelMap[modelKey]) {
-              modelMap[modelKey] = {
-                id: Date.now() + Math.floor(Math.random() * 10000), // 生成唯一ID
-                name: item.model,
-                parentId: brandId,
-                sort: 1
-              };
-            }
-          });
-          this.minorCategory = Object.values(modelMap);
-          
-          // 3. 提取所有问题
-          const issueMap = {};
-          this.rawData.forEach(item => {
-            const brandId = this.category.find(c => c.name === item.brand).id;
-            const modelKey = `${item.brand}_${item.model}`;
-            const modelId = this.minorCategory.find(m => m.name === item.model && m.parentId === brandId).id;
-            const issueKey = `${modelId}_${item.issue}`;
-            
-            if (!issueMap[issueKey]) {
-              issueMap[issueKey] = {
-                id: Date.now() + Math.floor(Math.random() * 100000), // 生成唯一ID
-                name: item.issue,
-                parentId: modelId,
-                price: parseInt(item.price),
-                time: item.time,
-                sort: 1
-              };
-            }
-          });
-          
-          this.allList = Object.values(issueMap);
-          console.log('处理后的数据结构：', {
-            brands: this.category,
-            models: this.minorCategory,
-            issues: this.allList
-          });
-        },
-        
-        // 大类选择变更 - 修复3：彻底重置小类/问题状态，优化小类筛选逻辑
-        categoryChange(bean) {
-          this.price = 0;
-          this.filterCategoryShow = false;
-          this.categoryId = bean.id;
-          this.categoryName = bean.name;
-          
-          // 彻底重置小类相关状态
-          this.minorCategoryId = null;
-          this.minorCategoryName = "Select Model";
-          this.minorCanSelectList = [];
-          
-          // 彻底重置问题相关状态
-          this.issueId = null;
-          this.issueListName = "Select Issue";
-          this.issueList = [];
-          this.currentIssue = { name:'', price:0, time:'' };
-          
-          // 筛选当前大类下的小类
-          this.minorCanSelectList = this.minorCategory
-            .filter(item => item.parentId === bean.id)
-            .sort((a,b) => a.sort - b.sort);
-          
-          this.filterMinorCategoryKey += 1;
-          
-          // 提示：如果当前大类无小类，给出提示
-          if (this.minorCanSelectList.length === 0) {
-            this.$toast.error(`No models found for ${bean.name}`);
+            this.errorMessage = ''
+          } catch (error) {
+            console.error(error)
+            this.errorMessage = 'Could not fetch the newest data.json right now. Please try again shortly.'
+          } finally {
+            this.loading = false
+            this.silentRefreshing = false
           }
         },
-        
-        // 小类选择变更
-        minorCategoryChange(bean) {
-          let that = this;
-          this.price = 0;
-          this.filterMinorCategoryShow = false;
-          this.minorCategoryId = bean.id;
-          this.minorCategoryName = bean.name;
-          
-          // 重置问题相关状态
-          this.issueId = null;
-          this.issueListName = "Select Issue";
-          this.currentIssue = { name:'', price:0, time:'' };
-          
-          // 筛选当前型号下的所有问题
-          this.issueList = this.allList
-            .filter(item => item.parentId === bean.id)
-            .sort((a,b) => a.sort - b.sort);
-          
-          // 提示：如果当前型号无问题，给出提示
-          if (this.issueList.length === 0) {
-            this.$toast.error(`No issues found for ${bean.name}`);
+        startPolling() {
+          this.stopPolling()
+          this.pollTimer = setInterval(() => {
+            this.fetchData(true)
+          }, this.refreshIntervalSeconds * 1000)
+        },
+        stopPolling() {
+          if (this.pollTimer) {
+            clearInterval(this.pollTimer)
+            this.pollTimer = null
           }
         },
-        
-        // 问题选择变更
-        issueChange(bean) {
-          this.issueListShow = false;
-          this.issueId = bean.id;
-          this.price = bean.price;
-          this.issueListName = bean.name;
-          this.currentIssue = bean;
-        },
-        
-        // 大类下拉框点击
-        categoryNameClick(){
-          this.filterCategoryShow = !this.filterCategoryShow;
-          this.filterMinorCategoryShow = false;
-          this.issueListShow = false;
-        },
-        
-        // 小类下拉框点击 - 修复4：增加数据校验，避免空列表展开
-        filterMinorCategoryClick(){
-          if (!this.categoryId || this.minorCanSelectList.length === 0) {
-            this.$toast.error("Please select a brand first (or no models available)");
-            return;
+        handleVisibilityChange() {
+          if (!document.hidden) {
+            this.fetchData(true)
           }
-          this.filterMinorCategoryShow = !this.filterMinorCategoryShow;
-          this.issueListShow = false;
-          this.filterCategoryShow = false;
         },
-        
-        // 问题下拉框点击 - 增加数据校验
-        issueListClick(){
-          if (!this.minorCategoryId || this.issueList.length === 0) {
-            this.$toast.error("Please select a model first (or no issues available)");
-            return;
-          }
-          this.issueListShow = !this.issueListShow;
-          this.filterMinorCategoryShow = false;
-          this.filterCategoryShow = false;
+        handleBrandChange() {
+          this.selectedModel = ''
+          this.selectedIssueKey = ''
+          this.currentIssue = null
         },
+        handleModelChange() {
+          this.selectedIssueKey = ''
+          this.currentIssue = null
+        },
+        handleIssueChange() {
+          this.refreshCurrentIssue()
+        },
+        resetSelection() {
+          this.selectedBrand = ''
+          this.selectedModel = ''
+          this.selectedIssueKey = ''
+          this.currentIssue = null
+        }
       }
-    });
+    })
   </script>
 </body>
 </html>
