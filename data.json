@@ -5015,14 +5015,14 @@
     "brand": "Apple Watch",
     "model": "Apple Watch Ultra 2 49mm",
     "issue": "Screen Replacement",
-    "price": "359",
+    "price": "479",
     "time": "1 to 3 Business days"
   },
   {
     "brand": "Apple Watch",
     "model": "Apple Watch Ultra 49mm",
     "issue": "Battery",
-    "price": "N/A",
+    "price": "180",
     "time": "1 to 3 Business days"
   },
   {
@@ -5034,16 +5034,121 @@
   },
   {
     "brand": "Google",
-    "model": "Google Pixel 5",
-    "issue": "Screen Replacement",
-    "price": "349",
+    "model": "Google Pixel 3",
+    "issue": "Battery Replacement",
+    "price": "159",
     "time": ""
   },
   {
     "brand": "Google",
-    "model": "Google Pixel 5A",
+    "model": "Google Pixel 3",
+    "issue": "Screen Replacement",
+    "price": "199",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 3 XL",
+    "issue": "Screen Replacement",
+    "price": "199",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 3A",
+    "issue": "Screen Replacement",
+    "price": "199",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 3A XL",
+    "issue": "Screen Replacement",
+    "price": "199",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 4",
+    "issue": "Battery Replacement",
+    "price": "159",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 4",
+    "issue": "Battery Replacement",
+    "price": "159",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 4 XL",
+    "issue": "Battery Replacement",
+    "price": "159",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 4A",
+    "issue": "Battery Replacement",
+    "price": "159",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 4A",
+    "issue": "Screen Replacement",
+    "price": "199",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 4A 5G",
+    "issue": "Battery Replacement",
+    "price": "189",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 4A 5G",
+    "issue": "Screen Replacement",
+    "price": "249",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 5",
+    "issue": "Battery Replacement",
+    "price": "159",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 5",
+    "issue": "Screen Replacement",
+    "price": "299",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 5A 5G",
+    "issue": "Battery Replacement",
+    "price": "159",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 5A 5G",
     "issue": "Screen Replacement",
     "price": "239",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 6",
+    "issue": "Battery Replacement",
+    "price": "169",
     "time": ""
   },
   {
@@ -5056,8 +5161,29 @@
   {
     "brand": "Google",
     "model": "Google Pixel 6 PRO",
-    "issue": "Screen Replacement",
+    "issue": "Battery Replacement",
+    "price": "189",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 6 PRO",
+    "issue": "Screen Replacement (ORI)",
     "price": "409",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 6 PRO",
+    "issue": "Screen Replacement (REF ORI)",
+    "price": "299",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 6A",
+    "issue": "Battery Replacement",
+    "price": "169",
     "time": ""
   },
   {
@@ -5070,6 +5196,13 @@
   {
     "brand": "Google",
     "model": "Google Pixel 7",
+    "issue": "Battery Replacement",
+    "price": "189",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 7",
     "issue": "Screen Replacement",
     "price": "309",
     "time": ""
@@ -5077,8 +5210,22 @@
   {
     "brand": "Google",
     "model": "Google Pixel 7 PRO",
+    "issue": "Battery Replacement",
+    "price": "189",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 7 PRO",
     "issue": "Screen Replacement",
-    "price": "479",
+    "price": "499",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 7A",
+    "issue": "Battery Replacement",
+    "price": "169",
     "time": ""
   },
   {
@@ -5091,6 +5238,13 @@
   {
     "brand": "Google",
     "model": "Google Pixel 8",
+    "issue": "Battery Replacement",
+    "price": "189",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 8",
     "issue": "Screen Replacement",
     "price": "339",
     "time": ""
@@ -5098,29 +5252,57 @@
   {
     "brand": "Google",
     "model": "Google Pixel 8 PRO",
+    "issue": "Battery Replacement",
+    "price": "189",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 8 PRO",
     "issue": "Screen Replacement",
-    "price": "459",
+    "price": "469",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 8A",
+    "issue": "Battery Replacement",
+    "price": "169",
     "time": ""
   },
   {
     "brand": "Google",
     "model": "Google Pixel 8A",
     "issue": "Screen Replacement",
-    "price": "269",
+    "price": "289",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 9",
+    "issue": "Battery Replacement",
+    "price": "189",
     "time": ""
   },
   {
     "brand": "Google",
     "model": "Google Pixel 9",
     "issue": "Screen Replacement",
-    "price": "329",
+    "price": "309",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 9 Pro",
+    "issue": "Battery Replacement",
+    "price": "199",
     "time": ""
   },
   {
     "brand": "Google",
     "model": "Google Pixel 9 Pro",
     "issue": "Screen Replacement",
-    "price": "349",
+    "price": "329",
     "time": ""
   },
   {
@@ -5133,8 +5315,22 @@
   {
     "brand": "Google",
     "model": "Google Pixel 9 Pro Fold TOP LCD",
+    "issue": "Battery Replacement",
+    "price": "199",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 9 Pro Fold TOP LCD",
     "issue": "Screen Replacement",
-    "price": "309",
+    "price": "349",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 9 Pro XL",
+    "issue": "Battery Replacement",
+    "price": "199",
     "time": ""
   },
   {
@@ -5147,8 +5343,36 @@
   {
     "brand": "Google",
     "model": "Google Pixel 9A",
+    "issue": "Battery Replacement",
+    "price": "169",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 9A",
     "issue": "Screen Replacement",
-    "price": "289",
+    "price": "269",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 10",
+    "issue": "Screen Replacement",
+    "price": "299",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 10 Pro",
+    "issue": "Screen Replacement",
+    "price": "299",
+    "time": ""
+  },
+  {
+    "brand": "Google",
+    "model": "Google Pixel 10 Pro XL",
+    "issue": "Screen Replacement",
+    "price": "389",
     "time": ""
   },
   {
