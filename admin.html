@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商店维修类型管理</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f5f7fa;
+      color: #1f2d3d;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    #app { padding: 20px; }
+    .page-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 6px 24px rgba(31, 45, 61, 0.08);
+      overflow: hidden;
+    }
+    .page-header {
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid #ebeef5;
+      background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+    }
+    .page-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      color: #1f2d3d;
+    }
+    .page-subtitle {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: #8492a6;
+    }
+    .toolbar, .toolbar-left, .toolbar-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .toolbar { justify-content: space-between; }
+    .summary-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 20px;
+      background: #fafafa;
+      border-bottom: 1px solid #ebeef5;
+    }
+    .summary-item {
+      min-width: 120px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #ebeef5;
+      border-radius: 10px;
+    }
+    .summary-label { font-size: 12px; color: #909399; margin-bottom: 4px; }
+    .summary-value { font-size: 20px; font-weight: 700; color: #303133; }
+    .table-wrap { padding: 12px 12px 16px; }
+    .tip {
+      margin-top: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #606266;
+      background: #f4f8ff;
+      border: 1px solid #dbe8ff;
+      border-radius: 8px;
+      line-height: 1.6;
+    }
+    .loader-box {
+      margin-top: 12px;
+      padding: 12px;
+      background: #fff8eb;
+      border: 1px solid #f6d8a8;
+      border-radius: 10px;
+    }
+    .loader-title { font-weight: 700; margin-bottom: 8px; color: #9a5c00; }
+    .name-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 30px;
+    }
+    .name-text {
+      cursor: pointer;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .name-text:hover, .price-text:hover, .time-text:hover, .sort-text:hover { color: #409eff; }
+    .level-badge {
+      min-width: 48px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      flex-shrink: 0;
+    }
+    .level-1 .level-badge { color: #2459d3; background: #edf4ff; border-color: #cfe1ff; }
+    .level-2 .level-badge { color: #7a4d00; background: #fff6e6; border-color: #ffe0a3; }
+    .level-3 .level-badge { color: #0c6b58; background: #eafaf6; border-color: #bcecdf; }
+    .level-1 .name-text { font-weight: 700; color: #303133; }
+    .level-2 .name-text { font-weight: 600; color: #4c566a; }
+    .level-3 .name-text { color: #606266; }
+    .cell-muted { color: #c0c4cc; }
+    .edit-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 4px 0;
+    }
+    .row-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+    .price-text, .time-text, .sort-text {
+      cursor: pointer;
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+    }
+    .empty-wrap {
+      padding: 40px 0;
+      text-align: center;
+      color: #909399;
+      font-size: 13px;
+    }
+    .sticky-tools {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #fff;
+    }
+    .selected-tip { font-size: 12px; color: #909399; }
+    .el-table th {
+      background: #f8fafc !important;
+      color: #606266;
+      font-weight: 700;
+    }
+    .el-table td, .el-table th { padding: 8px 0 !important; }
+    .el-table .cell { padding-left: 10px; padding-right: 10px; }
+    @media (max-width: 768px) {
+      #app { padding: 12px; }
+      .page-header, .summary-bar, .table-wrap { padding-left: 12px; padding-right: 12px; }
+      .summary-item { min-width: calc(50% - 6px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="page-card">
+      <div class="page-header sticky-tools">
+        <div class="page-title-row">
+          <div>
+            <h1 class="page-title">维修价格管理后台</h1>
+            <p class="page-subtitle">更适合批量维护品牌、型号和维修项目，编辑后可直接复制 JSON 提交到 Git。</p>
+          </div>
+          <div class="selected-tip">已选 {{ selectedRows.length }} 项</div>
+        </div>
+
+        <el-alert
+          v-if="loadError"
+          :title="loadError"
+          type="error"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 10px;">
+        </el-alert>
+
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <el-button type="primary" icon="el-icon-plus" @click="addTopLevel">新增一级品牌</el-button>
+            <el-button icon="el-icon-sort" @click="expandAll">全部展开</el-button>
+            <el-button icon="el-icon-minus" @click="collapseAll">全部收起</el-button>
+            <el-button type="danger" plain icon="el-icon-delete" @click="deleteData">删除选中</el-button>
+            <el-button type="success" icon="el-icon-document-copy" @click="copyJson">复制 JSON</el-button>
+            <el-button type="warning" icon="el-icon-upload2" @click="pushGit">提交到 Git</el-button>
+          </div>
+          <div class="toolbar-right">
+            <el-input v-model.trim="keyword" clearable placeholder="搜索品牌 / 型号 / 项目"
+              prefix-icon="el-icon-search" style="width: 280px" @clear="handleSearchClear">
+            </el-input>
+          </div>
+        </div>
+
+        <div class="tip">
+          使用方式：先在这里改好数据 → 点击“复制 JSON”或“提交到 Git” → 粘贴到 GitHub 编辑页保存。<br>
+          如果你是直接双击打开本地 html 文件，浏览器通常会拦截 <code>fetch('./data.json')</code>。这时点下面“选择 data.json”即可正常载入。
+        </div>
+
+        <div class="loader-box" v-if="showManualLoader">
+          <div class="loader-title">本地文件模式载入 data.json</div>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <el-button type="primary" plain icon="el-icon-folder-opened" @click="triggerFilePick">选择 data.json</el-button>
+            <span style="font-size:12px;color:#606266;">当前文件：{{ loadedFileName || '尚未选择' }}</span>
+            <input ref="jsonFileInput" type="file" accept="application/json,.json" style="display:none" @change="handleJsonFileChange">
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-bar">
+        <div class="summary-item">
+          <div class="summary-label">品牌数</div>
+          <div class="summary-value">{{ stats.brands }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">型号数</div>
+          <div class="summary-value">{{ stats.models }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">维修项目数</div>
+          <div class="summary-value">{{ stats.issues }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">当前显示</div>
+          <div class="summary-value">{{ visibleIssueCount }}</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <el-table v-if="displayTableData.length" :data="displayTableData" style="width: 100%"
+          @selection-change="handleSelectionChange" :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+          row-key="id" ref="table" border :default-expand-all="false">
+          <el-table-column type="selection" width="50"></el-table-column>
+
+          <el-table-column prop="name" label="名称" min-width="360">
+            <template slot-scope="scope">
+              <div :class="['name-cell', 'level-' + scope.row.level]">
+                <span class="level-badge">{{ levelLabel(scope.row.level) }}</span>
+                <div v-if="scope.row.editStatus" class="edit-cell">
+                  <el-input :ref="'input-' + scope.row.id" v-model.trim="scope.row.name" size="mini"
+                    placeholder="请输入名称" @keyup.enter.native="saveEditOrAdd(scope.row)">
+                  </el-input>
+                </div>
+                <div v-else class="name-text" @click="startEdit(scope.row)">{{ scope.row.name || '未命名' }}</div>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="price" label="价格" width="120" align="center">
+            <template slot-scope="scope">
+              <div v-if="scope.row.level === 3 && scope.row.editStatus" class="edit-cell">
+                <el-input v-model="scope.row.price" size="mini" type="number" placeholder="价格"
+                  @keyup.enter.native="saveEditOrAdd(scope.row)"></el-input>
+              </div>
+              <div v-else-if="scope.row.level === 3" class="price-text" @click="startEdit(scope.row)">
+                {{ formatPrice(scope.row.price) }}
+              </div>
+              <span v-else class="cell-muted">-</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="time" label="维修时间" width="180">
+            <template slot-scope="scope">
+              <div v-if="scope.row.level === 3 && scope.row.editStatus" class="edit-cell">
+                <el-input v-model.trim="scope.row.time" size="mini" placeholder="例如：30 minutes"
+                  @keyup.enter.native="saveEditOrAdd(scope.row)"></el-input>
+              </div>
+              <div v-else-if="scope.row.level === 3" class="time-text" @click="startEdit(scope.row)">
+                {{ scope.row.time || '-' }}
+              </div>
+              <span v-else class="cell-muted">-</span>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="sort" label="排序号" width="100" align="center">
+            <template slot-scope="scope">
+              <div v-if="scope.row.editStatus" class="edit-cell">
+                <el-input v-model.number="scope.row.sort" size="mini" type="number" placeholder="排序"
+                  @keyup.enter.native="saveEditOrAdd(scope.row)"></el-input>
+              </div>
+              <div v-else class="sort-text" @click="startEdit(scope.row)">
+                {{ scope.row.sort || 0 }}
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="操作" width="240" fixed="right">
+            <template slot-scope="scope">
+              <div class="row-actions">
+                <el-button v-if="scope.row.level === 1" type="text" size="small" @click="addChild(scope.row)">新增型号</el-button>
+                <el-button v-if="scope.row.level === 2" type="text" size="small" @click="addChild(scope.row)">新增项目</el-button>
+                <el-button v-if="!scope.row.editStatus" type="text" size="small" @click="startEdit(scope.row)">编辑</el-button>
+                <el-button v-if="scope.row.editStatus" type="text" size="small" @click="saveEditOrAdd(scope.row)">保存</el-button>
+                <el-button v-if="scope.row.editStatus" type="text" size="small" @click="cancelEdit(scope.row)">取消</el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div v-else class="empty-wrap">没有匹配的数据，请换个关键词试试。</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          keyword: '',
+          selectedRows: [],
+          tableData: [],
+          rawData: [],
+          rawDataResult: [],
+          idSeed: 1,
+          expandedAll: false,
+          loadError: '',
+          showManualLoader: false,
+          loadedFileName: ''
+        }
+      },
+      computed: {
+        displayTableData() {
+          return this.keyword ? this.filterTree(this.tableData, this.keyword) : this.tableData
+        },
+        stats() {
+          let brands = 0, models = 0, issues = 0
+          const walk = (nodes) => {
+            nodes.forEach(node => {
+              if (node.level === 1) brands++
+              if (node.level === 2) models++
+              if (node.level === 3) issues++
+              if (node.children && node.children.length) walk(node.children)
+            })
+          }
+          walk(this.tableData)
+          return { brands, models, issues }
+        },
+        visibleIssueCount() {
+          let issues = 0
+          const walk = (nodes) => {
+            nodes.forEach(node => {
+              if (node.level === 3) issues++
+              if (node.children && node.children.length) walk(node.children)
+            })
+          }
+          walk(this.displayTableData)
+          return issues
+        }
+      },
+      mounted() {
+        this.loadInitialData()
+      },
+      methods: {
+        async loadInitialData() {
+          const isFileProtocol = window.location.protocol === 'file:'
+          if (isFileProtocol) {
+            this.loadError = '你现在是直接用本地文件打开 admin.html，浏览器会拦截 data.json 的自动读取。请点击“选择 data.json”载入。'
+            this.showManualLoader = true
+            return
+          }
+          try {
+            const res = await fetch('./data.json', { cache: 'no-store' })
+            if (!res.ok) throw new Error('HTTP ' + res.status)
+            const data = await res.json()
+            this.applyRawData(data)
+            this.loadedFileName = 'data.json'
+          } catch (err) {
+            console.error(err)
+            this.loadError = 'data.json 自动读取失败。你可以直接点“选择 data.json”手动载入，或者用 Live Server / 本地服务器打开该页面。'
+            this.showManualLoader = true
+          }
+        },
+        triggerFilePick() {
+          if (this.$refs.jsonFileInput) this.$refs.jsonFileInput.click()
+        },
+        handleJsonFileChange(event) {
+          const file = event.target.files && event.target.files[0]
+          if (!file) return
+          const reader = new FileReader()
+          reader.onload = () => {
+            try {
+              const parsed = JSON.parse(reader.result)
+              this.applyRawData(parsed)
+              this.loadedFileName = file.name
+              this.loadError = ''
+              this.showManualLoader = true
+              this.$message.success('data.json 载入成功')
+            } catch (err) {
+              console.error(err)
+              this.$message.error('JSON 格式不正确，请检查 data.json 内容')
+            }
+          }
+          reader.onerror = () => {
+            this.$message.error('文件读取失败，请重试')
+          }
+          reader.readAsText(file, 'utf-8')
+          event.target.value = ''
+        },
+        applyRawData(data) {
+          this.rawData = Array.isArray(data) ? data : []
+          this.buildTreeData()
+        },
+        levelLabel(level) {
+          return ({1:'品牌',2:'型号',3:'项目'})[level] || '数据'
+        },
+        formatPrice(price) {
+          return price === '' || price === null || price === undefined ? '-' : price
+        },
+        buildTreeData() {
+          const brandMap = {}
+          this.idSeed = 1
+          this.rawData.forEach(item => {
+            if (!item || !item.brand || !item.model || !item.issue) return
+            if (!brandMap[item.brand]) {
+              brandMap[item.brand] = { id: this.idSeed++, level: 1, name: item.brand, price: '', time: '', sort: 0, editStatus: false, children: [] }
+            }
+            const brand = brandMap[item.brand]
+            let model = brand.children.find(c => c.name === item.model)
+            if (!model) {
+              model = { id: this.idSeed++, level: 2, name: item.model, price: '', time: '', sort: 0, editStatus: false, children: [] }
+              brand.children.push(model)
+            }
+            model.children.push({
+              id: this.idSeed++, level: 3, name: item.issue, price: item.price, time: item.time || '', sort: 0, editStatus: false, children: []
+            })
+          })
+          this.tableData = Object.values(brandMap)
+          this.$nextTick(() => this.collapseAll())
+        },
+        handleSearchClear() { this.$nextTick(() => this.collapseAll()) },
+        filterTree(nodes, keyword) {
+          const lowerKeyword = keyword.toLowerCase()
+          const result = []
+          nodes.forEach(node => {
+            const selfMatch = [node.name, node.price, node.time]
+              .filter(Boolean)
+              .some(value => String(value).toLowerCase().includes(lowerKeyword))
+            const children = node.children && node.children.length ? this.filterTree(node.children, keyword) : []
+            if (selfMatch || children.length) result.push({ ...node, children })
+          })
+          this.$nextTick(() => this.expandAll())
+          return result
+        },
+        closeAllEdit() {
+          const traverse = (nodes) => {
+            nodes.forEach(node => {
+              node.editStatus = false
+              delete node._backup
+              if (node.children && node.children.length) traverse(node.children)
+            })
+          }
+          traverse(this.tableData)
+        },
+        focusInput(row) {
+          this.$nextTick(() => {
+            const ref = this.$refs['input-' + row.id]
+            const vm = Array.isArray(ref) ? ref[0] : ref
+            if (vm && vm.focus) vm.focus()
+          })
+        },
+        startEdit(row) {
+          this.closeAllEdit()
+          row._backup = JSON.parse(JSON.stringify({ name: row.name, price: row.price, time: row.time, sort: row.sort }))
+          this.$set(row, 'editStatus', true)
+          this.focusInput(row)
+        },
+        cancelEdit(row) {
+          if (row._backup) {
+            row.name = row._backup.name
+            row.price = row._backup.price
+            row.time = row._backup.time
+            row.sort = row._backup.sort
+          }
+          row.editStatus = false
+          delete row._backup
+        },
+        addTopLevel() {
+          this.closeAllEdit()
+          const newNode = { id: this.idSeed++, level: 1, name: '', price: '', time: '', sort: 0, editStatus: true, children: [] }
+          this.tableData.unshift(newNode)
+          this.expandAll()
+          this.focusInput(newNode)
+        },
+        addChild(parentRow) {
+          this.closeAllEdit()
+          let newNode = null
+          if (parentRow.level === 1) {
+            newNode = { id: this.idSeed++, level: 2, name: '', price: '', time: '', sort: 0, editStatus: true, children: [] }
+          } else if (parentRow.level === 2) {
+            newNode = { id: this.idSeed++, level: 3, name: '', price: '', time: '30 minutes', sort: 0, editStatus: true, children: [] }
+          }
+          if (!newNode) return
+          if (!Array.isArray(parentRow.children)) this.$set(parentRow, 'children', [])
+          parentRow.children.unshift(newNode)
+          this.expandAll()
+          this.focusInput(newNode)
+        },
+        saveEditOrAdd(row) {
+          if (!String(row.name || '').trim()) {
+            this.$message.warning('名称不能为空')
+            this.focusInput(row)
+            return
+          }
+          row.name = row.name.trim()
+          row.editStatus = false
+          delete row._backup
+          this.syncAllRawData()
+          this.$message.success('保存成功')
+        },
+        syncAllRawData() {
+          this.convertTreeToRaw()
+          this.rawData = [...this.rawDataResult]
+        },
+        convertTreeToRaw() {
+          const result = []
+          const traverse = (node, parentBrand = null, parentModel = null) => {
+            if (node.level === 3) {
+              result.push({ brand: parentBrand, model: parentModel, issue: node.name, price: node.price, time: node.time })
+              return
+            }
+            if (!node.children || !node.children.length) return
+            node.children.forEach(child => {
+              const newBrand = node.level === 1 ? node.name : parentBrand
+              const newModel = node.level === 2 ? node.name : parentModel
+              traverse(child, newBrand, newModel)
+            })
+          }
+          this.tableData.forEach(root => traverse(root))
+          this.rawDataResult = result
+        },
+        handleSelectionChange(val) { this.selectedRows = val },
+        deleteData() {
+          if (!this.selectedRows.length) {
+            this.$message.warning('请先选择要删除的数据')
+            return
+          }
+          this.$confirm(`确认删除已选中的 ${this.selectedRows.length} 项吗？`, '提示', { type: 'warning' }).then(() => {
+            this.selectedRows.forEach(row => this.deleteRow(row))
+            this.syncAllRawData()
+            if (this.$refs.table) this.$refs.table.clearSelection()
+            this.selectedRows = []
+            this.$message.success('删除成功')
+          }).catch(() => {})
+        },
+        deleteRow(row) {
+          const del = (list) => {
+            const idx = list.findIndex(i => i.id === row.id)
+            if (idx > -1) {
+              list.splice(idx, 1)
+              return true
+            }
+            return list.some(i => Array.isArray(i.children) && del(i.children))
+          }
+          del(this.tableData)
+        },
+        expandAll() {
+          this.expandedAll = true
+          this.$nextTick(() => {
+            const rows = this.flattenRows(this.displayTableData)
+            rows.forEach(row => {
+              if (this.$refs.table && this.$refs.table.toggleRowExpansion) this.$refs.table.toggleRowExpansion(row, true)
+            })
+          })
+        },
+        collapseAll() {
+          this.expandedAll = false
+          this.$nextTick(() => {
+            const rows = this.flattenRows(this.displayTableData)
+            rows.forEach(row => {
+              if (this.$refs.table && this.$refs.table.toggleRowExpansion) this.$refs.table.toggleRowExpansion(row, false)
+            })
+          })
+        },
+        flattenRows(nodes) {
+          const rows = []
+          const walk = (items) => {
+            items.forEach(item => {
+              rows.push(item)
+              if (item.children && item.children.length) walk(item.children)
+            })
+          }
+          walk(nodes)
+          return rows
+        },
+        async copyJson() {
+          this.convertTreeToRaw()
+          try {
+            await navigator.clipboard.writeText(JSON.stringify(this.rawDataResult, null, 2))
+            this.$message.success('JSON 已复制到剪贴板')
+          } catch (err) {
+            console.error(err)
+            this.$message.error('复制失败，请手动复制')
+          }
+        },
+        async pushGit() {
+          const user = '987625922'
+          const repo = '987625922.github.io'
+          this.convertTreeToRaw()
+          try {
+            await navigator.clipboard.writeText(JSON.stringify(this.rawDataResult, null, 2))
+            this.$message.success('JSON 已复制，正在打开 GitHub')
+          } catch (err) {
+            console.error(err)
+            this.$message.warning('已打开 GitHub，但复制失败，请手动复制')
+          }
+          window.open(`https://github.com/${user}/${repo}/edit/main/data.json`, '_blank')
+        }
+      }
+    })
+  </script>
+</body>
+</html>
