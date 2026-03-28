@@ -1361,42 +1361,42 @@
     "brand": "Apple iPhone",
     "model": "iPhone 6",
     "issue": "Screen Replacement",
-    "price": "69",
+    "price": "79",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPhone",
     "model": "iPhone 6 Plus",
     "issue": "Screen Replacement",
-    "price": "69",
+    "price": "79",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPhone",
     "model": "iPhone 6S",
     "issue": "Screen Replacement",
-    "price": "69",
+    "price": "79",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPhone",
     "model": "iPhone 6S Plus",
     "issue": "Screen Replacement",
-    "price": "69",
+    "price": "79",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPhone",
     "model": "iPhone 7",
     "issue": "Screen Replacement",
-    "price": "79",
+    "price": "89",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPhone",
     "model": "iPhone 7 Plus",
     "issue": "Screen Replacement",
-    "price": "79",
+    "price": "89",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -1480,7 +1480,7 @@
     "brand": "Apple iPhone",
     "model": "iPhone 8",
     "issue": "Screen Replacement",
-    "price": "79",
+    "price": "89",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -1585,7 +1585,7 @@
     "brand": "Apple iPhone",
     "model": "iPhone 8 Plus",
     "issue": "Screen Replacement",
-    "price": "79",
+    "price": "89",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -1683,7 +1683,7 @@
     "brand": "Apple iPhone",
     "model": "iPhone 11",
     "issue": "Screen Replacement",
-    "price": "109",
+    "price": "119",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -1780,8 +1780,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 11 Pro",
-    "issue": "Screen Replacement",
-    "price": "109",
+    "issue": "Screen Replacement (LCD)",
+    "price": "119",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 11 Pro",
+    "issue": "Screen Replacement (OLED)",
+    "price": "159",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -1878,8 +1885,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 11 Pro Max",
-    "issue": "Screen Replacement",
-    "price": "109",
+    "issue": "Screen Replacement (LCD)",
+    "price": "129",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 11 Pro Max",
+    "issue": "Screen Replacement (OLED)",
+    "price": "169",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -1976,8 +1990,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 12",
-    "issue": "Screen Replacement",
-    "price": "119",
+    "issue": "Screen Replacement (LCD)",
+    "price": "129",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 12",
+    "issue": "Screen Replacement (OLED)",
+    "price": "169",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -2368,8 +2389,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 13",
-    "issue": "Screen Replacement",
-    "price": "149",
+    "issue": "Screen Replacement (LCD)",
+    "price": "139",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13",
+    "issue": "Screen Replacement (OLED)",
+    "price": "169",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -2564,110 +2592,124 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 13 Pro",
-    "issue": "Screen Replacement",
+    "issue": "Screen Replacement (LCD)",
+    "price": "149",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro",
+    "issue": "Screen Replacement (OLED)",
+    "price": "179",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro",
+    "issue": "Sim Tray",
+    "price": "39",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro",
+    "issue": "Vibrator",
+    "price": "129",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro",
+    "issue": "Wireless Charging Pad (NFC)",
+    "price": "159",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Back Glass Replacement",
+    "price": "169",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Battery",
+    "price": "$159",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Charging Socket",
+    "price": "149",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Ear Speaker/Ear Speaker Flex",
+    "price": "129",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Front Camera",
+    "price": "139",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Loud Speaker/Ringer",
+    "price": "139",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Mute and Volume Button Flex",
+    "price": "169",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Power Button Flex",
+    "price": "169",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Rear Camera",
+    "price": "229",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Rear Camera Lens",
+    "price": "99",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Screen Replacement (LCD)",
+    "price": "155",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 13 Pro Max",
+    "issue": "Screen Replacement (OLED)",
     "price": "189",
     "time": "30 minutes to 2 hours"
   },
   {
     "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro",
-    "issue": "Sim Tray",
-    "price": "39",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro",
-    "issue": "Vibrator",
-    "price": "129",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro",
-    "issue": "Wireless Charging Pad (NFC)",
-    "price": "159",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Back Glass Replacement",
-    "price": "169",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Battery",
-    "price": "$159",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Charging Socket",
-    "price": "149",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Ear Speaker/Ear Speaker Flex",
-    "price": "129",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Front Camera",
-    "price": "139",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Loud Speaker/Ringer",
-    "price": "139",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Mute and Volume Button Flex",
-    "price": "169",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Power Button Flex",
-    "price": "169",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Rear Camera",
-    "price": "229",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Rear Camera Lens",
-    "price": "99",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
-    "model": "iPhone 13 Pro Max",
-    "issue": "Screen Replacement",
-    "price": "199",
-    "time": "30 minutes to 2 hours"
-  },
-  {
-    "brand": "Apple iPhone",
     "model": "iPhone 13 Pro Max",
     "issue": "Sim Tray",
     "price": "39",
@@ -2760,8 +2802,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 14",
-    "issue": "Screen Replacement",
-    "price": "159",
+    "issue": "Screen Replacement (LCD)",
+    "price": "149",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 14",
+    "issue": "Screen Replacement (OLED)",
+    "price": "179",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -2956,8 +3005,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 14 Pro",
-    "issue": "Screen Replacement",
-    "price": "249",
+    "issue": "Screen Replacement (LCD)",
+    "price": "159",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 14 Pro",
+    "issue": "Screen Replacement (OLED)",
+    "price": "199",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -3054,7 +3110,14 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 14 Pro Max",
-    "issue": "Screen Replacement",
+    "issue": "Screen Replacement (LCD)",
+    "price": "159",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 14 Pro Max",
+    "issue": "Screen Replacement (OLED)",
     "price": "199",
     "time": "30 minutes to 2 hours"
   },
@@ -3152,8 +3215,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 15",
-    "issue": "Screen Replacement",
+    "issue": "Screen Replacement (LCD)",
     "price": "159",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 15",
+    "issue": "Screen Replacement (OLED)",
+    "price": "189",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -3348,8 +3418,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 15 Pro",
-    "issue": "Screen Replacement",
-    "price": "269",
+    "issue": "Screen Replacement (LCD)",
+    "price": "169",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 15 Pro",
+    "issue": "Screen Replacement (OLED)",
+    "price": "199",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -3446,8 +3523,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 15 Pro Max",
-    "issue": "Screen Replacement",
-    "price": "269",
+    "issue": "Screen Replacement (LCD)",
+    "price": "199",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 15 Pro Max",
+    "issue": "Screen Replacement (LCD)",
+    "price": "179",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -3537,8 +3621,8 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 16",
-    "issue": "Screen Replacement",
-    "price": "179",
+    "issue": "Screen Replacement (LCD)",
+    "price": "169",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -3810,7 +3894,14 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 16 Pro",
-    "issue": "Screen Replacement",
+    "issue": "Screen Replacement (LCD)",
+    "price": "199",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 16 Pro",
+    "issue": "Screen Replacement (OLED)",
     "price": "299",
     "time": "30 minutes to 2 hours"
   },
@@ -4021,7 +4112,7 @@
     "brand": "Apple iPhone",
     "model": "iPhone SE 2",
     "issue": "Screen Replacement",
-    "price": "79",
+    "price": "99",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -4126,7 +4217,7 @@
     "brand": "Apple iPhone",
     "model": "iPhone SE 3",
     "issue": "Screen Replacement",
-    "price": "79",
+    "price": "99",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -4223,8 +4314,8 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone X",
-    "issue": "Screen Replacement",
-    "price": "89",
+    "issue": "Screen Replacement (LCD)",
+    "price": "99",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -4322,7 +4413,7 @@
     "brand": "Apple iPhone",
     "model": "iPhone XR",
     "issue": "Screen Replacement",
-    "price": "89",
+    "price": "99",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -4419,8 +4510,8 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone XS",
-    "issue": "Screen Replacement",
-    "price": "89",
+    "issue": "Screen Replacement (LCD)",
+    "price": "99",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -4517,7 +4608,7 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone XS Max",
-    "issue": "Screen Replacement",
+    "issue": "Screen Replacement (LCD)",
     "price": "99",
     "time": "30 minutes to 2 hours"
   },
