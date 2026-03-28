@@ -2193,8 +2193,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 12 Pro",
-    "issue": "Screen Replacement",
-    "price": "119",
+    "issue": "Screen Replacement (LCD)",
+    "price": "129",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 12 Pro",
+    "issue": "Screen Replacement (OLED)",
+    "price": "169",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -2291,8 +2298,15 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 12 Pro Max",
-    "issue": "Screen Replacement",
-    "price": "129",
+    "issue": "Screen Replacement (LCD)",
+    "price": "149",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 12 Pro Max",
+    "issue": "Screen Replacement (OLED)",
+    "price": "179",
     "time": "30 minutes to 2 hours"
   },
   {
