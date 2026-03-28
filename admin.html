@@ -262,6 +262,67 @@
       }
     }
 
+
+
+    .auth-shell {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 460px;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 26px;
+      box-shadow: 0 20px 60px rgba(20, 36, 46, 0.14);
+      overflow: hidden;
+    }
+
+    .login-hero {
+      padding: 26px 24px 18px;
+      background: linear-gradient(135deg, var(--brand-dark) 0%, #28493f 100%);
+      color: #fff;
+    }
+
+    .login-title {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .login-subtitle {
+      margin: 10px 0 0;
+      line-height: 1.7;
+      font-size: 14px;
+      color: rgba(255,255,255,0.84);
+    }
+
+    .login-body {
+      padding: 22px;
+    }
+
+    .login-note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff8f1;
+      border: 1px solid #ffd6b5;
+      color: #7a4a21;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
     @media (max-width: 768px) {
       #app { padding: 12px; }
       .hero, .content { padding: 14px; }
@@ -271,7 +332,43 @@
 </head>
 <body>
   <div id="app">
-    <div class="page-card">
+    <div v-if="!isAuthenticated" class="auth-shell">
+      <div class="login-card">
+        <div class="login-hero">
+          <h1 class="login-title">TECHM8 Admin</h1>
+          <div class="login-subtitle">输入后台密码后才能进入价格管理页面。适合你这种几个月更新一次的日常使用场景。</div>
+        </div>
+        <div class="login-body">
+          <el-alert
+            title="这是前端静态密码保护，适合基础防误入，不等于真正服务器级安全。"
+            type="warning"
+            :closable="false"
+            show-icon
+            style="margin-bottom: 14px;">
+          </el-alert>
+
+          <el-input
+            v-model.trim="passwordInput"
+            show-password
+            placeholder="请输入后台密码"
+            @keyup.enter.native="login">
+          </el-input>
+
+          <div style="display:flex; gap:10px; margin-top:14px;">
+            <el-button type="primary" style="flex:1;" @click="login">进入后台</el-button>
+          </div>
+
+          <div v-if="loginError" class="login-note" style="background:#fff2f0; border-color:#ffc9c3; color:#b42318;">{{ loginError }}</div>
+
+          <div class="login-note">
+            密码写在这个 <code>admin.html</code> 文件顶部的 <code>ADMIN_PASSWORD</code> 变量里。
+            你以后要改密码，只需要把那个值改掉，再上传到 GitHub。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="page-card">
       <div class="hero">
         <div class="hero-top">
           <div>
@@ -401,7 +498,7 @@
           <div class="table-head">
             <div>
               <div class="table-head-title">价格表数据</div>
-              <div class="table-head-subtitle">直接改这里的值即可。保存动作在“复制 JSON / 下载 data.json / GitHub 提交”这一步完成。</div>
+              <div class="table-head-subtitle">直接改这里的值即可。已修复输入框空格问题；保存动作在“复制 JSON / 下载 data.json / GitHub 提交”这一步完成。</div>
             </div>
             <div class="cell-note">
               建议价格字段尽量统一。纯数字会在前台显示为 <strong>$数字</strong>；文字值会原样显示。
@@ -427,31 +524,31 @@
 
               <el-table-column label="Brand" min-width="180">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.brand" placeholder="Brand"></el-input>
+                  <el-input v-model="scope.row.brand" placeholder="Brand" @keydown.space.native.stop></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="Model" min-width="220">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.model" placeholder="Model"></el-input>
+                  <el-input v-model="scope.row.model" placeholder="Model" @keydown.space.native.stop></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="Issue" min-width="240">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.issue" placeholder="Issue"></el-input>
+                  <el-input v-model="scope.row.issue" placeholder="Issue" @keydown.space.native.stop></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="Price" width="150">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.price" placeholder="例如 99 / N/A / TBC"></el-input>
+                  <el-input v-model="scope.row.price" placeholder="例如 99 / N/A / TBC" @keydown.space.native.stop></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="Time" min-width="200">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.time" placeholder="例如 30 minutes to 2 hours"></el-input>
+                  <el-input v-model="scope.row.time" placeholder="例如 30 minutes to 2 hours" @keydown.space.native.stop></el-input>
                 </template>
               </el-table-column>
 
@@ -471,6 +568,9 @@
   </div>
 
   <script>
+    const ADMIN_PASSWORD = 'techm8admin';
+    const ADMIN_SESSION_KEY = 'techm8_admin_authed';
+
     new Vue({
       el: '#app',
       data() {
@@ -486,7 +586,10 @@
             repo: 'TECHM8-PRICE-LIST',
             branch: 'main',
             path: 'data.json'
-          }
+          },
+          isAuthenticated: false,
+          passwordInput: '',
+          loginError: ''
         }
       },
       computed: {
@@ -519,9 +622,33 @@
         }
       },
       mounted() {
-        this.loadInitialData()
+        if (sessionStorage.getItem(ADMIN_SESSION_KEY) === '1') {
+          this.isAuthenticated = true
+          this.loadInitialData()
+        }
       },
       methods: {
+        login() {
+          if (!this.passwordInput) {
+            this.loginError = '请输入密码。'
+            return
+          }
+          if (this.passwordInput !== ADMIN_PASSWORD) {
+            this.loginError = '密码不正确，请重新输入。'
+            return
+          }
+          this.isAuthenticated = true
+          this.loginError = ''
+          sessionStorage.setItem(ADMIN_SESSION_KEY, '1')
+          this.$nextTick(() => {
+            if (!this.rows.length) this.loadInitialData()
+          })
+        },
+        logout() {
+          this.isAuthenticated = false
+          this.passwordInput = ''
+          sessionStorage.removeItem(ADMIN_SESSION_KEY)
+        },
         normalizeRow(row) {
           return {
             id: row && row.id ? row.id : this.makeId(),
