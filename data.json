@@ -4048,6 +4048,13 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 17",
+    "issue": "Back Glass Replacement",
+    "price": "229",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17",
     "issue": "Screen Replacement (LCD)",
     "price": "199",
     "time": "30 minutes to 2 hours"
@@ -4068,6 +4075,20 @@
   },
   {
     "brand": "Apple iPhone",
+    "model": "iPhone 17 Air",
+    "issue": "Back Glass Replacement",
+    "price": "229",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17 Pro",
+    "issue": "Back Glass Replacement",
+    "price": "229",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
     "model": "iPhone 17 Pro",
     "issue": "Screen Replacement (OLED)",
     "price": "279",
@@ -4078,6 +4099,13 @@
     "model": "iPhone 17 Pro",
     "issue": "Screen Replacement (ORI)",
     "price": "659",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 17 Pro Max",
+    "issue": "Back Glass Replacement",
+    "price": "229",
     "time": "30 minutes to 2 hours"
   },
   {
