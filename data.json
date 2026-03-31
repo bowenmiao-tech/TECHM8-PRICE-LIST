@@ -1388,6 +1388,13 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 6",
+    "issue": "Battery",
+    "price": "89",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 6",
     "issue": "Screen Replacement",
     "price": "79",
     "time": "30 minutes to 2 hours"
@@ -1395,8 +1402,22 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 6 Plus",
+    "issue": "Battery",
+    "price": "89",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 6 Plus",
     "issue": "Screen Replacement",
     "price": "79",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 6S",
+    "issue": "Battery",
+    "price": "89",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -1416,7 +1437,21 @@
   {
     "brand": "Apple iPhone",
     "model": "iPhone 7",
+    "issue": "Battery",
+    "price": "89",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 7",
     "issue": "Screen Replacement",
+    "price": "89",
+    "time": "30 minutes to 2 hours"
+  },
+  {
+    "brand": "Apple iPhone",
+    "model": "iPhone 7 Plus",
+    "issue": "Battery",
     "price": "89",
     "time": "30 minutes to 2 hours"
   },
@@ -1438,7 +1473,7 @@
     "brand": "Apple iPhone",
     "model": "iPhone 8",
     "issue": "Battery",
-    "price": "$69",
+    "price": "89",
     "time": "30 minutes to 2 hours"
   },
   {
@@ -1543,7 +1578,7 @@
     "brand": "Apple iPhone",
     "model": "iPhone 8 Plus",
     "issue": "Battery",
-    "price": "$69",
+    "price": "89",
     "time": "30 minutes to 2 hours"
   },
   {
