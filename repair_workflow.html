@@ -6,462 +6,346 @@
   <title>维修接机登记</title>
   <style>
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f3f6fb;
-      color: #1f2937;
-    }
-    .page {
-      max-width: 1320px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-    .header {
-      background: #ffffff;
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-      margin-bottom: 20px;
-    }
-    .header h1 {
-      margin: 0 0 10px;
-      font-size: 30px;
-    }
-    .header p {
-      margin: 0;
-      color: #6b7280;
-      line-height: 1.6;
-    }
-    .layout {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
-    }
-    .panel {
-      background: #ffffff;
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-      margin-bottom: 20px;
-    }
-    .panel h2 {
-      margin: 0 0 6px;
-      font-size: 20px;
-    }
-    .panel-subtitle {
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 18px;
-      line-height: 1.5;
-    }
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f3f6fb; color: #1f2937; }
+    .page { max-width: 1380px; margin: 0 auto; padding: 24px; }
+    .header, .panel { background: #fff; border-radius: 18px; box-shadow: 0 8px 24px rgba(15,23,42,.08); }
+    .header { padding: 24px; margin-bottom: 20px; }
+    .header h1 { margin: 0 0 10px; font-size: 30px; }
+    .header p { margin: 0; color: #6b7280; line-height: 1.6; }
+    .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    .panel { padding: 20px; margin-bottom: 20px; }
+    .panel h2 { margin: 0 0 6px; font-size: 20px; }
+    .panel-subtitle { color: #6b7280; font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     .form-group { margin-bottom: 14px; }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-      font-weight: 700;
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
-      font-size: 14px;
-      background: #fff;
-    }
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-    .inline-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .chip {
-      border: 1px solid #d1d5db;
-      background: #f8fafc;
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .chip.active {
-      background: #111827;
-      color: #fff;
-      border-color: #111827;
-    }
-    .muted-box {
-      border: 1px solid #e5e7eb;
-      background: #f9fafb;
-      border-radius: 14px;
-      padding: 14px;
-      color: #4b5563;
-      line-height: 1.6;
-      font-size: 14px;
-    }
-    .photo-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .photo-slot {
-      min-height: 150px;
-      border: 2px dashed #cbd5e1;
-      border-radius: 16px;
-      background: #f8fafc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 12px;
-      color: #6b7280;
-      font-size: 14px;
-    }
-    .check-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .check-item {
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 12px;
-      background: #fff;
-    }
-    .check-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .check-actions {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    .check-btn {
-      border: 1px solid #d1d5db;
-      background: #f9fafb;
-      border-radius: 10px;
-      padding: 9px 4px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-    .side-list {
-      display: grid;
-      gap: 12px;
-    }
-    .side-card {
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 14px;
-      background: #fff;
-    }
-    .side-card strong {
-      display: block;
-      margin-bottom: 6px;
-    }
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }
-    .btn {
-      border: none;
-      border-radius: 12px;
-      padding: 12px 18px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn-primary {
-      background: #111827;
-      color: white;
-    }
-    .btn-outline {
-      background: #fff;
-      color: #111827;
-      border: 1px solid #d1d5db;
-    }
-    .hidden { display: none; }
-    .small-note {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 6px;
-    }
-    @media (max-width: 1024px) {
-      .layout, .grid-2, .grid-3, .check-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 640px) {
-      .page { padding: 14px; }
-      .header h1 { font-size: 24px; }
-      .photo-grid, .check-actions { grid-template-columns: 1fr; }
-    }
+    label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 700; }
+    input, select, textarea { width: 100%; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 14px; background: #fff; }
+    textarea { min-height: 100px; resize: vertical; }
+    .inline-options { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .chip { border: 1px solid #d1d5db; background: #f8fafc; border-radius: 999px; padding: 10px 14px; font-size: 13px; cursor: pointer; user-select: none; }
+    .chip.active { background: #111827; color: #fff; border-color: #111827; }
+    .muted-box, .summary-box, .test-box { border: 1px solid #e5e7eb; background: #f9fafb; border-radius: 14px; padding: 14px; color: #4b5563; line-height: 1.6; font-size: 14px; }
+    .summary-box strong { color: #111827; }
+    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .photo-slot { min-height: 150px; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; color: #6b7280; font-size: 14px; }
+    .check-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .check-item { border: 1px solid #e5e7eb; border-radius: 14px; padding: 12px; background: #fff; }
+    .check-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .check-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .check-btn { border: 1px solid #d1d5db; background: #f9fafb; border-radius: 10px; padding: 9px 4px; font-size: 12px; cursor: pointer; }
+    .check-btn.active { background: #111827; color: white; border-color: #111827; }
+    .side-list { display: grid; gap: 12px; }
+    .side-card { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; background: #fff; }
+    .side-card strong { display: block; margin-bottom: 6px; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .btn { border: none; border-radius: 12px; padding: 12px 18px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-primary { background: #111827; color: #fff; }
+    .btn-outline { background: #fff; color: #111827; border: 1px solid #d1d5db; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .hidden { display: none !important; }
+    .small-note { font-size: 12px; color: #6b7280; margin-top: 6px; }
+    .error-text { color: #dc2626; font-size: 12px; margin-top: 6px; display: none; }
+    .error-field { border-color: #dc2626 !important; background: #fef2f2; }
+    .preview-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+    .preview-item { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #fff; }
+    .preview-item img, .preview-item video { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .preview-item div { padding: 8px 10px; font-size: 12px; color: #4b5563; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 999; }
+    .modal { width: min(760px, 100%); background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+    .modal-header { background: #22d3ee; color: #fff; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h3 { margin: 0; font-size: 18px; }
+    .modal-body { padding: 18px; }
+    .modal-close { background: transparent; border: none; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+    #patternCanvas { width: 100%; max-width: 360px; display: block; margin: 0 auto 14px; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; touch-action: none; }
+    .pattern-result { text-align: center; font-size: 14px; color: #4b5563; margin-bottom: 12px; }
+    .camera-box { border: 1px solid #e5e7eb; border-radius: 16px; padding: 14px; background: #f9fafb; }
+    #cameraPreview { width: 100%; border-radius: 12px; background: #111827; max-height: 360px; }
+    @media (max-width: 1024px) { .layout, .grid-2, .grid-3, .check-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .page { padding: 14px; } .header h1 { font-size: 24px; } .photo-grid, .check-actions, .preview-list { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="header">
       <h1>维修接机登记</h1>
-      <p>这一页不是流程说明，而是正式要用的第一步页面。前提是客户已经同意维修。这个页面只做接机登记：记录客户信息、密码、机器照片、机器号码、以及基础功能检测。</p>
+      <p>这是正式接机第一页。前提是客户已经同意维修。这里专门负责：客户信息、密码、报价页带入的机器信息、拍照/录像、以及基础功能检测。</p>
     </div>
 
     <div class="layout">
       <div>
         <div class="panel">
-          <h2>1. 客户信息</h2>
-          <div class="panel-subtitle">姓名必填，联系方式手机号码 / 邮箱二选一即可。</div>
-          <div class="grid-2">
-            <div class="form-group">
-              <label>客户姓名</label>
-              <input type="text" placeholder="例如：Jason Chen" />
-            </div>
-            <div class="form-group">
-              <label>客户手机号码</label>
-              <input type="text" placeholder="0400 000 000" />
+          <h2>1. 报价页信息带入</h2>
+          <div class="panel-subtitle">默认从前面的报价页面带入。特殊订单才手动输入。</div>
+          <div class="form-group">
+            <label>信息来源</label>
+            <div class="inline-options" id="sourceTypeOptions">
+              <div class="chip active" onclick="setSourceType('quote', this)">使用报价页信息</div>
+              <div class="chip" onclick="setSourceType('manual', this)">特殊订单手动输入</div>
             </div>
           </div>
-          <div class="form-group">
-            <label>客户邮箱（可代替手机号）</label>
-            <input type="email" placeholder="example@email.com" />
-            <div class="small-note">手机号和邮箱至少填一个，后面可以改成提交时校验。</div>
+          <div id="quoteSummary" class="summary-box">
+            <strong>报价页已带入：</strong><br>
+            设备类型：Phone<br>
+            型号：iPhone 14 Pro Max<br>
+            报价：$219<br>
+            问题类型：Screen Replacement
           </div>
         </div>
 
-        <div class="panel">
-          <h2>2. 解锁信息</h2>
-          <div class="panel-subtitle">要兼容数字密码、文字密码，以及图案密码。</div>
-          <div class="form-group">
-            <label>密码类型</label>
-            <div class="inline-options" id="passwordTypeOptions">
-              <div class="chip active" data-type="numeric" onclick="setPasswordType('numeric', this)">数字密码</div>
-              <div class="chip" data-type="text" onclick="setPasswordType('text', this)">文字 / 混合密码</div>
-              <div class="chip" data-type="pattern" onclick="setPasswordType('pattern', this)">图案密码</div>
-              <div class="chip" data-type="none" onclick="setPasswordType('none', this)">无密码 / 无法提供</div>
-            </div>
-          </div>
-
-          <div id="passwordNumeric" class="form-group">
-            <label>数字密码</label>
-            <input type="text" placeholder="例如：123456" />
-          </div>
-
-          <div id="passwordText" class="form-group hidden">
-            <label>文字 / 混合密码</label>
-            <input type="text" placeholder="例如：Techm8@123" />
-          </div>
-
-          <div id="passwordPattern" class="form-group hidden">
-            <label>图案密码记录</label>
-            <textarea placeholder="这里先用文字记录，例如：左上→中间→右上→右下。后面你要的话我可以改成 3x3 点阵点击版。"></textarea>
-          </div>
-
-          <div id="passwordNone" class="form-group hidden">
-            <label>备注</label>
-            <textarea placeholder="例如：客户不记得密码 / 机器无法开机 / 无需解锁"></textarea>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>3. 机器信息</h2>
-          <div class="panel-subtitle">IMEI、S/N、或无法记录号码，这三种情况都要支持。</div>
-          <div class="grid-2">
-            <div class="form-group">
-              <label>设备类型</label>
-              <select>
-                <option>Phone</option>
-                <option>Tablet</option>
-                <option>Computer</option>
-                <option>Watch</option>
-                <option>Console</option>
-              </select>
+        <form id="repairForm">
+          <div class="panel">
+            <h2>2. 客户信息</h2>
+            <div class="panel-subtitle">姓名必填。手机号和邮箱至少填一个，提交时会报错提醒。</div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>客户姓名</label>
+                <input id="customerName" type="text" placeholder="例如：Jason Chen" />
+                <div id="nameError" class="error-text">请输入客户姓名。</div>
+              </div>
+              <div class="form-group">
+                <label>客户手机号码</label>
+                <input id="customerPhone" type="text" placeholder="0400 000 000" />
+                <div id="phoneError" class="error-text">请输入有效澳洲手机号或座机号码。</div>
+              </div>
             </div>
             <div class="form-group">
-              <label>设备型号</label>
-              <input type="text" placeholder="例如：iPhone 14 Pro Max" />
+              <label>客户邮箱</label>
+              <input id="customerEmail" type="text" placeholder="example@email.com" />
+              <div id="emailError" class="error-text">请输入有效邮箱格式。</div>
+              <div id="contactError" class="error-text">手机号和邮箱至少填写一个。</div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label>机器号码类型</label>
-            <div class="inline-options" id="deviceIdTypeOptions">
-              <div class="chip active" onclick="setDeviceIdType('imei', this)">IMEI</div>
-              <div class="chip" onclick="setDeviceIdType('sn', this)">S/N</div>
-              <div class="chip" onclick="setDeviceIdType('none', this)">无法记录</div>
-            </div>
-          </div>
-
-          <div id="deviceIdImei" class="form-group">
-            <label>IMEI 号码</label>
-            <input type="text" placeholder="扫描或手动输入 IMEI" />
-          </div>
-
-          <div id="deviceIdSn" class="form-group hidden">
-            <label>S/N 号码</label>
-            <input type="text" placeholder="输入 Serial Number" />
-          </div>
-
-          <div id="deviceIdNone" class="form-group hidden">
-            <label>无法记录原因</label>
-            <textarea placeholder="例如：不开机、机身严重损坏、后盖标签缺失"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>客户描述的问题</label>
-            <textarea placeholder="例如：屏幕碎裂，触摸偶尔失灵"></textarea>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>4. 机器拍照</h2>
-          <div class="panel-subtitle">接机时至少拍正面和背面，边框和现有损伤也建议留图。</div>
-          <div class="photo-grid">
-            <div class="photo-slot">正面照片<br>后面可接相机 / 上传功能</div>
-            <div class="photo-slot">背面照片</div>
-            <div class="photo-slot">左侧边框 / 顶部</div>
-            <div class="photo-slot">右侧边框 / 底部</div>
-          </div>
-          <div class="form-group" style="margin-top:14px;">
-            <label>现有外观问题</label>
-            <textarea placeholder="例如：后盖裂、边框掉漆、机身弯曲、摄像头圈损伤"></textarea>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>5. 基础功能检测</h2>
-          <div class="panel-subtitle">能检测就记录，不能检测也要明确选“无法测”。这一页先放基础常用项。</div>
-          <div class="check-grid">
-            <div class="check-item">
-              <div class="check-title">屏幕显示</div>
-              <div class="check-actions">
-                <button class="check-btn">正常</button>
-                <button class="check-btn">异常</button>
-                <button class="check-btn">未测</button>
-                <button class="check-btn">无法测</button>
+          <div class="panel">
+            <h2>3. 解锁信息</h2>
+            <div class="panel-subtitle">文字密码和数字密码合并为一个。图案密码单独打开图案锁面板录入。</div>
+            <div class="form-group">
+              <label>密码类型</label>
+              <div class="inline-options" id="passwordTypeOptions">
+                <div class="chip active" data-type="text" onclick="setPasswordType('text', this)">数字 / 文字密码</div>
+                <div class="chip" data-type="pattern" onclick="setPasswordType('pattern', this)">图案密码</div>
+                <div class="chip" data-type="none" onclick="setPasswordType('none', this)">无密码 / 无法提供</div>
               </div>
             </div>
-            <div class="check-item">
-              <div class="check-title">触摸功能</div>
-              <div class="check-actions">
-                <button class="check-btn">正常</button>
-                <button class="check-btn">异常</button>
-                <button class="check-btn">未测</button>
-                <button class="check-btn">无法测</button>
-              </div>
-            </div>
-            <div class="check-item">
-              <div class="check-title">充电功能</div>
-              <div class="check-actions">
-                <button class="check-btn">正常</button>
-                <button class="check-btn">异常</button>
-                <button class="check-btn">未测</button>
-                <button class="check-btn">无法测</button>
-              </div>
-            </div>
-            <div class="check-item">
-              <div class="check-title">前置 / 后置相机</div>
-              <div class="check-actions">
-                <button class="check-btn">正常</button>
-                <button class="check-btn">异常</button>
-                <button class="check-btn">未测</button>
-                <button class="check-btn">无法测</button>
-              </div>
-            </div>
-            <div class="check-item">
-              <div class="check-title">Face ID / 指纹</div>
-              <div class="check-actions">
-                <button class="check-btn">正常</button>
-                <button class="check-btn">异常</button>
-                <button class="check-btn">未测</button>
-                <button class="check-btn">无法测</button>
-              </div>
-            </div>
-            <div class="check-item">
-              <div class="check-title">开机状态</div>
-              <div class="check-actions">
-                <button class="check-btn">正常</button>
-                <button class="check-btn">异常</button>
-                <button class="check-btn">未测</button>
-                <button class="check-btn">无法测</button>
-              </div>
-            </div>
-          </div>
-          <div class="form-group" style="margin-top:14px;">
-            <label>检测备注</label>
-            <textarea placeholder="例如：屏幕全黑，但有震动；因此触摸和 Face ID 无法测试"></textarea>
-          </div>
-        </div>
 
-        <div class="panel">
-          <h2>6. 保存</h2>
-          <div class="panel-subtitle">这一页完成后，再进入后面的维修过程页面。</div>
-          <div class="btn-row">
-            <button class="btn btn-primary">保存并创建维修单</button>
-            <button class="btn btn-outline">保存草稿</button>
+            <div id="passwordText" class="form-group">
+              <label>密码</label>
+              <input type="text" placeholder="例如：123456 或 Techm8@123" />
+            </div>
+
+            <div id="passwordPattern" class="form-group hidden">
+              <label>图案密码</label>
+              <div class="btn-row" style="margin-top:0;">
+                <button type="button" class="btn btn-outline" onclick="openPatternModal()">打开图案密码面板</button>
+              </div>
+              <input id="patternValue" type="text" readonly placeholder="图案密码会记录在这里" style="margin-top:12px;" />
+            </div>
+
+            <div id="passwordNone" class="form-group hidden">
+              <label>备注</label>
+              <textarea placeholder="例如：客户不记得密码 / 机器无法开机 / 无需解锁"></textarea>
+            </div>
           </div>
-        </div>
+
+          <div class="panel">
+            <h2>4. 机器信息</h2>
+            <div class="panel-subtitle">机器信息默认来自报价页。特殊订单才允许手动输入覆盖。</div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label>设备类型</label>
+                <select id="deviceType" disabled>
+                  <option>Phone</option>
+                  <option>Tablet</option>
+                  <option>Computer</option>
+                  <option>Watch</option>
+                  <option>Console</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>设备型号</label>
+                <input id="deviceModel" type="text" value="iPhone 14 Pro Max" disabled />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label>报价金额</label>
+                <input id="quotedPrice" type="text" value="$219" />
+                <div class="small-note">价格可修改（加价 / 折扣）</div>
+              </div>
+              <div class="form-group">
+                <label>问题类型</label>
+                <input id="quoteIssue" type="text" value="Screen Replacement" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>机器号码类型</label>
+              <div class="inline-options" id="deviceIdTypeOptions">
+                <div class="chip active" onclick="setDeviceIdType('imei', this)">IMEI</div>
+                <div class="chip" onclick="setDeviceIdType('sn', this)">S/N</div>
+                <div class="chip" onclick="setDeviceIdType('none', this)">无法记录</div>
+              </div>
+            </div>
+
+            <div id="deviceIdImei" class="form-group">
+              <label>IMEI 号码</label>
+              <input id="imeiInput" type="text" placeholder="15位IMEI" />
+              <div id="imeiError" class="error-text">IMEI必须是有效的15位数字。</div>
+            </div>
+            <div id="deviceIdSn" class="form-group hidden">
+              <label>S/N 号码</label>
+              <input id="snInput" type="text" placeholder="Serial Number" />
+              <div id="snError" class="error-text">S/N不能为空。</div>
+            </div>
+            <div id="deviceIdNone" class="form-group hidden">
+              <label>无法记录原因</label>
+              <textarea placeholder="例如：不开机、标签缺失、机身严重损坏"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>客户描述的问题</label>
+              <textarea placeholder="例如：屏幕碎裂，触摸偶尔失灵"></textarea>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>5. 拍照 / 录像</h2>
+            <div class="panel-subtitle">不限制拍几张。能拍照也能录像。这里先给一个打开摄像头按钮。</div>
+            <div class="camera-box">
+              <div class="btn-row" style="margin-top:0;">
+                <button type="button" class="btn btn-primary" onclick="openCameraModal()">打开摄像头</button>
+                <button type="button" class="btn btn-outline" onclick="addMockVideo()">模拟添加录像</button>
+              </div>
+              <div class="small-note">浏览器允许摄像头权限后，就可以直接预览并拍照。录像这里先做结构占位，后面可继续接真实录制。</div>
+              <div id="mediaPreviewList" class="preview-list"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>6. 功能检测</h2>
+            <div class="panel-subtitle">先判断是否可以测试。如果不能测试，就直接写原因；如果可以测试，再显示完整检测项目。</div>
+            <div class="form-group">
+              <label>是否可以测试</label>
+              <div class="inline-options" id="testableOptions">
+                <div class="chip active" onclick="setTestable('yes', this)">可以测试</div>
+                <div class="chip" onclick="setTestable('no', this)">不能测试</div>
+              </div>
+            </div>
+
+            <div id="cannotTestReasonBox" class="form-group hidden">
+              <label>不能测试原因</label>
+              <textarea placeholder="例如：机器不开机、屏幕全黑、客户不提供密码"></textarea>
+            </div>
+
+            <div id="testItemsBox">
+              <div class="test-box" style="margin-bottom:14px;">
+                参考你的维修单，检测项如下：Touch Glass、Touch Function、LCD、Power Button、Volume Buttons、Fingerprint Scanner、Face ID、Charging Port、Ear Speaker、Vibrate Switch、Loudspeaker、Mic、Rear Camera、Front Camera、Flash、SIM Card Reader、Bluetooth、Wi‑Fi、Proximity Sensor、Back Glass、Keyboard、Touch Pad、Charging Cable & Adapter、Battery、Water Damage。
+              </div>
+              <div class="check-grid" id="checkGrid"></div>
+              <div class="form-group" style="margin-top:14px;">
+                <label>检测备注</label>
+                <textarea placeholder="例如：屏幕不亮，所以触摸和 Face ID 无法测试"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>7. 保存</h2>
+            <div class="panel-subtitle">点击提交时，会先检查必填项。</div>
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary">保存并创建维修单</button>
+              <button type="button" class="btn btn-outline">保存草稿</button>
+            </div>
+          </div>
+        </form>
       </div>
 
       <div>
         <div class="panel">
-          <h2>这一页的目标</h2>
+          <h2>这页现在实现的点</h2>
           <div class="side-list">
-            <div class="side-card">
-              <strong>只做第一步接机</strong>
-              不讲整个流程，不放订货、不放外发、不放交付。
-            </div>
-            <div class="side-card">
-              <strong>覆盖真实门店情况</strong>
-              联系方式二选一、密码多种类型、机器号码也不是永远都能记录。
-            </div>
-            <div class="side-card">
-              <strong>后面方便接数据库</strong>
-              每个模块都已经拆开，后面你接 GitHub 页面和报价系统会更顺。
-            </div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>下一步建议</h2>
-          <div class="muted-box">
-            这页确认后，下一页再做“维修过程页”：
-            <br><br>
-            - 是否需要订货
-            <br>
-            - 主板是否外发
-            <br>
-            - 发现新问题如何追加报价
-            <br>
-            - 当前维修状态
+            <div class="side-card"><strong>提交报错</strong> 手机号和邮箱至少填一个，姓名必填，IMEI / S/N 也会强制校验。</div>
+            <div class="side-card"><strong>图案密码</strong> 不是文字备注，而是单独打开 3x3 图案面板。</div>
+            <div class="side-card"><strong>报价页带入</strong> 机器信息和价格默认使用报价页数据，特殊单可切手动输入。</div>
+            <div class="side-card"><strong>拍照按钮</strong> 先做打开摄像头入口，支持截图保存预览。</div>
+            <div class="side-card"><strong>检测逻辑</strong> 先选能否测试，不能测试就只填原因。</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <div id="patternModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Draw Pattern Lock</h3>
+        <button class="modal-close" onclick="closePatternModal()">Close</button>
+      </div>
+      <div class="modal-body">
+        <canvas id="patternCanvas" width="360" height="360"></canvas>
+        <div class="pattern-result">当前图案：<span id="patternPreview">未记录</span></div>
+        <div class="btn-row" style="justify-content:center;">
+          <button type="button" class="btn btn-outline" onclick="clearPattern()">清空</button>
+          <button type="button" class="btn btn-primary" onclick="savePattern()">保存图案</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cameraModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>打开摄像头</h3>
+        <button class="modal-close" onclick="closeCameraModal()">Close</button>
+      </div>
+      <div class="modal-body">
+        <video id="cameraPreview" autoplay playsinline muted></video>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" onclick="capturePhoto()">拍照</button>
+          <button type="button" class="btn btn-danger" onclick="stopCamera()">停止摄像头</button>
+        </div>
+        <div class="small-note">这版先实现拍照。录像按钮目前先保留结构，你确认后我再接真实录制。</div>
+      </div>
+    </div>
+  </div>
+
   <script>
+    const checkItems = [
+      'Touch Glass Intact', 'Touch Function Working', 'LCD Working', 'Power Button Working', 'Volume Buttons Working',
+      'Fingerprint Scanner Working', 'Face ID Working', 'Charging Port Working', 'Ear Speaker Working', 'Vibrate Switch Working',
+      'Loudspeaker Working', 'Mic Working', 'Rear Camera Working', 'Front Camera Working', 'Flash Working',
+      'SIM Card Reader Working', 'Bluetooth Working', 'Wi‑Fi Working', 'Proximity Sensor Working', 'Back Glass Intact',
+      'Keyboard Working', 'Touch Pad Working', 'Charging Cable & Adapter Working', 'Battery Working', 'Water Damage'
+    ];
+
+    const checkGrid = document.getElementById('checkGrid');
+    checkItems.forEach((item, index) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'check-item';
+      wrap.innerHTML = `
+        <div class="check-title">${item}</div>
+        <div class="check-actions">
+          <button type="button" class="check-btn" onclick="activateCheck(this)">好</button>
+          <button type="button" class="check-btn" onclick="activateCheck(this)">坏</button>
+          <button type="button" class="check-btn" onclick="activateCheck(this)">无</button>
+        </div>
+      `;
+      checkGrid.appendChild(wrap);
+    });
+
+    function activateCheck(btn) {
+      btn.parentElement.querySelectorAll('.check-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
     function setPasswordType(type, el) {
       document.querySelectorAll('#passwordTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
       el.classList.add('active');
-      document.getElementById('passwordNumeric').classList.add('hidden');
       document.getElementById('passwordText').classList.add('hidden');
       document.getElementById('passwordPattern').classList.add('hidden');
       document.getElementById('passwordNone').classList.add('hidden');
-      if (type === 'numeric') document.getElementById('passwordNumeric').classList.remove('hidden');
       if (type === 'text') document.getElementById('passwordText').classList.remove('hidden');
       if (type === 'pattern') document.getElementById('passwordPattern').classList.remove('hidden');
       if (type === 'none') document.getElementById('passwordNone').classList.remove('hidden');
@@ -476,6 +360,242 @@
       if (type === 'imei') document.getElementById('deviceIdImei').classList.remove('hidden');
       if (type === 'sn') document.getElementById('deviceIdSn').classList.remove('hidden');
       if (type === 'none') document.getElementById('deviceIdNone').classList.remove('hidden');
+    }
+
+    function setSourceType(type, el) {
+      document.querySelectorAll('#sourceTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
+      el.classList.add('active');
+      const deviceDisabled = type === 'quote';
+      document.getElementById('quoteSummary').classList.toggle('hidden', type !== 'quote');
+      ['deviceType','deviceModel'].forEach(id => document.getElementById(id).disabled = deviceDisabled);
+      if (type === 'manual') {
+        document.getElementById('deviceModel').value = '';
+        document.getElementById('quotedPrice').value = '';
+        document.getElementById('quoteIssue').value = '';
+      } else {
+        document.getElementById('deviceType').value = 'Phone';
+        document.getElementById('deviceModel').value = 'iPhone 14 Pro Max';
+        document.getElementById('quotedPrice').value = '$219';
+        document.getElementById('quoteIssue').value = 'Screen Replacement';
+      }
+    }
+
+    function setTestable(type, el) {
+      document.querySelectorAll('#testableOptions .chip').forEach(chip => chip.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('cannotTestReasonBox').classList.toggle('hidden', type !== 'no');
+      document.getElementById('testItemsBox').classList.toggle('hidden', type === 'no');
+    }
+
+    const form = document.getElementById('repairForm');
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      let valid = true;
+      const name = document.getElementById('customerName');
+      const phone = document.getElementById('customerPhone');
+      const email = document.getElementById('customerEmail');
+      const imeiInput = document.getElementById('imeiInput');
+      const snInput = document.getElementById('snInput');
+      const nameError = document.getElementById('nameError');
+      const contactError = document.getElementById('contactError');
+      const phoneError = document.getElementById('phoneError');
+      const emailError = document.getElementById('emailError');
+      const imeiError = document.getElementById('imeiError');
+      const snError = document.getElementById('snError');
+
+      [name, phone, email, imeiInput, snInput].forEach(el => { if (el) el.classList.remove('error-field'); });
+      [nameError, contactError, phoneError, emailError, imeiError, snError].forEach(el => { if (el) el.style.display = 'none'; });
+
+      if (!name.value.trim()) {
+        valid = false;
+        name.classList.add('error-field');
+        nameError.style.display = 'block';
+      }
+
+      const phoneValue = phone.value.trim();
+      const emailValue = email.value.trim();
+      const normalizedPhone = phoneValue.replace(/[\s()-]/g, '');
+      const auPhoneRegex = /^(?:\+?61|0)(?:4\d{8}|[2378]\d{8})$/;
+      const simpleEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!phoneValue && !emailValue) {
+        valid = false;
+        phone.classList.add('error-field');
+        email.classList.add('error-field');
+        contactError.style.display = 'block';
+      }
+
+      if (phoneValue && !auPhoneRegex.test(normalizedPhone)) {
+        valid = false;
+        phone.classList.add('error-field');
+        phoneError.style.display = 'block';
+      }
+
+      if (emailValue && !simpleEmailRegex.test(emailValue)) {
+        valid = false;
+        email.classList.add('error-field');
+        emailError.style.display = 'block';
+      }
+
+      const imeiVisible = !document.getElementById('deviceIdImei').classList.contains('hidden');
+      const snVisible = !document.getElementById('deviceIdSn').classList.contains('hidden');
+
+      if (imeiVisible) {
+        const imei = (imeiInput.value || '').replace(/\D/g, '');
+        if (!isValidIMEI(imei)) {
+          valid = false;
+          imeiInput.classList.add('error-field');
+          imeiError.style.display = 'block';
+        }
+      }
+
+      if (snVisible && !snInput.value.trim()) {
+        valid = false;
+        snInput.classList.add('error-field');
+        snError.style.display = 'block';
+      }
+
+      if (!valid) {
+        alert('请先完成并修正必填信息。');
+        return;
+      }
+      alert('验证通过：这一步可以继续保存到数据库。');
+    });
+
+    function isValidIMEI(imei) {
+      if (!/^\d{15}$/.test(imei)) return false;
+      let sum = 0;
+      for (let i = 0; i < 14; i++) {
+        let digit = parseInt(imei.charAt(i), 10);
+        if (i % 2 === 1) {
+          digit *= 2;
+          if (digit > 9) digit -= 9;
+        }
+        sum += digit;
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      return checkDigit === parseInt(imei.charAt(14), 10);
+    }
+
+    let patternPath = [];
+    const canvas = document.getElementById('patternCanvas');
+    const ctx = canvas.getContext('2d');
+    const points = [
+      {x: 80, y: 80}, {x: 180, y: 80}, {x: 280, y: 80},
+      {x: 80, y: 180}, {x: 180, y: 180}, {x: 280, y: 180},
+      {x: 80, y: 280}, {x: 180, y: 280}, {x: 280, y: 280}
+    ];
+    let drawing = false;
+
+    function drawPatternBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (patternPath.length > 1) {
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        patternPath.forEach((idx, i) => {
+          const p = points[idx];
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+      }
+      points.forEach((p, idx) => {
+        ctx.fillStyle = patternPath.includes(idx) ? '#22d3ee' : '#607d8b';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      document.getElementById('patternPreview').textContent = patternPath.length ? patternPath.map(i => i + 1).join('-') : '未记录';
+    }
+
+    function getPointIndex(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * (canvas.width / rect.width);
+      const y = (clientY - rect.top) * (canvas.height / rect.height);
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const dx = x - p.x;
+        const dy = y - p.y;
+        if (Math.sqrt(dx * dx + dy * dy) < 22) return i;
+      }
+      return null;
+    }
+
+    function startPattern(e) {
+      drawing = true;
+      patternPath = [];
+      addPatternPoint(e);
+    }
+    function movePattern(e) { if (drawing) addPatternPoint(e); }
+    function endPattern() { drawing = false; }
+    function addPatternPoint(e) {
+      const touch = e.touches ? e.touches[0] : e;
+      const idx = getPointIndex(touch.clientX, touch.clientY);
+      if (idx !== null && !patternPath.includes(idx)) {
+        patternPath.push(idx);
+        drawPatternBoard();
+      }
+    }
+
+    canvas.addEventListener('mousedown', startPattern);
+    canvas.addEventListener('mousemove', movePattern);
+    window.addEventListener('mouseup', endPattern);
+    canvas.addEventListener('touchstart', startPattern, { passive: true });
+    canvas.addEventListener('touchmove', movePattern, { passive: true });
+    canvas.addEventListener('touchend', endPattern);
+    drawPatternBoard();
+
+    function openPatternModal() { document.getElementById('patternModal').style.display = 'flex'; drawPatternBoard(); }
+    function closePatternModal() { document.getElementById('patternModal').style.display = 'none'; }
+    function clearPattern() { patternPath = []; drawPatternBoard(); }
+    function savePattern() {
+      document.getElementById('patternValue').value = patternPath.length ? patternPath.map(i => i + 1).join('-') : '';
+      closePatternModal();
+    }
+
+    let mediaStream = null;
+    async function openCameraModal() {
+      document.getElementById('cameraModal').style.display = 'flex';
+      const video = document.getElementById('cameraPreview');
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = mediaStream;
+      } catch (err) {
+        alert('无法打开摄像头，请检查浏览器权限。');
+      }
+    }
+    function stopCamera() {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+      document.getElementById('cameraPreview').srcObject = null;
+    }
+    function closeCameraModal() {
+      stopCamera();
+      document.getElementById('cameraModal').style.display = 'none';
+    }
+    function capturePhoto() {
+      const video = document.getElementById('cameraPreview');
+      if (!video.videoWidth) return;
+      const canvasShot = document.createElement('canvas');
+      canvasShot.width = video.videoWidth;
+      canvasShot.height = video.videoHeight;
+      const shotCtx = canvasShot.getContext('2d');
+      shotCtx.drawImage(video, 0, 0, canvasShot.width, canvasShot.height);
+      const data = canvasShot.toDataURL('image/png');
+      const wrap = document.createElement('div');
+      wrap.className = 'preview-item';
+      wrap.innerHTML = `<img src="${data}" alt="capture"><div>拍照记录 ${new Date().toLocaleTimeString()}</div>`;
+      document.getElementById('mediaPreviewList').prepend(wrap);
+    }
+    function addMockVideo() {
+      const wrap = document.createElement('div');
+      wrap.className = 'preview-item';
+      wrap.innerHTML = `<div style="height:160px;display:flex;align-items:center;justify-content:center;background:#111827;color:#fff;">Video Placeholder</div><div>录像记录占位 ${new Date().toLocaleTimeString()}</div>`;
+      document.getElementById('mediaPreviewList').prepend(wrap);
     }
   </script>
 </body>
