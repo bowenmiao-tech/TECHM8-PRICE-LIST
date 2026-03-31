@@ -4781,6 +4781,83 @@
     "time": ""
   },
   {
+    "brand": "Apple MacBook",
+    "model": "MacBook Air 13'' (A2337)",
+    "issue": "Battery",
+    "price": "249",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Air 13'' (A2337)",
+    "issue": "Charging port",
+    "price": "149",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Air 13'' (A2337)",
+    "issue": "Complete LCD Display",
+    "price": "549",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Air 13'' (A2337)",
+    "issue": "Fan",
+    "price": "149",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Air 13'' (A2337)",
+    "issue": "Keyboard & Touch Bar",
+    "price": "399",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Pro 13\" (A2338)",
+    "issue": "Battery",
+    "price": "249",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Pro 13\" (A2338)",
+    "issue": "Charging port",
+    "price": "149",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Pro 13\" (A2338)",
+    "issue": "Complete LCD Display",
+    "price": "549",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Pro 13\" (A2338)",
+    "issue": "Fan",
+    "price": "149",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Pro 13\" (A2338)",
+    "issue": "Keyboard & Touch Bar",
+    "price": "399",
+    "time": "1-3 business days"
+  },
+  {
+    "brand": "Apple MacBook",
+    "model": "MacBook Pro 16\" A2991 (2023)",
+    "issue": "Complete LCD Display",
+    "price": "945",
+    "time": "1-3 business days"
+  },
+  {
     "brand": "Apple Watch",
     "model": "Apple Watch 3rd Gen 38mm",
     "issue": "Battery",
