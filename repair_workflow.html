@@ -62,7 +62,16 @@
     .camera-box { border: 1px solid #e5e7eb; border-radius: 16px; padding: 14px; background: #f9fafb; }
     #cameraPreview { width: 100%; border-radius: 12px; background: #111827; max-height: 360px; }
     @media (max-width: 1024px) { .layout, .grid-2, .grid-3, .check-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) { .page { padding: 14px; } .header h1 { font-size: 24px; } .photo-grid, .check-actions, .preview-list { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .page { padding: 14px; }
+      .header h1 { font-size: 24px; }
+      .photo-grid, .preview-list { grid-template-columns: 1fr; }
+      .check-grid { grid-template-columns: 1fr; gap: 10px; }
+      .check-item { padding: 14px; }
+      .check-title { font-size: 15px; margin-bottom: 10px; }
+      .check-actions { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .check-btn { padding: 12px 6px; font-size: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -106,13 +115,11 @@
               <div class="form-group">
                 <label>客户手机号码</label>
                 <input id="customerPhone" type="text" placeholder="0400 000 000" />
-                <div id="phoneError" class="error-text">请输入有效澳洲手机号或座机号码。</div>
               </div>
             </div>
             <div class="form-group">
               <label>客户邮箱</label>
-              <input id="customerEmail" type="text" placeholder="example@email.com" />
-              <div id="emailError" class="error-text">请输入有效邮箱格式。</div>
+              <input id="customerEmail" type="email" placeholder="example@email.com" />
               <div id="contactError" class="error-text">手机号和邮箱至少填写一个。</div>
             </div>
           </div>
@@ -171,12 +178,11 @@
             <div class="grid-2">
               <div class="form-group">
                 <label>报价金额</label>
-                <input id="quotedPrice" type="text" value="$219" />
-                <div class="small-note">价格可修改（加价 / 折扣）</div>
+                <input id="quotedPrice" type="text" value="$219" disabled />
               </div>
               <div class="form-group">
                 <label>问题类型</label>
-                <input id="quoteIssue" type="text" value="Screen Replacement" />
+                <input id="quoteIssue" type="text" value="Screen Replacement" disabled />
               </div>
             </div>
 
@@ -191,13 +197,11 @@
 
             <div id="deviceIdImei" class="form-group">
               <label>IMEI 号码</label>
-              <input id="imeiInput" type="text" placeholder="15位IMEI" />
-              <div id="imeiError" class="error-text">IMEI必须是有效的15位数字。</div>
+              <input type="text" placeholder="扫描或手动输入 IMEI" />
             </div>
             <div id="deviceIdSn" class="form-group hidden">
               <label>S/N 号码</label>
-              <input id="snInput" type="text" placeholder="Serial Number" />
-              <div id="snError" class="error-text">S/N不能为空。</div>
+              <input type="text" placeholder="输入 Serial Number" />
             </div>
             <div id="deviceIdNone" class="form-group hidden">
               <label>无法记录原因</label>
@@ -236,7 +240,8 @@
 
             <div id="cannotTestReasonBox" class="form-group hidden">
               <label>不能测试原因</label>
-              <textarea placeholder="例如：机器不开机、屏幕全黑、客户不提供密码"></textarea>
+              <textarea id="cannotTestReason" placeholder="例如：机器不开机、屏幕全黑、客户不提供密码"></textarea>
+              <div id="cannotTestReasonError" class="error-text">选择不能测试时，必须填写原因。</div>
             </div>
 
             <div id="testItemsBox">
@@ -266,7 +271,7 @@
         <div class="panel">
           <h2>这页现在实现的点</h2>
           <div class="side-list">
-            <div class="side-card"><strong>提交报错</strong> 手机号和邮箱至少填一个，姓名必填，IMEI / S/N 也会强制校验。</div>
+            <div class="side-card"><strong>提交报错</strong> 手机号和邮箱至少填一个，姓名必填。</div>
             <div class="side-card"><strong>图案密码</strong> 不是文字备注，而是单独打开 3x3 图案面板。</div>
             <div class="side-card"><strong>报价页带入</strong> 机器信息和价格默认使用报价页数据，特殊单可切手动输入。</div>
             <div class="side-card"><strong>拍照按钮</strong> 先做打开摄像头入口，支持截图保存预览。</div>
@@ -321,7 +326,7 @@
     ];
 
     const checkGrid = document.getElementById('checkGrid');
-    checkItems.forEach((item, index) => {
+    checkItems.forEach((item) => {
       const wrap = document.createElement('div');
       wrap.className = 'check-item';
       wrap.innerHTML = `
@@ -365,9 +370,9 @@
     function setSourceType(type, el) {
       document.querySelectorAll('#sourceTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
       el.classList.add('active');
-      const deviceDisabled = type === 'quote';
+      const disabled = type === 'quote';
       document.getElementById('quoteSummary').classList.toggle('hidden', type !== 'quote');
-      ['deviceType','deviceModel'].forEach(id => document.getElementById(id).disabled = deviceDisabled);
+      ['deviceType','deviceModel','quotedPrice','quoteIssue'].forEach(id => document.getElementById(id).disabled = disabled);
       if (type === 'manual') {
         document.getElementById('deviceModel').value = '';
         document.getElementById('quotedPrice').value = '';
@@ -394,88 +399,44 @@
       const name = document.getElementById('customerName');
       const phone = document.getElementById('customerPhone');
       const email = document.getElementById('customerEmail');
-      const imeiInput = document.getElementById('imeiInput');
-      const snInput = document.getElementById('snInput');
       const nameError = document.getElementById('nameError');
       const contactError = document.getElementById('contactError');
-      const phoneError = document.getElementById('phoneError');
-      const emailError = document.getElementById('emailError');
-      const imeiError = document.getElementById('imeiError');
-      const snError = document.getElementById('snError');
+      const cannotTestReason = document.getElementById('cannotTestReason');
+      const cannotTestReasonError = document.getElementById('cannotTestReasonError');
 
-      [name, phone, email, imeiInput, snInput].forEach(el => { if (el) el.classList.remove('error-field'); });
-      [nameError, contactError, phoneError, emailError, imeiError, snError].forEach(el => { if (el) el.style.display = 'none'; });
+      [name, phone, email, cannotTestReason].forEach(el => {
+        if (el) el.classList.remove('error-field');
+      });
+      [nameError, contactError, cannotTestReasonError].forEach(el => {
+        if (el) el.style.display = 'none';
+      });
 
       if (!name.value.trim()) {
         valid = false;
         name.classList.add('error-field');
         nameError.style.display = 'block';
       }
-
-      const phoneValue = phone.value.trim();
-      const emailValue = email.value.trim();
-      const normalizedPhone = phoneValue.replace(/[\s()-]/g, '');
-      const auPhoneRegex = /^(?:\+?61|0)(?:4\d{8}|[2378]\d{8})$/;
-      const simpleEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!phoneValue && !emailValue) {
+      if (!phone.value.trim() && !email.value.trim()) {
         valid = false;
         phone.classList.add('error-field');
         email.classList.add('error-field');
         contactError.style.display = 'block';
       }
 
-      if (phoneValue && !auPhoneRegex.test(normalizedPhone)) {
-        valid = false;
-        phone.classList.add('error-field');
-        phoneError.style.display = 'block';
-      }
-
-      if (emailValue && !simpleEmailRegex.test(emailValue)) {
-        valid = false;
-        email.classList.add('error-field');
-        emailError.style.display = 'block';
-      }
-
-      const imeiVisible = !document.getElementById('deviceIdImei').classList.contains('hidden');
-      const snVisible = !document.getElementById('deviceIdSn').classList.contains('hidden');
-
-      if (imeiVisible) {
-        const imei = (imeiInput.value || '').replace(/\D/g, '');
-        if (!isValidIMEI(imei)) {
+      if (!document.getElementById('cannotTestReasonBox').classList.contains('hidden')) {
+        if (!cannotTestReason.value.trim()) {
           valid = false;
-          imeiInput.classList.add('error-field');
-          imeiError.style.display = 'block';
+          cannotTestReason.classList.add('error-field');
+          cannotTestReasonError.style.display = 'block';
         }
       }
 
-      if (snVisible && !snInput.value.trim()) {
-        valid = false;
-        snInput.classList.add('error-field');
-        snError.style.display = 'block';
-      }
-
       if (!valid) {
-        alert('请先完成并修正必填信息。');
+        alert('请先完成必填信息。');
         return;
       }
       alert('验证通过：这一步可以继续保存到数据库。');
     });
-
-    function isValidIMEI(imei) {
-      if (!/^\d{15}$/.test(imei)) return false;
-      let sum = 0;
-      for (let i = 0; i < 14; i++) {
-        let digit = parseInt(imei.charAt(i), 10);
-        if (i % 2 === 1) {
-          digit *= 2;
-          if (digit > 9) digit -= 9;
-        }
-        sum += digit;
-      }
-      const checkDigit = (10 - (sum % 10)) % 10;
-      return checkDigit === parseInt(imei.charAt(14), 10);
-    }
 
     let patternPath = [];
     const canvas = document.getElementById('patternCanvas');
@@ -560,10 +521,20 @@
       document.getElementById('cameraModal').style.display = 'flex';
       const video = document.getElementById('cameraPreview');
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' }
+          },
+          audio: false
+        });
         video.srcObject = mediaStream;
       } catch (err) {
-        alert('无法打开摄像头，请检查浏览器权限。');
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          video.srcObject = mediaStream;
+        } catch (fallbackErr) {
+          alert('无法打开摄像头，请检查浏览器权限。');
+        }
       }
     }
     function stopCamera() {
