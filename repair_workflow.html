@@ -526,23 +526,18 @@
                     <div id="deviceIdImei">
                       <div class="field-label">IMEI</div>
                       <input id="deviceIdImeiInput" type="text" class="form-control" placeholder="Scan or type the IMEI">
+                      <div id="deviceIdImeiError" class="error-text">Please enter the IMEI or choose another ID option.</div>
                     </div>
                     <div id="deviceIdSn" class="hidden">
                       <div class="field-label">Serial Number</div>
                       <input id="deviceIdSnInput" type="text" class="form-control" placeholder="Type the serial number">
+                      <div id="deviceIdSnError" class="error-text">Please enter the serial number or choose another ID option.</div>
                     </div>
                     <div id="deviceIdNone" class="hidden">
                       <div class="field-label">Why it is unavailable</div>
                       <textarea id="deviceIdNoneReason" class="form-control" placeholder="Example: unit cannot boot, label missing, or housing too damaged to read"></textarea>
+                      <div id="deviceIdNoneError" class="error-text">Please explain why the device ID is unavailable.</div>
                     </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="field-label">Customer Reported Fault</div>
-                    <textarea id="customerIssue" class="form-control" placeholder="Example: screen cracked, touch is intermittent, battery drains quickly"></textarea>
-                  </div>
-                  <div class="col-12">
-                    <div class="field-label">Staff Notes</div>
-                    <textarea id="staffNotes" class="form-control" placeholder="Add intake notes, approved pricing changes, part colour, or anything the technician should know"></textarea>
                   </div>
                 </div>
               </div>
@@ -582,6 +577,13 @@
                 </div>
 
                 <div id="testItemsBox">
+                  <div class="mb-3">
+                    <div class="field-label">Test Profile</div>
+                    <div class="toggle-row" id="testProfileOptions">
+                      <div class="chip active" data-profile="mobile" onclick="setTestProfile('mobile', this)">Mobile Device</div>
+                      <div class="chip" data-profile="computer" onclick="setTestProfile('computer', this)">Laptop / Desktop</div>
+                    </div>
+                  </div>
                   <div class="helper mb-3">
                     Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.
                   </div>
@@ -694,13 +696,52 @@
       time: 'Please confirm in store'
     };
 
-    const checkItems = [
-      'Touch Glass', 'Touch Function', 'Display / LCD', 'Power Button', 'Volume Buttons',
-      'Fingerprint Scanner', 'Face ID', 'Charging Port', 'Ear Speaker', 'Vibrate Switch',
-      'Loudspeaker', 'Microphone', 'Rear Camera', 'Front Camera', 'Flash',
-      'SIM Reader', 'Bluetooth', 'Wi-Fi', 'Proximity Sensor', 'Back Glass',
-      'Keyboard', 'Trackpad', 'Charging Cable / Adapter', 'Battery', 'Water Damage'
-    ];
+    const testProfiles = {
+      mobile: [
+        'Outer Glass / Screen Condition',
+        'Touch Response',
+        'Display / OLED / LCD',
+        'Face ID / Fingerprint Unlock',
+        'Front Camera',
+        'Rear Camera',
+        'Earpiece Speaker',
+        'Loudspeaker',
+        'Microphone',
+        'Charging Port / Wireless Charging',
+        'Battery Health / Charging',
+        'Power Button',
+        'Volume Buttons / Mute Switch',
+        'Wi-Fi / Bluetooth',
+        'SIM / eSIM Detection',
+        'Proximity Sensor / Auto Brightness',
+        'Vibration / Haptics',
+        'Frame / Housing Condition',
+        'Back Glass / Rear Cover',
+        'Water Damage Indicators'
+      ],
+      computer: [
+        'LCD / External Display Output',
+        'Keyboard',
+        'Trackpad / Mouse Input',
+        'Battery Charge / Adapter Detection',
+        'USB Ports',
+        'USB-C / Thunderbolt Ports',
+        'HDMI / Display Output',
+        'Wi-Fi',
+        'Bluetooth',
+        'Webcam',
+        'Microphone',
+        'Speakers',
+        'Power Button',
+        'Touch ID / Fingerprint Reader',
+        'Storage Detection',
+        'Fan / Thermal Behaviour',
+        'Hinges / Chassis Condition',
+        'Charging Port / DC Jack',
+        'Boot To OS / Login',
+        'Liquid Damage Indicators'
+      ]
+    };
 
     let quoteData = { ...defaultQuoteData };
     let mediaStream = null;
@@ -708,6 +749,7 @@
     let currentTestable = 'yes';
     let currentPasswordType = 'text';
     let currentDeviceIdType = 'imei';
+    let currentTestProfile = 'mobile';
     let patternPath = [];
     let drawing = false;
 
@@ -805,6 +847,12 @@
       document.getElementById('deviceIdImei').classList.toggle('hidden', type !== 'imei');
       document.getElementById('deviceIdSn').classList.toggle('hidden', type !== 'sn');
       document.getElementById('deviceIdNone').classList.toggle('hidden', type !== 'none');
+      ['deviceIdImeiInput', 'deviceIdSnInput', 'deviceIdNoneReason'].forEach(id => {
+        document.getElementById(id).classList.remove('error-field');
+      });
+      ['deviceIdImeiError', 'deviceIdSnError', 'deviceIdNoneError'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
       updateLiveSummary();
     }
 
@@ -817,10 +865,18 @@
       updateLiveSummary();
     }
 
+    function setTestProfile(profile, el) {
+      currentTestProfile = profile;
+      document.querySelectorAll('#testProfileOptions .chip').forEach(chip => chip.classList.remove('active'));
+      el.classList.add('active');
+      buildChecklist();
+      updateLiveSummary();
+    }
+
     function buildChecklist() {
       const checkGrid = document.getElementById('checkGrid');
       checkGrid.innerHTML = '';
-      checkItems.forEach(item => {
+      (testProfiles[currentTestProfile] || []).forEach(item => {
         const wrap = document.createElement('div');
         wrap.className = 'test-item';
         wrap.innerHTML = `
@@ -873,7 +929,9 @@
       document.getElementById('summaryIssue').textContent = issue || 'Not entered';
       document.getElementById('summaryPrice').textContent = price || 'Not entered';
       document.getElementById('summaryTesting').textContent =
-        currentTestable === 'no' ? 'Testing not possible' : (testCount > 0 ? `${testCount} checks recorded` : 'Ready for functional test');
+        currentTestable === 'no'
+          ? 'Testing not possible'
+          : (testCount > 0 ? `${currentTestProfile === 'mobile' ? 'Mobile' : 'Computer'} profile: ${testCount} checks recorded` : 'Ready for functional test');
 
       if (currentSourceType === 'manual') {
         document.getElementById('heroDevice').textContent = deviceModel || 'Manual entry';
@@ -883,10 +941,10 @@
     }
 
     function clearValidation() {
-      ['customerName', 'customerPhone', 'customerEmail', 'cannotTestReason'].forEach(id => {
+      ['customerName', 'customerPhone', 'customerEmail', 'cannotTestReason', 'deviceIdImeiInput', 'deviceIdSnInput', 'deviceIdNoneReason'].forEach(id => {
         document.getElementById(id).classList.remove('error-field');
       });
-      ['nameError', 'contactError', 'cannotTestReasonError'].forEach(id => {
+      ['nameError', 'contactError', 'cannotTestReasonError', 'deviceIdImeiError', 'deviceIdSnError', 'deviceIdNoneError'].forEach(id => {
         document.getElementById(id).style.display = 'none';
       });
     }
@@ -914,6 +972,24 @@
         document.getElementById('cannotTestReasonError').style.display = 'block';
       }
 
+      if (currentDeviceIdType === 'imei' && !document.getElementById('deviceIdImeiInput').value.trim()) {
+        valid = false;
+        document.getElementById('deviceIdImeiInput').classList.add('error-field');
+        document.getElementById('deviceIdImeiError').style.display = 'block';
+      }
+
+      if (currentDeviceIdType === 'sn' && !document.getElementById('deviceIdSnInput').value.trim()) {
+        valid = false;
+        document.getElementById('deviceIdSnInput').classList.add('error-field');
+        document.getElementById('deviceIdSnError').style.display = 'block';
+      }
+
+      if (currentDeviceIdType === 'none' && !document.getElementById('deviceIdNoneReason').value.trim()) {
+        valid = false;
+        document.getElementById('deviceIdNoneReason').classList.add('error-field');
+        document.getElementById('deviceIdNoneError').style.display = 'block';
+      }
+
       return valid;
     }
 
@@ -923,6 +999,7 @@
         passwordType: currentPasswordType,
         deviceIdType: currentDeviceIdType,
         testable: currentTestable,
+        testProfile: currentTestProfile,
         quoteData,
         customerName: document.getElementById('customerName').value.trim(),
         customerPhone: document.getElementById('customerPhone').value.trim(),
@@ -939,8 +1016,6 @@
         deviceIdImei: document.getElementById('deviceIdImeiInput').value.trim(),
         deviceIdSn: document.getElementById('deviceIdSnInput').value.trim(),
         deviceIdNoneReason: document.getElementById('deviceIdNoneReason').value.trim(),
-        customerIssue: document.getElementById('customerIssue').value.trim(),
-        staffNotes: document.getElementById('staffNotes').value.trim(),
         cannotTestReason: document.getElementById('cannotTestReason').value.trim(),
         testNotes: document.getElementById('testNotes').value.trim(),
         testResults: getSelectedTestResults(),
@@ -959,6 +1034,7 @@
       setPasswordType(data.passwordType || 'text', document.querySelector(`#passwordTypeOptions .chip[data-type="${data.passwordType || 'text'}"]`));
       setDeviceIdType(data.deviceIdType || 'imei', document.querySelectorAll('#deviceIdTypeOptions .chip')[data.deviceIdType === 'sn' ? 1 : data.deviceIdType === 'none' ? 2 : 0]);
       setTestable(data.testable || 'yes', document.querySelectorAll('#testableOptions .chip')[data.testable === 'no' ? 1 : 0]);
+      setTestProfile(data.testProfile || 'mobile', document.querySelector(`#testProfileOptions .chip[data-profile="${data.testProfile || 'mobile'}"]`));
 
       document.getElementById('customerName').value = data.customerName || '';
       document.getElementById('customerPhone').value = data.customerPhone || '';
@@ -975,8 +1051,6 @@
       document.getElementById('deviceIdImeiInput').value = data.deviceIdImei || '';
       document.getElementById('deviceIdSnInput').value = data.deviceIdSn || '';
       document.getElementById('deviceIdNoneReason').value = data.deviceIdNoneReason || '';
-      document.getElementById('customerIssue').value = data.customerIssue || '';
-      document.getElementById('staffNotes').value = data.staffNotes || '';
       document.getElementById('cannotTestReason').value = data.cannotTestReason || '';
       document.getElementById('testNotes').value = data.testNotes || '';
 
@@ -1178,7 +1252,7 @@
     [
       'customerName', 'customerPhone', 'customerEmail', 'contactMethod', 'passwordTextInput', 'patternValue',
       'passwordNoneReason', 'deviceType', 'deviceModel', 'quotedPrice', 'quoteIssue', 'estimatedTime',
-      'deviceIdImeiInput', 'deviceIdSnInput', 'deviceIdNoneReason', 'customerIssue', 'staffNotes',
+      'deviceIdImeiInput', 'deviceIdSnInput', 'deviceIdNoneReason',
       'cannotTestReason', 'testNotes'
     ].forEach(id => {
       const node = document.getElementById(id);
