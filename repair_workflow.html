@@ -178,7 +178,7 @@
             <div class="grid-2">
               <div class="form-group">
                 <label>报价金额</label>
-                <input id="quotedPrice" type="text" value="$219" disabled />
+                <input id="quotedPrice" type="text" value="$219" />
               </div>
               <div class="form-group">
                 <label>问题类型</label>
@@ -421,7 +421,8 @@
       el.classList.add('active');
       const disabled = type === 'quote';
       document.getElementById('quoteSummary').classList.toggle('hidden', type !== 'quote');
-      ['deviceType','deviceModel','quotedPrice','quoteIssue'].forEach(id => document.getElementById(id).disabled = disabled);
+      ['deviceType','deviceModel','quoteIssue'].forEach(id => document.getElementById(id).disabled = disabled);
+      document.getElementById('quotedPrice').disabled = false;
       if (type === 'manual') {
         document.getElementById('deviceModel').value = '';
         document.getElementById('quotedPrice').value = '';
@@ -432,6 +433,13 @@
     }
 
     readQuoteDataFromQuery();
+    document.getElementById('quotedPrice').addEventListener('input', function(e) {
+      quoteData.price = e.target.value.trim();
+      if (!document.getElementById('quoteSummary').classList.contains('hidden')) {
+        updateQuoteFields();
+        document.getElementById('quotedPrice').value = quoteData.price;
+      }
+    });
 
     function setTestable(type, el) {
       document.querySelectorAll('#testableOptions .chip').forEach(chip => chip.classList.remove('active'));
