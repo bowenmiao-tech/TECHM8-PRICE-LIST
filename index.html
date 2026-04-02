@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
  <script>
@@ -254,30 +254,6 @@
       color: #fff;
     }
 
-    .mode-switch {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .mode-pill {
-      border: 1px solid var(--tm-border);
-      background: #f8fafc;
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .18s ease;
-    }
-
-    .mode-pill.active {
-      background: var(--tm-dark);
-      border-color: var(--tm-dark);
-      color: #fff;
-    }
-
     .helper-note {
       border-radius: 16px;
       border: 1px solid var(--tm-border);
@@ -348,11 +324,11 @@
         <div class="hero-meta">
           <div class="hero-meta-item">
             <div class="hero-meta-label">Brand</div>
-            <div class="hero-meta-value">{{ heroBrandValue }}</div>
+            <div class="hero-meta-value">{{ selectedBrand || 'Not selected' }}</div>
           </div>
           <div class="hero-meta-item">
             <div class="hero-meta-label">Model</div>
-            <div class="hero-meta-value">{{ heroModelValue }}</div>
+            <div class="hero-meta-value">{{ selectedModel || manualModel || 'Not selected' }}</div>
           </div>
           <div class="hero-meta-item">
             <div class="hero-meta-label">Last Sync</div>
@@ -372,7 +348,7 @@
               <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start mb-3">
                 <div>
                   <div class="section-title">Get an instant quote</div>
-                  <div class="section-subtitle">Use repair pricing, inspection pricing, or jump straight to manual intake when a model is not listed.</div>
+                  <div class="section-subtitle">The page reads from <code>data.json</code> with cache-busting and silent auto-refresh.</div>
                 </div>
                 <div>
                   <span class="status-pill" :class="statusClass">
@@ -382,21 +358,12 @@
                 </div>
               </div>
 
-              <div class="mode-switch">
-                <button class="mode-pill" :class="{ active: selectedMode === 'repair' }" type="button" @click="setMode('repair')">
-                  Repair Price List
-                </button>
-                <button class="mode-pill" :class="{ active: selectedMode === 'inspection' }" type="button" @click="setMode('inspection')">
-                  Inspection Services
-                </button>
-              </div>
-
               <div v-if="errorMessage" class="alert alert-warning rounded-4 mb-4" role="alert">
                 <div class="fw-bold mb-1">Unable to load latest data</div>
                 <div>{{ errorMessage }}</div>
               </div>
 
-              <div v-if="selectedMode === 'repair'" class="row g-3">
+              <div class="row g-3">
                 <div class="col-12">
                   <div class="field-label">Select Brand</div>
                   <select class="form-select" v-model="selectedBrand" @change="handleBrandChange">
@@ -441,28 +408,9 @@
                 </div>
               </div>
 
-              <div v-else class="row g-3">
-                <div class="col-12">
-                  <div class="field-label">Select Inspection Service</div>
-                  <select class="form-select" v-model="selectedInspectionKey" @change="handleInspectionChange">
-                    <option value="">Choose an inspection or onsite service</option>
-                    <option v-for="service in inspectionServices" :key="service.key" :value="service.key">
-                      {{ service.issue }} - {{ service.price }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col-12">
-                  <div class="helper-note">
-                    Inspection services are used when the customer brings in a device and the exact repair issue is not confirmed yet.
-                    Estimated time will be recorded as <strong>N/A</strong> in the workflow.
-                  </div>
-                </div>
-              </div>
-
               <div class="footer-row">
                 <div class="sync-text">
                   <div><strong>{{ totalRows }}</strong> repair items loaded.</div>
-                  <div><strong>{{ inspectionServices.length }}</strong> inspection services available.</div>
                   <div v-if="hasSelection">Current selection will be preserved when new data arrives if the same item still exists.</div>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
@@ -482,7 +430,7 @@
               <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
                 <div>
                   <div class="section-title mb-1">Quote Result</div>
-                  <div class="section-subtitle mb-0">{{ selectedMode === 'repair' ? 'Latest value from your uploaded price list' : 'Inspection and onsite service pricing' }}</div>
+                  <div class="section-subtitle mb-0">Latest value from your uploaded price list</div>
                 </div>
                 <div class="text-end">
                   <div class="small text-muted">Updated</div>
@@ -490,12 +438,12 @@
                 </div>
               </div>
 
-              <template v-if="activeQuote">
+              <template v-if="currentIssue">
                 <div class="quote-price">{{ formattedPrice }}</div>
-                <div class="quote-issue">{{ activeQuote.issue }}</div>
+                <div class="quote-issue">{{ currentIssue.issue }}</div>
                 <div class="quote-time mb-3">
                   <i class="bi bi-clock me-1"></i>
-                  {{ activeQuote.time || 'Please confirm repair time in store.' }}
+                  {{ currentIssue.time || 'Please confirm repair time in store.' }}
                 </div>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                   <a class="btn btn-workflow" :href="workflowUrl">
@@ -503,24 +451,18 @@
                   </a>
                 </div>
                 <div class="mini-note">
-                  <div><strong>Brand:</strong> {{ activeQuote.brand || 'N/A' }}</div>
-                  <div><strong>Model:</strong> {{ activeQuote.model || 'N/A' }}</div>
+                  <div><strong>Brand:</strong> {{ currentIssue.brand }}</div>
+                  <div><strong>Model:</strong> {{ currentIssue.model }}</div>
                   <div class="mt-2">
-                    <template v-if="selectedMode === 'repair'">
-                      Prices are shown from the latest deployed <code>data.json</code>. If the value was just changed in GitHub,
-                      this page will pick it up automatically on the next refresh cycle once GitHub Pages serves the new file.
-                    </template>
-                    <template v-else>
-                      Inspection services are a quick intake path for devices that need diagnosis before a full repair quote can be confirmed.
-                    </template>
+                    Prices are shown from the latest deployed <code>data.json</code>. If the value was just changed in GitHub,
+                    this page will pick it up automatically on the next refresh cycle once GitHub Pages serves the new file.
                   </div>
                 </div>
               </template>
 
               <div v-else class="empty-state mt-4">
-                <div class="fs-5 fw-bold mb-2">{{ selectedMode === 'repair' ? 'No repair selected yet' : 'No inspection service selected yet' }}</div>
-                <div v-if="selectedMode === 'repair'">Choose a brand, model, and issue to see the quoted price.</div>
-                <div v-else>Choose an inspection service to continue into the intake workflow.</div>
+                <div class="fs-5 fw-bold mb-2">No repair selected yet</div>
+                <div>Choose a brand, model, and issue to see the quoted price.</div>
                 <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
                   <a class="btn btn-soft" :href="manualWorkflowUrl">
                     <i class="bi bi-pencil-square me-1"></i> Not In Price List? Manual Entry
@@ -547,28 +489,12 @@
           pollTimer: null,
           rawData: [],
           dataSignature: '',
-          selectedMode: 'repair',
           brandOptions: [],
           selectedBrand: '',
           selectedModel: '',
           selectedIssueKey: '',
-          selectedInspectionKey: '',
           manualModel: '',
           currentIssue: null,
-          inspectionServices: [
-            { key: 'software-phone-tablet-inspection', brand: 'Inspection Service', model: 'Phone / Tablet', issue: 'Software Inspection', price: '$39', time: 'N/A', deviceType: 'Phone' },
-            { key: 'hardware-phone-tablet-inspection', brand: 'Inspection Service', model: 'Phone / Tablet', issue: 'Hardware Inspection', price: '$59', time: 'N/A', deviceType: 'Phone' },
-            { key: 'software-laptop-pc-inspection', brand: 'Inspection Service', model: 'Laptop / PC', issue: 'Software Inspection', price: '$69', time: 'N/A', deviceType: 'Computer' },
-            { key: 'hardware-laptop-pc-inspection', brand: 'Inspection Service', model: 'Laptop / PC', issue: 'Hardware Inspection', price: '$99', time: 'N/A', deviceType: 'Computer' },
-            { key: 'windows-macos-install', brand: 'Onsite / Remote Assistance', model: 'Windows / macOS', issue: 'System Install', price: '$79', time: 'N/A', deviceType: 'Computer' },
-            { key: 'unlock-computer-password', brand: 'Onsite / Remote Assistance', model: 'Laptop / PC', issue: 'Unlock Computer Password', price: '$79', time: 'N/A', deviceType: 'Computer' },
-            { key: 'phone-tablet-data-transfer', brand: 'Onsite / Remote Assistance', model: 'Phone / Tablet', issue: 'Data Transfer (No Repair Required)', price: '$79', time: 'N/A', deviceType: 'Phone' },
-            { key: 'computer-data-backup', brand: 'Onsite / Remote Assistance', model: 'Laptop / PC', issue: 'Computer Data Backup', price: '$89', time: 'N/A', deviceType: 'Computer' },
-            { key: 'pc-laptop-cleaning', brand: 'Onsite / Remote Assistance', model: 'Laptop / PC', issue: 'PC / Laptop Cleaning', price: '$89', time: 'N/A', deviceType: 'Computer' },
-            { key: 'phone-tablet-reset', brand: 'Onsite / Remote Assistance', model: 'Phone / Tablet', issue: 'Factory Reset / Password Reset', price: '$69', time: 'N/A', deviceType: 'Phone' },
-            { key: 'build-custom-computer', brand: 'Onsite / Remote Assistance', model: 'Desktop', issue: 'Build Custom Computer', price: '$250', time: 'N/A', deviceType: 'Computer' },
-            { key: 'repair-required-data-transfer', brand: 'Onsite / Remote Assistance', model: 'Phone / Tablet', issue: 'Data Transfer (Repair Required)', price: '$159', time: 'N/A', deviceType: 'Phone' }
-          ],
           loading: true,
           silentRefreshing: false,
           errorMessage: '',
@@ -582,27 +508,7 @@
           return this.rawData.length
         },
         hasSelection() {
-          return this.selectedMode === 'inspection'
-            ? !!this.selectedInspectionKey
-            : !!(this.selectedBrand || this.selectedModel || this.selectedIssueKey)
-        },
-        activeQuote() {
-          if (this.selectedMode === 'inspection') {
-            return this.inspectionServices.find(item => item.key === this.selectedInspectionKey) || null
-          }
-          return this.currentIssue
-        },
-        heroBrandValue() {
-          if (this.selectedMode === 'inspection') {
-            return this.activeQuote ? this.activeQuote.brand : 'Inspection mode'
-          }
-          return this.selectedBrand || 'Not selected'
-        },
-        heroModelValue() {
-          if (this.selectedMode === 'inspection') {
-            return this.activeQuote ? this.activeQuote.model : 'Choose a service'
-          }
-          return this.selectedModel || this.manualModel || 'Not selected'
+          return !!(this.selectedBrand || this.selectedModel || this.selectedIssueKey)
         },
         modelOptions() {
           if (!this.selectedBrand) return []
@@ -629,21 +535,20 @@
             .sort((a, b) => this.naturalSort(a.issue, b.issue))
         },
         formattedPrice() {
-          if (!this.activeQuote) return '—'
-          const rawPrice = this.activeQuote.price
-          const value = this.parsePriceNumber(rawPrice)
+          if (!this.currentIssue) return '—'
+          const value = this.parsePriceNumber(this.currentIssue.price)
           if (value !== null) return '$' + value
-          return rawPrice || 'Contact us'
+          return this.currentIssue.price || 'Contact us'
         },
         workflowUrl() {
-          if (!this.activeQuote) return './repair_workflow.html'
+          if (!this.currentIssue) return './repair_workflow.html'
           const params = new URLSearchParams({
-            brand: this.activeQuote.brand || '',
-            model: this.activeQuote.model || '',
-            issue: this.activeQuote.issue || '',
+            brand: this.currentIssue.brand || '',
+            model: this.currentIssue.model || '',
+            issue: this.currentIssue.issue || '',
             price: this.formattedPrice || '',
-            time: this.selectedMode === 'inspection' ? 'N/A' : (this.activeQuote.time || ''),
-            deviceType: this.activeQuote.deviceType || this.guessDeviceType(this.activeQuote)
+            time: this.currentIssue.time || '',
+            deviceType: this.guessDeviceType(this.currentIssue)
           })
           return './repair_workflow.html?' + params.toString()
         },
@@ -757,9 +662,6 @@
           }
         },
         preserveSelectionsAfterRefresh(previous) {
-          if (this.selectedMode !== 'repair') {
-            return
-          }
           if (!previous) {
             this.refreshCurrentIssue()
             return
@@ -774,17 +676,6 @@
           const issueExists = this.selectedBrand && this.selectedModel && this.issueOptions.some(item => item.key === previous.issueKey)
           this.selectedIssueKey = issueExists ? previous.issueKey : ''
           this.refreshCurrentIssue()
-        },
-        setMode(mode) {
-          this.selectedMode = mode
-          if (mode === 'inspection') {
-            this.selectedBrand = ''
-            this.selectedModel = ''
-            this.selectedIssueKey = ''
-            this.currentIssue = null
-          } else {
-            this.selectedInspectionKey = ''
-          }
         },
         async fetchData(silent) {
           if (silent) {
@@ -854,19 +745,18 @@
         handleModelChange() {
           this.selectedIssueKey = ''
           this.currentIssue = null
+          if (this.issueOptions.length === 1) {
+            this.selectedIssueKey = this.issueOptions[0].key
+            this.refreshCurrentIssue()
+          }
         },
         handleIssueChange() {
           this.refreshCurrentIssue()
         },
-        handleInspectionChange() {
-          this.currentIssue = null
-        },
         resetSelection() {
-          this.selectedMode = 'repair'
           this.selectedBrand = ''
           this.selectedModel = ''
           this.selectedIssueKey = ''
-          this.selectedInspectionKey = ''
           this.manualModel = ''
           this.currentIssue = null
         }
