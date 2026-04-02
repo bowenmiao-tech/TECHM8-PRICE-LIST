@@ -780,6 +780,7 @@
         issue: params.get('issue') || defaultQuoteData.issue,
         time: params.get('time') || defaultQuoteData.time
       };
+      currentSourceType = params.get('manual') === '1' ? 'manual' : 'quote';
     }
 
     function updateQuoteFields() {
@@ -819,12 +820,11 @@
       if (quoteMode) {
         updateQuoteFields();
       } else {
-        document.getElementById('deviceModel').value = '';
-        document.getElementById('quotedPrice').value = '';
-        document.getElementById('quoteIssue').value = '';
-        document.getElementById('estimatedTime').value = '';
-        document.getElementById('heroDevice').textContent = 'Manual entry';
-        document.getElementById('heroIssue').textContent = 'Manual entry';
+        if (!document.getElementById('estimatedTime').value.trim()) {
+          document.getElementById('estimatedTime').value = 'N/A';
+        }
+        document.getElementById('heroDevice').textContent = document.getElementById('deviceModel').value.trim() || 'Manual entry';
+        document.getElementById('heroIssue').textContent = document.getElementById('quoteIssue').value.trim() || 'Manual entry';
       }
 
       updateLiveSummary();
@@ -1246,7 +1246,9 @@
         return;
       }
       console.log('Repair intake submitted', getFormData());
-      alert('Repair intake validated and ready to be saved to your backend.');
+      localStorage.removeItem(draftStorageKey);
+      alert('Repair intake completed.');
+      window.location.href = './index.html';
     });
 
     [
@@ -1274,6 +1276,7 @@
     buildChecklist();
     drawPatternBoard();
     updateQuoteFields();
+    setSourceType(currentSourceType, document.querySelectorAll('#sourceTypeOptions .chip')[currentSourceType === 'manual' ? 1 : 0]);
     updateLiveSummary();
   </script>
 </body>
