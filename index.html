@@ -238,6 +238,22 @@
       color: #22343b;
     }
 
+    .btn-workflow {
+      border-radius: 14px;
+      padding: 10px 18px;
+      font-weight: 700;
+      background: var(--tm-dark);
+      border: 1px solid var(--tm-dark);
+      color: #fff;
+    }
+
+    .btn-workflow:hover,
+    .btn-workflow:focus {
+      background: #21453a;
+      border-color: #21453a;
+      color: #fff;
+    }
+
     .sync-text {
       font-size: 12px;
       color: #728088;
@@ -402,6 +418,11 @@
                   <i class="bi bi-clock me-1"></i>
                   {{ currentIssue.time || 'Please confirm repair time in store.' }}
                 </div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <a class="btn btn-workflow" :href="workflowUrl">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> 进入 Workflow
+                  </a>
+                </div>
                 <div class="mini-note">
                   <div><strong>Brand:</strong> {{ currentIssue.brand }}</div>
                   <div><strong>Model:</strong> {{ currentIssue.model }}</div>
@@ -486,6 +507,18 @@
           if (value !== null) return '$' + value
           return this.currentIssue.price || 'Contact us'
         },
+        workflowUrl() {
+          if (!this.currentIssue) return './repair_workflow.html'
+          const params = new URLSearchParams({
+            brand: this.currentIssue.brand || '',
+            model: this.currentIssue.model || '',
+            issue: this.currentIssue.issue || '',
+            price: this.formattedPrice || '',
+            time: this.currentIssue.time || '',
+            deviceType: this.guessDeviceType(this.currentIssue)
+          })
+          return './repair_workflow.html?' + params.toString()
+        },
         lastSyncLabel() {
           if (!this.lastSyncAt) return 'Not synced yet'
           return this.formatDateTime(this.lastSyncAt)
@@ -538,6 +571,14 @@
           if (!text) return null
           const match = text.match(/\d+(\.\d+)?/)
           return match ? Number(match[0]) : null
+        },
+        guessDeviceType(item) {
+          const text = [item.brand, item.model, item.issue].join(' ').toLowerCase()
+          if (/ipad|tablet|tab/.test(text)) return 'Tablet'
+          if (/macbook|laptop|notebook|imac|mac mini|computer|pc/.test(text)) return 'Computer'
+          if (/watch/.test(text)) return 'Watch'
+          if (/playstation|ps4|ps5|xbox|switch|console/.test(text)) return 'Console'
+          return 'Phone'
         },
         normalizeRow(item) {
           return {

@@ -367,6 +367,55 @@
       if (type === 'none') document.getElementById('deviceIdNone').classList.remove('hidden');
     }
 
+    const defaultQuoteData = {
+      deviceType: 'Phone',
+      brand: 'Apple',
+      model: 'iPhone 14 Pro Max',
+      price: '$219',
+      issue: 'Screen Replacement',
+      time: 'Please confirm in store'
+    };
+
+    let quoteData = { ...defaultQuoteData };
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function updateQuoteFields() {
+      document.getElementById('deviceType').value = quoteData.deviceType || defaultQuoteData.deviceType;
+      document.getElementById('deviceModel').value = quoteData.model || '';
+      document.getElementById('quotedPrice').value = quoteData.price || '';
+      document.getElementById('quoteIssue').value = quoteData.issue || '';
+      document.getElementById('quoteSummary').innerHTML = `
+        <strong>Quote info loaded:</strong><br>
+        Device Type: ${escapeHtml(quoteData.deviceType || defaultQuoteData.deviceType)}<br>
+        Brand: ${escapeHtml(quoteData.brand || 'N/A')}<br>
+        Model: ${escapeHtml(quoteData.model || 'N/A')}<br>
+        Quoted Price: ${escapeHtml(quoteData.price || 'N/A')}<br>
+        Issue Type: ${escapeHtml(quoteData.issue || 'N/A')}<br>
+        Estimated Time: ${escapeHtml(quoteData.time || 'Please confirm in store')}
+      `;
+    }
+
+    function readQuoteDataFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      quoteData = {
+        deviceType: params.get('deviceType') || defaultQuoteData.deviceType,
+        brand: params.get('brand') || defaultQuoteData.brand,
+        model: params.get('model') || defaultQuoteData.model,
+        price: params.get('price') || defaultQuoteData.price,
+        issue: params.get('issue') || defaultQuoteData.issue,
+        time: params.get('time') || defaultQuoteData.time
+      };
+      updateQuoteFields();
+    }
+
     function setSourceType(type, el) {
       document.querySelectorAll('#sourceTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
       el.classList.add('active');
@@ -378,12 +427,11 @@
         document.getElementById('quotedPrice').value = '';
         document.getElementById('quoteIssue').value = '';
       } else {
-        document.getElementById('deviceType').value = 'Phone';
-        document.getElementById('deviceModel').value = 'iPhone 14 Pro Max';
-        document.getElementById('quotedPrice').value = '$219';
-        document.getElementById('quoteIssue').value = 'Screen Replacement';
+        updateQuoteFields();
       }
     }
+
+    readQuoteDataFromQuery();
 
     function setTestable(type, el) {
       document.querySelectorAll('#testableOptions .chip').forEach(chip => chip.classList.remove('active'));
