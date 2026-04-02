@@ -1,372 +1,690 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>维修接机登记</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECHM8 Repair Intake Workflow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
+    :root {
+      --tm-dark: #163129;
+      --tm-dark-2: #23453b;
+      --tm-accent: #ef7204;
+      --tm-bg: #f5f7f9;
+      --tm-border: #dde4e8;
+      --tm-muted: #6f7d86;
+      --tm-danger: #c63d2f;
+    }
+
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f3f6fb; color: #1f2937; }
-    .page { max-width: 1380px; margin: 0 auto; padding: 24px; }
-    .header, .panel { background: #fff; border-radius: 18px; box-shadow: 0 8px 24px rgba(15,23,42,.08); }
-    .header { padding: 24px; margin-bottom: 20px; }
-    .header h1 { margin: 0 0 10px; font-size: 30px; }
-    .header p { margin: 0; color: #6b7280; line-height: 1.6; }
-    .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-    .panel { padding: 20px; margin-bottom: 20px; }
-    .panel h2 { margin: 0 0 6px; font-size: 20px; }
-    .panel-subtitle { color: #6b7280; font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .form-group { margin-bottom: 14px; }
-    label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 700; }
-    input, select, textarea { width: 100%; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 14px; background: #fff; }
-    textarea { min-height: 100px; resize: vertical; }
-    .inline-options { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
-    .chip { border: 1px solid #d1d5db; background: #f8fafc; border-radius: 999px; padding: 10px 14px; font-size: 13px; cursor: pointer; user-select: none; }
-    .chip.active { background: #111827; color: #fff; border-color: #111827; }
-    .muted-box, .summary-box, .test-box { border: 1px solid #e5e7eb; background: #f9fafb; border-radius: 14px; padding: 14px; color: #4b5563; line-height: 1.6; font-size: 14px; }
-    .summary-box strong { color: #111827; }
-    .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .photo-slot { min-height: 150px; border: 2px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; color: #6b7280; font-size: 14px; }
-    .check-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .check-item { border: 1px solid #e5e7eb; border-radius: 14px; padding: 12px; background: #fff; }
-    .check-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-    .check-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .check-btn { border: 1px solid #d1d5db; background: #f9fafb; border-radius: 10px; padding: 9px 4px; font-size: 12px; cursor: pointer; }
-    .check-btn.active { background: #111827; color: white; border-color: #111827; }
-    .side-list { display: grid; gap: 12px; }
-    .side-card { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; background: #fff; }
-    .side-card strong { display: block; margin-bottom: 6px; }
-    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-    .btn { border: none; border-radius: 12px; padding: 12px 18px; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .btn-primary { background: #111827; color: #fff; }
-    .btn-outline { background: #fff; color: #111827; border: 1px solid #d1d5db; }
-    .btn-danger { background: #ef4444; color: #fff; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(239,114,4,0.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(22,49,41,0.16), transparent 28%),
+        var(--tm-bg);
+      color: #142026;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .page-wrap {
+      min-height: 100vh;
+      padding: 24px 12px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-card {
+      width: 100%;
+      max-width: 1320px;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(10, 20, 30, 0.14);
+      background: #fff;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
+      color: #fff;
+      padding: 28px 28px 20px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .hero-title {
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 18px 0 10px;
+    }
+
+    .hero-title .accent { color: #ff9c46; }
+
+    .hero-text {
+      max-width: 780px;
+      color: rgba(255,255,255,0.82);
+      font-size: 15px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .hero-meta-item {
+      min-width: 170px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-meta-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      opacity: .72;
+      margin-bottom: 6px;
+    }
+
+    .hero-meta-value {
+      font-size: 15px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .body-section { padding: 22px; }
+    .panel {
+      border: 1px solid var(--tm-border);
+      border-radius: 24px;
+      background: #fff;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .section-subtitle {
+      color: var(--tm-muted);
+      margin-bottom: 18px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2f3f47;
+      margin-bottom: 8px;
+    }
+
+    .form-control,
+    .form-select {
+      border-radius: 16px;
+      min-height: 54px;
+      border-color: var(--tm-border);
+      padding-left: 16px;
+      padding-right: 16px;
+      box-shadow: none !important;
+    }
+
+    textarea.form-control {
+      min-height: 120px;
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: rgba(239,114,4,0.55);
+    }
+
+    .input-readonly { background: #f8fafb; }
+    .toggle-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .chip {
+      border: 1px solid var(--tm-border);
+      background: #f8fafc;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chip.active {
+      background: var(--tm-dark);
+      color: #fff;
+      border-color: var(--tm-dark);
+    }
+
+    .quote-card {
+      border-radius: 24px;
+      background: linear-gradient(180deg, #fff8f1 0%, #ffffff 100%);
+      border: 1px solid #ffe1c7;
+      padding: 18px;
+    }
+
+    .quote-card-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .quote-summary {
+      display: grid;
+      gap: 8px;
+      color: #41535c;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .summary-card {
+      position: sticky;
+      top: 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, #f9fbfc 0%, #ffffff 100%);
+      border: 1px solid var(--tm-border);
+      padding: 22px;
+    }
+
+    .summary-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .summary-subtitle {
+      font-size: 13px;
+      color: var(--tm-muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .summary-grid { display: grid; gap: 10px; margin-bottom: 16px; }
+    .summary-item {
+      border-radius: 16px;
+      border: 1px solid var(--tm-border);
+      background: #fff;
+      padding: 12px 14px;
+    }
+
+    .summary-label {
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--tm-muted);
+      margin-bottom: 6px;
+    }
+
+    .summary-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: #22343b;
+      word-break: break-word;
+    }
+
+    .summary-note {
+      border-radius: 16px;
+      background: #f8fafb;
+      border: 1px solid var(--tm-border);
+      padding: 14px 16px;
+      color: #5f6d75;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .test-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .test-item {
+      border: 1px solid var(--tm-border);
+      border-radius: 16px;
+      background: #fff;
+      padding: 14px;
+    }
+
+    .test-item-title { font-size: 14px; font-weight: 800; margin-bottom: 10px; }
+    .test-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .test-btn {
+      border: 1px solid var(--tm-border);
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 10px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .test-btn.active.pass { background: #e9f8ef; border-color: #bfe8cb; color: #166534; }
+    .test-btn.active.fail { background: #fff1f0; border-color: #f2c3be; color: #9f2f22; }
+    .test-btn.active.na { background: #f2f5f7; border-color: #d7e0e5; color: #40515a; }
+
+    .media-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .preview-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .preview-item { border: 1px solid var(--tm-border); border-radius: 16px; overflow: hidden; background: #fff; }
+    .preview-item img,
+    .preview-item video,
+    .preview-placeholder {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .preview-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #163129;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .preview-meta { padding: 10px 12px; font-size: 12px; color: #4b5563; }
+    .btn-accent,
+    .btn-dark,
+    .btn-soft {
+      border-radius: 14px;
+      padding: 10px 18px;
+      font-weight: 700;
+    }
+
+    .btn-accent { background: var(--tm-accent); border-color: var(--tm-accent); color: #fff; }
+    .btn-dark { background: var(--tm-dark); border-color: var(--tm-dark); color: #fff; }
+    .btn-soft { border: 1px solid var(--tm-border); background: #fff; color: #22343b; }
+
+    .helper { font-size: 12px; color: var(--tm-muted); line-height: 1.6; margin-top: 8px; }
+    .error-text { color: var(--tm-danger); font-size: 12px; margin-top: 6px; display: none; }
+    .error-field { border-color: var(--tm-danger) !important; background: #fef2f2; }
     .hidden { display: none !important; }
-    .small-note { font-size: 12px; color: #6b7280; margin-top: 6px; }
-    .error-text { color: #dc2626; font-size: 12px; margin-top: 6px; display: none; }
-    .error-field { border-color: #dc2626 !important; background: #fef2f2; }
-    .preview-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
-    .preview-item { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #fff; }
-    .preview-item img, .preview-item video { width: 100%; height: 160px; object-fit: cover; display: block; }
-    .preview-item div { padding: 8px 10px; font-size: 12px; color: #4b5563; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 999; }
-    .modal { width: min(760px, 100%); background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
-    .modal-header { background: #22d3ee; color: #fff; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; }
-    .modal-header h3 { margin: 0; font-size: 18px; }
-    .modal-body { padding: 18px; }
-    .modal-close { background: transparent; border: none; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
-    #patternCanvas { width: 100%; max-width: 360px; display: block; margin: 0 auto 14px; background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; touch-action: none; }
-    .pattern-result { text-align: center; font-size: 14px; color: #4b5563; margin-bottom: 12px; }
-    .camera-box { border: 1px solid #e5e7eb; border-radius: 16px; padding: 14px; background: #f9fafb; }
-    #cameraPreview { width: 100%; border-radius: 12px; background: #111827; max-height: 360px; }
-    @media (max-width: 1024px) { .layout, .grid-2, .grid-3, .check-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) {
-      .page { padding: 14px; }
-      .header h1 { font-size: 24px; }
-      .photo-grid, .preview-list { grid-template-columns: 1fr; }
-      .check-grid { grid-template-columns: 1fr; gap: 10px; }
-      .check-item { padding: 14px; }
-      .check-title { font-size: 15px; margin-bottom: 10px; }
-      .check-actions { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-      .check-btn { padding: 12px 6px; font-size: 14px; }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,.45);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 999;
+    }
+
+    @media (max-width: 991.98px) {
+      .summary-card { position: static; }
+    }
+
+    @media (max-width: 767.98px) {
+      .hero,
+      .body-section {
+        padding: 18px;
+      }
+
+      .panel,
+      .summary-card {
+        padding: 18px;
+      }
+
+      .hero-meta-item {
+        min-width: calc(50% - 6px);
+      }
+
+      .test-grid,
+      .preview-list {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="header">
-      <h1>维修接机登记</h1>
-      <p>这是正式接机第一页。前提是客户已经同意维修。这里专门负责：客户信息、密码、报价页带入的机器信息、拍照/录像、以及基础功能检测。</p>
-    </div>
+  <div class="page-wrap">
+    <div class="main-card">
+      <div class="hero">
+        <div class="hero-badge">
+          <i class="bi bi-clipboard-check"></i>
+          TECHM8 Intake Workflow
+        </div>
+        <div class="hero-title"><span class="accent">Repair</span> Intake Registration</div>
+        <p class="hero-text">
+          Use this page to register incoming repairs, confirm customer details, document device condition,
+          capture photos, and complete the initial functionality check before the job moves to the bench.
+        </p>
 
-    <div class="layout">
-      <div>
-        <div class="panel">
-          <h2>1. 报价页信息带入</h2>
-          <div class="panel-subtitle">默认从前面的报价页面带入。特殊订单才手动输入。</div>
-          <div class="form-group">
-            <label>信息来源</label>
-            <div class="inline-options" id="sourceTypeOptions">
-              <div class="chip active" onclick="setSourceType('quote', this)">使用报价页信息</div>
-              <div class="chip" onclick="setSourceType('manual', this)">特殊订单手动输入</div>
-            </div>
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Quote Source</div>
+            <div class="hero-meta-value" id="heroSource">Price page import</div>
           </div>
-          <div id="quoteSummary" class="summary-box">
-            <strong>报价页已带入：</strong><br>
-            设备类型：Phone<br>
-            型号：iPhone 14 Pro Max<br>
-            报价：$219<br>
-            问题类型：Screen Replacement
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Device</div>
+            <div class="hero-meta-value" id="heroDevice">Not loaded yet</div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Issue</div>
+            <div class="hero-meta-value" id="heroIssue">Not loaded yet</div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="hero-meta-label">Quoted Price</div>
+            <div class="hero-meta-value" id="heroPrice">Not loaded yet</div>
           </div>
         </div>
-
-        <form id="repairForm">
-          <div class="panel">
-            <h2>2. 客户信息</h2>
-            <div class="panel-subtitle">姓名必填。手机号和邮箱至少填一个，提交时会报错提醒。</div>
-            <div class="grid-2">
-              <div class="form-group">
-                <label>客户姓名</label>
-                <input id="customerName" type="text" placeholder="例如：Jason Chen" />
-                <div id="nameError" class="error-text">请输入客户姓名。</div>
-              </div>
-              <div class="form-group">
-                <label>客户手机号码</label>
-                <input id="customerPhone" type="text" placeholder="0400 000 000" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>客户邮箱</label>
-              <input id="customerEmail" type="email" placeholder="example@email.com" />
-              <div id="contactError" class="error-text">手机号和邮箱至少填写一个。</div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h2>3. 解锁信息</h2>
-            <div class="panel-subtitle">文字密码和数字密码合并为一个。图案密码单独打开图案锁面板录入。</div>
-            <div class="form-group">
-              <label>密码类型</label>
-              <div class="inline-options" id="passwordTypeOptions">
-                <div class="chip active" data-type="text" onclick="setPasswordType('text', this)">数字 / 文字密码</div>
-                <div class="chip" data-type="pattern" onclick="setPasswordType('pattern', this)">图案密码</div>
-                <div class="chip" data-type="none" onclick="setPasswordType('none', this)">无密码 / 无法提供</div>
-              </div>
-            </div>
-
-            <div id="passwordText" class="form-group">
-              <label>密码</label>
-              <input type="text" placeholder="例如：123456 或 Techm8@123" />
-            </div>
-
-            <div id="passwordPattern" class="form-group hidden">
-              <label>图案密码</label>
-              <div class="btn-row" style="margin-top:0;">
-                <button type="button" class="btn btn-outline" onclick="openPatternModal()">打开图案密码面板</button>
-              </div>
-              <input id="patternValue" type="text" readonly placeholder="图案密码会记录在这里" style="margin-top:12px;" />
-            </div>
-
-            <div id="passwordNone" class="form-group hidden">
-              <label>备注</label>
-              <textarea placeholder="例如：客户不记得密码 / 机器无法开机 / 无需解锁"></textarea>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h2>4. 机器信息</h2>
-            <div class="panel-subtitle">机器信息默认来自报价页。特殊订单才允许手动输入覆盖。</div>
-            <div class="grid-2">
-              <div class="form-group">
-                <label>设备类型</label>
-                <select id="deviceType" disabled>
-                  <option>Phone</option>
-                  <option>Tablet</option>
-                  <option>Computer</option>
-                  <option>Watch</option>
-                  <option>Console</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>设备型号</label>
-                <input id="deviceModel" type="text" value="iPhone 14 Pro Max" disabled />
-              </div>
-            </div>
-
-            <div class="grid-2">
-              <div class="form-group">
-                <label>报价金额</label>
-                <input id="quotedPrice" type="text" value="$219" />
-              </div>
-              <div class="form-group">
-                <label>问题类型</label>
-                <input id="quoteIssue" type="text" value="Screen Replacement" disabled />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>机器号码类型</label>
-              <div class="inline-options" id="deviceIdTypeOptions">
-                <div class="chip active" onclick="setDeviceIdType('imei', this)">IMEI</div>
-                <div class="chip" onclick="setDeviceIdType('sn', this)">S/N</div>
-                <div class="chip" onclick="setDeviceIdType('none', this)">无法记录</div>
-              </div>
-            </div>
-
-            <div id="deviceIdImei" class="form-group">
-              <label>IMEI 号码</label>
-              <input type="text" placeholder="扫描或手动输入 IMEI" />
-            </div>
-            <div id="deviceIdSn" class="form-group hidden">
-              <label>S/N 号码</label>
-              <input type="text" placeholder="输入 Serial Number" />
-            </div>
-            <div id="deviceIdNone" class="form-group hidden">
-              <label>无法记录原因</label>
-              <textarea placeholder="例如：不开机、标签缺失、机身严重损坏"></textarea>
-            </div>
-
-            <div class="form-group">
-              <label>客户描述的问题</label>
-              <textarea placeholder="例如：屏幕碎裂，触摸偶尔失灵"></textarea>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h2>5. 拍照 / 录像</h2>
-            <div class="panel-subtitle">不限制拍几张。能拍照也能录像。这里先给一个打开摄像头按钮。</div>
-            <div class="camera-box">
-              <div class="btn-row" style="margin-top:0;">
-                <button type="button" class="btn btn-primary" onclick="openCameraModal()">打开摄像头</button>
-                <button type="button" class="btn btn-outline" onclick="addMockVideo()">模拟添加录像</button>
-              </div>
-              <div class="small-note">浏览器允许摄像头权限后，就可以直接预览并拍照。录像这里先做结构占位，后面可继续接真实录制。</div>
-              <div id="mediaPreviewList" class="preview-list"></div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h2>6. 功能检测</h2>
-            <div class="panel-subtitle">先判断是否可以测试。如果不能测试，就直接写原因；如果可以测试，再显示完整检测项目。</div>
-            <div class="form-group">
-              <label>是否可以测试</label>
-              <div class="inline-options" id="testableOptions">
-                <div class="chip active" onclick="setTestable('yes', this)">可以测试</div>
-                <div class="chip" onclick="setTestable('no', this)">不能测试</div>
-              </div>
-            </div>
-
-            <div id="cannotTestReasonBox" class="form-group hidden">
-              <label>不能测试原因</label>
-              <textarea id="cannotTestReason" placeholder="例如：机器不开机、屏幕全黑、客户不提供密码"></textarea>
-              <div id="cannotTestReasonError" class="error-text">选择不能测试时，必须填写原因。</div>
-            </div>
-
-            <div id="testItemsBox">
-              <div class="test-box" style="margin-bottom:14px;">
-                参考你的维修单，检测项如下：Touch Glass、Touch Function、LCD、Power Button、Volume Buttons、Fingerprint Scanner、Face ID、Charging Port、Ear Speaker、Vibrate Switch、Loudspeaker、Mic、Rear Camera、Front Camera、Flash、SIM Card Reader、Bluetooth、Wi‑Fi、Proximity Sensor、Back Glass、Keyboard、Touch Pad、Charging Cable & Adapter、Battery、Water Damage。
-              </div>
-              <div class="check-grid" id="checkGrid"></div>
-              <div class="form-group" style="margin-top:14px;">
-                <label>检测备注</label>
-                <textarea placeholder="例如：屏幕不亮，所以触摸和 Face ID 无法测试"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <h2>7. 保存</h2>
-            <div class="panel-subtitle">点击提交时，会先检查必填项。</div>
-            <div class="btn-row">
-              <button type="submit" class="btn btn-primary">保存并创建维修单</button>
-              <button type="button" class="btn btn-outline">保存草稿</button>
-            </div>
-          </div>
-        </form>
       </div>
 
-      <div>
-        <div class="panel">
-          <h2>这页现在实现的点</h2>
-          <div class="side-list">
-            <div class="side-card"><strong>提交报错</strong> 手机号和邮箱至少填一个，姓名必填。</div>
-            <div class="side-card"><strong>图案密码</strong> 不是文字备注，而是单独打开 3x3 图案面板。</div>
-            <div class="side-card"><strong>报价页带入</strong> 机器信息和价格默认使用报价页数据，特殊单可切手动输入。</div>
-            <div class="side-card"><strong>拍照按钮</strong> 先做打开摄像头入口，支持截图保存预览。</div>
-            <div class="side-card"><strong>检测逻辑</strong> 先选能否测试，不能测试就只填原因。</div>
+      <div class="body-section">
+        <div class="row g-4 align-items-start">
+          <div class="col-lg-8">
+            <form id="repairForm">
+              <div class="panel">
+                <div class="section-title">Quote Import</div>
+                <div class="section-subtitle">
+                  Start from the quote page by default. For walk-in exceptions or manual intake, switch to manual entry.
+                </div>
+
+                <div class="mb-3">
+                  <div class="field-label">Source</div>
+                  <div class="toggle-row" id="sourceTypeOptions">
+                    <div class="chip active" onclick="setSourceType('quote', this)">Use imported quote</div>
+                    <div class="chip" onclick="setSourceType('manual', this)">Manual entry</div>
+                  </div>
+                </div>
+
+                <div id="quoteSummary" class="quote-card">
+                  <div class="quote-card-title">Imported quote details</div>
+                  <div class="quote-summary"></div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="section-title">Customer Details</div>
+                <div class="section-subtitle">
+                  Customer name is required. Enter at least one contact method so the store can approve updates and notify collection.
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="field-label">Customer Name</div>
+                    <input id="customerName" type="text" class="form-control" placeholder="Example: Jason Chen">
+                    <div id="nameError" class="error-text">Customer name is required.</div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="field-label">Phone Number</div>
+                    <input id="customerPhone" type="text" class="form-control" placeholder="0400 000 000">
+                  </div>
+                  <div class="col-md-6">
+                    <div class="field-label">Email</div>
+                    <input id="customerEmail" type="email" class="form-control" placeholder="example@email.com">
+                  </div>
+                  <div class="col-md-6">
+                    <div class="field-label">Preferred Contact Method</div>
+                    <select id="contactMethod" class="form-select">
+                      <option value="Phone">Phone</option>
+                      <option value="SMS">SMS</option>
+                      <option value="Email">Email</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <div id="contactError" class="error-text">Enter at least a phone number or an email address.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="section-title">Security And Unlock Details</div>
+                <div class="section-subtitle">
+                  Record how the device can be unlocked so technicians can test the unit safely and efficiently.
+                </div>
+
+                <div class="mb-3">
+                  <div class="field-label">Password Type</div>
+                  <div class="toggle-row" id="passwordTypeOptions">
+                    <div class="chip active" data-type="text" onclick="setPasswordType('text', this)">Text or numeric password</div>
+                    <div class="chip" data-type="pattern" onclick="setPasswordType('pattern', this)">Pattern lock</div>
+                    <div class="chip" data-type="none" onclick="setPasswordType('none', this)">Not provided</div>
+                  </div>
+                </div>
+
+                <div id="passwordText" class="mb-3">
+                  <div class="field-label">Password</div>
+                  <input id="passwordTextInput" type="text" class="form-control" placeholder="Example: 123456 or Techm8@123">
+                </div>
+
+                <div id="passwordPattern" class="mb-3 hidden">
+                  <div class="field-label">Pattern Lock</div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-soft" onclick="openPatternModal()">Open pattern pad</button>
+                  </div>
+                  <input id="patternValue" type="text" class="form-control mt-3 input-readonly" readonly placeholder="Saved pattern will appear here">
+                </div>
+
+                <div id="passwordNone" class="mb-3 hidden">
+                  <div class="field-label">Reason</div>
+                  <textarea id="passwordNoneReason" class="form-control" placeholder="Example: customer does not know the passcode, device cannot power on, or no unlock required"></textarea>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="section-title">Device And Job Details</div>
+                <div class="section-subtitle">
+                  Imported quote values are prefilled. Price remains editable so staff can adjust for approved deals or negotiated service totals.
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="field-label">Device Type</div>
+                    <select id="deviceType" class="form-select input-readonly" disabled>
+                      <option>Phone</option>
+                      <option>Tablet</option>
+                      <option>Computer</option>
+                      <option>Watch</option>
+                      <option>Console</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="field-label">Device Model</div>
+                    <input id="deviceModel" type="text" class="form-control input-readonly" disabled>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="field-label">Quoted Price</div>
+                    <input id="quotedPrice" type="text" class="form-control" placeholder="$219">
+                  </div>
+                  <div class="col-md-6">
+                    <div class="field-label">Repair Issue</div>
+                    <input id="quoteIssue" type="text" class="form-control input-readonly" disabled>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="field-label">Estimated Turnaround</div>
+                    <input id="estimatedTime" type="text" class="form-control input-readonly" disabled>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="field-label">Device ID Type</div>
+                    <div class="toggle-row" id="deviceIdTypeOptions">
+                      <div class="chip active" onclick="setDeviceIdType('imei', this)">IMEI</div>
+                      <div class="chip" onclick="setDeviceIdType('sn', this)">Serial Number</div>
+                      <div class="chip" onclick="setDeviceIdType('none', this)">Unavailable</div>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div id="deviceIdImei">
+                      <div class="field-label">IMEI</div>
+                      <input id="deviceIdImeiInput" type="text" class="form-control" placeholder="Scan or type the IMEI">
+                    </div>
+                    <div id="deviceIdSn" class="hidden">
+                      <div class="field-label">Serial Number</div>
+                      <input id="deviceIdSnInput" type="text" class="form-control" placeholder="Type the serial number">
+                    </div>
+                    <div id="deviceIdNone" class="hidden">
+                      <div class="field-label">Why it is unavailable</div>
+                      <textarea id="deviceIdNoneReason" class="form-control" placeholder="Example: unit cannot boot, label missing, or housing too damaged to read"></textarea>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="field-label">Customer Reported Fault</div>
+                    <textarea id="customerIssue" class="form-control" placeholder="Example: screen cracked, touch is intermittent, battery drains quickly"></textarea>
+                  </div>
+                  <div class="col-12">
+                    <div class="field-label">Staff Notes</div>
+                    <textarea id="staffNotes" class="form-control" placeholder="Add intake notes, approved pricing changes, part colour, or anything the technician should know"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="section-title">Photos And Evidence</div>
+                <div class="section-subtitle">
+                  Capture photos of the device condition at drop-off. You can also add a video placeholder if media was recorded separately.
+                </div>
+
+                <div class="media-actions">
+                  <button type="button" class="btn btn-dark" onclick="openCameraModal()">Open camera</button>
+                  <button type="button" class="btn btn-soft" onclick="addMockVideo()">Add video placeholder</button>
+                </div>
+                <div class="helper">Photo previews stay in this browser session until a backend upload flow is connected.</div>
+                <div id="mediaPreviewList" class="preview-list mt-3"></div>
+              </div>
+
+              <div class="panel">
+                <div class="section-title">Function Test</div>
+                <div class="section-subtitle">
+                  Choose whether the unit can be tested right now. If testing is not possible, record the reason and skip the checklist.
+                </div>
+
+                <div class="mb-3">
+                  <div class="field-label">Can this device be tested?</div>
+                  <div class="toggle-row" id="testableOptions">
+                    <div class="chip active" onclick="setTestable('yes', this)">Yes, test now</div>
+                    <div class="chip" onclick="setTestable('no', this)">No, cannot test</div>
+                  </div>
+                </div>
+
+                <div id="cannotTestReasonBox" class="mb-3 hidden">
+                  <div class="field-label">Why testing is not possible</div>
+                  <textarea id="cannotTestReason" class="form-control" placeholder="Example: no display, device will not power on, or customer did not provide the passcode"></textarea>
+                  <div id="cannotTestReasonError" class="error-text">Please enter a reason when testing cannot be completed.</div>
+                </div>
+
+                <div id="testItemsBox">
+                  <div class="helper mb-3">
+                    Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.
+                  </div>
+                  <div id="checkGrid" class="test-grid"></div>
+                  <div class="mt-3">
+                    <div class="field-label">Function Test Notes</div>
+                    <textarea id="testNotes" class="form-control" placeholder="Example: display does not light up, so touch and Face ID could not be confirmed"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="section-title">Save Intake</div>
+                <div class="section-subtitle">
+                  Save a draft locally while the customer is still in store, or submit once required intake details are complete.
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                  <button type="submit" class="btn btn-accent">Submit Intake</button>
+                  <button type="button" class="btn btn-soft" onclick="saveDraft()">Save Draft</button>
+                  <button type="button" class="btn btn-soft" onclick="loadDraft()">Load Draft</button>
+                  <button type="button" class="btn btn-soft" onclick="clearDraft()">Clear Draft</button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="summary-card">
+              <div class="summary-title">Live Intake Summary</div>
+              <div class="summary-subtitle">
+                This summary updates as staff complete the form, making it easier to confirm the final intake details with the customer before saving.
+              </div>
+
+              <div class="summary-grid">
+                <div class="summary-item">
+                  <div class="summary-label">Customer</div>
+                  <div class="summary-value" id="summaryCustomer">Not entered</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Contact</div>
+                  <div class="summary-value" id="summaryContact">Not entered</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Device</div>
+                  <div class="summary-value" id="summaryDevice">Not entered</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Issue</div>
+                  <div class="summary-value" id="summaryIssue">Not entered</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Quoted Price</div>
+                  <div class="summary-value" id="summaryPrice">Not entered</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-label">Testing Status</div>
+                  <div class="summary-value" id="summaryTesting">Ready for functional test</div>
+                </div>
+              </div>
+
+              <div class="summary-note">
+                If a special price is approved in store, update the quoted price field before submission so the intake record reflects the actual agreed amount.
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="patternModal" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Draw Pattern Lock</h3>
-        <button class="modal-close" onclick="closePatternModal()">Close</button>
+  <div id="patternModal" class="modal-backdrop hidden">
+    <div class="summary-card" style="width:min(760px,100%);position:static;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="summary-title mb-0" style="font-size:18px;">Draw Pattern Lock</div>
+        <button class="btn btn-soft" type="button" onclick="closePatternModal()">Close</button>
       </div>
-      <div class="modal-body">
-        <canvas id="patternCanvas" width="360" height="360"></canvas>
-        <div class="pattern-result">当前图案：<span id="patternPreview">未记录</span></div>
-        <div class="btn-row" style="justify-content:center;">
-          <button type="button" class="btn btn-outline" onclick="clearPattern()">清空</button>
-          <button type="button" class="btn btn-primary" onclick="savePattern()">保存图案</button>
-        </div>
+      <canvas id="patternCanvas" width="360" height="360" style="width:100%;max-width:360px;display:block;margin:0 auto 14px;background:#fff;border:1px solid var(--tm-border);border-radius:16px;touch-action:none;"></canvas>
+      <div class="text-center small text-muted mb-3">Current pattern: <span id="patternPreview">Not recorded</span></div>
+      <div class="d-flex flex-wrap justify-content-center gap-2">
+        <button type="button" class="btn btn-soft" onclick="clearPattern()">Clear</button>
+        <button type="button" class="btn btn-dark" onclick="savePattern()">Save Pattern</button>
       </div>
     </div>
   </div>
 
-  <div id="cameraModal" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>打开摄像头</h3>
-        <button class="modal-close" onclick="closeCameraModal()">Close</button>
+  <div id="cameraModal" class="modal-backdrop hidden">
+    <div class="summary-card" style="width:min(760px,100%);position:static;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="summary-title mb-0" style="font-size:18px;">Camera Capture</div>
+        <button class="btn btn-soft" type="button" onclick="closeCameraModal()">Close</button>
       </div>
-      <div class="modal-body">
-        <video id="cameraPreview" autoplay playsinline muted></video>
-        <div class="btn-row">
-          <button type="button" class="btn btn-primary" onclick="capturePhoto()">拍照</button>
-          <button type="button" class="btn btn-danger" onclick="stopCamera()">停止摄像头</button>
-        </div>
-        <div class="small-note">这版先实现拍照。录像按钮目前先保留结构，你确认后我再接真实录制。</div>
+      <video id="cameraPreview" autoplay playsinline muted style="width:100%;border-radius:12px;background:#111827;max-height:360px;"></video>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button type="button" class="btn btn-accent" onclick="capturePhoto()">Capture Photo</button>
+        <button type="button" class="btn btn-soft" onclick="stopCamera()">Stop Camera</button>
       </div>
+      <div class="helper">Allow camera permission in the browser to capture intake photos directly from this page.</div>
     </div>
   </div>
 
   <script>
-    const checkItems = [
-      'Touch Glass Intact', 'Touch Function Working', 'LCD Working', 'Power Button Working', 'Volume Buttons Working',
-      'Fingerprint Scanner Working', 'Face ID Working', 'Charging Port Working', 'Ear Speaker Working', 'Vibrate Switch Working',
-      'Loudspeaker Working', 'Mic Working', 'Rear Camera Working', 'Front Camera Working', 'Flash Working',
-      'SIM Card Reader Working', 'Bluetooth Working', 'Wi‑Fi Working', 'Proximity Sensor Working', 'Back Glass Intact',
-      'Keyboard Working', 'Touch Pad Working', 'Charging Cable & Adapter Working', 'Battery Working', 'Water Damage'
-    ];
-
-    const checkGrid = document.getElementById('checkGrid');
-    checkItems.forEach((item) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'check-item';
-      wrap.innerHTML = `
-        <div class="check-title">${item}</div>
-        <div class="check-actions">
-          <button type="button" class="check-btn" onclick="activateCheck(this)">好</button>
-          <button type="button" class="check-btn" onclick="activateCheck(this)">坏</button>
-          <button type="button" class="check-btn" onclick="activateCheck(this)">无</button>
-        </div>
-      `;
-      checkGrid.appendChild(wrap);
-    });
-
-    function activateCheck(btn) {
-      btn.parentElement.querySelectorAll('.check-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-
-    function setPasswordType(type, el) {
-      document.querySelectorAll('#passwordTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
-      el.classList.add('active');
-      document.getElementById('passwordText').classList.add('hidden');
-      document.getElementById('passwordPattern').classList.add('hidden');
-      document.getElementById('passwordNone').classList.add('hidden');
-      if (type === 'text') document.getElementById('passwordText').classList.remove('hidden');
-      if (type === 'pattern') document.getElementById('passwordPattern').classList.remove('hidden');
-      if (type === 'none') document.getElementById('passwordNone').classList.remove('hidden');
-    }
-
-    function setDeviceIdType(type, el) {
-      document.querySelectorAll('#deviceIdTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
-      el.classList.add('active');
-      document.getElementById('deviceIdImei').classList.add('hidden');
-      document.getElementById('deviceIdSn').classList.add('hidden');
-      document.getElementById('deviceIdNone').classList.add('hidden');
-      if (type === 'imei') document.getElementById('deviceIdImei').classList.remove('hidden');
-      if (type === 'sn') document.getElementById('deviceIdSn').classList.remove('hidden');
-      if (type === 'none') document.getElementById('deviceIdNone').classList.remove('hidden');
-    }
-
+    const draftStorageKey = 'techm8_repair_intake_draft';
     const defaultQuoteData = {
       deviceType: 'Phone',
       brand: 'Apple',
@@ -376,7 +694,30 @@
       time: 'Please confirm in store'
     };
 
+    const checkItems = [
+      'Touch Glass', 'Touch Function', 'Display / LCD', 'Power Button', 'Volume Buttons',
+      'Fingerprint Scanner', 'Face ID', 'Charging Port', 'Ear Speaker', 'Vibrate Switch',
+      'Loudspeaker', 'Microphone', 'Rear Camera', 'Front Camera', 'Flash',
+      'SIM Reader', 'Bluetooth', 'Wi-Fi', 'Proximity Sensor', 'Back Glass',
+      'Keyboard', 'Trackpad', 'Charging Cable / Adapter', 'Battery', 'Water Damage'
+    ];
+
     let quoteData = { ...defaultQuoteData };
+    let mediaStream = null;
+    let currentSourceType = 'quote';
+    let currentTestable = 'yes';
+    let currentPasswordType = 'text';
+    let currentDeviceIdType = 'imei';
+    let patternPath = [];
+    let drawing = false;
+
+    const canvas = document.getElementById('patternCanvas');
+    const ctx = canvas.getContext('2d');
+    const points = [
+      { x: 80, y: 80 }, { x: 180, y: 80 }, { x: 280, y: 80 },
+      { x: 80, y: 180 }, { x: 180, y: 180 }, { x: 280, y: 180 },
+      { x: 80, y: 280 }, { x: 180, y: 280 }, { x: 280, y: 280 }
+    ];
 
     function escapeHtml(value) {
       return String(value)
@@ -385,22 +726,6 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
-    }
-
-    function updateQuoteFields() {
-      document.getElementById('deviceType').value = quoteData.deviceType || defaultQuoteData.deviceType;
-      document.getElementById('deviceModel').value = quoteData.model || '';
-      document.getElementById('quotedPrice').value = quoteData.price || '';
-      document.getElementById('quoteIssue').value = quoteData.issue || '';
-      document.getElementById('quoteSummary').innerHTML = `
-        <strong>Quote info loaded:</strong><br>
-        Device Type: ${escapeHtml(quoteData.deviceType || defaultQuoteData.deviceType)}<br>
-        Brand: ${escapeHtml(quoteData.brand || 'N/A')}<br>
-        Model: ${escapeHtml(quoteData.model || 'N/A')}<br>
-        Quoted Price: ${escapeHtml(quoteData.price || 'N/A')}<br>
-        Issue Type: ${escapeHtml(quoteData.issue || 'N/A')}<br>
-        Estimated Time: ${escapeHtml(quoteData.time || 'Please confirm in store')}
-      `;
     }
 
     function readQuoteDataFromQuery() {
@@ -413,118 +738,336 @@
         issue: params.get('issue') || defaultQuoteData.issue,
         time: params.get('time') || defaultQuoteData.time
       };
-      updateQuoteFields();
+    }
+
+    function updateQuoteFields() {
+      document.getElementById('deviceType').value = quoteData.deviceType || defaultQuoteData.deviceType;
+      document.getElementById('deviceModel').value = quoteData.model || '';
+      document.getElementById('quotedPrice').value = quoteData.price || '';
+      document.getElementById('quoteIssue').value = quoteData.issue || '';
+      document.getElementById('estimatedTime').value = quoteData.time || '';
+
+      document.querySelector('#quoteSummary .quote-summary').innerHTML = `
+        <div><strong>Device Type:</strong> ${escapeHtml(quoteData.deviceType || defaultQuoteData.deviceType)}</div>
+        <div><strong>Brand:</strong> ${escapeHtml(quoteData.brand || 'N/A')}</div>
+        <div><strong>Model:</strong> ${escapeHtml(quoteData.model || 'N/A')}</div>
+        <div><strong>Quoted Price:</strong> ${escapeHtml(quoteData.price || 'N/A')}</div>
+        <div><strong>Issue:</strong> ${escapeHtml(quoteData.issue || 'N/A')}</div>
+        <div><strong>Estimated Time:</strong> ${escapeHtml(quoteData.time || 'Please confirm in store')}</div>
+      `;
+
+      document.getElementById('heroDevice').textContent = [quoteData.brand, quoteData.model].filter(Boolean).join(' ') || 'Not loaded yet';
+      document.getElementById('heroIssue').textContent = quoteData.issue || 'Not loaded yet';
+      document.getElementById('heroPrice').textContent = quoteData.price || 'Not loaded yet';
     }
 
     function setSourceType(type, el) {
+      currentSourceType = type;
       document.querySelectorAll('#sourceTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
       el.classList.add('active');
-      const disabled = type === 'quote';
-      document.getElementById('quoteSummary').classList.toggle('hidden', type !== 'quote');
-      ['deviceType','deviceModel','quoteIssue'].forEach(id => document.getElementById(id).disabled = disabled);
-      document.getElementById('quotedPrice').disabled = false;
-      if (type === 'manual') {
+
+      const quoteMode = type === 'quote';
+      document.getElementById('quoteSummary').classList.toggle('hidden', !quoteMode);
+      document.getElementById('heroSource').textContent = quoteMode ? 'Price page import' : 'Manual entry';
+      ['deviceType', 'deviceModel', 'quoteIssue', 'estimatedTime'].forEach(id => {
+        document.getElementById(id).disabled = quoteMode;
+        document.getElementById(id).classList.toggle('input-readonly', quoteMode);
+      });
+
+      if (quoteMode) {
+        updateQuoteFields();
+      } else {
         document.getElementById('deviceModel').value = '';
         document.getElementById('quotedPrice').value = '';
         document.getElementById('quoteIssue').value = '';
-      } else {
-        updateQuoteFields();
+        document.getElementById('estimatedTime').value = '';
+        document.getElementById('heroDevice').textContent = 'Manual entry';
+        document.getElementById('heroIssue').textContent = 'Manual entry';
       }
+
+      updateLiveSummary();
     }
 
-    readQuoteDataFromQuery();
-    document.getElementById('quotedPrice').addEventListener('input', function(e) {
-      quoteData.price = e.target.value.trim();
-      if (!document.getElementById('quoteSummary').classList.contains('hidden')) {
-        updateQuoteFields();
-        document.getElementById('quotedPrice').value = quoteData.price;
-      }
-    });
+    function setPasswordType(type, el) {
+      currentPasswordType = type;
+      document.querySelectorAll('#passwordTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('passwordText').classList.toggle('hidden', type !== 'text');
+      document.getElementById('passwordPattern').classList.toggle('hidden', type !== 'pattern');
+      document.getElementById('passwordNone').classList.toggle('hidden', type !== 'none');
+      updateLiveSummary();
+    }
+
+    function setDeviceIdType(type, el) {
+      currentDeviceIdType = type;
+      document.querySelectorAll('#deviceIdTypeOptions .chip').forEach(chip => chip.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('deviceIdImei').classList.toggle('hidden', type !== 'imei');
+      document.getElementById('deviceIdSn').classList.toggle('hidden', type !== 'sn');
+      document.getElementById('deviceIdNone').classList.toggle('hidden', type !== 'none');
+      updateLiveSummary();
+    }
 
     function setTestable(type, el) {
+      currentTestable = type;
       document.querySelectorAll('#testableOptions .chip').forEach(chip => chip.classList.remove('active'));
       el.classList.add('active');
       document.getElementById('cannotTestReasonBox').classList.toggle('hidden', type !== 'no');
       document.getElementById('testItemsBox').classList.toggle('hidden', type === 'no');
+      updateLiveSummary();
     }
 
-    const form = document.getElementById('repairForm');
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      let valid = true;
-      const name = document.getElementById('customerName');
-      const phone = document.getElementById('customerPhone');
-      const email = document.getElementById('customerEmail');
-      const nameError = document.getElementById('nameError');
-      const contactError = document.getElementById('contactError');
-      const cannotTestReason = document.getElementById('cannotTestReason');
-      const cannotTestReasonError = document.getElementById('cannotTestReasonError');
+    function buildChecklist() {
+      const checkGrid = document.getElementById('checkGrid');
+      checkGrid.innerHTML = '';
+      checkItems.forEach(item => {
+        const wrap = document.createElement('div');
+        wrap.className = 'test-item';
+        wrap.innerHTML = `
+          <div class="test-item-title">${escapeHtml(item)}</div>
+          <div class="test-actions">
+            <button type="button" class="test-btn" data-status="pass">Pass</button>
+            <button type="button" class="test-btn" data-status="fail">Fail</button>
+            <button type="button" class="test-btn" data-status="na">N/A</button>
+          </div>
+        `;
 
-      [name, phone, email, cannotTestReason].forEach(el => {
-        if (el) el.classList.remove('error-field');
+        wrap.querySelectorAll('.test-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            wrap.querySelectorAll('.test-btn').forEach(other => other.classList.remove('active', 'pass', 'fail', 'na'));
+            btn.classList.add('active', btn.dataset.status);
+            updateLiveSummary();
+          });
+        });
+
+        checkGrid.appendChild(wrap);
       });
-      [nameError, contactError, cannotTestReasonError].forEach(el => {
-        if (el) el.style.display = 'none';
-      });
+    }
 
-      if (!name.value.trim()) {
-        valid = false;
-        name.classList.add('error-field');
-        nameError.style.display = 'block';
-      }
-      if (!phone.value.trim() && !email.value.trim()) {
-        valid = false;
-        phone.classList.add('error-field');
-        email.classList.add('error-field');
-        contactError.style.display = 'block';
-      }
-
-      if (!document.getElementById('cannotTestReasonBox').classList.contains('hidden')) {
-        if (!cannotTestReason.value.trim()) {
-          valid = false;
-          cannotTestReason.classList.add('error-field');
-          cannotTestReasonError.style.display = 'block';
+    function getSelectedTestResults() {
+      const results = [];
+      document.querySelectorAll('#checkGrid .test-item').forEach(item => {
+        const active = item.querySelector('.test-btn.active');
+        if (active) {
+          results.push({
+            item: item.querySelector('.test-item-title').textContent,
+            status: active.dataset.status
+          });
         }
+      });
+      return results;
+    }
+
+    function updateLiveSummary() {
+      const name = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const email = document.getElementById('customerEmail').value.trim();
+      const deviceModel = document.getElementById('deviceModel').value.trim();
+      const issue = document.getElementById('quoteIssue').value.trim();
+      const price = document.getElementById('quotedPrice').value.trim();
+      const testCount = getSelectedTestResults().length;
+
+      document.getElementById('summaryCustomer').textContent = name || 'Not entered';
+      document.getElementById('summaryContact').textContent = [phone, email].filter(Boolean).join(' / ') || 'Not entered';
+      document.getElementById('summaryDevice').textContent = [document.getElementById('deviceType').value, deviceModel].filter(Boolean).join(' - ') || 'Not entered';
+      document.getElementById('summaryIssue').textContent = issue || 'Not entered';
+      document.getElementById('summaryPrice').textContent = price || 'Not entered';
+      document.getElementById('summaryTesting').textContent =
+        currentTestable === 'no' ? 'Testing not possible' : (testCount > 0 ? `${testCount} checks recorded` : 'Ready for functional test');
+
+      if (currentSourceType === 'manual') {
+        document.getElementById('heroDevice').textContent = deviceModel || 'Manual entry';
+        document.getElementById('heroIssue').textContent = issue || 'Manual entry';
+      }
+      document.getElementById('heroPrice').textContent = price || 'Not loaded yet';
+    }
+
+    function clearValidation() {
+      ['customerName', 'customerPhone', 'customerEmail', 'cannotTestReason'].forEach(id => {
+        document.getElementById(id).classList.remove('error-field');
+      });
+      ['nameError', 'contactError', 'cannotTestReasonError'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+    }
+
+    function validateForm() {
+      clearValidation();
+      let valid = true;
+
+      if (!document.getElementById('customerName').value.trim()) {
+        valid = false;
+        document.getElementById('customerName').classList.add('error-field');
+        document.getElementById('nameError').style.display = 'block';
       }
 
-      if (!valid) {
-        alert('请先完成必填信息。');
+      if (!document.getElementById('customerPhone').value.trim() && !document.getElementById('customerEmail').value.trim()) {
+        valid = false;
+        document.getElementById('customerPhone').classList.add('error-field');
+        document.getElementById('customerEmail').classList.add('error-field');
+        document.getElementById('contactError').style.display = 'block';
+      }
+
+      if (currentTestable === 'no' && !document.getElementById('cannotTestReason').value.trim()) {
+        valid = false;
+        document.getElementById('cannotTestReason').classList.add('error-field');
+        document.getElementById('cannotTestReasonError').style.display = 'block';
+      }
+
+      return valid;
+    }
+
+    function getFormData() {
+      return {
+        sourceType: currentSourceType,
+        passwordType: currentPasswordType,
+        deviceIdType: currentDeviceIdType,
+        testable: currentTestable,
+        quoteData,
+        customerName: document.getElementById('customerName').value.trim(),
+        customerPhone: document.getElementById('customerPhone').value.trim(),
+        customerEmail: document.getElementById('customerEmail').value.trim(),
+        contactMethod: document.getElementById('contactMethod').value,
+        passwordText: document.getElementById('passwordTextInput').value.trim(),
+        patternValue: document.getElementById('patternValue').value.trim(),
+        passwordNoneReason: document.getElementById('passwordNoneReason').value.trim(),
+        deviceType: document.getElementById('deviceType').value,
+        deviceModel: document.getElementById('deviceModel').value.trim(),
+        quotedPrice: document.getElementById('quotedPrice').value.trim(),
+        quoteIssue: document.getElementById('quoteIssue').value.trim(),
+        estimatedTime: document.getElementById('estimatedTime').value.trim(),
+        deviceIdImei: document.getElementById('deviceIdImeiInput').value.trim(),
+        deviceIdSn: document.getElementById('deviceIdSnInput').value.trim(),
+        deviceIdNoneReason: document.getElementById('deviceIdNoneReason').value.trim(),
+        customerIssue: document.getElementById('customerIssue').value.trim(),
+        staffNotes: document.getElementById('staffNotes').value.trim(),
+        cannotTestReason: document.getElementById('cannotTestReason').value.trim(),
+        testNotes: document.getElementById('testNotes').value.trim(),
+        testResults: getSelectedTestResults(),
+        capturedMediaCount: document.querySelectorAll('#mediaPreviewList .preview-item').length,
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function applyDraft(data) {
+      if (!data) return;
+
+      quoteData = data.quoteData || { ...defaultQuoteData };
+      updateQuoteFields();
+
+      setSourceType(data.sourceType === 'manual' ? 'manual' : 'quote', document.querySelectorAll('#sourceTypeOptions .chip')[data.sourceType === 'manual' ? 1 : 0]);
+      setPasswordType(data.passwordType || 'text', document.querySelector(`#passwordTypeOptions .chip[data-type="${data.passwordType || 'text'}"]`));
+      setDeviceIdType(data.deviceIdType || 'imei', document.querySelectorAll('#deviceIdTypeOptions .chip')[data.deviceIdType === 'sn' ? 1 : data.deviceIdType === 'none' ? 2 : 0]);
+      setTestable(data.testable || 'yes', document.querySelectorAll('#testableOptions .chip')[data.testable === 'no' ? 1 : 0]);
+
+      document.getElementById('customerName').value = data.customerName || '';
+      document.getElementById('customerPhone').value = data.customerPhone || '';
+      document.getElementById('customerEmail').value = data.customerEmail || '';
+      document.getElementById('contactMethod').value = data.contactMethod || 'Phone';
+      document.getElementById('passwordTextInput').value = data.passwordText || '';
+      document.getElementById('patternValue').value = data.patternValue || '';
+      document.getElementById('passwordNoneReason').value = data.passwordNoneReason || '';
+      document.getElementById('deviceType').value = data.deviceType || quoteData.deviceType || defaultQuoteData.deviceType;
+      document.getElementById('deviceModel').value = data.deviceModel || '';
+      document.getElementById('quotedPrice').value = data.quotedPrice || '';
+      document.getElementById('quoteIssue').value = data.quoteIssue || '';
+      document.getElementById('estimatedTime').value = data.estimatedTime || '';
+      document.getElementById('deviceIdImeiInput').value = data.deviceIdImei || '';
+      document.getElementById('deviceIdSnInput').value = data.deviceIdSn || '';
+      document.getElementById('deviceIdNoneReason').value = data.deviceIdNoneReason || '';
+      document.getElementById('customerIssue').value = data.customerIssue || '';
+      document.getElementById('staffNotes').value = data.staffNotes || '';
+      document.getElementById('cannotTestReason').value = data.cannotTestReason || '';
+      document.getElementById('testNotes').value = data.testNotes || '';
+
+      document.querySelectorAll('#checkGrid .test-item').forEach(item => {
+        item.querySelectorAll('.test-btn').forEach(btn => btn.classList.remove('active', 'pass', 'fail', 'na'));
+      });
+
+      if (Array.isArray(data.testResults)) {
+        data.testResults.forEach(result => {
+          const item = Array.from(document.querySelectorAll('#checkGrid .test-item')).find(entry => {
+            return entry.querySelector('.test-item-title').textContent === result.item;
+          });
+          if (!item) return;
+          const button = item.querySelector(`.test-btn[data-status="${result.status}"]`);
+          if (!button) return;
+          button.classList.add('active', result.status);
+        });
+      }
+
+      updateLiveSummary();
+    }
+
+    function saveDraft() {
+      localStorage.setItem(draftStorageKey, JSON.stringify(getFormData()));
+      alert('Draft saved in this browser.');
+    }
+
+    function loadDraft() {
+      const raw = localStorage.getItem(draftStorageKey);
+      if (!raw) {
+        alert('No saved draft found in this browser.');
         return;
       }
-      alert('验证通过：这一步可以继续保存到数据库。');
-    });
+      try {
+        applyDraft(JSON.parse(raw));
+        alert('Draft loaded.');
+      } catch (error) {
+        alert('Saved draft could not be loaded.');
+      }
+    }
 
-    let patternPath = [];
-    const canvas = document.getElementById('patternCanvas');
-    const ctx = canvas.getContext('2d');
-    const points = [
-      {x: 80, y: 80}, {x: 180, y: 80}, {x: 280, y: 80},
-      {x: 80, y: 180}, {x: 180, y: 180}, {x: 280, y: 180},
-      {x: 80, y: 280}, {x: 180, y: 280}, {x: 280, y: 280}
-    ];
-    let drawing = false;
+    function clearDraft() {
+      localStorage.removeItem(draftStorageKey);
+      alert('Saved draft cleared from this browser.');
+    }
+
+    function openPatternModal() {
+      document.getElementById('patternModal').classList.remove('hidden');
+      document.getElementById('patternModal').style.display = 'flex';
+      drawPatternBoard();
+    }
+
+    function closePatternModal() {
+      document.getElementById('patternModal').classList.add('hidden');
+      document.getElementById('patternModal').style.display = 'none';
+    }
+
+    function clearPattern() {
+      patternPath = [];
+      drawPatternBoard();
+    }
+
+    function savePattern() {
+      document.getElementById('patternValue').value = patternPath.length ? patternPath.map(i => i + 1).join('-') : '';
+      updateLiveSummary();
+      closePatternModal();
+    }
 
     function drawPatternBoard() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (patternPath.length > 1) {
-        ctx.strokeStyle = '#22d3ee';
+        ctx.strokeStyle = '#ef7204';
         ctx.lineWidth = 8;
         ctx.lineCap = 'round';
         ctx.beginPath();
         patternPath.forEach((idx, i) => {
-          const p = points[idx];
-          if (i === 0) ctx.moveTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
+          const point = points[idx];
+          if (i === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
         });
         ctx.stroke();
       }
-      points.forEach((p, idx) => {
-        ctx.fillStyle = patternPath.includes(idx) ? '#22d3ee' : '#607d8b';
+
+      points.forEach((point, idx) => {
+        ctx.fillStyle = patternPath.includes(idx) ? '#ef7204' : '#607d8b';
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+        ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
         ctx.fill();
       });
-      document.getElementById('patternPreview').textContent = patternPath.length ? patternPath.map(i => i + 1).join('-') : '未记录';
+
+      document.getElementById('patternPreview').textContent = patternPath.length ? patternPath.map(i => i + 1).join('-') : 'Not recorded';
     }
 
     function getPointIndex(clientX, clientY) {
@@ -532,67 +1075,57 @@
       const x = (clientX - rect.left) * (canvas.width / rect.width);
       const y = (clientY - rect.top) * (canvas.height / rect.height);
       for (let i = 0; i < points.length; i++) {
-        const p = points[i];
-        const dx = x - p.x;
-        const dy = y - p.y;
+        const point = points[i];
+        const dx = x - point.x;
+        const dy = y - point.y;
         if (Math.sqrt(dx * dx + dy * dy) < 22) return i;
       }
       return null;
     }
 
-    function startPattern(e) {
-      drawing = true;
-      patternPath = [];
-      addPatternPoint(e);
-    }
-    function movePattern(e) { if (drawing) addPatternPoint(e); }
-    function endPattern() { drawing = false; }
-    function addPatternPoint(e) {
-      const touch = e.touches ? e.touches[0] : e;
-      const idx = getPointIndex(touch.clientX, touch.clientY);
+    function addPatternPoint(event) {
+      const pointer = event.touches ? event.touches[0] : event;
+      const idx = getPointIndex(pointer.clientX, pointer.clientY);
       if (idx !== null && !patternPath.includes(idx)) {
         patternPath.push(idx);
         drawPatternBoard();
       }
     }
 
-    canvas.addEventListener('mousedown', startPattern);
-    canvas.addEventListener('mousemove', movePattern);
-    window.addEventListener('mouseup', endPattern);
-    canvas.addEventListener('touchstart', startPattern, { passive: true });
-    canvas.addEventListener('touchmove', movePattern, { passive: true });
-    canvas.addEventListener('touchend', endPattern);
-    drawPatternBoard();
-
-    function openPatternModal() { document.getElementById('patternModal').style.display = 'flex'; drawPatternBoard(); }
-    function closePatternModal() { document.getElementById('patternModal').style.display = 'none'; }
-    function clearPattern() { patternPath = []; drawPatternBoard(); }
-    function savePattern() {
-      document.getElementById('patternValue').value = patternPath.length ? patternPath.map(i => i + 1).join('-') : '';
-      closePatternModal();
+    function startPattern(event) {
+      drawing = true;
+      patternPath = [];
+      addPatternPoint(event);
     }
 
-    let mediaStream = null;
+    function movePattern(event) {
+      if (drawing) addPatternPoint(event);
+    }
+
+    function endPattern() {
+      drawing = false;
+    }
+
     async function openCameraModal() {
+      document.getElementById('cameraModal').classList.remove('hidden');
       document.getElementById('cameraModal').style.display = 'flex';
       const video = document.getElementById('cameraPreview');
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: 'environment' }
-          },
+          video: { facingMode: { ideal: 'environment' } },
           audio: false
         });
         video.srcObject = mediaStream;
-      } catch (err) {
+      } catch (error) {
         try {
           mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
           video.srcObject = mediaStream;
-        } catch (fallbackErr) {
-          alert('无法打开摄像头，请检查浏览器权限。');
+        } catch (fallbackError) {
+          alert('Unable to open the camera. Please check browser permissions.');
         }
       }
     }
+
     function stopCamera() {
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
@@ -600,10 +1133,13 @@
       }
       document.getElementById('cameraPreview').srcObject = null;
     }
+
     function closeCameraModal() {
       stopCamera();
+      document.getElementById('cameraModal').classList.add('hidden');
       document.getElementById('cameraModal').style.display = 'none';
     }
+
     function capturePhoto() {
       const video = document.getElementById('cameraPreview');
       if (!video.videoWidth) return;
@@ -613,17 +1149,58 @@
       const shotCtx = canvasShot.getContext('2d');
       shotCtx.drawImage(video, 0, 0, canvasShot.width, canvasShot.height);
       const data = canvasShot.toDataURL('image/png');
+
       const wrap = document.createElement('div');
       wrap.className = 'preview-item';
-      wrap.innerHTML = `<img src="${data}" alt="capture"><div>拍照记录 ${new Date().toLocaleTimeString()}</div>`;
+      wrap.innerHTML = `<img src="${data}" alt="Repair intake photo"><div class="preview-meta">Photo captured ${new Date().toLocaleTimeString()}</div>`;
       document.getElementById('mediaPreviewList').prepend(wrap);
+      updateLiveSummary();
     }
+
     function addMockVideo() {
       const wrap = document.createElement('div');
       wrap.className = 'preview-item';
-      wrap.innerHTML = `<div style="height:160px;display:flex;align-items:center;justify-content:center;background:#111827;color:#fff;">Video Placeholder</div><div>录像记录占位 ${new Date().toLocaleTimeString()}</div>`;
+      wrap.innerHTML = `<div class="preview-placeholder">Video Placeholder</div><div class="preview-meta">Video recorded separately ${new Date().toLocaleTimeString()}</div>`;
       document.getElementById('mediaPreviewList').prepend(wrap);
+      updateLiveSummary();
     }
+
+    document.getElementById('repairForm').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!validateForm()) {
+        alert('Please complete the required intake details before submitting.');
+        return;
+      }
+      console.log('Repair intake submitted', getFormData());
+      alert('Repair intake validated and ready to be saved to your backend.');
+    });
+
+    [
+      'customerName', 'customerPhone', 'customerEmail', 'contactMethod', 'passwordTextInput', 'patternValue',
+      'passwordNoneReason', 'deviceType', 'deviceModel', 'quotedPrice', 'quoteIssue', 'estimatedTime',
+      'deviceIdImeiInput', 'deviceIdSnInput', 'deviceIdNoneReason', 'customerIssue', 'staffNotes',
+      'cannotTestReason', 'testNotes'
+    ].forEach(id => {
+      const node = document.getElementById(id);
+      node.addEventListener('input', () => {
+        if (id === 'quotedPrice') quoteData.price = node.value.trim();
+        updateLiveSummary();
+      });
+      node.addEventListener('change', updateLiveSummary);
+    });
+
+    canvas.addEventListener('mousedown', startPattern);
+    canvas.addEventListener('mousemove', movePattern);
+    window.addEventListener('mouseup', endPattern);
+    canvas.addEventListener('touchstart', startPattern, { passive: true });
+    canvas.addEventListener('touchmove', movePattern, { passive: true });
+    canvas.addEventListener('touchend', endPattern);
+
+    readQuoteDataFromQuery();
+    buildChecklist();
+    drawPatternBoard();
+    updateQuoteFields();
+    updateLiveSummary();
   </script>
 </body>
 </html>
