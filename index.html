@@ -350,11 +350,14 @@
                   <div class="section-title">Get an instant quote</div>
                   <div class="section-subtitle">The page reads from <code>data.json</code> with cache-busting and silent auto-refresh.</div>
                 </div>
-                <div>
+                <div class="d-flex flex-column align-items-start align-items-md-end gap-2">
                   <span class="status-pill" :class="statusClass">
                     <i :class="statusIcon"></i>
                     {{ statusText }}
                   </span>
+                  <a class="btn btn-soft" href="https://www.imei.info/" target="_blank" rel="noopener noreferrer">
+                    <i class="bi bi-search me-1"></i> Open IMEI Lookup
+                  </a>
                 </div>
               </div>
 
