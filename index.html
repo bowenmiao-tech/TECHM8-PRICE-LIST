@@ -317,59 +317,87 @@
       border-color: rgba(255,255,255,0.22);
     }
 
-    .hero-helper {
-      color: rgba(255,255,255,0.78);
-      font-size: 12px;
-      line-height: 1.5;
+    .quick-search {
+      position: relative;
     }
 
-    .hero-match-list {
-      display: grid;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .hero-match-item {
+    .quick-search-input {
+      min-height: 44px;
       border-radius: 14px;
+      padding-left: 42px;
       background: rgba(255,255,255,0.98);
-      color: #22343b;
       border: 1px solid rgba(255,255,255,0.22);
-      padding: 10px 12px;
+      color: #22343b;
     }
 
-    .hero-match-item.unique {
-      border-color: rgba(239,114,4,0.42);
-      box-shadow: 0 0 0 1px rgba(239,114,4,0.16);
+    .quick-search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6d7980;
+      font-size: 15px;
+      pointer-events: none;
     }
 
-    .hero-match-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
+    .quick-search-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      z-index: 30;
+      overflow: hidden;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.98);
+      border: 1px solid rgba(20,32,38,0.08);
+      box-shadow: 0 18px 40px rgba(7, 17, 24, 0.18);
     }
 
-    .hero-match-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #203239;
-    }
-
-    .hero-match-subtitle {
-      color: #64727a;
+    .quick-search-status {
+      padding: 10px 14px;
       font-size: 12px;
+      color: #607078;
+      border-bottom: 1px solid #edf1f4;
+      background: #fbfcfd;
+    }
+
+    .quick-search-list {
+      display: grid;
+    }
+
+    .quick-search-item {
+      padding: 12px 14px;
+      border-bottom: 1px solid #edf1f4;
+    }
+
+    .quick-search-item:last-child {
+      border-bottom: 0;
+    }
+
+    .quick-search-item.unique {
+      background: #fff7ef;
+    }
+
+    .quick-search-model {
+      font-size: 14px;
+      font-weight: 700;
+      color: #213239;
+      line-height: 1.35;
+    }
+
+    .quick-search-meta {
+      font-size: 12px;
+      color: #687780;
       margin-top: 3px;
       line-height: 1.45;
     }
 
-    .hero-match-badge {
-      flex: 0 0 auto;
-      border-radius: 999px;
-      background: #fff3e8;
-      color: #9a4b00;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: 800;
+    .quick-search-note {
+      padding: 10px 14px;
+      background: #fbfcfd;
+      border-top: 1px solid #edf1f4;
+      font-size: 12px;
+      color: #607078;
     }
 
     .sync-text {
@@ -471,42 +499,37 @@
                       <a class="btn btn-soft" href="https://www.imei.info/" target="_blank" rel="noopener noreferrer">
                         <i class="bi bi-search me-1"></i> Open IMEI Lookup
                       </a>
-                      <input
-                        class="form-control"
-                        v-model.trim="appleModelSearch"
-                        placeholder="Search Apple A-model, e.g. A2337"
-                        inputmode="text"
-                        autocomplete="off"
-                        spellcheck="false"
-                      >
-                    </div>
-                    <div v-if="normalizedAppleModelSearch" class="hero-helper mt-2">
-                      Searching: <strong>{{ normalizedAppleModelSearch }}</strong>
-                    </div>
-                    <div v-if="appleModelSearch && !appleLookupMatches.length" class="hero-helper mt-2">
-                      No Apple A-model match found yet.
-                    </div>
-                    <div v-if="appleLookupMatches.length" class="hero-match-list">
-                      <div
-                        v-for="match in appleLookupMatches"
-                        :key="match.aNumber + '|' + match.displayModel"
-                        class="hero-match-item"
-                        :class="{ unique: appleLookupHasUniqueMatch && appleLookupMatches.length === 1 }"
-                      >
-                        <div class="hero-match-head">
-                          <div>
-                            <div class="hero-match-title">{{ match.displayModel }}</div>
-                            <div class="hero-match-subtitle">{{ match.aNumber }} · {{ match.familyLabel }}</div>
+                      <div class="quick-search">
+                        <i class="bi bi-search quick-search-icon"></i>
+                        <input
+                          class="form-control quick-search-input"
+                          v-model.trim="appleModelSearch"
+                          placeholder="Search Apple A-model, e.g. A2337"
+                          inputmode="text"
+                          autocomplete="off"
+                          spellcheck="false"
+                        >
+                        <div v-if="showAppleLookupPanel" class="quick-search-panel">
+                          <div class="quick-search-status">
+                            <span v-if="appleLookupHasUniqueMatch">Unique match found for <strong>{{ normalizedAppleModelSearch }}</strong></span>
+                            <span v-else-if="appleLookupMatches.length">Suggestions for <strong>{{ normalizedAppleModelSearch }}</strong></span>
+                            <span v-else>No Apple A-model match found yet.</span>
                           </div>
-                          <span v-if="appleLookupHasUniqueMatch && appleLookupMatches.length === 1" class="hero-match-badge">Unique Match</span>
-                        </div>
-                        <div v-if="match.priceListModel" class="hero-match-subtitle mt-2">
-                          Price list match: {{ match.brand }} / {{ match.priceListModel }}
-                        </div>
-                        <div class="mt-2">
-                          <button class="btn btn-soft" type="button" @click="applyAppleModelMatch(match)">
-                            Use This Model
-                          </button>
+                          <div v-if="appleLookupMatches.length" class="quick-search-list">
+                            <div
+                              v-for="match in appleLookupMatches"
+                              :key="match.aNumber + '|' + match.displayModel"
+                              class="quick-search-item"
+                              :class="{ unique: appleLookupHasUniqueMatch && appleLookupMatches.length === 1 }"
+                            >
+                              <div class="quick-search-model">{{ match.displayModel }}</div>
+                              <div class="quick-search-meta">{{ match.aNumber }} · {{ match.familyLabel }}</div>
+                              <div v-if="match.priceListModel" class="quick-search-meta">Price list model: {{ match.priceListModel }}</div>
+                            </div>
+                          </div>
+                          <div v-if="appleLookupMatches.length" class="quick-search-note">
+                            Quick reference only. Continue the quote flow with the normal brand and model selectors.
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -701,10 +724,13 @@
               if (a.aNumber.length !== b.aNumber.length) return a.aNumber.length - b.aNumber.length
               return this.naturalSort(a.displayModel, b.displayModel) || this.naturalSort(a.aNumber, b.aNumber)
             })
-            .slice(0, 8)
+            .slice(0, 5)
         },
         appleLookupHasUniqueMatch() {
           return /^A\d{4}$/.test(this.normalizedAppleModelSearch) && this.appleLookupMatches.length === 1
+        },
+        showAppleLookupPanel() {
+          return !!this.appleModelSearch && (!!this.appleLookupMatches.length || /^A\d{1,4}$/.test(this.normalizedAppleModelSearch))
         },
         modelOptions() {
           if (!this.selectedBrand) return []
@@ -1022,16 +1048,6 @@
         },
         handleIssueChange() {
           this.refreshCurrentIssue()
-        },
-        applyAppleModelMatch(match) {
-          this.selectedBrand = match.brand
-          this.selectedModel = match.priceListModel || ''
-          this.selectedIssueKey = ''
-          this.currentIssue = null
-          this.manualModel = match.priceListModel ? '' : match.displayModel
-          if (this.selectedModel) {
-            this.handleModelChange()
-          }
         },
         resetSelection() {
           this.selectedBrand = ''
