@@ -264,6 +264,30 @@
       line-height: 1.65;
     }
 
+    .search-match-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .search-match-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--tm-border);
+      border-radius: 14px;
+      background: #fff;
+      padding: 10px 12px;
+    }
+
+    .search-match-text {
+      font-size: 13px;
+      color: #304047;
+      line-height: 1.5;
+    }
+
     .sync-text {
       font-size: 12px;
       color: #728088;
@@ -395,6 +419,31 @@
 
                 <div class="col-12">
                   <div class="helper-note">
+                    <div class="fw-bold mb-2">Apple A-Model Search</div>
+                    <div class="mb-3">Enter an Apple model code like <code>A2337</code> or just <code>2337</code> to find the matching model from the current price list.</div>
+                    <div class="row g-2 align-items-center">
+                      <div class="col-md">
+                        <input class="form-control" v-model.trim="appleModelSearch" placeholder="Example: A2337">
+                      </div>
+                    </div>
+                    <div v-if="normalizedAppleModelSearch" class="helper mt-2">Searching for: <strong>{{ normalizedAppleModelSearch }}</strong></div>
+                    <div v-if="appleModelSearch && !appleModelMatches.length" class="helper mt-2">No Apple model match found in the current price list.</div>
+                    <div v-if="appleModelMatches.length" class="search-match-list">
+                      <div v-for="match in appleModelMatches" :key="match.brand + '|' + match.model" class="search-match-item">
+                        <div class="search-match-text">
+                          <strong>{{ match.brand }}</strong><br>
+                          {{ match.model }}
+                        </div>
+                        <button class="btn btn-soft" type="button" @click="applyAppleModelMatch(match)">
+                          Use This Model
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="helper-note">
                     <div class="fw-bold mb-2">Model not in the price list?</div>
                     <div class="mb-3">Enter the model manually and continue to the workflow page for a manual intake.</div>
                     <div class="row g-2 align-items-center">
@@ -496,6 +545,7 @@
           selectedBrand: '',
           selectedModel: '',
           selectedIssueKey: '',
+          appleModelSearch: '',
           manualModel: '',
           currentIssue: null,
           loading: true,
@@ -512,6 +562,29 @@
         },
         hasSelection() {
           return !!(this.selectedBrand || this.selectedModel || this.selectedIssueKey)
+        },
+        normalizedAppleModelSearch() {
+          const raw = String(this.appleModelSearch || '').trim().toUpperCase()
+          if (!raw) return ''
+          const digitsOnly = raw.replace(/[^0-9]/g, '')
+          if (digitsOnly.length === 4) return 'A' + digitsOnly
+          const match = raw.match(/A\d{4}/)
+          return match ? match[0] : raw
+        },
+        appleModelMatches() {
+          const search = this.normalizedAppleModelSearch
+          if (!search || !/^A\d{4}$/.test(search)) return []
+
+          const seen = new Set()
+          return this.rawData
+            .filter(item => /apple/i.test(item.brand) && item.model.toUpperCase().includes(search))
+            .filter(item => {
+              const key = item.brand + '|' + item.model
+              if (seen.has(key)) return false
+              seen.add(key)
+              return true
+            })
+            .sort((a, b) => this.naturalSort(a.model, b.model))
         },
         modelOptions() {
           if (!this.selectedBrand) return []
@@ -756,10 +829,18 @@
         handleIssueChange() {
           this.refreshCurrentIssue()
         },
+        applyAppleModelMatch(match) {
+          this.selectedBrand = match.brand
+          this.selectedModel = match.model
+          this.selectedIssueKey = ''
+          this.currentIssue = null
+          this.manualModel = ''
+        },
         resetSelection() {
           this.selectedBrand = ''
           this.selectedModel = ''
           this.selectedIssueKey = ''
+          this.appleModelSearch = ''
           this.manualModel = ''
           this.currentIssue = null
         }
