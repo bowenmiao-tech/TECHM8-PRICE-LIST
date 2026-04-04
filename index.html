@@ -291,14 +291,14 @@
     .tool-stack {
       width: 100%;
       display: grid;
-      gap: 10px;
+      gap: 12px;
+      justify-items: center;
     }
 
     .tool-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 10px;
-      align-items: start;
+      width: min(100%, 520px);
+      display: flex;
+      justify-content: center;
     }
 
     .tool-card {
@@ -307,6 +307,7 @@
       border-radius: 18px;
       padding: 12px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+      width: min(100%, 520px);
     }
 
     .tool-card-title {
@@ -326,6 +327,8 @@
 
     .quick-search {
       position: relative;
+      width: 100%;
+      max-width: 520px;
     }
 
     .quick-search-input {
@@ -448,11 +451,6 @@
       .tool-stack { width: 100%; }
     }
 
-    @media (min-width: 768px) {
-      .tool-row {
-        grid-template-columns: 220px minmax(0, 1fr);
-      }
-    }
   </style>
 </head>
 <body>
@@ -509,10 +507,12 @@
               <div class="tool-stack mb-4">
                 <div class="tool-card">
                   <div class="tool-card-title">Quick Lookup</div>
-                  <div class="tool-row">
+                  <div class="tool-row mb-2">
                     <a class="btn btn-soft" href="https://www.imei.info/" target="_blank" rel="noopener noreferrer">
                       <i class="bi bi-search me-1"></i> Open IMEI Lookup
                     </a>
+                  </div>
+                  <div class="tool-row">
                     <div class="quick-search">
                       <i class="bi bi-search quick-search-icon"></i>
                       <input
