@@ -1097,6 +1097,29 @@
       alert('Saved draft cleared from this browser.');
     }
 
+    async function submitIntakeToServer(payload) {
+      const response = await fetch('./api/intakes.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      let result = null;
+      try {
+        result = await response.json();
+      } catch (error) {
+        result = null;
+      }
+
+      if (!response.ok || !result || result.ok !== true) {
+        throw new Error(result && result.message ? result.message : 'Failed to save intake.');
+      }
+
+      return result;
+    }
+
     function openPatternModal() {
       document.getElementById('patternModal').classList.remove('hidden');
       document.getElementById('patternModal').style.display = 'flex';
@@ -1239,16 +1262,31 @@
       updateLiveSummary();
     }
 
-    document.getElementById('repairForm').addEventListener('submit', event => {
+    document.getElementById('repairForm').addEventListener('submit', async event => {
       event.preventDefault();
       if (!validateForm()) {
         alert('Please complete the required intake details before submitting.');
         return;
       }
-      console.log('Repair intake submitted', getFormData());
-      localStorage.removeItem(draftStorageKey);
-      alert('Repair intake completed.');
-      window.location.href = './index.html';
+
+      const submitButton = event.target.querySelector('button[type="submit"]');
+      const originalLabel = submitButton.textContent;
+      submitButton.disabled = true;
+      submitButton.textContent = 'Saving...';
+
+      try {
+        const payload = getFormData();
+        await submitIntakeToServer(payload);
+        localStorage.removeItem(draftStorageKey);
+        alert('Repair intake saved to the database.');
+        window.location.href = './index.html';
+      } catch (error) {
+        console.error(error);
+        alert('The intake could not be saved to the database. Your local draft is still available in this browser.');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalLabel;
+      }
     });
 
     [

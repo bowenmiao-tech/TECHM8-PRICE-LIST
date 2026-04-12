@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TECHM8 价格管理后台</title>
+  <title>TECHM8 婵炲濞€閺€閬嶆偋閸濄儳涓嶉柨娑樺閸婄偤鏌涘顒勵€楃憸?/title>
   <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
   <script src="https://unpkg.com/element-ui/lib/index.js"></script>
@@ -336,11 +336,11 @@
       <div class="login-card">
         <div class="login-hero">
           <h1 class="login-title">TECHM8 Admin</h1>
-          <div class="login-subtitle">输入后台密码后才能进入价格管理页面。适合你这种几个月更新一次的日常使用场景。</div>
+          <div class="login-subtitle">闁哄鐗婇幐鎼佸矗閸℃稑瑙﹂幖绮光偓鎶藉彙闁诲酣娼уΛ娑㈡偉濠婂牆瑙﹂幖娣灩椤ゅ懘鏌ら崘娴嬪亾閻旇櫣顔掗梺绋跨箞閸庝即鎮抽鐐插唨闁兼祴鏅╅崥鈧梺鑽ゅ仜濡繈濡存径鎰棃妞ゎ偒鍏橀崑鎾诲磼閻愨晛浜鹃柛灞剧閸娿倕霉閿濆洤鞋缂佺粯鐗滅划鏂款吋閸涱厽顓绘繛鎴炴惄娴滄繂锕㈤埀顒勬煛閸パ呮憼闁哄苯锕ョ粙澶愬焵椤掆偓閳诲酣鏁嶉崟顒傛殸闂佸搫鍟ㄩ崕閬嶆偉閼稿灚濯撮悹鎭掑妽閺嗗繘鏌涢敂鎯у妺婵炲懏鐟╂俊?/div>
         </div>
         <div class="login-body">
           <el-alert
-            title="这是前端静态密码保护，适合基础防误入，不等于真正服务器级安全。"
+            title="闁哄鏅滈悷锕€危閹间礁绀堢€广儱娴傛导鍌炴⒒閸喓鎳勯柍褜鍏涚粈渚€鎯侀幋锔藉剺濞达綁顥撶粻浠嬫煙闊彃鈧呮濠靛鐒婚柛灞剧閸娿倝鏌涢埡鍕仩妞ゃ垹鎳樺濂告嚑妫版繂娈╅梺绋跨箞閸庤崵妲愬┑鍥┾枖鐎广儱娲ㄩ幖鐓幟瑰鍐╂崳婵犫偓閳ユ剚娼伴柨婵嗘缁犳盯鏌涢弬琛″亾閾忣偆褰滅紓浣哄珡閸愵亝娈ч梺绋跨箞閸斿﹪鍩€?
             type="warning"
             :closable="false"
             show-icon
@@ -350,19 +350,19 @@
           <el-input
             v-model.trim="passwordInput"
             show-password
-            placeholder="请输入后台密码"
+            placeholder="闁荤姴娲ㄩ弻澶屾椤撱垹绀傞柕澶堝劜閸婄敻鏌涘▎鎰凡闁伙附鍨块幆?
             @keyup.enter.native="login">
           </el-input>
 
           <div style="display:flex; gap:10px; margin-top:14px;">
-            <el-button type="primary" style="flex:1;" @click="login">进入后台</el-button>
+            <el-button type="primary" style="flex:1;" @click="login">闁哄鏅滅粙鎴﹀矗閸℃稑瑙﹂幖绮光偓鎶藉彙</el-button>
           </div>
 
           <div v-if="loginError" class="login-note" style="background:#fff2f0; border-color:#ffc9c3; color:#b42318;">{{ loginError }}</div>
 
           <div class="login-note">
-            密码写在这个 <code>admin.html</code> 文件顶部的 <code>ADMIN_PASSWORD</code> 变量里。
-            你以后要改密码，只需要把那个值改掉，再上传到 GitHub。
+            闁诲酣娼уΛ娑㈡偉濠婂牆绀冩繛鍡楃箲闊剟寮堕埡鍌滄噥闂?<code>admin.html</code> 闂佸搫鍊稿ú锝呪枎閵徛颁簻闁割偅娲栭崝銉╂煟?<code>ADMIN_PASSWORD</code> 闂佸憡鐟﹂敃銏ゅ闯濞差亝鐓傞悘鐐靛劦閸?
+            婵炶揪绲挎慨铏閹烘瑙﹂幖娣€ゅú锝夋煛閳ь剟鎮烽幍顔筋潥闂佹椿鍠曠欢銈囨濠靛鐭楁い蹇撶墛娴犳﹢鎮烽弴姘卞妽濠碘剝鎮傞弻鍥晲閸曨垰娈濋梺绋匡工閸氬寮總绋跨濠㈣埖绋撶粈澶愭煕閹邦剛小缂佹鍊圭€靛ジ鎮╅幓鎺斿帓 GitHub闂?
           </div>
         </div>
       </div>
@@ -372,33 +372,33 @@
       <div class="hero">
         <div class="hero-top">
           <div>
-            <h1 class="hero-title">TECHM8 价格管理后台</h1>
+            <h1 class="hero-title">TECHM8 婵炲濞€閺€閬嶆偋閸濄儳涓嶉柨娑樺閸婄偤鏌涘顒勵€楃憸?/h1>
             <div class="hero-subtitle">
-              这是一个不用数据库的免费版本：你在后台改价后，复制或下载新的 <code>data.json</code>，提交到 GitHub，
-              前台会通过防缓存请求和定时轮询自动拉取最新价格。也就是说，不是秒级推送，但已经做到部署后自动刷新前台。
+              闁哄鏅滈悷锕€危閸涘﹦鈻旈柍褜鍓氱粙澶愵敂閸愵亞鎲归梺娲绘娇閸斿秹寮抽悢鐓庣妞ゆ棁鍋愬銊╂煟閵娿儱顏╅柛妯稿€楅幏褰掑捶椤撶儐鏆梺鍝勭墱閸撱劎妲愰悧鍫熷闁绘ê寮堕煬顒勬煕濮橆剟顎楃憸鐗堟尦瀵劑鏌呭☉姘畾闂佸憡鑹鹃崙鐣屾濠靛洤绶炵€广儱鎳庨悡鎴︽煙鐎涙澧х紒妤€鎳忓顏堟嚍閵夛妇鍘愰梺?<code>data.json</code>闂佹寧绋戦張顒冦亹娴ｅ湱顩查柕鍫濇噹閻?GitHub闂?
+              闂佸憡鎸哥粔纾嬨亹鐎涙ê顕辨慨妯虹亪閸嬫挸顫濆畷鍥╃暫闂傚倸鍟崇亸娆戞閿旈敮鍋撳☉娆樼劸妞ゆ洦鍓欐晥闁稿本纰嶇€氭煡鎮楃憴鍕暡婵＄偛鍊瑰顏堫敊濞嗘儳娈戦梺鐓庮殠娴滄粍鎱ㄩ埡鍛濠㈣泛锕ょ徊鍧楁煛閸艾浜鹃梺鍝勫€块。锕傛偝椤栫偛鍐€缂佹銆€閸嬫捇宕掑▎鎴犳闁诲繐绻楁ご绋课ｉ崫銉﹀珰閺夊牆澧界粈澶娾槈閹惧磭校婵℃彃鎽滅划鏃堝箳閺冨牏宕滈梺瑙勪航閸旀垿鍩€椤戣法绛忕紒杈ㄧ箖閹峰懘宕卞Δ鈧崵鎺旂磽娴ｅ摜绠板ù鐘崇洴瀹曟碍瀵奸弶鎴濆Г缂傚倸鍟ぐ鍐箖濡ゅ懏鍤婃い蹇撳琚熼梺鍛婂浮閺€閬嶅蓟婵犲洤绀堢€广儱鎳庨柊閬嶆煏?
             </div>
           </div>
           <div>
-            <el-tag type="success" effect="dark">GitHub Pages 方案</el-tag>
+            <el-tag type="success" effect="dark">GitHub Pages 闂佸搫鍊介～澶愩€?/el-tag>
           </div>
         </div>
 
         <div class="hero-steps">
           <div class="hero-step">
             <div class="hero-step-index">Step 1</div>
-            <div class="hero-step-text">先在这里编辑品牌、型号、维修项目、价格和时间。</div>
+            <div class="hero-step-text">闂佺绻愰悧鍡楋耿椤忓懏浜ゆ繛鍡樻尭濞咃紕绱撻崒娑氬⒊缂侀鍋婂畷顐ｆ媴閸濆嫷鏉洪梺闈涙缁€渚€鎮楅悜钘夌煑闁哄鍋€閸嬫挻鎷呴悜妯烩枙婵烇絽娴傞崳锝夊Υ瀹ュ鍎庢い鏃囥€€閸嬫挻鎷呮搴＄畾闂佸搫绉堕崢褔骞忔导鏉戠睄闁割偅娲橀敍鐔兼煏?/div>
           </div>
           <div class="hero-step">
             <div class="hero-step-index">Step 2</div>
-            <div class="hero-step-text">点击“复制 JSON”或“下载 data.json”，把最新数据准备好。</div>
+            <div class="hero-step-text">闂佺粯鍔楅幊鎾诲吹椤曗偓閸ㄦ儳顭ㄩ崘鐐╅梺?JSON闂佺偨鍎茬换鍐垂閵娾晛鐏虫繝濞惧亾缂佹鎳忓?data.json闂佺偨鍎茬换鎰濠靛绠┑鐘插暞娴犳﹢鏌￠崒婊冾暭闁哄棛鍠栭獮鎴︻敊閻撳孩鐝繝銏ｆ硾濞层倝濡舵禒瀣?/div>
           </div>
           <div class="hero-step">
             <div class="hero-step-index">Step 3</div>
-            <div class="hero-step-text">点击“打开 GitHub 编辑页”，粘贴并提交到你的仓库。</div>
+            <div class="hero-step-text">闂佺粯鍔楅幊鎾诲吹椤曗偓閸ㄦ儳顭ㄩ崟顐熷徍閻庢鍠掗崑?GitHub 缂傚倸鍊归悧鐐垫椤愶絻浜滅痪鐗埱氶崑鎾斥攽閹惧墎顦紓渚囧枟椤牓宕氬☉銏㈠祦闁兼悂娼х徊鐟懊瑰┃鍨偓鏇㈠春鐏炵偓濯撮柣妯虹仛閻ｅ崬霉閻樿櫕灏紒銊╀憾婵?/div>
           </div>
           <div class="hero-step">
             <div class="hero-step-index">Step 4</div>
-            <div class="hero-step-text">前台页面会定时检查新的 data.json，GitHub Pages 更新后会自动拉到新价格。</div>
+            <div class="hero-step-text">闂佸憡鎸哥粔纾嬨亹鐎涙ǜ浜滈柣銏犳啞濡椼劌霉閸忚壈澹橀柣锝夌畺瀵噣鎳滃▓鎸庘挄闂佸搫琚崕鏌ュ蓟婵犲洦鍎?data.json闂佹寧绋戦悺姒爐Hub Pages 闂佸搫娲ら悺銊╁蓟婵犲洤瑙﹂幖瀛樼箘缁愭鏌ゆ總澶夌盎濠殿喒鏅犻獮蹇斿緞婵犲倻鍘掗梺鍝勫€块。锕傛偝椤栫偛鍐€缂佹銆€閸?/div>
           </div>
         </div>
       </div>
@@ -406,50 +406,50 @@
       <div class="content">
         <div class="summary-row">
           <div class="summary-card">
-            <div class="summary-label">总记录数</div>
+            <div class="summary-label">闂佽鍓氬Σ鎺楊敊閸ヮ亗浜归柡鍥╁枑濞?/div>
             <div class="summary-value">{{ filteredRows.length }}</div>
           </div>
           <div class="summary-card">
-            <div class="summary-label">品牌数</div>
+            <div class="summary-label">闂佸憡绻€閼宠埖鏅跺┑瀣瀬?/div>
             <div class="summary-value">{{ stats.brandCount }}</div>
           </div>
           <div class="summary-card">
-            <div class="summary-label">型号数</div>
+            <div class="summary-label">闂佹悶鍔岄鍛般亹閸ф鏋?/div>
             <div class="summary-value">{{ stats.modelCount }}</div>
           </div>
           <div class="summary-card">
-            <div class="summary-label">已选中</div>
+            <div class="summary-label">閻庣懓鎲￠悡锟犲焵椤掆偓椤︻噣鎳?/div>
             <div class="summary-value">{{ selectedRows.length }}</div>
           </div>
           <div class="summary-card">
-            <div class="summary-label">当前文件</div>
+            <div class="summary-label">閻熸粎澧楅幐鍛婃櫠閻樿妫橀柛銉檮椤?/div>
             <div class="summary-value" style="font-size:18px; line-height:1.3; word-break:break-word;">{{ loadedFileName || 'data.json' }}</div>
           </div>
         </div>
 
         <div class="toolbar-grid">
           <div class="toolbar-card">
-            <div class="toolbar-title">编辑工具</div>
+            <div class="toolbar-title">Edit Tools</div>
             <div class="toolbar-subtitle">
-              这里已经做了你要的三个核心修改：
-              1）GitHub 仓库地址改成正确可配置；2）前台将用防缓存方式拉取 data.json；3）前台支持自动重新拉取数据。
+              This page can work with either local JSON files or the database API.
+              Use the database buttons first when Hostinger is ready.
             </div>
             <div class="button-group">
-              <el-button type="primary" icon="el-icon-plus" @click="addRow">新增一行</el-button>
-              <el-button icon="el-icon-document-copy" @click="duplicateSelected" :disabled="selectedRows.length !== 1">复制选中行</el-button>
-              <el-button type="danger" plain icon="el-icon-delete" @click="deleteSelected" :disabled="!selectedRows.length">删除选中</el-button>
-              <el-button type="success" icon="el-icon-document-copy" @click="copyJson">复制 JSON</el-button>
-              <el-button type="warning" icon="el-icon-download" @click="downloadJson">下载 data.json</el-button>
+              <el-button type="primary" icon="el-icon-plus" @click="addRow">Add Row</el-button>
+              <el-button icon="el-icon-document-copy" @click="duplicateSelected" :disabled="selectedRows.length !== 1">Duplicate Selected</el-button>
+              <el-button type="danger" plain icon="el-icon-delete" @click="deleteSelected" :disabled="!selectedRows.length">Delete Selected</el-button>
+              <el-button type="success" icon="el-icon-document-copy" @click="copyJson">Copy JSON</el-button>
+              <el-button type="warning" icon="el-icon-download" @click="downloadJson">Download data.json</el-button>
             </div>
             <div class="muted-note">
-              为了避免前台出现 <code>NaN</code> 这种情况，这个版本不会把价格强制转成数字。
-              你可以保留 <code>N/A</code>、<code>TBC</code> 或纯数字，前台会自动兼容显示。
+              Prices remain string-compatible, so values like <code>N/A</code>, <code>TBC</code>, or numeric prices will all continue to work.
             </div>
-          </div>
+            </div>
+
 
           <div class="config-card">
-            <div class="config-title">GitHub 配置</div>
-            <div class="config-subtitle">如果你以后换仓库，只改下面 4 个字段就行，不用再改按钮逻辑。</div>
+            <div class="config-title">GitHub Config</div>
+            <div class="config-subtitle">These values are only used for the backup GitHub flow.</div>
             <div class="repo-grid">
               <el-input v-model.trim="github.owner" placeholder="owner">
                 <template slot="prepend">Owner</template>
@@ -465,11 +465,11 @@
               </el-input>
             </div>
             <div class="button-group" style="margin-top:12px;">
-              <el-button type="primary" plain icon="el-icon-link" @click="openGithubRepo">打开仓库</el-button>
-              <el-button type="primary" icon="el-icon-upload2" @click="openGithubEditPage">打开 GitHub 编辑页</el-button>
+              <el-button type="primary" plain icon="el-icon-link" @click="openGithubRepo">Open Repo</el-button>
+              <el-button type="primary" icon="el-icon-upload2" @click="openGithubEditPage">Open GitHub Editor</el-button>
             </div>
             <div class="muted-note">
-              点击“打开 GitHub 编辑页”前，系统会先把最新 JSON 复制到你的剪贴板。打开后直接全选原内容并粘贴，再 Commit 就可以了。
+              The GitHub buttons remain available as a fallback export path.
             </div>
           </div>
         </div>
@@ -479,16 +479,16 @@
         </div>
 
         <div class="toolbar-card" style="margin-bottom:16px;">
-          <div class="toolbar-title">载入和筛选</div>
-          <div class="toolbar-subtitle">如果你是直接双击本地 HTML 打开的，浏览器可能拦截自动读取，这时可以手动选择 data.json。</div>
+          <div class="toolbar-title">Load And Filter</div>
+          <div class="toolbar-subtitle">Load from the database API when available, or fall back to a local JSON file.</div>
           <div class="button-group" style="margin-bottom:12px;">
-            <el-button icon="el-icon-refresh" @click="loadInitialData">重新读取 data.json</el-button>
-            <el-button icon="el-icon-folder-opened" @click="triggerFilePick">选择 data.json</el-button>
+            <el-button icon="el-icon-refresh" @click="loadInitialData">Reload Data</el-button>
+            <el-button icon="el-icon-folder-opened" @click="triggerFilePick">Choose data.json</el-button>
             <input ref="jsonFileInput" type="file" accept="application/json,.json" style="display:none" @change="handleJsonFileChange">
           </div>
           <div class="repo-grid">
-            <el-input v-model="keyword" clearable placeholder="搜索品牌 / 型号 / 项目" @clear="handleSearchClear"></el-input>
-            <el-select v-model="brandFilter" clearable filterable placeholder="按品牌筛选">
+            <el-input v-model="keyword" clearable placeholder="Search brand / model / issue" @clear="handleSearchClear"></el-input>
+            <el-select v-model="brandFilter" clearable filterable placeholder="Filter by brand">
               <el-option v-for="brand in brandOptions" :key="brand" :label="brand" :value="brand"></el-option>
             </el-select>
           </div>
@@ -497,11 +497,11 @@
         <div class="table-card">
           <div class="table-head">
             <div>
-              <div class="table-head-title">价格表数据</div>
-              <div class="table-head-subtitle">直接改这里的值即可。已修复输入框空格问题；保存动作在“复制 JSON / 下载 data.json / GitHub 提交”这一步完成。</div>
+              <div class="table-head-title">Price Table</div>
+              <div class="table-head-subtitle">Edit values here, then save to the database or export JSON as a fallback.</div>
             </div>
             <div class="cell-note">
-              建议价格字段尽量统一。纯数字会在前台显示为 <strong>$数字</strong>；文字值会原样显示。
+              Numeric prices show as <strong>$value</strong> on the quote page. Text values remain unchanged.
             </div>
           </div>
 
@@ -512,7 +512,7 @@
               border
               style="width:100%"
               @selection-change="handleSelectionChange"
-              empty-text="暂无数据，请先加载 data.json 或新增一行"
+              empty-text="闂佸搫妫楅崐鐟拔涢妶澶婃瀬闁绘鐗嗙粊锕傛煥濞戞鐒锋い鏇ㄥ墴瀹曟宕煎┑鍡╂奖闁?data.json 闂佺懓鐡ㄩ悧妤呭蓟婵犲啯娅犻柣鎰椤忛亶鎮?
               max-height="720">
               <el-table-column type="selection" width="50"></el-table-column>
 
@@ -542,21 +542,21 @@
 
               <el-table-column label="Price" width="150">
                 <template slot-scope="scope">
-                  <el-input v-model="scope.row.price" placeholder="例如 99 / N/A / TBC" @keydown.space.native.stop></el-input>
+                  <el-input v-model="scope.row.price" placeholder="婵炴挻鑹鹃鍛淬€?99 / N/A / TBC" @keydown.space.native.stop></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="Time" min-width="200">
                 <template slot-scope="scope">
-                  <el-input v-model="scope.row.time" placeholder="例如 30 minutes to 2 hours" @keydown.space.native.stop></el-input>
+                  <el-input v-model="scope.row.time" placeholder="婵炴挻鑹鹃鍛淬€?30 minutes to 2 hours" @keydown.space.native.stop></el-input>
                 </template>
               </el-table-column>
 
-              <el-table-column label="操作" width="190" fixed="right">
+              <el-table-column label="闂佺懓鐏濈粔宕囩礊? width="190" fixed="right">
                 <template slot-scope="scope">
                   <div class="table-actions">
-                    <el-button size="mini" @click="duplicateRow(scope.row)">复制</el-button>
-                    <el-button size="mini" type="danger" plain @click="deleteRow(scope.$index, scope.row)">删除</el-button>
+                    <el-button size="mini" @click="duplicateRow(scope.row)">婵犮垼娉涚粔鎾春?/el-button>
+                    <el-button size="mini" type="danger" plain @click="deleteRow(scope.$index, scope.row)">闂佸憡甯炴繛鈧繛?/el-button>
                   </div>
                 </template>
               </el-table-column>
@@ -581,6 +581,7 @@
           brandFilter: '',
           loadError: '',
           loadedFileName: '',
+          backendMode: '',
           github: {
             owner: 'bowenmiao-tech',
             repo: 'TECHM8-PRICE-LIST',
@@ -630,11 +631,11 @@
       methods: {
         login() {
           if (!this.passwordInput) {
-            this.loginError = '请输入密码。'
+            this.loginError = 'Please enter the admin password.'
             return
           }
           if (this.passwordInput !== ADMIN_PASSWORD) {
-            this.loginError = '密码不正确，请重新输入。'
+            this.loginError = 'Incorrect password. Please try again.'
             return
           }
           this.isAuthenticated = true
@@ -668,7 +669,7 @@
         async loadInitialData() {
           const isFileProtocol = window.location.protocol === 'file:'
           if (isFileProtocol) {
-            this.loadError = '你当前是本地 file 模式打开，浏览器通常会拦截自动读取 data.json。请点击“选择 data.json”手动载入。'
+            this.loadError = 'You opened the admin page from a local file. Please choose data.json manually.'
             return
           }
           try {
@@ -682,7 +683,7 @@
             this.loadError = ''
           } catch (error) {
             console.error(error)
-            this.loadError = '自动读取 data.json 失败。你可以手动选择文件继续编辑。'
+            this.loadError = 'Automatic loading failed. You can still choose a JSON file manually.'
           }
         },
         handleJsonFileChange(event) {
@@ -694,20 +695,20 @@
               const parsed = JSON.parse(reader.result)
               this.applyData(parsed, file.name)
               this.loadError = ''
-              this.$message.success('data.json 载入成功')
+              this.$message.success('JSON file loaded successfully')
             } catch (error) {
               console.error(error)
-              this.$message.error('JSON 格式不正确，请检查文件内容')
+              this.$message.error('Invalid JSON file')
             }
           }
           reader.onerror = () => {
-            this.$message.error('文件读取失败，请重试')
+            this.$message.error('File read failed')
           }
           reader.readAsText(file, 'utf-8')
           event.target.value = ''
         },
         applyData(data, fileName) {
-          if (!Array.isArray(data)) throw new Error('data.json 不是数组结构')
+          if (!Array.isArray(data)) throw new Error('Price data must be an array')
           this.rows = data.map(item => this.normalizeRow(item))
           this.loadedFileName = fileName || 'data.json'
           this.selectedRows = []
@@ -718,47 +719,47 @@
         },
         addRow() {
           this.rows.unshift(this.normalizeRow({ brand: '', model: '', issue: '', price: '', time: '' }))
-          this.$message.success('已新增一行')
+          this.$message.success('Row added')
         },
         duplicateRow(row) {
           this.rows.unshift(this.normalizeRow(row))
-          this.$message.success('已复制当前行')
+          this.$message.success('Row duplicated')
         },
         duplicateSelected() {
           if (this.selectedRows.length !== 1) {
-            this.$message.warning('请选择一行后再复制')
+            this.$message.warning('Select one row to duplicate')
             return
           }
           this.duplicateRow(this.selectedRows[0])
         },
         deleteRow(index, row) {
-          this.$confirm(`确认删除 ${row.brand || '未命名品牌'} / ${row.model || '未命名型号'} / ${row.issue || '未命名项目'} 吗？`, '提示', {
+          this.$confirm(`Delete ${row.brand || 'Unnamed brand'} / ${row.model || 'Unnamed model'} / ${row.issue || 'Unnamed issue'}?`, 'Confirm', {
             type: 'warning'
           }).then(() => {
             this.rows = this.rows.filter(item => item.id !== row.id)
-            this.$message.success('删除成功')
+            this.$message.success('Row deleted')
           }).catch(() => {})
         },
         deleteSelected() {
           if (!this.selectedRows.length) {
-            this.$message.warning('请先选择要删除的行')
+            this.$message.warning('Select rows first')
             return
           }
           const ids = new Set(this.selectedRows.map(item => item.id))
-          this.$confirm(`确认删除选中的 ${this.selectedRows.length} 行吗？`, '提示', {
+          this.$confirm(`Delete ${this.selectedRows.length} selected row(s)?`, 'Confirm', {
             type: 'warning'
           }).then(() => {
             this.rows = this.rows.filter(item => !ids.has(item.id))
             this.selectedRows = []
             if (this.$refs.dataTable) this.$refs.dataTable.clearSelection()
-            this.$message.success('删除成功')
+            this.$message.success('Rows deleted')
           }).catch(() => {})
         },
         validateRows() {
           const cleaned = this.rows.map(row => this.normalizeRow(row))
           const invalid = cleaned.find(row => !row.brand || !row.model || !row.issue)
           if (invalid) {
-            this.$message.error('brand、model、issue 不能为空，请先补完整')
+            this.$message.error('brand, model, and issue are required for every row')
             return null
           }
           cleaned.sort((a, b) => {
@@ -780,10 +781,10 @@
           if (!jsonText) return
           try {
             await navigator.clipboard.writeText(jsonText)
-            this.$message.success('JSON 已复制到剪贴板')
+            this.$message.success('JSON copied to clipboard')
           } catch (error) {
             console.error(error)
-            this.$message.error('复制失败，请手动复制')
+            this.$message.error('Copy failed')
           }
         },
         downloadJson() {
@@ -798,7 +799,7 @@
           link.click()
           document.body.removeChild(link)
           URL.revokeObjectURL(url)
-          this.$message.success('data.json 已下载')
+          this.$message.success('data.json downloaded')
         },
         githubEditUrl() {
           const owner = this.github.owner || 'bowenmiao-tech'
@@ -817,10 +818,10 @@
           if (!jsonText) return
           try {
             await navigator.clipboard.writeText(jsonText)
-            this.$message.success('JSON 已复制，正在打开 GitHub 编辑页')
+            this.$message.success('JSON copied. Opening GitHub editor.')
           } catch (error) {
             console.error(error)
-            this.$message.warning('GitHub 编辑页会打开，但复制失败了，请手动复制 JSON')
+            this.$message.warning('Opening GitHub editor, but clipboard copy failed.')
           }
           window.open(this.githubEditUrl(), '_blank')
         },
@@ -829,6 +830,136 @@
         }
       }
     })
+  </script>
+  <script>
+    (function () {
+      function createActionButton(text, className, handler) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = className;
+        button.innerHTML = '<span>' + text + '</span>';
+        button.addEventListener('click', handler);
+        return button;
+      }
+
+      function addDatabaseButtons(vm) {
+        const toolbarGroups = document.querySelectorAll('.toolbar-card .button-group');
+        if (!toolbarGroups.length) return;
+
+        const editToolsGroup = toolbarGroups[0];
+        const loadGroup = toolbarGroups[1];
+
+        if (editToolsGroup && !document.getElementById('save-db-btn')) {
+          const saveButton = createActionButton('Save To Database', 'el-button el-button--primary', () => vm.saveToDatabase());
+          saveButton.id = 'save-db-btn';
+          editToolsGroup.insertBefore(saveButton, editToolsGroup.firstChild);
+        }
+
+        if (loadGroup && !document.getElementById('load-db-btn')) {
+          const loadButton = createActionButton('Load From Database', 'el-button el-button--success is-plain', () => vm.loadInitialData());
+          loadButton.id = 'load-db-btn';
+          loadGroup.insertBefore(loadButton, loadGroup.firstChild);
+        }
+      }
+
+      function enhanceAdmin() {
+        const root = document.getElementById('app');
+        const vm = root && root.__vue__;
+        if (!vm || vm.__dbEnhanced) return false;
+
+        vm.__dbEnhanced = true;
+        if (typeof vm.backendMode === 'undefined') {
+          vm.$set(vm, 'backendMode', '');
+        }
+
+        vm.fetchRowsFromApi = async function () {
+          const response = await fetch('./api/prices.php?v=' + Date.now(), {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          return await response.json();
+        };
+
+        vm.loadInitialData = async function () {
+          try {
+            const data = await this.fetchRowsFromApi();
+            this.applyData(data, 'Database');
+            this.backendMode = 'database';
+            this.loadError = '';
+          } catch (error) {
+            try {
+              const response = await fetch('./data.json?v=' + Date.now(), {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache' }
+              });
+              if (!response.ok) throw new Error('HTTP ' + response.status);
+              const data = await response.json();
+              this.applyData(data, 'data.json');
+              this.backendMode = 'file';
+              this.loadError = 'Database API is not available yet, so the editor loaded local data.json instead.';
+            } catch (fallbackError) {
+              console.error(error);
+              console.error(fallbackError);
+              this.loadError = 'Could not load data from the database API or local data.json.';
+            }
+          }
+        };
+
+        vm.saveToDatabase = async function () {
+          const cleaned = this.validateRows();
+          if (!cleaned) return;
+
+          try {
+            const response = await fetch('./api/prices.php', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                replace_all: true,
+                rows: cleaned
+              })
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.ok) {
+              throw new Error((result && result.message) || 'Save failed');
+            }
+
+            this.backendMode = 'database';
+            this.loadedFileName = 'Database';
+            this.$message.success('Price list saved to database');
+          } catch (error) {
+            console.error(error);
+            this.$message.error('Could not save to database');
+          }
+        };
+
+        const originalApplyData = vm.applyData.bind(vm);
+        vm.applyData = function (data, fileName) {
+          originalApplyData(data, fileName);
+          if (fileName === 'Database') {
+            this.backendMode = 'database';
+          }
+        };
+
+        addDatabaseButtons(vm);
+
+        if (sessionStorage.getItem(ADMIN_SESSION_KEY) === '1' && !vm.rows.length) {
+          vm.loadInitialData();
+        }
+
+        return true;
+      }
+
+      if (!enhanceAdmin()) {
+        const timer = setInterval(() => {
+          if (enhanceAdmin()) clearInterval(timer);
+        }, 200);
+        setTimeout(() => clearInterval(timer), 10000);
+      }
+    })();
   </script>
 </body>
 </html>

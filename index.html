@@ -930,25 +930,39 @@
         },
         async fetchAppleModelMap() {
           try {
-            const response = await fetch('./apple_a_model_map.json?v=' + Date.now(), {
+            let response = await fetch('./api/apple-model-map.php?v=' + Date.now(), {
               cache: 'no-store',
               headers: { 'Cache-Control': 'no-cache' }
             })
+
+            if (!response.ok) {
+              response = await fetch('./apple_a_model_map.json?v=' + Date.now(), {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache' }
+              })
+            }
+
             if (!response.ok) throw new Error('HTTP ' + response.status)
             const data = await response.json()
             const flattened = {}
 
-            ;['iphone', 'ipad'].forEach(key => {
-              if (data[key] && typeof data[key] === 'object') {
-                flattened[key] = data[key]
-              }
-            })
-
+            if (data.iphone && typeof data.iphone === 'object') {
+              flattened.iphone = data.iphone
+            }
+            if (data.ipad && typeof data.ipad === 'object') {
+              flattened.ipad = data.ipad
+            }
             if (data.mac && typeof data.mac === 'object') {
               Object.keys(data.mac).forEach(key => {
                 if (key === 'normalization_notes') return
                 if (data.mac[key] && typeof data.mac[key] === 'object') {
                   flattened[key] = data.mac[key]
+                }
+              })
+            } else {
+              Object.keys(data).forEach(key => {
+                if (data[key] && typeof data[key] === 'object') {
+                  flattened[key] = data[key]
                 }
               })
             }
@@ -958,6 +972,22 @@
             console.error(error)
             this.appleModelMap = {}
           }
+        },
+        async fetchPriceRows() {
+          let response = await fetch('./api/prices.php?v=' + Date.now(), {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+          })
+
+          if (!response.ok) {
+            response = await fetch('./data.json?v=' + Date.now(), {
+              cache: 'no-store',
+              headers: { 'Cache-Control': 'no-cache' }
+            })
+          }
+
+          if (!response.ok) throw new Error('HTTP ' + response.status)
+          return await response.json()
         },
         refreshCurrentIssue() {
           if (!this.selectedIssueKey) {
@@ -1000,12 +1030,7 @@
           }
 
           try {
-            const response = await fetch('./data.json?v=' + Date.now(), {
-              cache: 'no-store',
-              headers: { 'Cache-Control': 'no-cache' }
-            })
-            if (!response.ok) throw new Error('HTTP ' + response.status)
-            const data = await response.json()
+            const data = await this.fetchPriceRows()
             if (!Array.isArray(data)) throw new Error('data.json is not a valid array')
 
             const normalized = this.sortRows(data.map(this.normalizeRow).filter(item => item.brand && item.model && item.issue))

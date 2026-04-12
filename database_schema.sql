@@ -1,0 +1,61 @@
+CREATE TABLE IF NOT EXISTS repair_prices (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  brand VARCHAR(255) NOT NULL,
+  model VARCHAR(255) NOT NULL,
+  issue VARCHAR(255) NOT NULL,
+  price VARCHAR(100) NOT NULL DEFAULT '',
+  turnaround_time VARCHAR(100) NOT NULL DEFAULT '',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_repair_price (brand, model, issue),
+  KEY idx_repair_brand_model (brand, model)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS repair_intakes (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  source_type VARCHAR(50) NOT NULL DEFAULT 'quote',
+  customer_name VARCHAR(255) NOT NULL,
+  customer_phone VARCHAR(100) NOT NULL DEFAULT '',
+  customer_email VARCHAR(255) NOT NULL DEFAULT '',
+  contact_method VARCHAR(50) NOT NULL DEFAULT 'Phone',
+  device_type VARCHAR(100) NOT NULL DEFAULT '',
+  device_model VARCHAR(255) NOT NULL DEFAULT '',
+  quoted_price VARCHAR(100) NOT NULL DEFAULT '',
+  repair_issue VARCHAR(255) NOT NULL DEFAULT '',
+  estimated_time VARCHAR(100) NOT NULL DEFAULT '',
+  password_type VARCHAR(50) NOT NULL DEFAULT 'text',
+  password_text VARCHAR(255) NOT NULL DEFAULT '',
+  pattern_value VARCHAR(100) NOT NULL DEFAULT '',
+  password_none_reason TEXT NULL,
+  device_id_type VARCHAR(50) NOT NULL DEFAULT 'imei',
+  device_id_imei VARCHAR(100) NOT NULL DEFAULT '',
+  device_id_sn VARCHAR(100) NOT NULL DEFAULT '',
+  device_id_unavailable_reason TEXT NULL,
+  testable VARCHAR(20) NOT NULL DEFAULT 'yes',
+  test_profile VARCHAR(50) NOT NULL DEFAULT 'mobile',
+  cannot_test_reason TEXT NULL,
+  test_notes TEXT NULL,
+  test_results_json LONGTEXT NULL,
+  quote_data_json LONGTEXT NULL,
+  intake_json LONGTEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_repair_intakes_customer (customer_name),
+  KEY idx_repair_intakes_device (device_model),
+  KEY idx_repair_intakes_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS apple_model_map (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  a_number VARCHAR(10) NOT NULL,
+  family_key VARCHAR(100) NOT NULL,
+  model_name VARCHAR(255) NOT NULL,
+  linked_price_list_model VARCHAR(255) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_apple_a_number (a_number),
+  KEY idx_apple_family (family_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
