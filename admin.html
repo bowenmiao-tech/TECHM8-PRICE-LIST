@@ -1,200 +1,189 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TECHM8 婵炲濞€閺€閬嶆偋閸濄儳涓嶉柨娑樺閸婄偤鏌涘顒勵€楃憸?/title>
+  <title>TECHM8 Price Admin</title>
+  <script src="./supabase-config.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
   <script src="https://unpkg.com/element-ui/lib/index.js"></script>
   <style>
     :root {
-      --card-radius: 18px;
-      --border-color: #e6ebf0;
-      --text-main: #22323a;
-      --text-sub: #6f7d85;
-      --brand: #ef7204;
-      --brand-dark: #163129;
-      --bg-soft: #f5f7fb;
+      --tm-dark: #163129;
+      --tm-dark-2: #25473d;
+      --tm-accent: #ef7204;
+      --tm-bg: #f4f7f9;
+      --tm-border: #dfe7eb;
+      --tm-muted: #667781;
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       background:
-        radial-gradient(circle at top right, rgba(239,114,4,0.08), transparent 26%),
-        radial-gradient(circle at top left, rgba(22,49,41,0.08), transparent 28%),
-        var(--bg-soft);
-      color: var(--text-main);
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        radial-gradient(circle at top right, rgba(239,114,4,0.10), transparent 24%),
+        radial-gradient(circle at top left, rgba(22,49,41,0.12), transparent 26%),
+        var(--tm-bg);
+      color: #17252d;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     #app {
-      max-width: 1400px;
+      max-width: 1480px;
       margin: 0 auto;
       padding: 20px;
     }
 
-    .page-card {
+    .shell {
       background: #fff;
-      border: 1px solid var(--border-color);
-      border-radius: 26px;
+      border: 1px solid var(--tm-border);
+      border-radius: 28px;
       overflow: hidden;
-      box-shadow: 0 20px 60px rgba(20, 36, 46, 0.10);
+      box-shadow: 0 24px 64px rgba(15, 23, 32, 0.10);
     }
 
     .hero {
-      padding: 24px 24px 18px;
-      background: linear-gradient(135deg, var(--brand-dark) 0%, #28493f 100%);
+      padding: 28px;
+      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
       color: #fff;
     }
 
     .hero-top {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
       align-items: flex-start;
       justify-content: space-between;
+      gap: 16px;
     }
 
-    .hero-title {
+    .hero h1 {
       margin: 0;
-      font-size: 30px;
-      line-height: 1.1;
+      font-size: 32px;
+      line-height: 1.05;
       font-weight: 800;
     }
 
-    .hero-subtitle {
+    .hero p {
       margin: 10px 0 0;
+      max-width: 840px;
       color: rgba(255,255,255,0.82);
-      font-size: 14px;
       line-height: 1.7;
-      max-width: 820px;
+      font-size: 14px;
     }
 
-    .hero-steps {
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
       margin-top: 18px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
     }
 
-    .hero-step {
-      padding: 14px 16px;
-      border-radius: 16px;
+    .hero-tag {
+      padding: 10px 14px;
+      border-radius: 999px;
       background: rgba(255,255,255,0.10);
       border: 1px solid rgba(255,255,255,0.12);
-      min-height: 88px;
-    }
-
-    .hero-step-index {
       font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      opacity: .75;
-      margin-bottom: 6px;
       font-weight: 700;
-    }
-
-    .hero-step-text {
-      font-size: 14px;
-      line-height: 1.65;
-      color: rgba(255,255,255,0.95);
+      letter-spacing: .03em;
     }
 
     .content {
       padding: 18px;
     }
 
-    .summary-row {
+    .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 12px;
       margin-bottom: 16px;
     }
 
-    .summary-card {
-      border: 1px solid var(--border-color);
-      border-radius: var(--card-radius);
+    .stat-card,
+    .panel {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
       background: #fff;
+    }
+
+    .stat-card {
       padding: 16px;
     }
 
-    .summary-label {
-      color: var(--text-sub);
+    .stat-label {
+      color: var(--tm-muted);
       font-size: 12px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
-    .summary-value {
-      font-weight: 800;
+    .stat-value {
       font-size: 28px;
       line-height: 1;
+      font-weight: 800;
     }
 
-    .toolbar-card,
-    .table-card,
-    .config-card {
-      border: 1px solid var(--border-color);
-      border-radius: var(--card-radius);
-      background: #fff;
-    }
-
-    .toolbar-card,
-    .config-card {
-      padding: 16px;
+    .tool-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(300px, .9fr);
+      gap: 16px;
       margin-bottom: 16px;
     }
 
-    .toolbar-grid {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap: 16px;
+    .panel {
+      padding: 16px;
     }
 
-    .toolbar-title,
-    .config-title {
+    .panel-title {
       font-size: 16px;
       font-weight: 800;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
-    .toolbar-subtitle,
-    .config-subtitle {
-      color: var(--text-sub);
+    .panel-subtitle {
       font-size: 13px;
-      line-height: 1.65;
+      line-height: 1.7;
+      color: var(--tm-muted);
       margin-bottom: 14px;
     }
 
-    .button-group {
+    .button-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
     }
 
-    .table-card {
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .table-panel {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
       overflow: hidden;
+      background: #fff;
     }
 
     .table-head {
-      padding: 16px;
-      border-bottom: 1px solid var(--border-color);
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      background: #fafbfd;
+      padding: 16px;
+      background: #fafcfd;
+      border-bottom: 1px solid var(--tm-border);
     }
 
-    .table-head-title {
+    .table-title {
       font-size: 16px;
       font-weight: 800;
     }
 
-    .table-head-subtitle {
-      color: var(--text-sub);
+    .table-subtitle {
+      color: var(--tm-muted);
       font-size: 13px;
       margin-top: 4px;
     }
@@ -203,306 +192,137 @@
       padding: 0 12px 12px;
     }
 
-    .repo-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+    .alert {
+      margin-bottom: 16px;
     }
 
-    .muted-note {
-      margin-top: 12px;
+    .footer-note {
+      margin-top: 16px;
+      color: var(--tm-muted);
       font-size: 12px;
-      color: var(--text-sub);
       line-height: 1.7;
-      background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 12px 14px;
     }
 
-    .cell-note {
-      font-size: 12px;
-      color: var(--text-sub);
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
 
-    .table-actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .danger-text {
-      color: #c0392b;
-    }
-
-    .el-table th {
-      background: #f7f9fb !important;
-      color: #56636b;
-      font-weight: 800;
-    }
-
-    .el-table td, .el-table th {
-      padding: 10px 0 !important;
-    }
-
-    .el-input__inner,
-    .el-textarea__inner {
-      border-radius: 12px;
-    }
-
-    .el-button {
-      border-radius: 12px;
-      font-weight: 700;
-    }
-
-    @media (max-width: 980px) {
-      .toolbar-grid,
-      .repo-grid {
+    @media (max-width: 1080px) {
+      .tool-grid {
         grid-template-columns: 1fr;
       }
     }
 
+    @media (max-width: 640px) {
+      #app {
+        padding: 12px;
+      }
 
+      .hero,
+      .content {
+        padding: 14px;
+      }
 
-    .auth-shell {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .login-card {
-      width: 100%;
-      max-width: 460px;
-      background: #fff;
-      border: 1px solid var(--border-color);
-      border-radius: 26px;
-      box-shadow: 0 20px 60px rgba(20, 36, 46, 0.14);
-      overflow: hidden;
-    }
-
-    .login-hero {
-      padding: 26px 24px 18px;
-      background: linear-gradient(135deg, var(--brand-dark) 0%, #28493f 100%);
-      color: #fff;
-    }
-
-    .login-title {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 800;
-    }
-
-    .login-subtitle {
-      margin: 10px 0 0;
-      line-height: 1.7;
-      font-size: 14px;
-      color: rgba(255,255,255,0.84);
-    }
-
-    .login-body {
-      padding: 22px;
-    }
-
-    .login-note {
-      margin-top: 14px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: #fff8f1;
-      border: 1px solid #ffd6b5;
-      color: #7a4a21;
-      font-size: 12px;
-      line-height: 1.7;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    @media (max-width: 768px) {
-      #app { padding: 12px; }
-      .hero, .content { padding: 14px; }
-      .summary-value { font-size: 24px; }
+      .hero h1 {
+        font-size: 26px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="app">
-    <div v-if="!isAuthenticated" class="auth-shell">
-      <div class="login-card">
-        <div class="login-hero">
-          <h1 class="login-title">TECHM8 Admin</h1>
-          <div class="login-subtitle">闁哄鐗婇幐鎼佸矗閸℃稑瑙﹂幖绮光偓鎶藉彙闁诲酣娼уΛ娑㈡偉濠婂牆瑙﹂幖娣灩椤ゅ懘鏌ら崘娴嬪亾閻旇櫣顔掗梺绋跨箞閸庝即鎮抽鐐插唨闁兼祴鏅╅崥鈧梺鑽ゅ仜濡繈濡存径鎰棃妞ゎ偒鍏橀崑鎾诲磼閻愨晛浜鹃柛灞剧閸娿倕霉閿濆洤鞋缂佺粯鐗滅划鏂款吋閸涱厽顓绘繛鎴炴惄娴滄繂锕㈤埀顒勬煛閸パ呮憼闁哄苯锕ョ粙澶愬焵椤掆偓閳诲酣鏁嶉崟顒傛殸闂佸搫鍟ㄩ崕閬嶆偉閼稿灚濯撮悹鎭掑妽閺嗗繘鏌涢敂鎯у妺婵炲懏鐟╂俊?/div>
-        </div>
-        <div class="login-body">
-          <el-alert
-            title="闁哄鏅滈悷锕€危閹间礁绀堢€广儱娴傛导鍌炴⒒閸喓鎳勯柍褜鍏涚粈渚€鎯侀幋锔藉剺濞达綁顥撶粻浠嬫煙闊彃鈧呮濠靛鐒婚柛灞剧閸娿倝鏌涢埡鍕仩妞ゃ垹鎳樺濂告嚑妫版繂娈╅梺绋跨箞閸庤崵妲愬┑鍥┾枖鐎广儱娲ㄩ幖鐓幟瑰鍐╂崳婵犫偓閳ユ剚娼伴柨婵嗘缁犳盯鏌涢弬琛″亾閾忣偆褰滅紓浣哄珡閸愵亝娈ч梺绋跨箞閸斿﹪鍩€?
-            type="warning"
-            :closable="false"
-            show-icon
-            style="margin-bottom: 14px;">
-          </el-alert>
-
-          <el-input
-            v-model.trim="passwordInput"
-            show-password
-            placeholder="闁荤姴娲ㄩ弻澶屾椤撱垹绀傞柕澶堝劜閸婄敻鏌涘▎鎰凡闁伙附鍨块幆?
-            @keyup.enter.native="login">
-          </el-input>
-
-          <div style="display:flex; gap:10px; margin-top:14px;">
-            <el-button type="primary" style="flex:1;" @click="login">闁哄鏅滅粙鎴﹀矗閸℃稑瑙﹂幖绮光偓鎶藉彙</el-button>
-          </div>
-
-          <div v-if="loginError" class="login-note" style="background:#fff2f0; border-color:#ffc9c3; color:#b42318;">{{ loginError }}</div>
-
-          <div class="login-note">
-            闁诲酣娼уΛ娑㈡偉濠婂牆绀冩繛鍡楃箲闊剟寮堕埡鍌滄噥闂?<code>admin.html</code> 闂佸搫鍊稿ú锝呪枎閵徛颁簻闁割偅娲栭崝銉╂煟?<code>ADMIN_PASSWORD</code> 闂佸憡鐟﹂敃銏ゅ闯濞差亝鐓傞悘鐐靛劦閸?
-            婵炶揪绲挎慨铏閹烘瑙﹂幖娣€ゅú锝夋煛閳ь剟鎮烽幍顔筋潥闂佹椿鍠曠欢銈囨濠靛鐭楁い蹇撶墛娴犳﹢鎮烽弴姘卞妽濠碘剝鎮傞弻鍥晲閸曨垰娈濋梺绋匡工閸氬寮總绋跨濠㈣埖绋撶粈澶愭煕閹邦剛小缂佹鍊圭€靛ジ鎮╅幓鎺斿帓 GitHub闂?
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-else class="page-card">
+    <div class="shell">
       <div class="hero">
         <div class="hero-top">
           <div>
-            <h1 class="hero-title">TECHM8 婵炲濞€閺€閬嶆偋閸濄儳涓嶉柨娑樺閸婄偤鏌涘顒勵€楃憸?/h1>
-            <div class="hero-subtitle">
-              闁哄鏅滈悷锕€危閸涘﹦鈻旈柍褜鍓氱粙澶愵敂閸愵亞鎲归梺娲绘娇閸斿秹寮抽悢鐓庣妞ゆ棁鍋愬銊╂煟閵娿儱顏╅柛妯稿€楅幏褰掑捶椤撶儐鏆梺鍝勭墱閸撱劎妲愰悧鍫熷闁绘ê寮堕煬顒勬煕濮橆剟顎楃憸鐗堟尦瀵劑鏌呭☉姘畾闂佸憡鑹鹃崙鐣屾濠靛洤绶炵€广儱鎳庨悡鎴︽煙鐎涙澧х紒妤€鎳忓顏堟嚍閵夛妇鍘愰梺?<code>data.json</code>闂佹寧绋戦張顒冦亹娴ｅ湱顩查柕鍫濇噹閻?GitHub闂?
-              闂佸憡鎸哥粔纾嬨亹鐎涙ê顕辨慨妯虹亪閸嬫挸顫濆畷鍥╃暫闂傚倸鍟崇亸娆戞閿旈敮鍋撳☉娆樼劸妞ゆ洦鍓欐晥闁稿本纰嶇€氭煡鎮楃憴鍕暡婵＄偛鍊瑰顏堫敊濞嗘儳娈戦梺鐓庮殠娴滄粍鎱ㄩ埡鍛濠㈣泛锕ょ徊鍧楁煛閸艾浜鹃梺鍝勫€块。锕傛偝椤栫偛鍐€缂佹銆€閸嬫捇宕掑▎鎴犳闁诲繐绻楁ご绋课ｉ崫銉﹀珰閺夊牆澧界粈澶娾槈閹惧磭校婵℃彃鎽滅划鏃堝箳閺冨牏宕滈梺瑙勪航閸旀垿鍩€椤戣法绛忕紒杈ㄧ箖閹峰懘宕卞Δ鈧崵鎺旂磽娴ｅ摜绠板ù鐘崇洴瀹曟碍瀵奸弶鎴濆Г缂傚倸鍟ぐ鍐箖濡ゅ懏鍤婃い蹇撳琚熼梺鍛婂浮閺€閬嶅蓟婵犲洤绀堢€广儱鎳庨柊閬嶆煏?
-            </div>
+            <h1>Price List Admin</h1>
+            <p>
+              This page edits the repair price list used by the quote page. It reads from Supabase first, falls back to local
+              <span class="mono">data.json</span>, and can export a clean JSON file in the same structure as Jason's sync file.
+            </p>
           </div>
-          <div>
-            <el-tag type="success" effect="dark">GitHub Pages 闂佸搫鍊介～澶愩€?/el-tag>
-          </div>
-        </div>
-
-        <div class="hero-steps">
-          <div class="hero-step">
-            <div class="hero-step-index">Step 1</div>
-            <div class="hero-step-text">闂佺绻愰悧鍡楋耿椤忓懏浜ゆ繛鍡樻尭濞咃紕绱撻崒娑氬⒊缂侀鍋婂畷顐ｆ媴閸濆嫷鏉洪梺闈涙缁€渚€鎮楅悜钘夌煑闁哄鍋€閸嬫挻鎷呴悜妯烩枙婵烇絽娴傞崳锝夊Υ瀹ュ鍎庢い鏃囥€€閸嬫挻鎷呮搴＄畾闂佸搫绉堕崢褔骞忔导鏉戠睄闁割偅娲橀敍鐔兼煏?/div>
-          </div>
-          <div class="hero-step">
-            <div class="hero-step-index">Step 2</div>
-            <div class="hero-step-text">闂佺粯鍔楅幊鎾诲吹椤曗偓閸ㄦ儳顭ㄩ崘鐐╅梺?JSON闂佺偨鍎茬换鍐垂閵娾晛鐏虫繝濞惧亾缂佹鎳忓?data.json闂佺偨鍎茬换鎰濠靛绠┑鐘插暞娴犳﹢鏌￠崒婊冾暭闁哄棛鍠栭獮鎴︻敊閻撳孩鐝繝銏ｆ硾濞层倝濡舵禒瀣?/div>
-          </div>
-          <div class="hero-step">
-            <div class="hero-step-index">Step 3</div>
-            <div class="hero-step-text">闂佺粯鍔楅幊鎾诲吹椤曗偓閸ㄦ儳顭ㄩ崟顐熷徍閻庢鍠掗崑?GitHub 缂傚倸鍊归悧鐐垫椤愶絻浜滅痪鐗埱氶崑鎾斥攽閹惧墎顦紓渚囧枟椤牓宕氬☉銏㈠祦闁兼悂娼х徊鐟懊瑰┃鍨偓鏇㈠春鐏炵偓濯撮柣妯虹仛閻ｅ崬霉閻樿櫕灏紒銊╀憾婵?/div>
-          </div>
-          <div class="hero-step">
-            <div class="hero-step-index">Step 4</div>
-            <div class="hero-step-text">闂佸憡鎸哥粔纾嬨亹鐎涙ǜ浜滈柣銏犳啞濡椼劌霉閸忚壈澹橀柣锝夌畺瀵噣鎳滃▓鎸庘挄闂佸搫琚崕鏌ュ蓟婵犲洦鍎?data.json闂佹寧绋戦悺姒爐Hub Pages 闂佸搫娲ら悺銊╁蓟婵犲洤瑙﹂幖瀛樼箘缁愭鏌ゆ總澶夌盎濠殿喒鏅犻獮蹇斿緞婵犲倻鍘掗梺鍝勫€块。锕傛偝椤栫偛鍐€缂佹銆€閸?/div>
+          <div class="hero-tags">
+            <div class="hero-tag">No front-end password</div>
+            <div class="hero-tag">Supabase primary</div>
+            <div class="hero-tag">JSON fallback</div>
           </div>
         </div>
       </div>
 
       <div class="content">
-        <div class="summary-row">
-          <div class="summary-card">
-            <div class="summary-label">闂佽鍓氬Σ鎺楊敊閸ヮ亗浜归柡鍥╁枑濞?/div>
-            <div class="summary-value">{{ filteredRows.length }}</div>
+        <el-alert
+          v-if="loadError"
+          class="alert"
+          type="warning"
+          :closable="false"
+          :title="loadError">
+        </el-alert>
+
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Rows</div>
+            <div class="stat-value">{{ rows.length }}</div>
           </div>
-          <div class="summary-card">
-            <div class="summary-label">闂佸憡绻€閼宠埖鏅跺┑瀣瀬?/div>
-            <div class="summary-value">{{ stats.brandCount }}</div>
+          <div class="stat-card">
+            <div class="stat-label">Brands</div>
+            <div class="stat-value">{{ brandCount }}</div>
           </div>
-          <div class="summary-card">
-            <div class="summary-label">闂佹悶鍔岄鍛般亹閸ф鏋?/div>
-            <div class="summary-value">{{ stats.modelCount }}</div>
+          <div class="stat-card">
+            <div class="stat-label">Data Source</div>
+            <div class="stat-value" style="font-size:22px;">{{ loadedFileName || 'Not loaded' }}</div>
           </div>
-          <div class="summary-card">
-            <div class="summary-label">閻庣懓鎲￠悡锟犲焵椤掆偓椤︻噣鎳?/div>
-            <div class="summary-value">{{ selectedRows.length }}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">閻熸粎澧楅幐鍛婃櫠閻樿妫橀柛銉檮椤?/div>
-            <div class="summary-value" style="font-size:18px; line-height:1.3; word-break:break-word;">{{ loadedFileName || 'data.json' }}</div>
+          <div class="stat-card">
+            <div class="stat-label">Last Loaded</div>
+            <div class="stat-value" style="font-size:18px; line-height:1.35;">{{ lastLoadedLabel }}</div>
           </div>
         </div>
 
-        <div class="toolbar-grid">
-          <div class="toolbar-card">
-            <div class="toolbar-title">Edit Tools</div>
-            <div class="toolbar-subtitle">
-              This page can work with either local JSON files or the database API.
-              Use the database buttons first when Hostinger is ready.
+        <div class="tool-grid">
+          <div class="panel">
+            <div class="panel-title">Data Actions</div>
+            <div class="panel-subtitle">
+              Use Supabase as the live source. If Supabase is unavailable, load from local <span class="mono">data.json</span>.
+              Export is kept in the same flat JSON row format: <span class="mono">brand / model / issue / price / time</span>.
             </div>
-            <div class="button-group">
-              <el-button type="primary" icon="el-icon-plus" @click="addRow">Add Row</el-button>
-              <el-button icon="el-icon-document-copy" @click="duplicateSelected" :disabled="selectedRows.length !== 1">Duplicate Selected</el-button>
-              <el-button type="danger" plain icon="el-icon-delete" @click="deleteSelected" :disabled="!selectedRows.length">Delete Selected</el-button>
-              <el-button type="success" icon="el-icon-document-copy" @click="copyJson">Copy JSON</el-button>
-              <el-button type="warning" icon="el-icon-download" @click="downloadJson">Download data.json</el-button>
+            <div class="button-row">
+              <el-button type="primary" icon="el-icon-upload2" @click="saveToSupabase" :loading="saving">Save To Supabase</el-button>
+              <el-button icon="el-icon-refresh" @click="loadFromSupabase" :loading="loading">Load From Supabase</el-button>
+              <el-button icon="el-icon-document" @click="loadFromJson" :loading="loading">Load From data.json</el-button>
+              <el-button icon="el-icon-document-copy" @click="copyJson">Copy JSON</el-button>
+              <el-button icon="el-icon-download" @click="downloadJson">Download JSON</el-button>
             </div>
-            <div class="muted-note">
-              Prices remain string-compatible, so values like <code>N/A</code>, <code>TBC</code>, or numeric prices will all continue to work.
-            </div>
-            </div>
+          </div>
 
-
-          <div class="config-card">
-            <div class="config-title">GitHub Config</div>
-            <div class="config-subtitle">These values are only used for the backup GitHub flow.</div>
-            <div class="repo-grid">
-              <el-input v-model.trim="github.owner" placeholder="owner">
-                <template slot="prepend">Owner</template>
-              </el-input>
-              <el-input v-model.trim="github.repo" placeholder="repo">
-                <template slot="prepend">Repo</template>
-              </el-input>
-              <el-input v-model.trim="github.branch" placeholder="main">
-                <template slot="prepend">Branch</template>
-              </el-input>
-              <el-input v-model.trim="github.path" placeholder="data.json">
-                <template slot="prepend">Path</template>
-              </el-input>
-            </div>
-            <div class="button-group" style="margin-top:12px;">
-              <el-button type="primary" plain icon="el-icon-link" @click="openGithubRepo">Open Repo</el-button>
-              <el-button type="primary" icon="el-icon-upload2" @click="openGithubEditPage">Open GitHub Editor</el-button>
-            </div>
-            <div class="muted-note">
-              The GitHub buttons remain available as a fallback export path.
+          <div class="panel">
+            <div class="panel-title">Quick Tools</div>
+            <div class="stack">
+              <el-input v-model.trim="keyword" clearable placeholder="Search brand, model, issue, or price"></el-input>
+              <el-select v-model="brandFilter" clearable filterable placeholder="Filter by brand">
+                <el-option
+                  v-for="brand in brandOptions"
+                  :key="brand"
+                  :label="brand"
+                  :value="brand">
+                </el-option>
+              </el-select>
+              <div class="button-row">
+                <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
+                <el-button type="warning" plain icon="el-icon-document-copy" @click="duplicateSelected">Duplicate Selected</el-button>
+                <el-button type="danger" plain icon="el-icon-delete" @click="deleteSelected">Delete Selected</el-button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div v-if="loadError" style="margin-bottom:16px;">
-          <el-alert :title="loadError" type="warning" :closable="false" show-icon></el-alert>
-        </div>
-
-        <div class="toolbar-card" style="margin-bottom:16px;">
-          <div class="toolbar-title">Load And Filter</div>
-          <div class="toolbar-subtitle">Load from the database API when available, or fall back to a local JSON file.</div>
-          <div class="button-group" style="margin-bottom:12px;">
-            <el-button icon="el-icon-refresh" @click="loadInitialData">Reload Data</el-button>
-            <el-button icon="el-icon-folder-opened" @click="triggerFilePick">Choose data.json</el-button>
-            <input ref="jsonFileInput" type="file" accept="application/json,.json" style="display:none" @change="handleJsonFileChange">
-          </div>
-          <div class="repo-grid">
-            <el-input v-model="keyword" clearable placeholder="Search brand / model / issue" @clear="handleSearchClear"></el-input>
-            <el-select v-model="brandFilter" clearable filterable placeholder="Filter by brand">
-              <el-option v-for="brand in brandOptions" :key="brand" :label="brand" :value="brand"></el-option>
-            </el-select>
-          </div>
-        </div>
-
-        <div class="table-card">
+        <div class="table-panel">
           <div class="table-head">
             <div>
-              <div class="table-head-title">Price Table</div>
-              <div class="table-head-subtitle">Edit values here, then save to the database or export JSON as a fallback.</div>
+              <div class="table-title">Repair Price Rows</div>
+              <div class="table-subtitle">
+                Editing is inline. Every row must keep <span class="mono">brand</span>, <span class="mono">model</span>, and <span class="mono">issue</span>.
+              </div>
             </div>
-            <div class="cell-note">
-              Numeric prices show as <strong>$value</strong> on the quote page. Text values remain unchanged.
-            </div>
+            <div class="table-subtitle">{{ filteredRows.length }} visible row(s)</div>
           </div>
 
           <div class="table-wrap">
@@ -510,66 +330,57 @@
               ref="dataTable"
               :data="filteredRows"
               border
-              style="width:100%"
-              @selection-change="handleSelectionChange"
-              empty-text="闂佸搫妫楅崐鐟拔涢妶澶婃瀬闁绘鐗嗙粊锕傛煥濞戞鐒锋い鏇ㄥ墴瀹曟宕煎┑鍡╂奖闁?data.json 闂佺懓鐡ㄩ悧妤呭蓟婵犲啯娅犻柣鎰椤忛亶鎮?
-              max-height="720">
+              stripe
+              height="640"
+              @selection-change="selectedRows = $event">
               <el-table-column type="selection" width="50"></el-table-column>
-
-              <el-table-column label="#" width="70">
-                <template slot-scope="scope">
-                  <strong>{{ scope.$index + 1 }}</strong>
-                </template>
-              </el-table-column>
-
               <el-table-column label="Brand" min-width="180">
                 <template slot-scope="scope">
-                  <el-input v-model="scope.row.brand" placeholder="Brand" @keydown.space.native.stop></el-input>
+                  <el-input v-model.trim="scope.row.brand" placeholder="Brand"></el-input>
                 </template>
               </el-table-column>
-
-              <el-table-column label="Model" min-width="220">
+              <el-table-column label="Model" min-width="260">
                 <template slot-scope="scope">
-                  <el-input v-model="scope.row.model" placeholder="Model" @keydown.space.native.stop></el-input>
+                  <el-input v-model.trim="scope.row.model" placeholder="Model"></el-input>
                 </template>
               </el-table-column>
-
-              <el-table-column label="Issue" min-width="240">
+              <el-table-column label="Issue" min-width="300">
                 <template slot-scope="scope">
-                  <el-input v-model="scope.row.issue" placeholder="Issue" @keydown.space.native.stop></el-input>
+                  <el-input v-model.trim="scope.row.issue" placeholder="Issue"></el-input>
                 </template>
               </el-table-column>
-
-              <el-table-column label="Price" width="150">
+              <el-table-column label="Price" min-width="120">
                 <template slot-scope="scope">
-                  <el-input v-model="scope.row.price" placeholder="婵炴挻鑹鹃鍛淬€?99 / N/A / TBC" @keydown.space.native.stop></el-input>
+                  <el-input v-model.trim="scope.row.price" placeholder="$79"></el-input>
                 </template>
               </el-table-column>
-
-              <el-table-column label="Time" min-width="200">
+              <el-table-column label="Time" min-width="170">
                 <template slot-scope="scope">
-                  <el-input v-model="scope.row.time" placeholder="婵炴挻鑹鹃鍛淬€?30 minutes to 2 hours" @keydown.space.native.stop></el-input>
+                  <el-input v-model.trim="scope.row.time" placeholder="1-3 business days"></el-input>
                 </template>
               </el-table-column>
-
-              <el-table-column label="闂佺懓鐏濈粔宕囩礊? width="190" fixed="right">
+              <el-table-column label="Actions" width="170" fixed="right">
                 <template slot-scope="scope">
-                  <div class="table-actions">
-                    <el-button size="mini" @click="duplicateRow(scope.row)">婵犮垼娉涚粔鎾春?/el-button>
-                    <el-button size="mini" type="danger" plain @click="deleteRow(scope.$index, scope.row)">闂佸憡甯炴繛鈧繛?/el-button>
+                  <div class="button-row">
+                    <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
+                    <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
                   </div>
                 </template>
               </el-table-column>
             </el-table>
           </div>
         </div>
+
+        <div class="footer-note">
+          This admin page currently has no built-in access control because you asked to remove passwords first.
+          Keep the repository and Supabase project private until proper authentication is added.
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    const ADMIN_PASSWORD = '008009';
-    const ADMIN_SESSION_KEY = 'techm8_admin_authed';
+    const SUPABASE = window.TECHM8_SUPABASE || null;
 
     new Vue({
       el: '#app',
@@ -579,387 +390,244 @@
           selectedRows: [],
           keyword: '',
           brandFilter: '',
-          loadError: '',
           loadedFileName: '',
-          backendMode: '',
-          github: {
-            owner: 'bowenmiao-tech',
-            repo: 'TECHM8-PRICE-LIST',
-            branch: 'main',
-            path: 'data.json'
-          },
-          isAuthenticated: false,
-          passwordInput: '',
-          loginError: ''
-        }
+          loadError: '',
+          loading: false,
+          saving: false,
+          lastLoadedAt: null
+        };
       },
       computed: {
         brandOptions() {
-          const set = new Set(this.rows.map(row => row.brand).filter(Boolean))
-          return Array.from(set).sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }))
+          return Array.from(new Set(this.rows.map(row => row.brand).filter(Boolean)))
+            .sort(this.naturalSort);
+        },
+        brandCount() {
+          return this.brandOptions.length;
         },
         filteredRows() {
-          const keyword = this.keyword.trim().toLowerCase()
+          const keyword = String(this.keyword || '').trim().toLowerCase();
           return this.rows.filter(row => {
-            const matchBrand = !this.brandFilter || row.brand === this.brandFilter
-            const matchKeyword = !keyword || [row.brand, row.model, row.issue, row.price, row.time]
+            if (this.brandFilter && row.brand !== this.brandFilter) return false;
+            if (!keyword) return true;
+            const haystack = [row.brand, row.model, row.issue, row.price, row.time]
               .join(' ')
-              .toLowerCase()
-              .includes(keyword)
-            return matchBrand && matchKeyword
-          })
+              .toLowerCase();
+            return haystack.includes(keyword);
+          });
         },
-        stats() {
-          const brandSet = new Set()
-          const modelSet = new Set()
-          this.filteredRows.forEach(row => {
-            if (row.brand) brandSet.add(row.brand)
-            if (row.brand && row.model) modelSet.add(row.brand + '|||' + row.model)
-          })
-          return {
-            brandCount: brandSet.size,
-            modelCount: modelSet.size
-          }
+        lastLoadedLabel() {
+          if (!this.lastLoadedAt) return 'Not loaded yet';
+          return new Date(this.lastLoadedAt).toLocaleString();
         }
       },
       mounted() {
-        if (sessionStorage.getItem(ADMIN_SESSION_KEY) === '1') {
-          this.isAuthenticated = true
-          this.loadInitialData()
-        }
+        this.loadInitialData();
       },
       methods: {
-        login() {
-          if (!this.passwordInput) {
-            this.loginError = 'Please enter the admin password.'
-            return
-          }
-          if (this.passwordInput !== ADMIN_PASSWORD) {
-            this.loginError = 'Incorrect password. Please try again.'
-            return
-          }
-          this.isAuthenticated = true
-          this.loginError = ''
-          sessionStorage.setItem(ADMIN_SESSION_KEY, '1')
-          this.$nextTick(() => {
-            if (!this.rows.length) this.loadInitialData()
-          })
-        },
-        logout() {
-          this.isAuthenticated = false
-          this.passwordInput = ''
-          sessionStorage.removeItem(ADMIN_SESSION_KEY)
-        },
-        normalizeRow(row) {
-          return {
-            id: row && row.id ? row.id : this.makeId(),
-            brand: row && row.brand !== undefined ? String(row.brand).trim() : '',
-            model: row && row.model !== undefined ? String(row.model).trim() : '',
-            issue: row && row.issue !== undefined ? String(row.issue).trim() : '',
-            price: row && row.price !== undefined && row.price !== null ? String(row.price).trim() : '',
-            time: row && row.time !== undefined && row.time !== null ? String(row.time).trim() : ''
-          }
+        naturalSort(a, b) {
+          return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
         },
         makeId() {
-          return 'row_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9)
+          return 'row_' + Math.random().toString(36).slice(2, 10);
         },
-        triggerFilePick() {
-          if (this.$refs.jsonFileInput) this.$refs.jsonFileInput.click()
+        normalizeRow(item) {
+          return {
+            id: item.id || this.makeId(),
+            brand: String(item.brand || '').trim(),
+            model: String(item.model || '').trim(),
+            issue: String(item.issue || '').trim(),
+            price: item.price === null || item.price === undefined ? '' : String(item.price).trim(),
+            time: item.time === null || item.time === undefined ? '' : String(item.time).trim()
+          };
         },
-        async loadInitialData() {
-          const isFileProtocol = window.location.protocol === 'file:'
-          if (isFileProtocol) {
-            this.loadError = 'You opened the admin page from a local file. Please choose data.json manually.'
-            return
-          }
-          try {
-            const response = await fetch('./data.json?v=' + Date.now(), {
-              cache: 'no-store',
-              headers: { 'Cache-Control': 'no-cache' }
-            })
-            if (!response.ok) throw new Error('HTTP ' + response.status)
-            const data = await response.json()
-            this.applyData(data, 'data.json')
-            this.loadError = ''
-          } catch (error) {
-            console.error(error)
-            this.loadError = 'Automatic loading failed. You can still choose a JSON file manually.'
-          }
-        },
-        handleJsonFileChange(event) {
-          const file = event.target.files && event.target.files[0]
-          if (!file) return
-          const reader = new FileReader()
-          reader.onload = () => {
-            try {
-              const parsed = JSON.parse(reader.result)
-              this.applyData(parsed, file.name)
-              this.loadError = ''
-              this.$message.success('JSON file loaded successfully')
-            } catch (error) {
-              console.error(error)
-              this.$message.error('Invalid JSON file')
-            }
-          }
-          reader.onerror = () => {
-            this.$message.error('File read failed')
-          }
-          reader.readAsText(file, 'utf-8')
-          event.target.value = ''
-        },
-        applyData(data, fileName) {
-          if (!Array.isArray(data)) throw new Error('Price data must be an array')
-          this.rows = data.map(item => this.normalizeRow(item))
-          this.loadedFileName = fileName || 'data.json'
-          this.selectedRows = []
-          if (this.$refs.dataTable) this.$refs.dataTable.clearSelection()
-        },
-        handleSelectionChange(rows) {
-          this.selectedRows = rows
-        },
-        addRow() {
-          this.rows.unshift(this.normalizeRow({ brand: '', model: '', issue: '', price: '', time: '' }))
-          this.$message.success('Row added')
-        },
-        duplicateRow(row) {
-          this.rows.unshift(this.normalizeRow(row))
-          this.$message.success('Row duplicated')
-        },
-        duplicateSelected() {
-          if (this.selectedRows.length !== 1) {
-            this.$message.warning('Select one row to duplicate')
-            return
-          }
-          this.duplicateRow(this.selectedRows[0])
-        },
-        deleteRow(index, row) {
-          this.$confirm(`Delete ${row.brand || 'Unnamed brand'} / ${row.model || 'Unnamed model'} / ${row.issue || 'Unnamed issue'}?`, 'Confirm', {
-            type: 'warning'
-          }).then(() => {
-            this.rows = this.rows.filter(item => item.id !== row.id)
-            this.$message.success('Row deleted')
-          }).catch(() => {})
-        },
-        deleteSelected() {
-          if (!this.selectedRows.length) {
-            this.$message.warning('Select rows first')
-            return
-          }
-          const ids = new Set(this.selectedRows.map(item => item.id))
-          this.$confirm(`Delete ${this.selectedRows.length} selected row(s)?`, 'Confirm', {
-            type: 'warning'
-          }).then(() => {
-            this.rows = this.rows.filter(item => !ids.has(item.id))
-            this.selectedRows = []
-            if (this.$refs.dataTable) this.$refs.dataTable.clearSelection()
-            this.$message.success('Rows deleted')
-          }).catch(() => {})
-        },
-        validateRows() {
-          const cleaned = this.rows.map(row => this.normalizeRow(row))
-          const invalid = cleaned.find(row => !row.brand || !row.model || !row.issue)
-          if (invalid) {
-            this.$message.error('brand, model, and issue are required for every row')
-            return null
-          }
-          cleaned.sort((a, b) => {
+        applyData(data, source) {
+          this.rows = (Array.isArray(data) ? data : []).map(item => this.normalizeRow(item)).sort((a, b) => {
             return (
-              String(a.brand).localeCompare(String(b.brand), undefined, { numeric: true, sensitivity: 'base' }) ||
-              String(a.model).localeCompare(String(b.model), undefined, { numeric: true, sensitivity: 'base' }) ||
-              String(a.issue).localeCompare(String(b.issue), undefined, { numeric: true, sensitivity: 'base' })
-            )
-          })
-          return cleaned.map(({ brand, model, issue, price, time }) => ({ brand, model, issue, price, time }))
+              this.naturalSort(a.brand, b.brand) ||
+              this.naturalSort(a.model, b.model) ||
+              this.naturalSort(a.issue, b.issue)
+            );
+          });
+          this.loadedFileName = source;
+          this.lastLoadedAt = Date.now();
         },
-        buildJsonText() {
-          const cleaned = this.validateRows()
-          if (!cleaned) return null
-          return JSON.stringify(cleaned, null, 2)
-        },
-        async copyJson() {
-          const jsonText = this.buildJsonText()
-          if (!jsonText) return
-          try {
-            await navigator.clipboard.writeText(jsonText)
-            this.$message.success('JSON copied to clipboard')
-          } catch (error) {
-            console.error(error)
-            this.$message.error('Copy failed')
+        async loadFromSupabase() {
+          if (!SUPABASE) {
+            throw new Error('Supabase config is missing.');
           }
-        },
-        downloadJson() {
-          const jsonText = this.buildJsonText()
-          if (!jsonText) return
-          const blob = new Blob([jsonText], { type: 'application/json;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = 'data.json'
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          URL.revokeObjectURL(url)
-          this.$message.success('data.json downloaded')
-        },
-        githubEditUrl() {
-          const owner = this.github.owner || 'bowenmiao-tech'
-          const repo = this.github.repo || 'TECHM8-PRICE-LIST'
-          const branch = this.github.branch || 'main'
-          const path = this.github.path || 'data.json'
-          return `https://github.com/${owner}/${repo}/edit/${branch}/${path}`
-        },
-        githubRepoUrl() {
-          const owner = this.github.owner || 'bowenmiao-tech'
-          const repo = this.github.repo || 'TECHM8-PRICE-LIST'
-          return `https://github.com/${owner}/${repo}`
-        },
-        async openGithubEditPage() {
-          const jsonText = this.buildJsonText()
-          if (!jsonText) return
-          try {
-            await navigator.clipboard.writeText(jsonText)
-            this.$message.success('JSON copied. Opening GitHub editor.')
-          } catch (error) {
-            console.error(error)
-            this.$message.warning('Opening GitHub editor, but clipboard copy failed.')
+          const response = await fetch(
+            SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc',
+            {
+              headers: {
+                apikey: SUPABASE.anonKey,
+                Authorization: 'Bearer ' + SUPABASE.anonKey
+              }
+            }
+          );
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error((result && result.message) || 'Failed to load Supabase price list.');
           }
-          window.open(this.githubEditUrl(), '_blank')
+          this.applyData(result, 'Supabase');
+          this.loadError = '';
         },
-        openGithubRepo() {
-          window.open(this.githubRepoUrl(), '_blank')
-        }
-      }
-    })
-  </script>
-  <script>
-    (function () {
-      function createActionButton(text, className, handler) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = className;
-        button.innerHTML = '<span>' + text + '</span>';
-        button.addEventListener('click', handler);
-        return button;
-      }
-
-      function addDatabaseButtons(vm) {
-        const toolbarGroups = document.querySelectorAll('.toolbar-card .button-group');
-        if (!toolbarGroups.length) return;
-
-        const editToolsGroup = toolbarGroups[0];
-        const loadGroup = toolbarGroups[1];
-
-        if (editToolsGroup && !document.getElementById('save-db-btn')) {
-          const saveButton = createActionButton('Save To Database', 'el-button el-button--primary', () => vm.saveToDatabase());
-          saveButton.id = 'save-db-btn';
-          editToolsGroup.insertBefore(saveButton, editToolsGroup.firstChild);
-        }
-
-        if (loadGroup && !document.getElementById('load-db-btn')) {
-          const loadButton = createActionButton('Load From Database', 'el-button el-button--success is-plain', () => vm.loadInitialData());
-          loadButton.id = 'load-db-btn';
-          loadGroup.insertBefore(loadButton, loadGroup.firstChild);
-        }
-      }
-
-      function enhanceAdmin() {
-        const root = document.getElementById('app');
-        const vm = root && root.__vue__;
-        if (!vm || vm.__dbEnhanced) return false;
-
-        vm.__dbEnhanced = true;
-        if (typeof vm.backendMode === 'undefined') {
-          vm.$set(vm, 'backendMode', '');
-        }
-
-        vm.fetchRowsFromApi = async function () {
-          const response = await fetch('./api/prices.php?v=' + Date.now(), {
+        async loadFromJson() {
+          const response = await fetch('./data.json?v=' + Date.now(), {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache' }
           });
-          if (!response.ok) throw new Error('HTTP ' + response.status);
-          return await response.json();
-        };
-
-        vm.loadInitialData = async function () {
+          if (!response.ok) {
+            throw new Error('Failed to load data.json');
+          }
+          const result = await response.json();
+          this.applyData(result, 'data.json');
+        },
+        async loadInitialData() {
+          this.loading = true;
           try {
-            const response = await fetch('./data.json?v=' + Date.now(), {
-              cache: 'no-store',
-              headers: { 'Cache-Control': 'no-cache' }
-            });
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            const data = await response.json();
-            this.applyData(data, 'data.json');
-            this.backendMode = 'file';
-            this.loadError = '';
+            await this.loadFromSupabase();
           } catch (error) {
             try {
-              const data = await this.fetchRowsFromApi();
-              this.applyData(data, 'Database');
-              this.backendMode = 'database';
-              this.loadError = 'Local data.json is unavailable, so the editor loaded database data instead.';
+              await this.loadFromJson();
+              this.loadError = 'Supabase load failed. The editor is using local data.json instead.';
             } catch (fallbackError) {
               console.error(error);
               console.error(fallbackError);
-              this.loadError = 'Could not load data from local data.json or the database API.';
+              this.loadError = 'Could not load Supabase or local data.json.';
+              this.$message.error(this.loadError);
             }
+          } finally {
+            this.loading = false;
           }
-        };
-
-        vm.saveToDatabase = async function () {
+        },
+        addRow() {
+          this.rows.unshift(this.normalizeRow({
+            brand: '',
+            model: '',
+            issue: '',
+            price: '',
+            time: ''
+          }));
+        },
+        duplicateRow(row) {
+          this.rows.unshift(this.normalizeRow(row));
+          this.$message.success('Row duplicated.');
+        },
+        duplicateSelected() {
+          if (this.selectedRows.length !== 1) {
+            this.$message.warning('Select exactly one row to duplicate.');
+            return;
+          }
+          this.duplicateRow(this.selectedRows[0]);
+        },
+        deleteRow(row) {
+          this.$confirm(
+            `Delete "${row.brand || 'Unknown'} / ${row.model || 'Unknown'} / ${row.issue || 'Unknown'}"?`,
+            'Confirm',
+            { type: 'warning' }
+          ).then(() => {
+            this.rows = this.rows.filter(item => item.id !== row.id);
+            this.$message.success('Row deleted.');
+          }).catch(() => {});
+        },
+        deleteSelected() {
+          if (!this.selectedRows.length) {
+            this.$message.warning('Select rows first.');
+            return;
+          }
+          const ids = new Set(this.selectedRows.map(item => item.id));
+          this.$confirm(`Delete ${ids.size} selected row(s)?`, 'Confirm', { type: 'warning' })
+            .then(() => {
+              this.rows = this.rows.filter(item => !ids.has(item.id));
+              this.selectedRows = [];
+              if (this.$refs.dataTable) this.$refs.dataTable.clearSelection();
+              this.$message.success('Selected rows deleted.');
+            })
+            .catch(() => {});
+        },
+        validateRows() {
+          const cleaned = this.rows.map(item => this.normalizeRow(item));
+          const invalid = cleaned.find(row => !row.brand || !row.model || !row.issue);
+          if (invalid) {
+            this.$message.error('Brand, model, and issue are required in every row.');
+            return null;
+          }
+          cleaned.sort((a, b) => {
+            return (
+              this.naturalSort(a.brand, b.brand) ||
+              this.naturalSort(a.model, b.model) ||
+              this.naturalSort(a.issue, b.issue)
+            );
+          });
+          return cleaned.map(({ brand, model, issue, price, time }) => ({ brand, model, issue, price, time }));
+        },
+        buildJsonText() {
           const cleaned = this.validateRows();
-          if (!cleaned) return;
-
+          if (!cleaned) return null;
+          return JSON.stringify(cleaned, null, 2);
+        },
+        async copyJson() {
+          const text = this.buildJsonText();
+          if (!text) return;
           try {
-            const response = await fetch('./api/prices.php', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                replace_all: true,
-                rows: cleaned
-              })
-            });
-
-            const result = await response.json();
-            if (!response.ok || !result.ok) {
-              throw new Error((result && result.message) || 'Save failed');
-            }
-
-            this.backendMode = 'database';
-            this.loadedFileName = 'Database';
-            this.$message.success('Price list saved to database');
+            await navigator.clipboard.writeText(text);
+            this.$message.success('JSON copied.');
           } catch (error) {
             console.error(error);
-            this.$message.error('Could not save to database');
+            this.$message.error('Copy failed.');
           }
-        };
-
-        const originalApplyData = vm.applyData.bind(vm);
-        vm.applyData = function (data, fileName) {
-          originalApplyData(data, fileName);
-          if (fileName === 'Database') {
-            this.backendMode = 'database';
+        },
+        downloadJson() {
+          const text = this.buildJsonText();
+          if (!text) return;
+          const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'data.json';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          this.$message.success('data.json downloaded.');
+        },
+        async saveToSupabase() {
+          const cleaned = this.validateRows();
+          if (!cleaned) return;
+          if (!SUPABASE) {
+            this.$message.error('Supabase config is missing.');
+            return;
           }
-        };
 
-        addDatabaseButtons(vm);
-
-        if (sessionStorage.getItem(ADMIN_SESSION_KEY) === '1' && !vm.rows.length) {
-          vm.loadInitialData();
+          this.saving = true;
+          try {
+            const response = await fetch(SUPABASE.url + '/rest/v1/rpc/save_repair_prices', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                apikey: SUPABASE.anonKey,
+                Authorization: 'Bearer ' + SUPABASE.anonKey
+              },
+              body: JSON.stringify({ payload: cleaned })
+            });
+            const result = await response.json();
+            if (!response.ok || (result && result.ok === false)) {
+              throw new Error((result && result.message) || 'Save failed.');
+            }
+            this.loadedFileName = 'Supabase';
+            this.lastLoadedAt = Date.now();
+            this.loadError = '';
+            this.$message.success(`Saved ${cleaned.length} row(s) to Supabase.`);
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Could not save to Supabase.');
+          } finally {
+            this.saving = false;
+          }
         }
-
-        return true;
       }
-
-      if (!enhanceAdmin()) {
-        const timer = setInterval(() => {
-          if (enhanceAdmin()) clearInterval(timer);
-        }, 200);
-        setTimeout(() => clearInterval(timer), 10000);
-      }
-    })();
+    });
   </script>
 </body>
 </html>

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECHM8 Backup Price Lookup</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+  <style>
+    :root {
+      --tm-dark: #163129;
+      --tm-dark-2: #23453b;
+      --tm-accent: #ef7204;
+      --tm-bg: #f5f7f9;
+      --tm-border: #dde4e8;
+      --tm-muted: #6f7d86;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(239,114,4,0.10), transparent 28%),
+        radial-gradient(circle at top right, rgba(22,49,41,0.14), transparent 28%),
+        var(--tm-bg);
+      color: #142026;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .page-wrap {
+      min-height: 100vh;
+      padding: 24px 12px 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .main-card {
+      width: 100%;
+      max-width: 1080px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 20px 60px rgba(10, 20, 30, 0.14);
+    }
+
+    .hero {
+      padding: 28px;
+      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
+      color: #fff;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .hero-title {
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 18px 0 10px;
+    }
+
+    .hero-text {
+      max-width: 760px;
+      color: rgba(255,255,255,0.82);
+      font-size: 15px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .content {
+      padding: 24px;
+    }
+
+    .lookup-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(300px, .9fr);
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--tm-border);
+      border-radius: 22px;
+      background: #fff;
+      padding: 18px;
+    }
+
+    .panel-title {
+      font-weight: 800;
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .panel-subtitle {
+      color: var(--tm-muted);
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+
+    .lookup-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+
+    .quick-link,
+    .search-shell {
+      min-height: 54px;
+      border: 1px solid #cfd9de;
+      border-radius: 18px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+    }
+
+    .quick-link {
+      justify-content: center;
+      text-decoration: none;
+      color: #1a2c33;
+      font-weight: 700;
+      gap: 10px;
+    }
+
+    .search-shell {
+      position: relative;
+      padding-left: 42px;
+    }
+
+    .search-shell i {
+      position: absolute;
+      left: 14px;
+      color: var(--tm-muted);
+    }
+
+    .search-shell input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      font-size: 16px;
+      background: transparent;
+    }
+
+    .search-pop {
+      margin-top: 10px;
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 18px 42px rgba(10, 20, 30, 0.08);
+      overflow: hidden;
+    }
+
+    .search-pop-head {
+      padding: 12px 14px;
+      background: #f8fbfc;
+      border-bottom: 1px solid var(--tm-border);
+      font-size: 13px;
+      color: var(--tm-muted);
+    }
+
+    .search-pop-item {
+      padding: 14px;
+      border-bottom: 1px solid #edf2f5;
+    }
+
+    .search-pop-item:last-child {
+      border-bottom: 0;
+    }
+
+    .search-pop-model {
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .search-pop-meta {
+      color: var(--tm-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .form-label {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .form-select,
+    .form-control {
+      min-height: 54px;
+      border-radius: 16px;
+      border-color: #d5dde2;
+      box-shadow: none !important;
+    }
+
+    .quote-card {
+      height: 100%;
+      border: 1px dashed #d8e1e6;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #fff 0%, #fbfcfd 100%);
+      padding: 18px;
+    }
+
+    .quote-price {
+      font-size: 40px;
+      line-height: 1;
+      font-weight: 800;
+      color: var(--tm-dark);
+      margin: 14px 0 10px;
+    }
+
+    .quote-issue {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .quote-time {
+      color: var(--tm-muted);
+      margin-bottom: 16px;
+    }
+
+    .empty-state {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--tm-muted);
+    }
+
+    .manual-box {
+      margin-top: 16px;
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fbfcfd;
+    }
+
+    .mini-note {
+      border-radius: 16px;
+      padding: 14px;
+      background: #f8fafb;
+      border: 1px solid var(--tm-border);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #44545c;
+    }
+
+    @media (max-width: 991px) {
+      .lookup-grid,
+      .lookup-toolbar {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="page-wrap">
+    <div class="main-card">
+      <div class="hero">
+        <div class="hero-badge">
+          <i class="bi bi-shield-check"></i>
+          Backup Lookup
+        </div>
+        <div class="hero-title">Backup Repair Price Lookup</div>
+        <p class="hero-text">
+          This page only reads local <code>data.json</code> and <code>apple_a_model_map.json</code>. It is designed as a stable fallback
+          when the main homepage is being changed or Supabase is temporarily unavailable.
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="lookup-grid">
+          <div class="panel">
+            <div class="panel-title">Quick Lookup</div>
+            <div class="panel-subtitle">Use IMEI.info in a new tab or search Apple A-model numbers here.</div>
+
+            <div class="lookup-toolbar">
+              <a class="quick-link" href="https://www.imei.info/" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-search"></i>
+                Open IMEI Lookup
+              </a>
+
+              <div>
+                <div class="search-shell">
+                  <i class="bi bi-search"></i>
+                  <input
+                    v-model.trim="appleModelSearch"
+                    type="text"
+                    inputmode="text"
+                    autocomplete="off"
+                    placeholder="Search Apple A-model, e.g. A2337">
+                </div>
+
+                <div v-if="showAppleLookupPanel" class="search-pop">
+                  <div class="search-pop-head">
+                    <span v-if="appleLookupHasUniqueMatch">Unique Apple model match</span>
+                    <span v-else>Suggestions for {{ normalizedAppleModelSearch }}</span>
+                  </div>
+                  <div
+                    v-for="match in appleLookupMatches"
+                    :key="match.aNumber"
+                    class="search-pop-item">
+                    <div class="search-pop-model">{{ match.displayModel }}</div>
+                    <div class="search-pop-meta">
+                      {{ match.aNumber }} · {{ match.familyLabel }}
+                      <span v-if="match.priceListModel"><br>Price list model: {{ match.priceListModel }}</span>
+                    </div>
+                  </div>
+                  <div v-if="!appleLookupMatches.length" class="search-pop-item">
+                    <div class="search-pop-meta">No Apple A-model match found yet.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Select Brand</label>
+              <select v-model="selectedBrand" class="form-select">
+                <option value="">Choose a brand</option>
+                <option v-for="brand in brandOptions" :key="brand" :value="brand">{{ brand }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Select Model</label>
+              <select v-model="selectedModel" class="form-select" :disabled="!selectedBrand">
+                <option value="">Choose a model</option>
+                <option v-for="model in modelOptions" :key="model" :value="model">{{ model }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Select Issue</label>
+              <select v-model="selectedIssueKey" class="form-select" :disabled="!selectedModel">
+                <option value="">Choose a repair type</option>
+                <option v-for="issue in issueOptions" :key="issue.key" :value="issue.key">
+                  {{ issue.issue }}
+                </option>
+              </select>
+            </div>
+
+            <div class="manual-box">
+              <div class="panel-title mb-1">Model not in the price list?</div>
+              <div class="panel-subtitle mb-3">Enter the model manually and continue to the workflow page for a manual intake.</div>
+              <div class="d-flex flex-column flex-md-row gap-2">
+                <input v-model.trim="manualModel" class="form-control" placeholder="Example: iPhone 16 Pro Max">
+                <a class="btn btn-dark px-4 d-inline-flex align-items-center justify-content-center" :href="manualWorkflowUrl">
+                  <i class="bi bi-box-arrow-up-right me-2"></i> Manual Entry
+                </a>
+              </div>
+            </div>
+
+            <div class="mt-4 small text-muted">
+              {{ totalRows }} repair items loaded from local JSON.
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="quote-card">
+              <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                <div>
+                  <div class="panel-title mb-1">Quote Result</div>
+                  <div class="panel-subtitle mb-0">Source: local data.json only</div>
+                </div>
+                <div class="text-end small text-muted">
+                  <div>Mode</div>
+                  <div class="fw-bold">Backup</div>
+                </div>
+              </div>
+
+              <template v-if="currentIssue">
+                <div class="quote-price">{{ formattedPrice }}</div>
+                <div class="quote-issue">{{ currentIssue.issue }}</div>
+                <div class="quote-time">
+                  <i class="bi bi-clock me-1"></i>
+                  {{ currentIssue.time || 'Please confirm repair time in store.' }}
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <a class="btn btn-dark" :href="workflowUrl">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Open Workflow
+                  </a>
+                </div>
+                <div class="mini-note">
+                  <div><strong>Brand:</strong> {{ currentIssue.brand }}</div>
+                  <div><strong>Model:</strong> {{ currentIssue.model }}</div>
+                  <div class="mt-2">This page does not depend on Supabase and is meant to stay available during main-site changes.</div>
+                </div>
+              </template>
+
+              <div v-else class="empty-state">
+                <div>
+                  <div class="fs-5 fw-bold mb-2">No repair selected yet</div>
+                  <div>Choose a brand, model, and issue to see the quoted price.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          rawData: [],
+          appleModelMap: {},
+          selectedBrand: '',
+          selectedModel: '',
+          selectedIssueKey: '',
+          appleModelSearch: '',
+          manualModel: '',
+          currentIssue: null
+        };
+      },
+      computed: {
+        totalRows() {
+          return this.rawData.length;
+        },
+        brandOptions() {
+          return Array.from(new Set(this.rawData.map(item => item.brand).filter(Boolean)))
+            .sort(this.naturalSort);
+        },
+        modelOptions() {
+          if (!this.selectedBrand) return [];
+          return Array.from(new Set(
+            this.rawData
+              .filter(item => item.brand === this.selectedBrand)
+              .map(item => item.model)
+              .filter(Boolean)
+          )).sort(this.naturalSort);
+        },
+        issueOptions() {
+          if (!this.selectedBrand || !this.selectedModel) return [];
+          return this.rawData
+            .filter(item => item.brand === this.selectedBrand && item.model === this.selectedModel)
+            .map(item => ({
+              key: this.makeIssueKey(item),
+              issue: item.issue,
+              price: item.price,
+              time: item.time,
+              brand: item.brand,
+              model: item.model
+            }))
+            .sort((a, b) => this.naturalSort(a.issue, b.issue));
+        },
+        formattedPrice() {
+          if (!this.currentIssue) return '—';
+          const value = this.parsePriceNumber(this.currentIssue.price);
+          if (value !== null) return '$' + value;
+          return this.currentIssue.price || 'Contact us';
+        },
+        workflowUrl() {
+          if (!this.currentIssue) return './repair_workflow.html';
+          const params = new URLSearchParams({
+            brand: this.currentIssue.brand || '',
+            model: this.currentIssue.model || '',
+            issue: this.currentIssue.issue || '',
+            price: this.formattedPrice || '',
+            time: this.currentIssue.time || '',
+            deviceType: this.guessDeviceType(this.currentIssue)
+          });
+          return './repair_workflow.html?' + params.toString();
+        },
+        manualWorkflowUrl() {
+          const params = new URLSearchParams({
+            brand: this.selectedBrand || '',
+            model: this.manualModel || this.selectedModel || '',
+            issue: '',
+            price: '',
+            time: 'N/A',
+            deviceType: this.guessDeviceType({ brand: this.selectedBrand || '', model: this.manualModel || this.selectedModel || '', issue: '' }),
+            manual: '1'
+          });
+          return './repair_workflow.html?' + params.toString();
+        },
+        normalizedAppleModelSearch() {
+          const raw = String(this.appleModelSearch || '').trim().toUpperCase();
+          if (!raw) return '';
+          const digitsOnly = raw.replace(/[^0-9]/g, '').slice(0, 4);
+          if (!digitsOnly) return '';
+          return 'A' + digitsOnly;
+        },
+        appleLookupMatches() {
+          const search = this.normalizedAppleModelSearch;
+          if (!search) return [];
+
+          const rows = [];
+          Object.keys(this.appleModelMap || {}).forEach(familyKey => {
+            const familyMap = this.appleModelMap[familyKey];
+            Object.keys(familyMap || {}).forEach(aNumber => {
+              if (!aNumber.startsWith(search)) return;
+              const displayModel = familyMap[aNumber];
+              rows.push({
+                aNumber,
+                displayModel,
+                familyKey,
+                familyLabel: this.formatAppleFamilyLabel(familyKey),
+                priceListModel: this.findBestApplePriceListModel(displayModel)
+              });
+            });
+          });
+
+          return rows
+            .sort((a, b) => {
+              if (a.aNumber.length !== b.aNumber.length) return a.aNumber.length - b.aNumber.length;
+              return this.naturalSort(a.displayModel, b.displayModel) || this.naturalSort(a.aNumber, b.aNumber);
+            })
+            .slice(0, 5);
+        },
+        appleLookupHasUniqueMatch() {
+          return /^A\d{4}$/.test(this.normalizedAppleModelSearch) && this.appleLookupMatches.length === 1;
+        },
+        showAppleLookupPanel() {
+          return !!this.appleModelSearch && (!!this.appleLookupMatches.length || /^A\d{1,4}$/.test(this.normalizedAppleModelSearch));
+        }
+      },
+      watch: {
+        selectedBrand() {
+          this.selectedModel = '';
+          this.selectedIssueKey = '';
+          this.currentIssue = null;
+        },
+        selectedModel() {
+          this.selectedIssueKey = '';
+          this.currentIssue = null;
+        },
+        selectedIssueKey(value) {
+          this.currentIssue = this.issueOptions.find(item => item.key === value) || null;
+        }
+      },
+      mounted() {
+        this.fetchData();
+        this.fetchAppleModelMap();
+      },
+      methods: {
+        naturalSort(a, b) {
+          return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+        },
+        parsePriceNumber(value) {
+          if (value === null || value === undefined) return null;
+          const text = String(value).trim();
+          if (!text) return null;
+          const match = text.match(/\d+(\.\d+)?/);
+          return match ? Number(match[0]) : null;
+        },
+        guessDeviceType(item) {
+          const text = [item.brand, item.model, item.issue].join(' ').toLowerCase();
+          if (/ipad|tablet|tab/.test(text)) return 'Tablet';
+          if (/macbook|laptop|notebook|imac|mac mini|computer|pc/.test(text)) return 'Computer';
+          if (/watch/.test(text)) return 'Watch';
+          if (/playstation|ps4|ps5|xbox|switch|console/.test(text)) return 'Console';
+          return 'Phone';
+        },
+        makeIssueKey(item) {
+          return [item.brand, item.model, item.issue].join('|||');
+        },
+        normalizeAppleModelText(value) {
+          return String(value || '')
+            .toLowerCase()
+            .replace(/\([^)]*\)/g, ' ')
+            .replace(/[^a-z0-9]+/g, ' ')
+            .replace(/\b(wifi|cellular|generation|inch|model|retina|display|only|ports?)\b/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        },
+        formatAppleFamilyLabel(familyKey) {
+          const labels = {
+            iphone: 'iPhone',
+            ipad: 'iPad',
+            macbook_air: 'MacBook Air',
+            macbook_pro: 'MacBook Pro',
+            macbook: 'MacBook',
+            mac_mini: 'Mac mini',
+            imac: 'iMac',
+            mac_studio: 'Mac Studio',
+            mac_pro: 'Mac Pro'
+          };
+          return labels[familyKey] || familyKey;
+        },
+        findBestApplePriceListModel(displayModel) {
+          const appleModels = Array.from(new Set(
+            this.rawData
+              .filter(item => /apple/i.test(item.brand))
+              .map(item => item.model)
+              .filter(Boolean)
+          ));
+
+          const searchText = this.normalizeAppleModelText(displayModel);
+          if (!searchText) return '';
+
+          const exactMatch = appleModels.find(model => this.normalizeAppleModelText(model) === searchText);
+          if (exactMatch) return exactMatch;
+
+          return appleModels.find(model => {
+            const normalized = this.normalizeAppleModelText(model);
+            return normalized.includes(searchText) || searchText.includes(normalized);
+          }) || '';
+        },
+        async fetchData() {
+          const response = await fetch('./data.json?v=' + Date.now(), {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+          const result = await response.json();
+          this.rawData = Array.isArray(result) ? result : [];
+        },
+        async fetchAppleModelMap() {
+          const response = await fetch('./apple_a_model_map.json?v=' + Date.now(), {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+          const result = await response.json();
+          this.appleModelMap = result || {};
+        }
+      }
+    });
+  </script>
+</body>
+</html>

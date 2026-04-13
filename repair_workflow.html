@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TECHM8 Repair Intake Workflow</title>
+  <script src="./supabase-config.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
@@ -686,6 +687,7 @@
   </div>
 
   <script>
+    const SUPABASE = window.TECHM8_SUPABASE || null;
     const draftStorageKey = 'techm8_repair_intake_draft';
     const defaultQuoteData = {
       deviceType: 'Phone',
@@ -1098,26 +1100,59 @@
     }
 
     async function submitIntakeToServer(payload) {
-      const response = await fetch('./api/intakes.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      if (SUPABASE) {
+        const response = await fetch(SUPABASE.url + '/rest/v1/repair_intakes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE.anonKey,
+            Authorization: 'Bearer ' + SUPABASE.anonKey,
+            Prefer: 'return=representation'
+          },
+          body: JSON.stringify({
+            source_type: payload.sourceType || 'quote',
+            customer_name: payload.customerName || '',
+            customer_phone: payload.customerPhone || '',
+            customer_email: payload.customerEmail || '',
+            contact_method: payload.contactMethod || 'Phone',
+            device_type: payload.deviceType || '',
+            device_model: payload.deviceModel || '',
+            quoted_price: payload.quotedPrice || '',
+            repair_issue: payload.quoteIssue || '',
+            estimated_time: payload.estimatedTime || '',
+            password_type: payload.passwordType || 'text',
+            password_text: payload.passwordText || '',
+            pattern_value: payload.patternValue || '',
+            password_none_reason: payload.passwordNoneReason || '',
+            device_id_type: payload.deviceIdType || 'imei',
+            device_id_imei: payload.deviceIdImei || '',
+            device_id_sn: payload.deviceIdSn || '',
+            device_id_unavailable_reason: payload.deviceIdNoneReason || '',
+            testable: payload.testable || 'yes',
+            test_profile: payload.testProfile || 'mobile',
+            cannot_test_reason: payload.cannotTestReason || '',
+            test_notes: payload.testNotes || '',
+            test_results_json: payload.testResults || [],
+            quote_data_json: payload.quoteData || {},
+            intake_json: payload
+          })
+        });
 
-      let result = null;
-      try {
-        result = await response.json();
-      } catch (error) {
-        result = null;
+        let result = null;
+        try {
+          result = await response.json();
+        } catch (error) {
+          result = null;
+        }
+
+        if (!response.ok) {
+          throw new Error(result && result.message ? result.message : 'Failed to save intake.');
+        }
+
+        return result;
       }
 
-      if (!response.ok || !result || result.ok !== true) {
-        throw new Error(result && result.message ? result.message : 'Failed to save intake.');
-      }
-
-      return result;
+      throw new Error('Supabase is not configured.');
     }
 
     function openPatternModal() {
