@@ -930,13 +930,13 @@
         },
         async fetchAppleModelMap() {
           try {
-            let response = await fetch('./api/apple-model-map.php?v=' + Date.now(), {
+            let response = await fetch('./apple_a_model_map.json?v=' + Date.now(), {
               cache: 'no-store',
               headers: { 'Cache-Control': 'no-cache' }
             })
 
             if (!response.ok) {
-              response = await fetch('./apple_a_model_map.json?v=' + Date.now(), {
+              response = await fetch('./api/apple-model-map.php?v=' + Date.now(), {
                 cache: 'no-store',
                 headers: { 'Cache-Control': 'no-cache' }
               })
@@ -974,13 +974,13 @@
           }
         },
         async fetchPriceRows() {
-          let response = await fetch('./api/prices.php?v=' + Date.now(), {
+          let response = await fetch('./data.json?v=' + Date.now(), {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache' }
           })
 
           if (!response.ok) {
-            response = await fetch('./data.json?v=' + Date.now(), {
+            response = await fetch('./api/prices.php?v=' + Date.now(), {
               cache: 'no-store',
               headers: { 'Cache-Control': 'no-cache' }
             })

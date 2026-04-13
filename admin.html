@@ -883,25 +883,25 @@
 
         vm.loadInitialData = async function () {
           try {
-            const data = await this.fetchRowsFromApi();
-            this.applyData(data, 'Database');
-            this.backendMode = 'database';
+            const response = await fetch('./data.json?v=' + Date.now(), {
+              cache: 'no-store',
+              headers: { 'Cache-Control': 'no-cache' }
+            });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            this.applyData(data, 'data.json');
+            this.backendMode = 'file';
             this.loadError = '';
           } catch (error) {
             try {
-              const response = await fetch('./data.json?v=' + Date.now(), {
-                cache: 'no-store',
-                headers: { 'Cache-Control': 'no-cache' }
-              });
-              if (!response.ok) throw new Error('HTTP ' + response.status);
-              const data = await response.json();
-              this.applyData(data, 'data.json');
-              this.backendMode = 'file';
-              this.loadError = 'Database API is not available yet, so the editor loaded local data.json instead.';
+              const data = await this.fetchRowsFromApi();
+              this.applyData(data, 'Database');
+              this.backendMode = 'database';
+              this.loadError = 'Local data.json is unavailable, so the editor loaded database data instead.';
             } catch (fallbackError) {
               console.error(error);
               console.error(fallbackError);
-              this.loadError = 'Could not load data from the database API or local data.json.';
+              this.loadError = 'Could not load data from local data.json or the database API.';
             }
           }
         };

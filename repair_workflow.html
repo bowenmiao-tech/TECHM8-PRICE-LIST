@@ -1282,7 +1282,8 @@
         window.location.href = './index.html';
       } catch (error) {
         console.error(error);
-        alert('The intake could not be saved to the database. Your local draft is still available in this browser.');
+        localStorage.setItem(draftStorageKey, JSON.stringify(getFormData()));
+        alert('Database save is unavailable right now. The intake was kept as a local draft in this browser so staff can continue working.');
       } finally {
         submitButton.disabled = false;
         submitButton.textContent = originalLabel;
