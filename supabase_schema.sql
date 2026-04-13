@@ -156,7 +156,12 @@ begin
       coalesce(trim(item->>'issue'), ''),
       coalesce(trim(item->>'price'), ''),
       coalesce(trim(item->>'time'), '')
-    );
+    )
+    on conflict (brand, model, issue) do update
+    set
+      price = excluded.price,
+      turnaround_time = excluded.turnaround_time,
+      updated_at = now();
   end loop;
 
   return jsonb_build_object(
