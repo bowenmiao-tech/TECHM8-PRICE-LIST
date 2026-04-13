@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TECHM8 Supabase Seed</title>
   <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js"></script>
   <style>
     body {
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -66,11 +67,11 @@
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" data-auth-protected>
     <h1>Supabase Seed Tool</h1>
     <div class="note">
       This tool uploads the local <code>data.json</code> and <code>apple_a_model_map.json</code> files into Supabase.
-      Run it after you execute <code>supabase_schema.sql</code>. This temporary setup does not require an admin password.
+      Run it after you execute <code>supabase_schema.sql</code>. This page now uses the database staff password.
     </div>
     <div class="stack" style="margin-top: 16px;">
       <button id="syncButton" type="button">Sync Local Files To Supabase</button>
@@ -80,6 +81,11 @@
 
   <script>
     const SUPABASE = window.TECHM8_SUPABASE;
+    window.Techm8StaffAuth.init({
+      rootSelector: '[data-auth-protected]',
+      title: 'Seed Access',
+      subtitle: 'Enter the staff password to sync local files into Supabase.'
+    });
     const output = document.getElementById('output');
     const button = document.getElementById('syncButton');
 
@@ -123,10 +129,16 @@
         ]);
 
         log('Uploading repair_prices...');
-        await callRpc('save_repair_prices', { payload: prices });
+        await callRpc('save_repair_prices', {
+          session_token: window.Techm8StaffAuth.getToken(),
+          payload: prices
+        });
 
         log('Uploading apple_model_map...');
-        await callRpc('save_apple_model_map', { payload: appleMap });
+        await callRpc('save_apple_model_map', {
+          session_token: window.Techm8StaffAuth.getToken(),
+          payload: appleMap
+        });
 
         log('Supabase sync completed successfully.');
       } catch (error) {

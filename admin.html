@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TECHM8 Price Admin</title>
   <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
   <script src="https://unpkg.com/element-ui/lib/index.js"></script>
@@ -12,7 +13,6 @@
     :root {
       --tm-dark: #163129;
       --tm-dark-2: #25473d;
-      --tm-accent: #ef7204;
       --tm-bg: #f4f7f9;
       --tm-border: #dfe7eb;
       --tm-muted: #667781;
@@ -90,9 +90,7 @@
       letter-spacing: .03em;
     }
 
-    .content {
-      padding: 18px;
-    }
+    .content { padding: 18px; }
 
     .stats {
       display: grid;
@@ -108,9 +106,7 @@
       background: #fff;
     }
 
-    .stat-card {
-      padding: 16px;
-    }
+    .stat-card { padding: 16px; }
 
     .stat-label {
       color: var(--tm-muted);
@@ -119,21 +115,19 @@
     }
 
     .stat-value {
-      font-size: 28px;
-      line-height: 1;
+      font-size: 26px;
+      line-height: 1.1;
       font-weight: 800;
     }
 
     .tool-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(300px, .9fr);
+      grid-template-columns: minmax(0, 1.5fr) minmax(320px, .9fr);
       gap: 16px;
       margin-bottom: 16px;
     }
 
-    .panel {
-      padding: 16px;
-    }
+    .panel { padding: 16px; }
 
     .panel-title {
       font-size: 16px;
@@ -188,63 +182,36 @@
       margin-top: 4px;
     }
 
-    .table-wrap {
-      padding: 0 12px 12px;
-    }
-
-    .alert {
-      margin-bottom: 16px;
-    }
-
-    .footer-note {
-      margin-top: 16px;
-      color: var(--tm-muted);
-      font-size: 12px;
-      line-height: 1.7;
-    }
-
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
+    .table-wrap { padding: 0 12px 12px; }
+    .alert { margin-bottom: 16px; }
 
     @media (max-width: 1080px) {
-      .tool-grid {
-        grid-template-columns: 1fr;
-      }
+      .tool-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px) {
-      #app {
-        padding: 12px;
-      }
-
-      .hero,
-      .content {
-        padding: 14px;
-      }
-
-      .hero h1 {
-        font-size: 26px;
-      }
+      #app { padding: 12px; }
+      .hero, .content { padding: 14px; }
+      .hero h1 { font-size: 26px; }
     }
   </style>
 </head>
 <body>
-  <div id="app">
+  <div id="app" data-auth-protected>
     <div class="shell">
       <div class="hero">
         <div class="hero-top">
           <div>
-            <h1>Price List Admin</h1>
+            <h1>Price Admin</h1>
             <p>
-              This page edits the repair price list used by the quote page. It reads from Supabase first, falls back to local
-              <span class="mono">data.json</span>, and can export a clean JSON file in the same structure as Jason's sync file.
+              This page is for row-by-row database maintenance. Change one product, save that row, and the live quote page
+              can use the new price without a full file sync.
             </p>
           </div>
           <div class="hero-tags">
-            <div class="hero-tag">No front-end password</div>
-            <div class="hero-tag">Supabase primary</div>
-            <div class="hero-tag">JSON fallback</div>
+            <div class="hero-tag">Single row save</div>
+            <div class="hero-tag">Database password</div>
+            <div class="hero-tag">Live price table</div>
           </div>
         </div>
       </div>
@@ -268,33 +235,44 @@
             <div class="stat-value">{{ brandCount }}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Data Source</div>
-            <div class="stat-value" style="font-size:22px;">{{ loadedFileName || 'Not loaded' }}</div>
+            <div class="stat-label">Visible Rows</div>
+            <div class="stat-value">{{ filteredRows.length }}</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Last Loaded</div>
-            <div class="stat-value" style="font-size:18px; line-height:1.35;">{{ lastLoadedLabel }}</div>
+            <div class="stat-value" style="font-size:18px;">{{ lastLoadedLabel }}</div>
           </div>
         </div>
 
         <div class="tool-grid">
           <div class="panel">
-            <div class="panel-title">Data Actions</div>
+            <div class="panel-title">Data Tools</div>
             <div class="panel-subtitle">
-              Use Supabase as the live source. If Supabase is unavailable, load from local <span class="mono">data.json</span>.
-              Export is kept in the same flat JSON row format: <span class="mono">brand / model / issue / price / time</span>.
+              Load the latest rows from Supabase. You can also load local <code>data.json</code> as a reference and save only the rows you want.
             </div>
             <div class="button-row">
-              <el-button type="primary" icon="el-icon-upload2" @click="saveToSupabase" :loading="saving">Save To Supabase</el-button>
               <el-button icon="el-icon-refresh" @click="loadFromSupabase" :loading="loading">Load From Supabase</el-button>
               <el-button icon="el-icon-document" @click="loadFromJson" :loading="loading">Load From data.json</el-button>
-              <el-button icon="el-icon-document-copy" @click="copyJson">Copy JSON</el-button>
-              <el-button icon="el-icon-download" @click="downloadJson">Download JSON</el-button>
+              <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-title">Quick Tools</div>
+            <div class="panel-title">Password</div>
+            <div class="stack">
+              <el-input v-model.trim="newPassword" show-password placeholder="New staff password"></el-input>
+              <el-input v-model.trim="confirmPassword" show-password placeholder="Confirm new password"></el-input>
+              <div class="button-row">
+                <el-button type="primary" @click="changePassword" :loading="changingPassword">Update Password</el-button>
+                <el-button @click="logout">Logout</el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-grid" style="grid-template-columns: minmax(0, 1fr) minmax(320px, .7fr);">
+          <div class="panel">
+            <div class="panel-title">Search</div>
             <div class="stack">
               <el-input v-model.trim="keyword" clearable placeholder="Search brand, model, issue, or price"></el-input>
               <el-select v-model="brandFilter" clearable filterable placeholder="Filter by brand">
@@ -305,11 +283,13 @@
                   :value="brand">
                 </el-option>
               </el-select>
-              <div class="button-row">
-                <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
-                <el-button type="warning" plain icon="el-icon-document-copy" @click="duplicateSelected">Duplicate Selected</el-button>
-                <el-button type="danger" plain icon="el-icon-delete" @click="deleteSelected">Delete Selected</el-button>
-              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">Notes</div>
+            <div class="panel-subtitle" style="margin-bottom:0;">
+              Save works one row at a time. Delete also affects only one row. This avoids replacing the full table when you only changed a single product price.
             </div>
           </div>
         </div>
@@ -318,22 +298,13 @@
           <div class="table-head">
             <div>
               <div class="table-title">Repair Price Rows</div>
-              <div class="table-subtitle">
-                Editing is inline. Every row must keep <span class="mono">brand</span>, <span class="mono">model</span>, and <span class="mono">issue</span>.
-              </div>
+              <div class="table-subtitle">Brand, model, and issue identify a unique product row in the live table.</div>
             </div>
             <div class="table-subtitle">{{ filteredRows.length }} visible row(s)</div>
           </div>
 
           <div class="table-wrap">
-            <el-table
-              ref="dataTable"
-              :data="filteredRows"
-              border
-              stripe
-              height="640"
-              @selection-change="selectedRows = $event">
-              <el-table-column type="selection" width="50"></el-table-column>
+            <el-table :data="filteredRows" border stripe height="640">
               <el-table-column label="Brand" min-width="180">
                 <template slot-scope="scope">
                   <el-input v-model.trim="scope.row.brand" placeholder="Brand"></el-input>
@@ -349,19 +320,20 @@
                   <el-input v-model.trim="scope.row.issue" placeholder="Issue"></el-input>
                 </template>
               </el-table-column>
-              <el-table-column label="Price" min-width="120">
+              <el-table-column label="Price" min-width="130">
                 <template slot-scope="scope">
                   <el-input v-model.trim="scope.row.price" placeholder="$79"></el-input>
                 </template>
               </el-table-column>
-              <el-table-column label="Time" min-width="170">
+              <el-table-column label="Time" min-width="180">
                 <template slot-scope="scope">
                   <el-input v-model.trim="scope.row.time" placeholder="1-3 business days"></el-input>
                 </template>
               </el-table-column>
-              <el-table-column label="Actions" width="170" fixed="right">
+              <el-table-column label="Actions" width="220" fixed="right">
                 <template slot-scope="scope">
                   <div class="button-row">
+                    <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
                     <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
                     <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
                   </div>
@@ -370,11 +342,6 @@
             </el-table>
           </div>
         </div>
-
-        <div class="footer-note">
-          This admin page currently has no built-in access control because you asked to remove passwords first.
-          Keep the repository and Supabase project private until proper authentication is added.
-        </div>
       </div>
     </div>
   </div>
@@ -382,19 +349,25 @@
   <script>
     const SUPABASE = window.TECHM8_SUPABASE || null;
 
+    window.Techm8StaffAuth.init({
+      rootSelector: '#app',
+      title: 'Admin Access',
+      subtitle: 'Enter the staff password to open the admin page.'
+    });
+
     new Vue({
       el: '#app',
       data() {
         return {
           rows: [],
-          selectedRows: [],
           keyword: '',
           brandFilter: '',
-          loadedFileName: '',
           loadError: '',
           loading: false,
-          saving: false,
-          lastLoadedAt: null
+          lastLoadedAt: null,
+          newPassword: '',
+          confirmPassword: '',
+          changingPassword: false
         };
       },
       computed: {
@@ -410,9 +383,7 @@
           return this.rows.filter(row => {
             if (this.brandFilter && row.brand !== this.brandFilter) return false;
             if (!keyword) return true;
-            const haystack = [row.brand, row.model, row.issue, row.price, row.time]
-              .join(' ')
-              .toLowerCase();
+            const haystack = [row.brand, row.model, row.issue, row.price, row.time].join(' ').toLowerCase();
             return haystack.includes(keyword);
           });
         },
@@ -422,7 +393,7 @@
         }
       },
       mounted() {
-        this.loadInitialData();
+        this.loadFromSupabase();
       },
       methods: {
         naturalSort(a, b) {
@@ -441,7 +412,7 @@
             time: item.time === null || item.time === undefined ? '' : String(item.time).trim()
           };
         },
-        applyData(data, source) {
+        applyData(data) {
           this.rows = (Array.isArray(data) ? data : []).map(item => this.normalizeRow(item)).sort((a, b) => {
             return (
               this.naturalSort(a.brand, b.brand) ||
@@ -449,182 +420,161 @@
               this.naturalSort(a.issue, b.issue)
             );
           });
-          this.loadedFileName = source;
           this.lastLoadedAt = Date.now();
         },
-        async loadFromSupabase() {
-          if (!SUPABASE) {
-            throw new Error('Supabase config is missing.');
+        authToken() {
+          const token = window.Techm8StaffAuth.getToken();
+          if (!token) {
+            throw new Error('Login expired. Please sign in again.');
           }
-          const response = await fetch(
-            SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc',
-            {
-              headers: {
-                apikey: SUPABASE.anonKey,
-                Authorization: 'Bearer ' + SUPABASE.anonKey
-              }
-            }
-          );
-          const result = await response.json();
-          if (!response.ok) {
-            throw new Error((result && result.message) || 'Failed to load Supabase price list.');
-          }
-          this.applyData(result, 'Supabase');
-          this.loadError = '';
+          return token;
         },
-        async loadFromJson() {
-          const response = await fetch('./data.json?v=' + Date.now(), {
-            cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache' }
-          });
-          if (!response.ok) {
-            throw new Error('Failed to load data.json');
+        validateRow(row) {
+          const cleaned = this.normalizeRow(row);
+          if (!cleaned.brand || !cleaned.model || !cleaned.issue) {
+            this.$message.error('Brand, model, and issue are required.');
+            return null;
           }
-          const result = await response.json();
-          this.applyData(result, 'data.json');
-        },
-        async loadInitialData() {
-          this.loading = true;
-          try {
-            await this.loadFromSupabase();
-          } catch (error) {
-            try {
-              await this.loadFromJson();
-              this.loadError = 'Supabase load failed. The editor is using local data.json instead.';
-            } catch (fallbackError) {
-              console.error(error);
-              console.error(fallbackError);
-              this.loadError = 'Could not load Supabase or local data.json.';
-              this.$message.error(this.loadError);
-            }
-          } finally {
-            this.loading = false;
-          }
+          return cleaned;
         },
         addRow() {
-          this.rows.unshift(this.normalizeRow({
-            brand: '',
-            model: '',
-            issue: '',
-            price: '',
-            time: ''
-          }));
+          this.rows.unshift(this.normalizeRow({}));
         },
         duplicateRow(row) {
           this.rows.unshift(this.normalizeRow(row));
           this.$message.success('Row duplicated.');
         },
-        duplicateSelected() {
-          if (this.selectedRows.length !== 1) {
-            this.$message.warning('Select exactly one row to duplicate.');
-            return;
-          }
-          this.duplicateRow(this.selectedRows[0]);
-        },
-        deleteRow(row) {
-          this.$confirm(
-            `Delete "${row.brand || 'Unknown'} / ${row.model || 'Unknown'} / ${row.issue || 'Unknown'}"?`,
-            'Confirm',
-            { type: 'warning' }
-          ).then(() => {
-            this.rows = this.rows.filter(item => item.id !== row.id);
-            this.$message.success('Row deleted.');
-          }).catch(() => {});
-        },
-        deleteSelected() {
-          if (!this.selectedRows.length) {
-            this.$message.warning('Select rows first.');
-            return;
-          }
-          const ids = new Set(this.selectedRows.map(item => item.id));
-          this.$confirm(`Delete ${ids.size} selected row(s)?`, 'Confirm', { type: 'warning' })
-            .then(() => {
-              this.rows = this.rows.filter(item => !ids.has(item.id));
-              this.selectedRows = [];
-              if (this.$refs.dataTable) this.$refs.dataTable.clearSelection();
-              this.$message.success('Selected rows deleted.');
-            })
-            .catch(() => {});
-        },
-        validateRows() {
-          const cleaned = this.rows.map(item => this.normalizeRow(item));
-          const invalid = cleaned.find(row => !row.brand || !row.model || !row.issue);
-          if (invalid) {
-            this.$message.error('Brand, model, and issue are required in every row.');
-            return null;
-          }
-          cleaned.sort((a, b) => {
-            return (
-              this.naturalSort(a.brand, b.brand) ||
-              this.naturalSort(a.model, b.model) ||
-              this.naturalSort(a.issue, b.issue)
-            );
-          });
-          return cleaned.map(({ brand, model, issue, price, time }) => ({ brand, model, issue, price, time }));
-        },
-        buildJsonText() {
-          const cleaned = this.validateRows();
-          if (!cleaned) return null;
-          return JSON.stringify(cleaned, null, 2);
-        },
-        async copyJson() {
-          const text = this.buildJsonText();
-          if (!text) return;
+        async loadFromSupabase() {
+          this.loading = true;
           try {
-            await navigator.clipboard.writeText(text);
-            this.$message.success('JSON copied.');
+            if (!SUPABASE) throw new Error('Supabase config is missing.');
+            const response = await fetch(
+              SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc',
+              {
+                headers: {
+                  apikey: SUPABASE.anonKey,
+                  Authorization: 'Bearer ' + SUPABASE.anonKey
+                }
+              }
+            );
+            const result = await response.json();
+            if (!response.ok) throw new Error((result && result.message) || 'Failed to load Supabase price list.');
+            this.applyData(result);
+            this.loadError = '';
           } catch (error) {
             console.error(error);
-            this.$message.error('Copy failed.');
+            this.loadError = error.message || 'Could not load Supabase data.';
+            this.$message.error(this.loadError);
+          } finally {
+            this.loading = false;
           }
         },
-        downloadJson() {
-          const text = this.buildJsonText();
-          if (!text) return;
-          const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = 'data.json';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          this.$message.success('data.json downloaded.');
+        async loadFromJson() {
+          this.loading = true;
+          try {
+            const response = await fetch('./data.json?v=' + Date.now(), {
+              cache: 'no-store',
+              headers: { 'Cache-Control': 'no-cache' }
+            });
+            if (!response.ok) throw new Error('Failed to load data.json');
+            const result = await response.json();
+            this.applyData(result);
+            this.loadError = 'Showing local data.json. Save only the rows you want to publish.';
+          } catch (error) {
+            console.error(error);
+            this.loadError = error.message || 'Could not load data.json.';
+            this.$message.error(this.loadError);
+          } finally {
+            this.loading = false;
+          }
         },
-        async saveToSupabase() {
-          const cleaned = this.validateRows();
+        async saveRow(row) {
+          const cleaned = this.validateRow(row);
           if (!cleaned) return;
-          if (!SUPABASE) {
-            this.$message.error('Supabase config is missing.');
+
+          try {
+            const result = await window.Techm8StaffAuth.callRpc('upsert_repair_price', {
+              session_token: this.authToken(),
+              row_payload: {
+                brand: cleaned.brand,
+                model: cleaned.model,
+                issue: cleaned.issue,
+                price: cleaned.price,
+                time: cleaned.time
+              }
+            });
+            if (!result || !result.ok) throw new Error('Save failed.');
+            Object.assign(row, cleaned);
+            this.$message.success('Row saved to database.');
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Could not save row.');
+          }
+        },
+        async deleteRow(row) {
+          const cleaned = this.validateRow(row);
+          const removeOnlyLocal = !cleaned;
+
+          if (removeOnlyLocal) {
+            this.rows = this.rows.filter(item => item.id !== row.id);
             return;
           }
 
-          this.saving = true;
-          try {
-            const response = await fetch(SUPABASE.url + '/rest/v1/rpc/save_repair_prices', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                apikey: SUPABASE.anonKey,
-                Authorization: 'Bearer ' + SUPABASE.anonKey
-              },
-              body: JSON.stringify({ payload: cleaned })
-            });
-            const result = await response.json();
-            if (!response.ok || (result && result.ok === false)) {
-              throw new Error((result && result.message) || 'Save failed.');
+          this.$confirm(
+            `Delete "${cleaned.brand} / ${cleaned.model} / ${cleaned.issue}" from the database?`,
+            'Confirm',
+            { type: 'warning' }
+          ).then(async () => {
+            try {
+              const result = await window.Techm8StaffAuth.callRpc('delete_repair_price', {
+                session_token: this.authToken(),
+                target_brand: cleaned.brand,
+                target_model: cleaned.model,
+                target_issue: cleaned.issue
+              });
+              if (!result || !result.ok) throw new Error('Delete failed.');
+              this.rows = this.rows.filter(item => item.id !== row.id);
+              this.$message.success('Row deleted from database.');
+            } catch (error) {
+              console.error(error);
+              this.$message.error(error.message || 'Could not delete row.');
             }
-            this.loadedFileName = 'Supabase';
-            this.lastLoadedAt = Date.now();
-            this.loadError = '';
-            this.$message.success(`Saved ${cleaned.length} row(s) to Supabase.`);
+          }).catch(() => {});
+        },
+        async changePassword() {
+          if (!this.newPassword) {
+            this.$message.error('New password is required.');
+            return;
+          }
+          if (this.newPassword !== this.confirmPassword) {
+            this.$message.error('Password confirmation does not match.');
+            return;
+          }
+
+          this.changingPassword = true;
+          try {
+            const result = await window.Techm8StaffAuth.callRpc('change_staff_password', {
+              session_token: this.authToken(),
+              new_password: this.newPassword
+            });
+            if (!result || !result.ok) throw new Error('Password update failed.');
+            this.$alert('Password updated. You need to sign in again.', 'Done', {
+              confirmButtonText: 'OK',
+              callback: async () => {
+                this.newPassword = '';
+                this.confirmPassword = '';
+                await window.Techm8StaffAuth.logout();
+              }
+            });
           } catch (error) {
             console.error(error);
-            this.$message.error(error.message || 'Could not save to Supabase.');
+            this.$message.error(error.message || 'Could not update password.');
           } finally {
-            this.saving = false;
+            this.changingPassword = false;
           }
+        },
+        async logout() {
+          await window.Techm8StaffAuth.logout();
         }
       }
     });
