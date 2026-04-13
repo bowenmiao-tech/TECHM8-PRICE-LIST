@@ -1320,7 +1320,7 @@
         await submitIntakeToServer(payload);
         localStorage.removeItem(draftStorageKey);
         alert('Repair intake saved to the database.');
-        window.location.href = './index.html';
+        window.location.href = './quote.html';
       } catch (error) {
         console.error(error);
         localStorage.setItem(draftStorageKey, JSON.stringify(getFormData()));
