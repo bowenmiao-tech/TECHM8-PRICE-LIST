@@ -144,7 +144,8 @@ begin
     raise exception 'Payload must be a JSON array';
   end if;
 
-  delete from public.repair_prices;
+  delete from public.repair_prices
+  where true;
 
   for item in select * from jsonb_array_elements(payload)
   loop
@@ -180,7 +181,8 @@ begin
     raise exception 'Payload must be a JSON object';
   end if;
 
-  delete from public.apple_model_map;
+  delete from public.apple_model_map
+  where true;
 
   for family_key, family_payload in
     select key, value
