@@ -44,7 +44,6 @@ window.Techm8StaffAuth = (function () {
     const style = document.createElement('style');
     style.id = 'techm8-auth-style';
     style.textContent = `
-      [data-auth-protected] { visibility: hidden; }
       .tm-auth-overlay {
         position: fixed;
         inset: 0;
@@ -181,11 +180,7 @@ window.Techm8StaffAuth = (function () {
     injectStyles();
 
     const settings = options || {};
-    const root = document.querySelector(settings.rootSelector || '[data-auth-protected]');
-    if (root) root.style.visibility = 'hidden';
-
     if (await verifyExistingSession()) {
-      if (root) root.style.visibility = 'visible';
       return true;
     }
 
@@ -196,7 +191,6 @@ window.Techm8StaffAuth = (function () {
           throw new Error((result && result.message) || 'Incorrect password.');
         }
         setToken(result.session_token);
-        if (root) root.style.visibility = 'visible';
         resolve(true);
       });
     });
