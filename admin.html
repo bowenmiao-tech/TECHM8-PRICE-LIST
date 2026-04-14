@@ -453,14 +453,12 @@
             let from = 0;
 
             while (true) {
-              const to = from + pageSize - 1;
               const response = await fetch(
-                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc',
+                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc&limit=' + pageSize + '&offset=' + from,
                 {
                   headers: {
                     apikey: SUPABASE.anonKey,
-                    Authorization: 'Bearer ' + SUPABASE.anonKey,
-                    Range: from + '-' + to
+                    Authorization: 'Bearer ' + SUPABASE.anonKey
                   }
                 }
               );
