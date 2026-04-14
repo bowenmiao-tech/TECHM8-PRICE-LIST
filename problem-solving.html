@@ -39,7 +39,7 @@
 
     .shell {
       width: 100%;
-      max-width: 1180px;
+      max-width: 1240px;
       background: #fff;
       border: 1px solid var(--tm-border);
       border-radius: 30px;
@@ -103,49 +103,97 @@
       line-height: 1.7;
     }
 
-    .guide-grid {
+    .guide-list {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
     }
 
-    .guide-card {
-      display: block;
+    .guide-row {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 20px;
+      align-items: stretch;
+      border: 1px solid var(--tm-border);
+      border-radius: 26px;
+      overflow: hidden;
       text-decoration: none;
       color: inherit;
-      padding: 22px;
-      border-radius: 24px;
-      border: 1px solid var(--tm-border);
-      background:
-        radial-gradient(circle at top right, rgba(239,114,4,0.10), transparent 28%),
-        linear-gradient(180deg, #ffffff 0%, #f8fbfc 100%);
+      background: linear-gradient(180deg, #fff 0%, #f8fbfc 100%);
       box-shadow: 0 16px 38px rgba(13, 25, 32, 0.07);
     }
 
-    .guide-icon {
-      width: 56px;
-      height: 56px;
-      display: inline-grid;
-      place-items: center;
-      border-radius: 16px;
-      margin-bottom: 16px;
-      color: #fff;
-      font-size: 26px;
-      background: linear-gradient(135deg, #ef7204 0%, #c55a00 100%);
+    .guide-thumb {
+      min-height: 220px;
+      position: relative;
+      background:
+        radial-gradient(circle at top left, rgba(239,114,4,0.18), transparent 30%),
+        linear-gradient(135deg, #18362d 0%, #25483d 100%);
+      display: flex;
+      align-items: flex-end;
+      padding: 20px;
+      overflow: hidden;
     }
 
-    .guide-label {
-      text-transform: uppercase;
-      letter-spacing: .08em;
+    .guide-thumb img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: .80;
+    }
+
+    .guide-thumb::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(10,18,24,0.02) 0%, rgba(10,18,24,0.58) 100%);
+    }
+
+    .guide-badge {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      color: #fff;
       font-size: 12px;
-      color: #8a979f;
+      letter-spacing: .08em;
+      text-transform: uppercase;
       font-weight: 700;
-      margin-bottom: 8px;
+      backdrop-filter: blur(6px);
+    }
+
+    .guide-body {
+      padding: 22px 22px 20px 0;
+      display: grid;
+      gap: 14px;
+    }
+
+    .guide-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #f2f6f8;
+      color: #51616a;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .guide-title {
-      margin: 0 0 10px;
-      font-size: 28px;
+      margin: 0;
+      font-size: 30px;
       line-height: 1.06;
       font-weight: 800;
     }
@@ -155,24 +203,56 @@
       color: #53636b;
       line-height: 1.8;
       font-size: 15px;
+      max-width: 720px;
     }
 
-    .guide-meta {
-      margin-top: 16px;
+    .guide-points {
+      display: grid;
+      gap: 10px;
+      color: #26363d;
+      font-size: 14px;
+    }
+
+    .guide-point {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .guide-point i {
+      color: var(--tm-accent);
+      margin-top: 2px;
+    }
+
+    .guide-action {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      color: #163129;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: #163129;
+      color: #fff;
       font-weight: 700;
+      width: fit-content;
     }
 
     @media (max-width: 991px) {
-      .guide-grid { grid-template-columns: 1fr; }
+      .guide-row {
+        grid-template-columns: 1fr;
+      }
+
+      .guide-body {
+        padding: 0 18px 18px;
+      }
+
+      .guide-thumb {
+        min-height: 230px;
+      }
     }
 
     @media (max-width: 640px) {
       .hero, .content { padding: 18px; }
-      .guide-title { font-size: 24px; }
+      .guide-title { font-size: 25px; }
     }
   </style>
 </head>
@@ -185,26 +265,63 @@
         </div>
         <h1>Problem Solving Guides</h1>
         <p>
-          Open simplified internal guides for diagnosis and common repair-side tasks. These are quick staff references,
-          not full public tutorials.
+          Internal reference guides for activation, setup, and common Windows support tasks. Each guide is simplified for
+          quick use at the counter or on the bench.
         </p>
       </div>
 
       <div class="content">
-        <h2 class="section-title">Available Guides</h2>
+        <h2 class="section-title">Guide Library</h2>
         <p class="section-subtitle">
-          Start with the most common issue guides. More internal guides can be added here later.
+          Open a guide to see step-by-step instructions, screenshots, and quick actions.
         </p>
 
-        <div class="guide-grid">
-          <a class="guide-card" href="./guide-windows-activation-bypass.html">
-            <div class="guide-icon"><i class="bi bi-windows"></i></div>
-            <div class="guide-label">Windows Activation</div>
-            <h3 class="guide-title">Activation Setup Bypass Guide</h3>
-            <p class="guide-text">
-              Quick instructions for opening Command Prompt on the activation screen and launching the local-only setup path.
-            </p>
-            <div class="guide-meta">Open Guide <i class="bi bi-arrow-right"></i></div>
+        <div class="guide-list">
+          <a class="guide-row" href="./guide-windows-activation-bypass.html">
+            <div class="guide-thumb">
+              <img src="./win11-msft-acc-login.webp" alt="Windows account setup page">
+              <div class="guide-badge"><i class="bi bi-windows"></i> Setup Guide</div>
+            </div>
+            <div class="guide-body">
+              <div class="guide-meta">
+                <span class="meta-chip"><i class="bi bi-lightning-charge-fill"></i> Quick Fix</span>
+                <span class="meta-chip"><i class="bi bi-display"></i> Windows 11</span>
+              </div>
+              <h3 class="guide-title">Windows Activation Setup Bypass</h3>
+              <p class="guide-text">
+                Use this guide when the machine is on the Microsoft account setup screen and you need to open Command Prompt
+                and launch the local-only setup path.
+              </p>
+              <div class="guide-points">
+                <div class="guide-point"><i class="bi bi-check-circle-fill"></i><span>Includes the correct screen image showing where the command is used</span></div>
+                <div class="guide-point"><i class="bi bi-check-circle-fill"></i><span>Step-by-step instructions for staff</span></div>
+                <div class="guide-point"><i class="bi bi-check-circle-fill"></i><span>Command reference included for quick copy</span></div>
+              </div>
+              <span class="guide-action">Open Guide <i class="bi bi-arrow-right"></i></span>
+            </div>
+          </a>
+
+          <a class="guide-row" href="./guide-kms-tool.html">
+            <div class="guide-thumb">
+              <div class="guide-badge"><i class="bi bi-key-fill"></i> Activation Tool</div>
+            </div>
+            <div class="guide-body">
+              <div class="guide-meta">
+                <span class="meta-chip"><i class="bi bi-download"></i> Local File</span>
+                <span class="meta-chip"><i class="bi bi-microsoft"></i> Windows + Office</span>
+              </div>
+              <h3 class="guide-title">KMS Activation Tool</h3>
+              <p class="guide-text">
+                Internal reference page for the KMS batch tool used to activate Windows and Office. The download is served
+                from your own website so staff are not blocked if the external source has issues.
+              </p>
+              <div class="guide-points">
+                <div class="guide-point"><i class="bi bi-check-circle-fill"></i><span>Explains what the tool is used for</span></div>
+                <div class="guide-point"><i class="bi bi-check-circle-fill"></i><span>Provides your own hosted download link</span></div>
+                <div class="guide-point"><i class="bi bi-check-circle-fill"></i><span>Includes original source reference</span></div>
+              </div>
+              <span class="guide-action">Open Guide <i class="bi bi-arrow-right"></i></span>
+            </div>
           </a>
         </div>
       </div>
