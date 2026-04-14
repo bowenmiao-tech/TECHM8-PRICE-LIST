@@ -146,6 +146,8 @@
       position: relative;
       min-height: 330px;
       padding: 24px;
+      display: flex;
+      flex-direction: column;
       border-radius: 26px;
       overflow: hidden;
       text-decoration: none;
@@ -210,6 +212,7 @@
       gap: 10px;
       color: #2b3b43;
       font-size: 14px;
+      flex: 1 1 auto;
     }
 
     .portal-list li {
@@ -221,9 +224,6 @@
     .portal-list i { color: var(--tm-accent); }
 
     .portal-cta {
-      position: absolute;
-      left: 24px;
-      bottom: 24px;
       display: inline-flex;
       align-items: center;
       gap: 10px;
@@ -232,6 +232,8 @@
       background: #163129;
       color: #fff;
       font-weight: 700;
+      margin-top: 22px;
+      width: fit-content;
     }
 
     @media (max-width: 991px) {
