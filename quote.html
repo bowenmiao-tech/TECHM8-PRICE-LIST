@@ -968,17 +968,36 @@
         },
         async fetchPriceRows() {
           if (SUPABASE) {
-            const supabaseResponse = await fetch(
-              SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc',
-              {
-                headers: {
-                  apikey: SUPABASE.anonKey,
-                  Authorization: 'Bearer ' + SUPABASE.anonKey
+            const allRows = []
+            const pageSize = 1000
+            let from = 0
+
+            while (true) {
+              const to = from + pageSize - 1
+              const supabaseResponse = await fetch(
+                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc',
+                {
+                  headers: {
+                    apikey: SUPABASE.anonKey,
+                    Authorization: 'Bearer ' + SUPABASE.anonKey,
+                    Range: from + '-' + to
+                  }
                 }
-              }
-            )
-            if (supabaseResponse.ok) {
-              return await supabaseResponse.json()
+              )
+
+              if (!supabaseResponse.ok) break
+
+              const pageRows = await supabaseResponse.json()
+              if (!Array.isArray(pageRows) || !pageRows.length) break
+
+              allRows.push(...pageRows)
+
+              if (pageRows.length < pageSize) break
+              from += pageSize
+            }
+
+            if (allRows.length) {
+              return allRows
             }
           }
 

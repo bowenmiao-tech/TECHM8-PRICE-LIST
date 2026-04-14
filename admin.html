@@ -448,18 +448,34 @@
           this.loading = true;
           try {
             if (!SUPABASE) throw new Error('Supabase config is missing.');
-            const response = await fetch(
-              SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc',
-              {
-                headers: {
-                  apikey: SUPABASE.anonKey,
-                  Authorization: 'Bearer ' + SUPABASE.anonKey
+            const allRows = [];
+            const pageSize = 1000;
+            let from = 0;
+
+            while (true) {
+              const to = from + pageSize - 1;
+              const response = await fetch(
+                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc',
+                {
+                  headers: {
+                    apikey: SUPABASE.anonKey,
+                    Authorization: 'Bearer ' + SUPABASE.anonKey,
+                    Range: from + '-' + to
+                  }
                 }
-              }
-            );
-            const result = await response.json();
-            if (!response.ok) throw new Error((result && result.message) || 'Failed to load Supabase price list.');
-            this.applyData(result);
+              );
+
+              const result = await response.json();
+              if (!response.ok) throw new Error((result && result.message) || 'Failed to load Supabase price list.');
+              if (!Array.isArray(result) || !result.length) break;
+
+              allRows.push(...result);
+
+              if (result.length < pageSize) break;
+              from += pageSize;
+            }
+
+            this.applyData(allRows);
             this.loadError = '';
           } catch (error) {
             console.error(error);
