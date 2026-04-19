@@ -607,10 +607,6 @@
               <template v-if="currentIssue">
                 <div class="quote-price">{{ formattedPrice }}</div>
                 <div class="quote-issue">{{ currentIssue.issue }}</div>
-                <div class="quote-time mb-3">
-                  <i class="bi bi-clock me-1"></i>
-                  {{ currentIssue.time || 'Please confirm repair time in store.' }}
-                </div>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                   <a class="btn btn-workflow" :href="workflowUrl">
                     <i class="bi bi-box-arrow-up-right me-1"></i> Open Workflow
@@ -740,7 +736,6 @@
               key: this.makeIssueKey(item),
               issue: item.issue,
               price: item.price,
-              time: item.time,
               brand: item.brand,
               model: item.model
             }))
@@ -759,7 +754,7 @@
             model: this.currentIssue.model || '',
             issue: this.currentIssue.issue || '',
             price: this.formattedPrice || '',
-            time: this.currentIssue.time || '',
+            time: '',
             deviceType: this.guessDeviceType(this.currentIssue)
           })
           return './repair_workflow.html?' + params.toString()
@@ -843,8 +838,7 @@
             brand: String(item.brand || '').trim(),
             model: String(item.model || '').trim(),
             issue: String(item.issue || '').trim(),
-            price: item.price === null || item.price === undefined ? '' : String(item.price).trim(),
-            time: item.time === null || item.time === undefined ? '' : String(item.time).trim()
+            price: item.price === null || item.price === undefined ? '' : String(item.price).trim()
           }
         },
         sortRows(rows) {
@@ -974,7 +968,7 @@
 
             while (true) {
               const supabaseResponse = await fetch(
-                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,time:turnaround_time&order=brand.asc&order=model.asc&order=issue.asc&limit=' + pageSize + '&offset=' + from,
+                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price&order=brand.asc&order=model.asc&order=issue.asc&limit=' + pageSize + '&offset=' + from,
                 {
                   headers: {
                     apikey: SUPABASE.anonKey,
