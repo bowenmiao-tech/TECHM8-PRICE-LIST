@@ -8,7 +8,8 @@ create table if not exists public.repair_prices (
   issue text not null,
   price text not null default '',
   cny_cost_price numeric(12,2),
-  aud_cost_price numeric(12,2),
+  aud_cost_price_ex_gst numeric(12,2),
+  aud_cost_price_inc_gst numeric(12,2),
   cost_basis_currency text,
   fx_rate_cny_to_aud numeric(12,6),
   fx_source text,
@@ -20,13 +21,15 @@ create table if not exists public.repair_prices (
 
 alter table public.repair_prices
   add column if not exists cny_cost_price numeric(12,2),
-  add column if not exists aud_cost_price numeric(12,2),
+  add column if not exists aud_cost_price_ex_gst numeric(12,2),
+  add column if not exists aud_cost_price_inc_gst numeric(12,2),
   add column if not exists cost_basis_currency text,
   add column if not exists fx_rate_cny_to_aud numeric(12,6),
   add column if not exists fx_source text,
   add column if not exists fx_updated_at timestamptz;
 
 alter table public.repair_prices
+  drop column if exists aud_cost_price,
   drop column if exists turnaround_time;
 
 create table if not exists public.repair_intakes (
@@ -289,7 +292,8 @@ declare
   row_issue text;
   row_price text;
   row_cny_cost_price numeric(12,2);
-  row_aud_cost_price numeric(12,2);
+  row_aud_cost_price_ex_gst numeric(12,2);
+  row_aud_cost_price_inc_gst numeric(12,2);
   row_cost_basis_currency text;
   row_fx_rate_cny_to_aud numeric(12,6);
   row_fx_source text;
@@ -314,8 +318,12 @@ begin
     row_cny_cost_price := (row_payload->>'cny_cost_price')::numeric(12,2);
   end if;
 
-  if coalesce(trim(row_payload->>'aud_cost_price'), '') <> '' then
-    row_aud_cost_price := (row_payload->>'aud_cost_price')::numeric(12,2);
+  if coalesce(trim(row_payload->>'aud_cost_price_ex_gst'), '') <> '' then
+    row_aud_cost_price_ex_gst := (row_payload->>'aud_cost_price_ex_gst')::numeric(12,2);
+  end if;
+
+  if coalesce(trim(row_payload->>'aud_cost_price_inc_gst'), '') <> '' then
+    row_aud_cost_price_inc_gst := (row_payload->>'aud_cost_price_inc_gst')::numeric(12,2);
   end if;
 
   if coalesce(trim(row_payload->>'fx_rate_cny_to_aud'), '') <> '' then
@@ -336,7 +344,8 @@ begin
     issue,
     price,
     cny_cost_price,
-    aud_cost_price,
+    aud_cost_price_ex_gst,
+    aud_cost_price_inc_gst,
     cost_basis_currency,
     fx_rate_cny_to_aud,
     fx_source,
@@ -348,7 +357,8 @@ begin
     row_issue,
     row_price,
     row_cny_cost_price,
-    row_aud_cost_price,
+    row_aud_cost_price_ex_gst,
+    row_aud_cost_price_inc_gst,
     row_cost_basis_currency,
     row_fx_rate_cny_to_aud,
     row_fx_source,
@@ -358,7 +368,8 @@ begin
   set
     price = excluded.price,
     cny_cost_price = excluded.cny_cost_price,
-    aud_cost_price = excluded.aud_cost_price,
+    aud_cost_price_ex_gst = excluded.aud_cost_price_ex_gst,
+    aud_cost_price_inc_gst = excluded.aud_cost_price_inc_gst,
     cost_basis_currency = excluded.cost_basis_currency,
     fx_rate_cny_to_aud = excluded.fx_rate_cny_to_aud,
     fx_source = excluded.fx_source,
@@ -427,7 +438,8 @@ begin
       issue,
       price,
       cny_cost_price,
-      aud_cost_price,
+      aud_cost_price_ex_gst,
+      aud_cost_price_inc_gst,
       cost_basis_currency,
       fx_rate_cny_to_aud,
       fx_source,
@@ -439,7 +451,8 @@ begin
       coalesce(trim(item->>'issue'), ''),
       coalesce(trim(item->>'price'), ''),
       case when coalesce(trim(item->>'cny_cost_price'), '') = '' then null else (item->>'cny_cost_price')::numeric(12,2) end,
-      case when coalesce(trim(item->>'aud_cost_price'), '') = '' then null else (item->>'aud_cost_price')::numeric(12,2) end,
+      case when coalesce(trim(item->>'aud_cost_price_ex_gst'), '') = '' then null else (item->>'aud_cost_price_ex_gst')::numeric(12,2) end,
+      case when coalesce(trim(item->>'aud_cost_price_inc_gst'), '') = '' then null else (item->>'aud_cost_price_inc_gst')::numeric(12,2) end,
       nullif(upper(coalesce(trim(item->>'cost_basis_currency'), '')), ''),
       case when coalesce(trim(item->>'fx_rate_cny_to_aud'), '') = '' then null else (item->>'fx_rate_cny_to_aud')::numeric(12,6) end,
       nullif(coalesce(trim(item->>'fx_source'), ''), ''),
@@ -449,7 +462,8 @@ begin
     set
       price = excluded.price,
       cny_cost_price = excluded.cny_cost_price,
-      aud_cost_price = excluded.aud_cost_price,
+      aud_cost_price_ex_gst = excluded.aud_cost_price_ex_gst,
+      aud_cost_price_inc_gst = excluded.aud_cost_price_inc_gst,
       cost_basis_currency = excluded.cost_basis_currency,
       fx_rate_cny_to_aud = excluded.fx_rate_cny_to_aud,
       fx_source = excluded.fx_source,

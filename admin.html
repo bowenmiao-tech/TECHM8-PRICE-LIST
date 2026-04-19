@@ -31,7 +31,7 @@
     }
 
     #app {
-      max-width: 1640px;
+      max-width: 1700px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -67,7 +67,7 @@
 
     .hero p {
       margin: 10px 0 0;
-      max-width: 960px;
+      max-width: 980px;
       color: rgba(255,255,255,0.82);
       line-height: 1.7;
       font-size: 14px;
@@ -217,14 +217,14 @@
           <div>
             <h1>Price Admin</h1>
             <p>
-              This page is for row-by-row database maintenance. `Time` has been removed from the price table.
-              Each row now supports a retail price plus linked cost prices in CNY and AUD. When you edit one cost currency,
-              the other side is recalculated from the latest exchange rate before saving.
+              This page is for row-by-row database maintenance. Time has been removed from the price table.
+              Each row now supports retail price plus linked cost prices in CNY, AUD ex GST, and AUD inc GST.
+              When you edit CNY or AUD ex GST, the other values are recalculated from the latest exchange rate and GST rule.
             </p>
           </div>
           <div class="hero-tags">
             <div class="hero-tag">Single row save</div>
-            <div class="hero-tag">CNY + AUD cost link</div>
+            <div class="hero-tag">AUD ex GST + inc GST</div>
             <div class="hero-tag">FX snapshot stored</div>
           </div>
         </div>
@@ -282,7 +282,7 @@
                 <el-button icon="el-icon-refresh" @click="refreshFxRate" :loading="fxLoading">Refresh FX</el-button>
               </div>
               <div class="panel-subtitle" style="margin-bottom:0;">
-                Source: {{ fxSourceDisplay }}. When you save a row, the latest rate is stored with that row.
+                Source: {{ fxSourceDisplay }}. AUD inc GST is always calculated as AUD ex GST x 1.10.
               </div>
             </div>
           </div>
@@ -322,27 +322,27 @@
             <div>
               <div class="table-title">Repair Price Rows</div>
               <div class="table-subtitle">
-                Save works one row at a time. Edit retail price freely. Edit either CNY or AUD cost price, and the other cost will be recalculated from the current FX rate.
+                Edit retail price freely. Edit CNY cost or AUD ex GST cost, and the system will recalculate the linked values before saving.
               </div>
             </div>
             <div class="table-subtitle">{{ filteredRows.length }} visible row(s)</div>
           </div>
 
           <div class="table-wrap">
-            <el-table :data="filteredRows" border stripe height="680">
+            <el-table :data="filteredRows" border stripe height="700">
               <el-table-column label="Brand" min-width="170">
                 <template slot-scope="scope">
                   <el-input v-model.trim="scope.row.brand" placeholder="Brand"></el-input>
                 </template>
               </el-table-column>
 
-              <el-table-column label="Model" min-width="260">
+              <el-table-column label="Model" min-width="250">
                 <template slot-scope="scope">
                   <el-input v-model.trim="scope.row.model" placeholder="Model"></el-input>
                 </template>
               </el-table-column>
 
-              <el-table-column label="Issue" min-width="280">
+              <el-table-column label="Issue" min-width="260">
                 <template slot-scope="scope">
                   <el-input v-model.trim="scope.row.issue" placeholder="Issue"></el-input>
                 </template>
@@ -354,7 +354,7 @@
                 </template>
               </el-table-column>
 
-              <el-table-column label="CNY Cost" min-width="130">
+              <el-table-column label="CNY Cost" min-width="120">
                 <template slot-scope="scope">
                   <el-input
                     v-model.trim="scope.row.cny_cost_price"
@@ -364,12 +364,22 @@
                 </template>
               </el-table-column>
 
-              <el-table-column label="AUD Cost" min-width="130">
+              <el-table-column label="AUD Ex GST" min-width="130">
                 <template slot-scope="scope">
                   <el-input
-                    v-model.trim="scope.row.aud_cost_price"
+                    v-model.trim="scope.row.aud_cost_price_ex_gst"
                     placeholder="25.00"
                     @input="markCostEdit(scope.row, 'AUD')">
+                  </el-input>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="AUD Inc GST" min-width="130">
+                <template slot-scope="scope">
+                  <el-input
+                    v-model.trim="scope.row.aud_cost_price_inc_gst"
+                    placeholder="27.50"
+                    disabled>
                   </el-input>
                 </template>
               </el-table-column>
@@ -377,8 +387,8 @@
               <el-table-column label="FX Info" min-width="180">
                 <template slot-scope="scope">
                   <div style="font-size:12px; line-height:1.6; color:#52616a;">
-                    <div><strong>Basis:</strong> {{ scope.row.cost_basis_currency || '—' }}</div>
-                    <div><strong>Rate:</strong> {{ scope.row.fx_rate_cny_to_aud || '—' }}</div>
+                    <div><strong>Basis:</strong> {{ scope.row.cost_basis_currency || '-' }}</div>
+                    <div><strong>Rate:</strong> {{ scope.row.fx_rate_cny_to_aud || '-' }}</div>
                     <div><strong>At:</strong> {{ formatFxTimestamp(scope.row.fx_updated_at) }}</div>
                   </div>
                 </template>
@@ -447,7 +457,8 @@
               row.issue,
               row.price,
               row.cny_cost_price,
-              row.aud_cost_price
+              row.aud_cost_price_ex_gst,
+              row.aud_cost_price_inc_gst
             ].join(' ').toLowerCase();
             return haystack.includes(keyword);
           });
@@ -487,7 +498,8 @@
         },
         normalizeRow(item) {
           const cnyCost = this.normalizeMoneyString(item.cny_cost_price);
-          const audCost = this.normalizeMoneyString(item.aud_cost_price);
+          const audExGst = this.normalizeMoneyString(item.aud_cost_price_ex_gst);
+          const audIncGst = this.normalizeMoneyString(item.aud_cost_price_inc_gst);
 
           return {
             id: item.id || this.makeId(),
@@ -496,13 +508,14 @@
             issue: String(item.issue || '').trim(),
             price: item.price === null || item.price === undefined ? '' : String(item.price).trim(),
             cny_cost_price: cnyCost,
-            aud_cost_price: audCost,
+            aud_cost_price_ex_gst: audExGst,
+            aud_cost_price_inc_gst: audIncGst,
             cost_basis_currency: String(item.cost_basis_currency || '').trim().toUpperCase(),
             fx_rate_cny_to_aud: item.fx_rate_cny_to_aud === null || item.fx_rate_cny_to_aud === undefined ? '' : String(item.fx_rate_cny_to_aud).trim(),
             fx_source: String(item.fx_source || '').trim(),
             fx_updated_at: item.fx_updated_at || '',
             _originalCnyCostPrice: cnyCost,
-            _originalAudCostPrice: audCost,
+            _originalAudCostPriceExGst: audExGst,
             _lastEditedCostField: ''
           };
         },
@@ -532,7 +545,7 @@
           return Number.isFinite(numeric) ? numeric : null;
         },
         formatFxTimestamp(value) {
-          if (!value) return '—';
+          if (!value) return '-';
           return new Date(value).toLocaleString();
         },
         async refreshFxRate() {
@@ -578,7 +591,7 @@
 
             while (true) {
               const response = await fetch(
-                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,cny_cost_price,aud_cost_price,cost_basis_currency,fx_rate_cny_to_aud,fx_source,fx_updated_at&order=brand.asc&order=model.asc&order=issue.asc&limit=' + pageSize + '&offset=' + from,
+                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,cny_cost_price,aud_cost_price_ex_gst,aud_cost_price_inc_gst,cost_basis_currency,fx_rate_cny_to_aud,fx_source,fx_updated_at&order=brand.asc&order=model.asc&order=issue.asc&limit=' + pageSize + '&offset=' + from,
                 {
                   headers: {
                     apikey: SUPABASE.anonKey,
@@ -635,35 +648,41 @@
           }
 
           const originalCny = this.parseMoney(row._originalCnyCostPrice);
-          const originalAud = this.parseMoney(row._originalAudCostPrice);
+          const originalAudExGst = this.parseMoney(row._originalAudCostPriceExGst);
           let currentCny = this.parseMoney(row.cny_cost_price);
-          let currentAud = this.parseMoney(row.aud_cost_price);
+          let currentAudExGst = this.parseMoney(row.aud_cost_price_ex_gst);
+          let currentAudIncGst = this.parseMoney(row.aud_cost_price_inc_gst);
           const cnyChanged = (currentCny ?? null) !== (originalCny ?? null);
-          const audChanged = (currentAud ?? null) !== (originalAud ?? null);
+          const audChanged = (currentAudExGst ?? null) !== (originalAudExGst ?? null);
 
           let basis = row._lastEditedCostField || row.cost_basis_currency || '';
 
           if (cnyChanged && !audChanged) basis = 'CNY';
           if (audChanged && !cnyChanged) basis = 'AUD';
-          if (!basis && currentCny !== null && currentAud === null) basis = 'CNY';
-          if (!basis && currentAud !== null && currentCny === null) basis = 'AUD';
+          if (!basis && currentCny !== null && currentAudExGst === null) basis = 'CNY';
+          if (!basis && currentAudExGst !== null && currentCny === null) basis = 'AUD';
 
           if (basis === 'CNY') {
             if (currentCny === null) {
-              currentAud = null;
+              currentAudExGst = null;
+              currentAudIncGst = null;
             } else {
-              currentAud = Number((currentCny * this.fxRateCnyToAud).toFixed(2));
+              currentAudExGst = Number((currentCny * this.fxRateCnyToAud).toFixed(2));
+              currentAudIncGst = Number((currentAudExGst * 1.10).toFixed(2));
             }
           } else if (basis === 'AUD') {
-            if (currentAud === null) {
+            if (currentAudExGst === null) {
               currentCny = null;
+              currentAudIncGst = null;
             } else {
-              currentCny = Number((currentAud / this.fxRateCnyToAud).toFixed(2));
+              currentCny = Number((currentAudExGst / this.fxRateCnyToAud).toFixed(2));
+              currentAudIncGst = Number((currentAudExGst * 1.10).toFixed(2));
             }
           }
 
           row.cny_cost_price = currentCny === null ? '' : currentCny.toFixed(2);
-          row.aud_cost_price = currentAud === null ? '' : currentAud.toFixed(2);
+          row.aud_cost_price_ex_gst = currentAudExGst === null ? '' : currentAudExGst.toFixed(2);
+          row.aud_cost_price_inc_gst = currentAudIncGst === null ? '' : currentAudIncGst.toFixed(2);
           row.cost_basis_currency = basis || '';
           row.fx_rate_cny_to_aud = this.fxRateCnyToAud.toFixed(6);
           row.fx_source = this.fxSource;
@@ -671,7 +690,8 @@
 
           return {
             cny_cost_price: currentCny,
-            aud_cost_price: currentAud,
+            aud_cost_price_ex_gst: currentAudExGst,
+            aud_cost_price_inc_gst: currentAudIncGst,
             cost_basis_currency: basis || null,
             fx_rate_cny_to_aud: this.fxRateCnyToAud,
             fx_source: this.fxSource,
@@ -692,7 +712,8 @@
                 issue: cleaned.issue,
                 price: cleaned.price,
                 cny_cost_price: costPayload.cny_cost_price,
-                aud_cost_price: costPayload.aud_cost_price,
+                aud_cost_price_ex_gst: costPayload.aud_cost_price_ex_gst,
+                aud_cost_price_inc_gst: costPayload.aud_cost_price_inc_gst,
                 cost_basis_currency: costPayload.cost_basis_currency,
                 fx_rate_cny_to_aud: costPayload.fx_rate_cny_to_aud,
                 fx_source: costPayload.fx_source,
@@ -706,7 +727,7 @@
             row.issue = cleaned.issue;
             row.price = cleaned.price;
             row._originalCnyCostPrice = row.cny_cost_price;
-            row._originalAudCostPrice = row.aud_cost_price;
+            row._originalAudCostPriceExGst = row.aud_cost_price_ex_gst;
             row._lastEditedCostField = '';
 
             this.$message.success('Row saved to database.');
