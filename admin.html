@@ -290,7 +290,7 @@
 
         <div class="tool-grid">
           <div class="panel">
-            <div class="panel-title">Search</div>
+            <div class="panel-title">Advanced Filters</div>
             <div class="stack">
               <el-input v-model.trim="keyword" clearable placeholder="Search brand, model, issue, retail or cost price"></el-input>
               <el-select v-model="brandFilter" clearable filterable placeholder="Filter by brand">
@@ -301,6 +301,25 @@
                   :value="brand">
                 </el-option>
               </el-select>
+              <el-select v-model="modelFilter" clearable filterable placeholder="Filter by model" :disabled="!modelOptions.length">
+                <el-option
+                  v-for="model in modelOptions"
+                  :key="model"
+                  :label="model"
+                  :value="model">
+                </el-option>
+              </el-select>
+              <el-select v-model="issueFilter" clearable filterable placeholder="Filter by issue" :disabled="!issueOptions.length">
+                <el-option
+                  v-for="issue in issueOptions"
+                  :key="issue"
+                  :label="issue"
+                  :value="issue">
+                </el-option>
+              </el-select>
+              <div class="button-row">
+                <el-button plain @click="clearFilters">Clear Filters</el-button>
+              </div>
             </div>
           </div>
 
@@ -384,6 +403,14 @@
                 </template>
               </el-table-column>
 
+              <el-table-column label="Retail - AUD Incl GST" min-width="160">
+                <template slot-scope="scope">
+                  <div :style="profitStyle(scope.row)">
+                    {{ formatProfit(scope.row) }}
+                  </div>
+                </template>
+              </el-table-column>
+
               <el-table-column label="FX Info" min-width="180">
                 <template slot-scope="scope">
                   <div style="font-size:12px; line-height:1.6; color:#52616a;">
@@ -426,6 +453,8 @@
           rows: [],
           keyword: '',
           brandFilter: '',
+          modelFilter: '',
+          issueFilter: '',
           loadError: '',
           loading: false,
           lastLoadedAt: null,
@@ -443,6 +472,32 @@
           return Array.from(new Set(this.rows.map(row => row.brand).filter(Boolean)))
             .sort(this.naturalSort);
         },
+        modelOptions() {
+          return Array.from(
+            new Set(
+              this.rows
+                .filter(row => {
+                  if (this.brandFilter && row.brand !== this.brandFilter) return false;
+                  if (this.issueFilter && row.issue !== this.issueFilter) return false;
+                  return Boolean(row.model);
+                })
+                .map(row => row.model)
+            )
+          ).sort(this.naturalSort);
+        },
+        issueOptions() {
+          return Array.from(
+            new Set(
+              this.rows
+                .filter(row => {
+                  if (this.brandFilter && row.brand !== this.brandFilter) return false;
+                  if (this.modelFilter && row.model !== this.modelFilter) return false;
+                  return Boolean(row.issue);
+                })
+                .map(row => row.issue)
+            )
+          ).sort(this.naturalSort);
+        },
         brandCount() {
           return this.brandOptions.length;
         },
@@ -450,6 +505,8 @@
           const keyword = String(this.keyword || '').trim().toLowerCase();
           return this.rows.filter(row => {
             if (this.brandFilter && row.brand !== this.brandFilter) return false;
+            if (this.modelFilter && row.model !== this.modelFilter) return false;
+            if (this.issueFilter && row.issue !== this.issueFilter) return false;
             if (!keyword) return true;
             const haystack = [
               row.brand,
@@ -458,7 +515,8 @@
               row.price,
               row.cny_cost_price,
               row.aud_cost_price_ex_gst,
-              row.aud_cost_price_inc_gst
+              row.aud_cost_price_inc_gst,
+              this.formatProfit(row)
             ].join(' ').toLowerCase();
             return haystack.includes(keyword);
           });
@@ -476,6 +534,17 @@
         },
         fxSourceDisplay() {
           return this.fxSource || 'Unknown';
+        }
+      },
+      watch: {
+        brandFilter() {
+          this.syncFilterSelections();
+        },
+        modelFilter() {
+          this.syncFilterSelections();
+        },
+        issueFilter() {
+          this.syncFilterSelections();
         }
       },
       mounted() {
@@ -539,10 +608,50 @@
         markCostEdit(row, currency) {
           row._lastEditedCostField = currency;
         },
+        clearFilters() {
+          this.keyword = '';
+          this.brandFilter = '';
+          this.modelFilter = '';
+          this.issueFilter = '';
+        },
+        syncFilterSelections() {
+          if (this.modelFilter && !this.modelOptions.includes(this.modelFilter)) {
+            this.modelFilter = '';
+            return;
+          }
+          if (this.issueFilter && !this.issueOptions.includes(this.issueFilter)) {
+            this.issueFilter = '';
+          }
+        },
         parseMoney(value) {
           if (value === null || value === undefined) return null;
           const numeric = Number(String(value).trim().replace(/[^0-9.\-]/g, ''));
           return Number.isFinite(numeric) ? numeric : null;
+        },
+        calculateProfit(row) {
+          const retail = this.parseMoney(row.price);
+          const audInclGst = this.parseMoney(row.aud_cost_price_inc_gst);
+          if (retail === null || audInclGst === null) return null;
+          return Number((retail - audInclGst).toFixed(2));
+        },
+        formatProfit(row) {
+          const profit = this.calculateProfit(row);
+          if (profit === null) return '-';
+          const prefix = profit >= 0 ? '$' : '-$';
+          return prefix + Math.abs(profit).toFixed(2);
+        },
+        profitStyle(row) {
+          const profit = this.calculateProfit(row);
+          if (profit === null) {
+            return {
+              color: '#8a9aa5',
+              fontWeight: 700
+            };
+          }
+          return {
+            color: profit < 0 ? '#c63d2f' : '#126a42',
+            fontWeight: 800
+          };
         },
         formatFxTimestamp(value) {
           if (!value) return '-';
