@@ -247,6 +247,33 @@
     .summary-input-row td { background: var(--tm-yellow); }
     .summary-total-row td { background: #e8f1ff; font-weight: 800; }
     .summary-sales-row td { background: var(--tm-green-soft); }
+    .summary-neutral-row td { background: #f8fafb; }
+    .summary-money {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+    .summary-sub-money {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color: #29424a;
+      font-weight: 700;
+    }
+    .eod-input-panel {
+      display: grid;
+      gap: 12px;
+    }
+    .eod-input-card {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      background: #fbfdfe;
+      padding: 14px;
+    }
+    .eod-input-card .field-label {
+      margin-bottom: 10px;
+    }
 
     .customer-track-grid {
       display: grid;
@@ -564,62 +591,58 @@
               <div>
                 <table class="summary-table">
                   <tr class="summary-input-row">
-                    <td class="summary-label-cell">CASH Received from Customers (Enter amount)</td>
-                    <td>{{ money(endOfDay.cash_received) }}</td>
+                    <td class="summary-label-cell">Cash Received from Customers</td>
+                    <td class="summary-money">{{ money(endOfDay.cash_received) }}</td>
                   </tr>
                   <tr class="summary-input-row">
-                    <td class="summary-label-cell">EFTPOS SALES (Don't forget AmEx) Net Amount</td>
-                    <td>{{ money(endOfDay.eftpos_sales) }}</td>
+                    <td class="summary-label-cell">EFTPOS Sales Net Amount</td>
+                    <td class="summary-money">{{ money(endOfDay.eftpos_sales) }}</td>
                   </tr>
                   <tr class="summary-input-row">
                     <td class="summary-label-cell">Afterpay Sales (Enter data)</td>
-                    <td>{{ money(endOfDay.afterpay_sales) }}</td>
+                    <td class="summary-money">{{ money(endOfDay.afterpay_sales) }}</td>
                   </tr>
                   <tr class="summary-total-row">
-                    <td class="summary-label-cell">TOTAL Sales (Do not Enter)</td>
-                    <td>{{ money(endOfDayTotalSalesInput) }}</td>
-                  </tr>
-                  <tr>
-                    <td class="summary-label-cell">To do List need to be finished if sales less than $2000</td>
-                    <td>{{ endOfDayTotalSalesInput < 2000 ? 'Yes' : 'No' }}</td>
+                    <td class="summary-label-cell">Total Sales</td>
+                    <td class="summary-money">{{ money(endOfDayTotalSalesInput) }}</td>
                   </tr>
                   <tr class="summary-sales-row">
-                    <td class="summary-label-cell">REPAIR SALES (Do not Enter)</td>
-                    <td>{{ money(repairSalesTotal) }}</td>
+                    <td class="summary-label-cell">Repair Sales</td>
+                    <td class="summary-sub-money">{{ money(repairSalesTotal) }}</td>
                   </tr>
                   <tr class="summary-sales-row">
-                    <td class="summary-label-cell">ACCESSORIES SALES (Do not Enter)</td>
-                    <td>{{ money(accessoriesSalesTotal) }}</td>
+                    <td class="summary-label-cell">Accessories Sales</td>
+                    <td class="summary-sub-money">{{ money(accessoriesSalesTotal) }}</td>
                   </tr>
                   <tr class="summary-sales-row">
-                    <td class="summary-label-cell">DEVICE SALES (Do not Enter)</td>
-                    <td>{{ money(deviceSalesTotal) }}</td>
+                    <td class="summary-label-cell">Device Sales</td>
+                    <td class="summary-sub-money">{{ money(deviceSalesTotal) }}</td>
                   </tr>
                   <tr class="summary-total-row">
-                    <td class="summary-label-cell">TOTAL Sales (Do not Enter)</td>
-                    <td>{{ money(endOfDayTotalBreakdown) }}</td>
+                    <td class="summary-label-cell">Total Sales Check</td>
+                    <td class="summary-money">{{ money(endOfDayTotalBreakdown) }}</td>
                   </tr>
-                  <tr>
-                    <td class="summary-label-cell">EXPENSE (Do not Enter)</td>
-                    <td>{{ money(expenseTotal) }}</td>
+                  <tr class="summary-neutral-row">
+                    <td class="summary-label-cell">Expense</td>
+                    <td class="summary-sub-money">{{ money(expenseTotal) }}</td>
                   </tr>
                   <tr class="summary-sales-row">
-                    <td class="summary-label-cell">CASH TO BE BANKED (Do not Enter)</td>
-                    <td>{{ money(cashToBeBanked) }}</td>
+                    <td class="summary-label-cell">Cash To Be Banked</td>
+                    <td class="summary-money">{{ money(cashToBeBanked) }}</td>
                   </tr>
                 </table>
               </div>
 
-              <div class="line-stack">
-                <div class="line-card">
+              <div class="eod-input-panel">
+                <div class="eod-input-card">
                   <label class="field-label">CASH Received from Customers (Enter amount)</label>
                   <el-input v-model.trim="endOfDay.cash_received" placeholder="50.00"></el-input>
                 </div>
-                <div class="line-card">
+                <div class="eod-input-card">
                   <label class="field-label">EFTPOS SALES (Don't forget AmEx) Net Amount</label>
                   <el-input v-model.trim="endOfDay.eftpos_sales" placeholder="1212.95"></el-input>
                 </div>
-                <div class="line-card">
+                <div class="eod-input-card">
                   <label class="field-label">Afterpay Sales (Enter data)</label>
                   <el-input v-model.trim="endOfDay.afterpay_sales" placeholder="0.00"></el-input>
                 </div>
@@ -728,7 +751,7 @@
                 <div class="grid-missing">
                   <div>
                     <label class="field-label">Product Name / Service</label>
-                    <el-input v-model.trim="line.product_name_service" placeholder="Product or service"></el-input>
+                    <el-input v-model="line.product_name_service" placeholder="Product or service"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Name (Staff)</label>
