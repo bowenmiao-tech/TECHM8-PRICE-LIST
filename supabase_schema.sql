@@ -1298,6 +1298,18 @@ begin
 
   report_date_value := coalesce(nullif(payload->>'report_date', '')::date, current_date);
 
+  if exists (
+    select 1
+    from public.daily_report_submissions report
+    where report.store_id = selected_store.id
+      and report.report_date = report_date_value
+  ) then
+    delete from public.daily_report_drafts
+    where store_id = selected_store.id
+      and report_date = report_date_value;
+    raise exception 'A report for this store and date has already been submitted';
+  end if;
+
   insert into public.daily_report_drafts (
     store_id,
     staff_id,
@@ -1721,3 +1733,470 @@ grant execute on function public.save_daily_report_draft(text, jsonb) to anon, a
 grant execute on function public.get_daily_report_draft(text, text, text, text) to anon, authenticated;
 grant execute on function public.submit_daily_report(text, jsonb) to anon, authenticated;
 grant execute on function public.get_daily_reports(text, text, text) to anon, authenticated;
+
+alter table public.daily_report_submissions
+  add column if not exists submission_source text not null default 'staff',
+  add column if not exists auto_submitted boolean not null default false;
+
+create or replace function public.submit_daily_report_internal(
+  payload jsonb,
+  submission_source_value text default 'staff',
+  auto_submitted_value boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  selected_store public.store_locations%rowtype;
+  selected_staff public.staff_directory%rowtype;
+  report_date_value date;
+  report_notes text;
+  repair_lines jsonb;
+  lcd_lines jsonb;
+  faulty_broken_lines jsonb;
+  device_sales_lines jsonb;
+  device_buyback_lines jsonb;
+  end_of_day_json jsonb;
+  cash_expense_lines jsonb;
+  customer_tracking_json jsonb;
+  missing_sales_lines jsonb;
+  repair_line jsonb;
+  lcd_line jsonb;
+  created_report_id bigint;
+  created_report_code text;
+  total_amount_value numeric(12,2) := 0;
+  repair_count_value integer := 0;
+  lcd_count_value integer := 0;
+  line_index integer := 0;
+  inventory_row public.lcd_inventory_items%rowtype;
+  line_quantity integer;
+  line_amount numeric(12,2);
+  line_action text;
+begin
+  if jsonb_typeof(payload) <> 'object' then
+    raise exception 'Payload must be a JSON object';
+  end if;
+
+  select *
+  into selected_store
+  from public.store_locations
+  where active = true
+    and store_code = coalesce(trim(payload->>'store_code'), '');
+
+  if not found then
+    raise exception 'Store not found';
+  end if;
+
+  select *
+  into selected_staff
+  from public.staff_directory
+  where active = true
+    and display_name = coalesce(trim(payload->>'staff_name'), '');
+
+  if not found then
+    raise exception 'Staff member not found';
+  end if;
+
+  report_date_value := coalesce(nullif(payload->>'report_date', '')::date, current_date);
+  report_notes := coalesce(trim(payload->>'notes'), '');
+  repair_lines := coalesce(payload->'repair_lines', '[]'::jsonb);
+  lcd_lines := coalesce(payload->'lcd_lines', '[]'::jsonb);
+  faulty_broken_lines := coalesce(payload->'faulty_broken_lines', '[]'::jsonb);
+  device_sales_lines := coalesce(payload->'device_sales_lines', '[]'::jsonb);
+  device_buyback_lines := coalesce(payload->'device_buyback_lines', '[]'::jsonb);
+  end_of_day_json := coalesce(payload->'end_of_day', '{}'::jsonb);
+  cash_expense_lines := coalesce(payload->'cash_expense_lines', '[]'::jsonb);
+  customer_tracking_json := coalesce(payload->'customer_tracking', '{}'::jsonb);
+  missing_sales_lines := coalesce(payload->'missing_sales_lines', '[]'::jsonb);
+
+  if jsonb_typeof(repair_lines) <> 'array' then
+    raise exception 'Repair lines must be an array';
+  end if;
+  if jsonb_typeof(lcd_lines) <> 'array' then
+    raise exception 'LCD lines must be an array';
+  end if;
+  if jsonb_typeof(faulty_broken_lines) <> 'array' then
+    raise exception 'Faulty and broken lines must be an array';
+  end if;
+  if jsonb_typeof(device_sales_lines) <> 'array' then
+    raise exception 'Device sales lines must be an array';
+  end if;
+  if jsonb_typeof(device_buyback_lines) <> 'array' then
+    raise exception 'Device buyback lines must be an array';
+  end if;
+  if jsonb_typeof(cash_expense_lines) <> 'array' then
+    raise exception 'Cash expense lines must be an array';
+  end if;
+  if jsonb_typeof(missing_sales_lines) <> 'array' then
+    raise exception 'Missing sales lines must be an array';
+  end if;
+  if jsonb_typeof(end_of_day_json) <> 'object' then
+    raise exception 'End of day data must be an object';
+  end if;
+  if jsonb_typeof(customer_tracking_json) <> 'object' then
+    raise exception 'Customer tracking data must be an object';
+  end if;
+
+  if exists (
+    select 1
+    from public.daily_report_submissions existing_report
+    where existing_report.store_id = selected_store.id
+      and existing_report.report_date = report_date_value
+  ) then
+    raise exception 'A report for this store and date has already been submitted';
+  end if;
+
+  insert into public.daily_report_submissions (
+    report_date,
+    store_id,
+    staff_id,
+    store_name,
+    staff_name,
+    notes,
+    faulty_broken_lines_json,
+    device_sales_lines_json,
+    device_buyback_lines_json,
+    end_of_day_json,
+    cash_expense_lines_json,
+    customer_tracking_json,
+    missing_sales_lines_json,
+    submission_source,
+    auto_submitted
+  )
+  values (
+    report_date_value,
+    selected_store.id,
+    selected_staff.id,
+    selected_store.store_name,
+    selected_staff.display_name,
+    report_notes,
+    faulty_broken_lines,
+    device_sales_lines,
+    device_buyback_lines,
+    end_of_day_json,
+    cash_expense_lines,
+    customer_tracking_json,
+    missing_sales_lines,
+    coalesce(nullif(trim(submission_source_value), ''), 'staff'),
+    auto_submitted_value
+  )
+  returning id into created_report_id;
+
+  created_report_code := 'DR-' || to_char(report_date_value, 'YYYYMMDD') || '-' || lpad(created_report_id::text, 5, '0');
+
+  line_index := 0;
+  for repair_line in
+    select value
+    from jsonb_array_elements(repair_lines)
+  loop
+    if jsonb_typeof(repair_line) <> 'object' then
+      continue;
+    end if;
+
+    if coalesce(trim(repair_line->>'model_and_color'), '') = ''
+      and coalesce(trim(repair_line->>'problem_and_parts_used'), '') = ''
+      and coalesce(trim(repair_line->>'invoice_number'), '') = ''
+      and coalesce(trim(repair_line->>'amount'), '') = '' then
+      continue;
+    end if;
+
+    line_index := line_index + 1;
+    line_amount := case
+      when coalesce(trim(repair_line->>'amount'), '') = '' then 0
+      else regexp_replace(repair_line->>'amount', '[^0-9.\-]', '', 'g')::numeric(12,2)
+    end;
+
+    insert into public.daily_report_repairs (
+      report_id,
+      line_order,
+      model_and_color,
+      problem_and_parts_used,
+      tech_name,
+      invoice_number,
+      amount
+    )
+    values (
+      created_report_id,
+      line_index,
+      coalesce(trim(repair_line->>'model_and_color'), ''),
+      coalesce(trim(repair_line->>'problem_and_parts_used'), ''),
+      coalesce(nullif(trim(repair_line->>'tech_name'), ''), selected_staff.display_name),
+      coalesce(trim(repair_line->>'invoice_number'), ''),
+      line_amount
+    );
+
+    total_amount_value := total_amount_value + coalesce(line_amount, 0);
+    repair_count_value := repair_count_value + 1;
+  end loop;
+
+  line_index := 0;
+  for lcd_line in
+    select value
+    from jsonb_array_elements(lcd_lines)
+  loop
+    if jsonb_typeof(lcd_line) <> 'object' then
+      continue;
+    end if;
+
+    if coalesce(trim(lcd_line->>'inventory_item_id'), '') = '' then
+      continue;
+    end if;
+
+    line_action := coalesce(trim(lcd_line->>'action_type'), '');
+    if line_action not in ('sold', 'send_to_other', 'faulty', 'broken') then
+      raise exception 'Invalid LCD action type';
+    end if;
+
+    line_quantity := coalesce(nullif(trim(lcd_line->>'quantity'), ''), '0')::integer;
+    if line_quantity <= 0 then
+      raise exception 'LCD quantity must be greater than 0';
+    end if;
+
+    select *
+    into inventory_row
+    from public.lcd_inventory_items
+    where id = (lcd_line->>'inventory_item_id')::bigint
+      and store_id = selected_store.id
+      and active = true
+    for update;
+
+    if not found then
+      raise exception 'LCD inventory item not found for the selected store';
+    end if;
+
+    if inventory_row.current_qty < line_quantity then
+      raise exception 'Not enough stock for % (%)', inventory_row.model_name, inventory_row.variant_name;
+    end if;
+
+    line_index := line_index + 1;
+
+    update public.lcd_inventory_items
+    set current_qty = current_qty - line_quantity
+    where id = inventory_row.id;
+
+    insert into public.daily_report_lcd_lines (
+      report_id,
+      line_order,
+      lcd_inventory_item_id,
+      model_name,
+      variant_name,
+      action_type,
+      quantity,
+      stock_before,
+      stock_after
+    )
+    values (
+      created_report_id,
+      line_index,
+      inventory_row.id,
+      inventory_row.model_name,
+      inventory_row.variant_name,
+      line_action,
+      line_quantity,
+      inventory_row.current_qty,
+      inventory_row.current_qty - line_quantity
+    );
+
+    lcd_count_value := lcd_count_value + 1;
+  end loop;
+
+  update public.daily_report_submissions
+  set
+    report_code = created_report_code,
+    total_amount = total_amount_value,
+    repair_count = repair_count_value,
+    lcd_adjustment_count = lcd_count_value
+  where id = created_report_id;
+
+  delete from public.daily_report_drafts
+  where store_id = selected_store.id
+    and report_date = report_date_value;
+
+  return jsonb_build_object(
+    'ok', true,
+    'report_id', created_report_id,
+    'report_code', created_report_code,
+    'total_amount', total_amount_value,
+    'repair_count', repair_count_value,
+    'lcd_adjustment_count', lcd_count_value,
+    'submission_source', coalesce(nullif(trim(submission_source_value), ''), 'staff'),
+    'auto_submitted', auto_submitted_value
+  );
+end;
+$$;
+
+create or replace function public.submit_daily_report(session_token text, payload jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_valid_staff_session(session_token) then
+    raise exception 'Invalid session';
+  end if;
+
+  return public.submit_daily_report_internal(payload, 'staff', false);
+end;
+$$;
+
+create or replace function public.list_daily_report_drafts(
+  session_token text,
+  target_store_code text,
+  target_date text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  selected_store public.store_locations%rowtype;
+  target_date_value date;
+  drafts_payload jsonb;
+begin
+  if not public.is_valid_staff_session(session_token) then
+    raise exception 'Invalid session';
+  end if;
+
+  target_date_value := coalesce(nullif(target_date, '')::date, current_date);
+
+  select *
+  into selected_store
+  from public.store_locations
+  where active = true
+    and store_code = coalesce(trim(target_store_code), '');
+
+  if not found then
+    return jsonb_build_object('ok', true, 'drafts', '[]'::jsonb, 'submitted_today', false);
+  end if;
+
+  delete from public.daily_report_drafts draft
+  where draft.store_id = selected_store.id
+    and draft.report_date = target_date_value
+    and exists (
+      select 1
+      from public.daily_report_submissions report
+      where report.store_id = draft.store_id
+        and report.report_date = draft.report_date
+    );
+
+  delete from public.daily_report_drafts
+  where report_date < current_date;
+
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', draft.id,
+        'staff_name', draft.staff_name,
+        'store_name', draft.store_name,
+        'report_date', draft.report_date,
+        'updated_at', draft.updated_at,
+        'payload', draft.payload
+      )
+      order by draft.updated_at desc, draft.id desc
+    ),
+    '[]'::jsonb
+  )
+  into drafts_payload
+  from public.daily_report_drafts draft
+  where draft.store_id = selected_store.id
+    and draft.report_date = target_date_value;
+
+  return jsonb_build_object(
+    'ok', true,
+    'submitted_today', exists (
+      select 1
+      from public.daily_report_submissions report
+      where report.store_id = selected_store.id
+        and report.report_date = target_date_value
+    ),
+    'drafts', drafts_payload
+  );
+end;
+$$;
+
+create or replace function public.rollover_daily_report_drafts(target_date date default current_date)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  draft_record record;
+  processed_count integer := 0;
+  deleted_count integer := 0;
+begin
+  for draft_record in
+    select distinct on (draft.store_id, draft.report_date)
+      draft.*
+    from public.daily_report_drafts draft
+    where draft.report_date < target_date
+    order by draft.store_id, draft.report_date, draft.updated_at desc, draft.id desc
+  loop
+    if exists (
+      select 1
+      from public.daily_report_submissions report
+      where report.store_id = draft_record.store_id
+        and report.report_date = draft_record.report_date
+    ) then
+      delete from public.daily_report_drafts
+      where id = draft_record.id;
+      deleted_count := deleted_count + 1;
+      continue;
+    end if;
+
+    perform public.submit_daily_report_internal(draft_record.payload, 'midnight-rollover', true);
+    processed_count := processed_count + 1;
+
+    delete from public.daily_report_drafts
+    where store_id = draft_record.store_id
+      and report_date = draft_record.report_date;
+  end loop;
+
+  delete from public.daily_report_drafts
+  where report_date < target_date;
+
+  return jsonb_build_object(
+    'ok', true,
+    'auto_submitted', processed_count,
+    'deleted', deleted_count
+  );
+end;
+$$;
+
+do $$
+begin
+  begin
+    create extension if not exists pg_cron;
+  exception when others then
+    null;
+  end;
+
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    begin
+      perform cron.unschedule(jobid)
+      from cron.job
+      where jobname = 'techm8_daily_report_midnight_rollover';
+    exception when others then
+      null;
+    end;
+
+    begin
+      perform cron.schedule(
+        'techm8_daily_report_midnight_rollover',
+        '0 0 * * *',
+        $cron$select public.rollover_daily_report_drafts(current_date);$cron$
+      );
+    exception when others then
+      null;
+    end;
+  end if;
+end;
+$$;
+
+grant execute on function public.submit_daily_report_internal(jsonb, text, boolean) to anon, authenticated;
+grant execute on function public.list_daily_report_drafts(text, text, text) to anon, authenticated;
+grant execute on function public.rollover_daily_report_drafts(date) to anon, authenticated;

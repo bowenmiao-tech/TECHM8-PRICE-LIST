@@ -300,6 +300,36 @@
       line-height: 1.6;
     }
 
+    .draft-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .draft-item {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      padding: 14px;
+      background: #fbfdfe;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .draft-item-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .draft-item-meta {
+      color: var(--tm-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
     @media (max-width: 1280px) {
       .meta-grid,
       .summary-grid,
@@ -380,6 +410,32 @@
           </div>
           <div class="toolbar">
             <el-button type="primary" @click="enterReport" :loading="setupLoading">Continue To Report</el-button>
+          </div>
+
+          <div class="draft-list" v-if="selectedStoreCode">
+            <div class="draft-note" v-if="submittedTodayForStore">
+              This store already has a submitted report for today. Any temporary draft for today has been cleared automatically.
+            </div>
+
+            <template v-else>
+              <div class="draft-note" v-if="storeDrafts.length">
+                Saved reports found for today under this store. Choose one to reopen and continue editing.
+              </div>
+              <div class="draft-item" v-for="draft in storeDrafts" :key="'store-draft-' + draft.id">
+                <div>
+                  <div class="draft-item-title">{{ draft.staff_name }}</div>
+                  <div class="draft-item-meta">
+                    {{ draft.store_name }} | {{ formatDateTime(draft.updated_at) }}
+                  </div>
+                </div>
+                <div class="toolbar" style="margin-top:0;">
+                  <el-button plain @click="resumeDraftFromSetup(draft)">Open Saved Report</el-button>
+                </div>
+              </div>
+              <div class="empty-note" v-if="!storeDrafts.length">
+                No saved report has been found for this store today.
+              </div>
+            </template>
           </div>
         </div>
 
@@ -901,6 +957,8 @@
             selectedStoreCode: '',
             selectedStaffName: '',
             draftLoadedAt: '',
+            storeDrafts: [],
+            submittedTodayForStore: false,
             repairLines: [],
             faultyBrokenLines: [],
             deviceSalesLines: [],
@@ -977,6 +1035,16 @@
               + Number(this.customerTracking.warranty || 0);
           }
         },
+        watch: {
+          selectedStoreCode(newValue) {
+            this.selectedStaffName = '';
+            this.storeDrafts = [];
+            this.submittedTodayForStore = false;
+            if (newValue) {
+              this.loadStoreDrafts(newValue);
+            }
+          }
+        },
         mounted() {
           this.loadSetup();
         },
@@ -1044,6 +1112,29 @@
             if (!this.repairLines.length) this.addRepairLine();
             if (!this.timesheetLines.length) this.addTimesheetLine();
             await this.loadDraft();
+          },
+          async loadStoreDrafts(storeCode) {
+            try {
+              const result = await window.Techm8StaffAuth.callRpc('list_daily_report_drafts', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                target_store_code: storeCode,
+                target_date: this.todayIso
+              });
+              this.storeDrafts = Array.isArray(result.drafts) ? result.drafts : [];
+              this.submittedTodayForStore = Boolean(result.submitted_today);
+            } catch (error) {
+              console.error(error);
+              this.storeDrafts = [];
+              this.submittedTodayForStore = false;
+            }
+          },
+          async resumeDraftFromSetup(draft) {
+            this.selectedStoreCode = this.stores.find(store => store.store_name === draft.store_name)?.store_code || this.selectedStoreCode;
+            this.selectedStaffName = draft.staff_name || '';
+            await this.loadSetup(this.selectedStoreCode);
+            this.stage = 'report';
+            this.applyDraft(draft.payload || {});
+            this.draftLoadedAt = draft.updated_at || new Date().toISOString();
           },
           backToSetup() {
             this.stage = 'setup';
@@ -1188,6 +1279,7 @@
                 payload: this.buildPayload()
               });
               this.draftLoadedAt = new Date().toISOString();
+              await this.loadStoreDrafts(this.selectedStoreCode);
               this.$message.success('Draft saved.');
             } catch (error) {
               console.error(error);
@@ -1240,6 +1332,7 @@
                 { confirmButtonText: 'OK' }
               );
               await this.loadSetup(this.selectedStoreCode);
+              await this.loadStoreDrafts(this.selectedStoreCode);
               this.resetForm();
             } catch (error) {
               console.error(error);
