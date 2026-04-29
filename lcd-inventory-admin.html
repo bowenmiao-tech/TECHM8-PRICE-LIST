@@ -254,20 +254,17 @@
             <div class="button-row">
               <el-button icon="el-icon-refresh" @click="loadInventory" :loading="loading">Load Inventory</el-button>
               <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
-              <el-button plain icon="el-icon-s-home" onclick="window.location.href='./admin.html'">Price Admin</el-button>
-              <el-button plain icon="el-icon-tickets" onclick="window.location.href='./daily-report-admin.html'">Daily Report Admin</el-button>
+              <el-button plain icon="el-icon-s-home" onclick="window.location.href='./admin.html'">Back To Admin Portal</el-button>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-title">Admin Account Password</div>
-            <div class="stack">
-              <el-input v-model.trim="newPassword" show-password placeholder="New admin password"></el-input>
-              <el-input v-model.trim="confirmPassword" show-password placeholder="Confirm new admin password"></el-input>
-              <div class="button-row">
-                <el-button type="primary" @click="changePassword" :loading="changingPassword">Update Password</el-button>
-                <el-button @click="logout">Logout</el-button>
-              </div>
+            <div class="panel-title">Session</div>
+            <div class="panel-subtitle">
+              This page uses the admin portal session. Use logout here if you want to close the current admin session.
+            </div>
+            <div class="button-row">
+              <el-button @click="logout">Logout</el-button>
             </div>
           </div>
         </div>
@@ -422,10 +419,7 @@
           variantFilter: '',
           activeFilter: '',
           loadError: '',
-          loading: false,
-          newPassword: '',
-          confirmPassword: '',
-          changingPassword: false
+          loading: false
         };
       },
       computed: {
@@ -631,36 +625,6 @@
           } catch (error) {
             console.error(error);
             this.$message.error(error.message || 'Failed to delete LCD inventory row.');
-          }
-        },
-        async changePassword() {
-          if (!this.newPassword || this.newPassword.length < 8) {
-            this.$message.error('Password must be at least 8 characters.');
-            return;
-          }
-          if (this.newPassword !== this.confirmPassword) {
-            this.$message.error('Passwords do not match.');
-            return;
-          }
-
-          this.changingPassword = true;
-          try {
-            const result = await window.Techm8StaffAuth.callRpc('change_admin_account_password', {
-              session_token: window.Techm8StaffAuth.getToken(),
-              new_password: this.newPassword
-            });
-            if (!result || !result.ok) {
-              throw new Error((result && result.message) || 'Failed to update password.');
-            }
-            this.$message.success('Admin password updated. Please sign in again.');
-            this.newPassword = '';
-            this.confirmPassword = '';
-            setTimeout(() => window.Techm8StaffAuth.logout(), 400);
-          } catch (error) {
-            console.error(error);
-            this.$message.error(error.message || 'Failed to update password.');
-          } finally {
-            this.changingPassword = false;
           }
         },
         logout() {

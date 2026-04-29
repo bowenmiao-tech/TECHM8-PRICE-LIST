@@ -48,6 +48,12 @@ window.Techm8StaffAuth = (function () {
     const style = document.createElement('style');
     style.id = 'techm8-auth-style';
     style.textContent = `
+      [data-auth-protected] {
+        visibility: hidden;
+      }
+      [data-auth-protected].tm-auth-ready {
+        visibility: visible;
+      }
       .tm-auth-overlay {
         position: fixed;
         inset: 0;
@@ -195,12 +201,14 @@ window.Techm8StaffAuth = (function () {
     injectStyles();
 
     const settings = options || {};
+    const protectedRoot = document.querySelector(settings.rootSelector || '[data-auth-protected]');
     activeSessionKey = settings.sessionKey || DEFAULT_SESSION_KEY;
     activeCreateRpc = settings.createRpc || 'create_staff_session';
     activeVerifyRpc = settings.verifyRpc || 'verify_staff_session';
     activeRevokeRpc = settings.revokeRpc || 'revoke_staff_session';
 
     if (await verifyExistingSession()) {
+      if (protectedRoot) protectedRoot.classList.add('tm-auth-ready');
       return true;
     }
 
@@ -219,6 +227,7 @@ window.Techm8StaffAuth = (function () {
           throw new Error((result && result.message) || 'Incorrect password.');
         }
         setToken(result.session_token);
+        if (protectedRoot) protectedRoot.classList.add('tm-auth-ready');
         resolve(true);
       });
     });

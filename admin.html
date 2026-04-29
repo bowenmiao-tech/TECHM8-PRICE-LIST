@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TECHM8 Price Admin</title>
+  <title>TECHM8 Admin Portal</title>
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
   <style>
     :root {
       --tm-dark: #163129;
-      --tm-dark-2: #25473d;
-      --tm-bg: #f4f7f9;
-      --tm-border: #dfe7eb;
+      --tm-dark-2: #24463b;
+      --tm-bg: #eef3f6;
+      --tm-border: #dce5e9;
+      --tm-text: #16242b;
       --tm-muted: #667781;
+      --tm-accent: #ef7204;
     }
 
     * { box-sizing: border-box; }
@@ -23,429 +22,310 @@
     body {
       margin: 0;
       background:
-        radial-gradient(circle at top right, rgba(239,114,4,0.10), transparent 24%),
-        radial-gradient(circle at top left, rgba(22,49,41,0.12), transparent 26%),
-        var(--tm-bg);
-      color: #17252d;
+        radial-gradient(circle at top left, rgba(239,114,4,0.12), transparent 24%),
+        radial-gradient(circle at top right, rgba(22,49,41,0.10), transparent 28%),
+        linear-gradient(180deg, #f7f9fb 0%, var(--tm-bg) 100%);
+      color: var(--tm-text);
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    #app {
-      max-width: 1700px;
+    .page {
+      max-width: 1360px;
       margin: 0 auto;
       padding: 20px;
     }
 
     .shell {
-      background: #fff;
-      border: 1px solid var(--tm-border);
-      border-radius: 28px;
       overflow: hidden;
-      box-shadow: 0 24px 64px rgba(15, 23, 32, 0.10);
+      border-radius: 30px;
+      border: 1px solid var(--tm-border);
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 24px 64px rgba(14, 24, 32, 0.12);
     }
 
     .hero {
-      padding: 28px;
+      padding: 32px;
       background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
       color: #fff;
     }
 
-    .hero-top {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
     .hero h1 {
       margin: 0;
-      font-size: 32px;
-      line-height: 1.05;
+      font-size: clamp(34px, 5vw, 52px);
+      line-height: 1;
       font-weight: 800;
     }
 
     .hero p {
-      margin: 10px 0 0;
-      max-width: 980px;
-      color: rgba(255,255,255,0.82);
+      margin: 14px 0 0;
+      max-width: 760px;
+      color: rgba(255,255,255,0.84);
       line-height: 1.7;
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .hero-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 18px;
+      margin-top: 20px;
     }
 
     .hero-tag {
       padding: 10px 14px;
       border-radius: 999px;
       background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.14);
       font-size: 12px;
       font-weight: 700;
       letter-spacing: .03em;
     }
 
-    .content { padding: 18px; }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
+    .content {
+      padding: 22px;
     }
 
-    .stat-card,
-    .panel {
-      border: 1px solid var(--tm-border);
-      border-radius: 18px;
-      background: #fff;
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 800;
     }
 
-    .stat-card { padding: 16px; }
-
-    .stat-label {
+    .section-copy {
+      margin: 0 0 18px;
+      font-size: 14px;
+      line-height: 1.7;
       color: var(--tm-muted);
-      font-size: 12px;
-      margin-bottom: 8px;
     }
 
-    .stat-value {
-      font-size: 24px;
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .admin-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 300px;
+      padding: 26px;
+      border-radius: 24px;
+      border: 1px solid var(--tm-border);
+      background:
+        radial-gradient(circle at top right, rgba(239,114,4,0.10), transparent 24%),
+        linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%);
+    }
+
+    .icon-box {
+      width: 64px;
+      height: 64px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--tm-dark) 0%, #295545 100%);
+      color: #fff;
+      font-size: 30px;
+      font-weight: 800;
+      box-shadow: 0 16px 28px rgba(22,49,41,0.18);
+    }
+
+    .card-label {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .09em;
+      color: #8798a2;
+      text-transform: uppercase;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 28px;
       line-height: 1.1;
       font-weight: 800;
     }
 
-    .tool-grid {
+    .card-copy {
+      margin: 0;
+      color: #4f616a;
+      line-height: 1.8;
+      font-size: 15px;
+      flex: 1;
+    }
+
+    .card-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
       display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(340px, .95fr);
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .panel { padding: 16px; }
-
-    .panel-title {
-      font-size: 16px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .panel-subtitle {
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--tm-muted);
-      margin-bottom: 14px;
-    }
-
-    .button-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .stack {
-      display: grid;
-      gap: 12px;
-    }
-
-    .fx-line {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
       gap: 10px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: #f7fafb;
-      border: 1px solid var(--tm-border);
-      color: #31414a;
+      color: #33454e;
       font-size: 14px;
     }
 
-    .table-panel {
-      border: 1px solid var(--tm-border);
-      border-radius: 18px;
-      overflow: hidden;
-      background: #fff;
+    .card-list li {
+      position: relative;
+      padding-left: 20px;
     }
 
-    .table-head {
-      display: flex;
-      flex-wrap: wrap;
+    .card-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--tm-accent);
+    }
+
+    .card-button {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 16px;
-      background: #fafcfd;
-      border-bottom: 1px solid var(--tm-border);
-    }
-
-    .table-title {
+      justify-content: center;
+      gap: 10px;
+      min-height: 54px;
+      width: fit-content;
+      padding: 0 22px;
+      border-radius: 999px;
+      background: var(--tm-dark);
+      color: #fff;
+      text-decoration: none;
       font-size: 16px;
       font-weight: 800;
+      border: 0;
+      cursor: pointer;
     }
 
-    .table-subtitle {
-      color: var(--tm-muted);
-      font-size: 13px;
-      margin-top: 4px;
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 16px;
     }
 
-    .table-wrap { padding: 0 12px 12px; }
-    .alert { margin-bottom: 16px; }
+    .ghost-button {
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--tm-border);
+      background: #fff;
+      color: var(--tm-text);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
 
-    @media (max-width: 1180px) {
-      .tool-grid { grid-template-columns: 1fr; }
+    @media (max-width: 1100px) {
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 640px) {
-      #app { padding: 12px; }
-      .hero, .content { padding: 14px; }
-      .hero h1 { font-size: 26px; }
+      .page {
+        padding: 12px;
+      }
+
+      .hero,
+      .content {
+        padding: 16px;
+      }
+
+      .admin-card {
+        min-height: unset;
+        padding: 20px;
+      }
+
+      .card-title {
+        font-size: 24px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="app" data-auth-protected>
+  <div class="page" data-auth-protected>
     <div class="shell">
       <div class="hero">
-        <div class="hero-top">
-          <div>
-            <h1>Price Admin</h1>
-            <p>
-              This page is for row-by-row database maintenance. Time has been removed from the price table.
-              Each row now supports retail price plus linked cost prices in CNY, AUD ex GST, and AUD inc GST.
-              When you edit CNY or AUD ex GST, the other values are recalculated from the latest exchange rate and GST rule.
-            </p>
-          </div>
-          <div class="hero-tags">
-            <div class="hero-tag">Single row save</div>
-            <div class="hero-tag">AUD ex GST + inc GST</div>
-            <div class="hero-tag">FX snapshot stored</div>
-          </div>
+        <h1>Admin Portal</h1>
+        <p>
+          Use one admin email and password to open the backend. From here you can manage repair prices,
+          review daily reports, and maintain LCD inventory for each store.
+        </p>
+        <div class="hero-tags">
+          <div class="hero-tag">Admin account login</div>
+          <div class="hero-tag">Price management</div>
+          <div class="hero-tag">Daily report review</div>
+          <div class="hero-tag">LCD inventory control</div>
         </div>
       </div>
 
       <div class="content">
-        <el-alert
-          v-if="loadError"
-          class="alert"
-          type="warning"
-          :closable="false"
-          :title="loadError">
-        </el-alert>
-
-        <div class="stats">
-          <div class="stat-card">
-            <div class="stat-label">Rows</div>
-            <div class="stat-value">{{ rows.length }}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Brands</div>
-            <div class="stat-value">{{ brandCount }}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Visible Rows</div>
-            <div class="stat-value">{{ filteredRows.length }}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Last Loaded</div>
-            <div class="stat-value" style="font-size:18px;">{{ lastLoadedLabel }}</div>
-          </div>
+        <div class="top-actions">
+          <button class="ghost-button" type="button" id="logoutButton">Logout</button>
         </div>
 
-        <div class="tool-grid">
-          <div class="panel">
-            <div class="panel-title">Data Tools</div>
-            <div class="panel-subtitle">
-              Load the latest rows from Supabase. You can also load local <code>data.json</code> as a reference and save only the rows you want.
-            </div>
-            <div class="button-row">
-              <el-button icon="el-icon-refresh" @click="loadFromSupabase" :loading="loading">Load From Supabase</el-button>
-              <el-button icon="el-icon-document" @click="loadFromJson" :loading="loading">Load From data.json</el-button>
-              <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
-              <el-button plain icon="el-icon-tickets" onclick="window.location.href='./daily-report-admin.html'">Daily Report Admin</el-button>
-              <el-button plain icon="el-icon-s-grid" onclick="window.location.href='./lcd-inventory-admin.html'">LCD Inventory Admin</el-button>
-            </div>
-          </div>
+        <h2 class="section-title">Select A Backend Tool</h2>
+        <p class="section-copy">
+          Each tool opens as a separate page. The pages do not need to cross-link with each other.
+        </p>
 
-          <div class="panel">
-            <div class="panel-title">Exchange Rate</div>
-            <div class="stack">
-              <div class="fx-line">
-                <strong>1 CNY = {{ currentFxRateLabel }} AUD</strong>
-                <span v-if="fxUpdatedLabel">Updated {{ fxUpdatedLabel }}</span>
-              </div>
-              <div class="button-row">
-                <el-button icon="el-icon-refresh" @click="refreshFxRate" :loading="fxLoading">Refresh FX</el-button>
-              </div>
-              <div class="panel-subtitle" style="margin-bottom:0;">
-                Source: {{ fxSourceDisplay }}. AUD inc GST is always calculated as AUD ex GST x 1.10.
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="card-grid">
+          <section class="admin-card">
+            <div class="icon-box">P</div>
+            <div class="card-label">Price</div>
+            <h3 class="card-title">Price List Admin</h3>
+            <p class="card-copy">
+              Edit retail prices, maintain cost prices, refresh FX-linked values, and update the front-end staff password.
+            </p>
+            <ul class="card-list">
+              <li>Single row price save</li>
+              <li>Retail and cost price maintenance</li>
+              <li>Front-end staff password update</li>
+            </ul>
+            <a class="card-button" href="./price-admin.html">Open Price Admin</a>
+          </section>
 
-        <div class="tool-grid">
-          <div class="panel">
-            <div class="panel-title">Advanced Filters</div>
-            <div class="stack">
-              <el-input v-model.trim="keyword" clearable placeholder="Search brand, model, issue, retail or cost price"></el-input>
-              <el-select v-model="brandFilter" clearable filterable placeholder="Filter by brand">
-                <el-option
-                  v-for="brand in brandOptions"
-                  :key="brand"
-                  :label="brand"
-                  :value="brand">
-                </el-option>
-              </el-select>
-              <el-select v-model="modelFilter" clearable filterable placeholder="Filter by model" :disabled="!modelOptions.length">
-                <el-option
-                  v-for="model in modelOptions"
-                  :key="model"
-                  :label="model"
-                  :value="model">
-                </el-option>
-              </el-select>
-              <el-select v-model="issueFilter" clearable filterable placeholder="Filter by issue" :disabled="!issueOptions.length">
-                <el-option
-                  v-for="issue in issueOptions"
-                  :key="issue"
-                  :label="issue"
-                  :value="issue">
-                </el-option>
-              </el-select>
-              <div class="button-row">
-                <el-button plain @click="clearFilters">Clear Filters</el-button>
-              </div>
-            </div>
-          </div>
+          <section class="admin-card">
+            <div class="icon-box">R</div>
+            <div class="card-label">Report</div>
+            <h3 class="card-title">Daily Report Admin</h3>
+            <p class="card-copy">
+              Query submitted reports by date and store, inspect repair lines, and check LCD reductions against store activity.
+            </p>
+            <ul class="card-list">
+              <li>Store and date filtering</li>
+              <li>Repair and sales summary view</li>
+              <li>LCD reduction audit</li>
+            </ul>
+            <a class="card-button" href="./daily-report-admin.html">Open Report Admin</a>
+          </section>
 
-          <div class="panel">
-            <div class="panel-title">Admin Account Password</div>
-            <div class="stack">
-              <el-input v-model.trim="newPassword" show-password placeholder="New admin password"></el-input>
-              <el-input v-model.trim="confirmPassword" show-password placeholder="Confirm new admin password"></el-input>
-              <div class="button-row">
-                <el-button type="primary" @click="changePassword" :loading="changingPassword">Update Password</el-button>
-                <el-button @click="logout">Logout</el-button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="table-panel">
-          <div class="table-head">
-            <div>
-              <div class="table-title">Repair Price Rows</div>
-              <div class="table-subtitle">
-                Edit retail price freely. Edit CNY cost or AUD ex GST cost, and the system will recalculate the linked values before saving.
-              </div>
-            </div>
-            <div class="table-subtitle">{{ filteredRows.length }} visible row(s)</div>
-          </div>
-
-          <div class="table-wrap">
-            <el-table :data="filteredRows" border stripe height="700">
-              <el-table-column label="Brand" min-width="170">
-                <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.brand" placeholder="Brand"></el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Model" min-width="250">
-                <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.model" placeholder="Model"></el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Issue" min-width="260">
-                <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.issue" placeholder="Issue"></el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Retail Price" min-width="130">
-                <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.price" placeholder="$79"></el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="CNY Cost" min-width="120">
-                <template slot-scope="scope">
-                  <el-input
-                    v-model.trim="scope.row.cny_cost_price"
-                    placeholder="120.00"
-                    @input="markCostEdit(scope.row, 'CNY')">
-                  </el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="AUD Ex GST" min-width="130">
-                <template slot-scope="scope">
-                  <el-input
-                    v-model.trim="scope.row.aud_cost_price_ex_gst"
-                    placeholder="25.00"
-                    @input="markCostEdit(scope.row, 'AUD')">
-                  </el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="AUD Inc GST" min-width="130">
-                <template slot-scope="scope">
-                  <el-input
-                    v-model.trim="scope.row.aud_cost_price_inc_gst"
-                    placeholder="27.50"
-                    disabled>
-                  </el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Retail - AUD Incl GST" min-width="160">
-                <template slot-scope="scope">
-                  <div :style="profitStyle(scope.row)">
-                    {{ formatProfit(scope.row) }}
-                  </div>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="FX Info" min-width="180">
-                <template slot-scope="scope">
-                  <div style="font-size:12px; line-height:1.6; color:#52616a;">
-                    <div><strong>Basis:</strong> {{ scope.row.cost_basis_currency || '-' }}</div>
-                    <div><strong>Rate:</strong> {{ scope.row.fx_rate_cny_to_aud || '-' }}</div>
-                    <div><strong>At:</strong> {{ formatFxTimestamp(scope.row.fx_updated_at) }}</div>
-                  </div>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Actions" width="220" fixed="right">
-                <template slot-scope="scope">
-                  <div class="button-row">
-                    <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
-                    <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
-                    <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
+          <section class="admin-card">
+            <div class="icon-box">L</div>
+            <div class="card-label">Inventory</div>
+            <h3 class="card-title">LCD Inventory Admin</h3>
+            <p class="card-copy">
+              Add, edit, remove, and activate LCD stock rows per store with full variant control for colour and panel type.
+            </p>
+            <ul class="card-list">
+              <li>Per-store LCD stock</li>
+              <li>Variant rows like LCD, OLED, ORI, Touch</li>
+              <li>Active or inactive stock rows</li>
+            </ul>
+            <a class="card-button" href="./lcd-inventory-admin.html">Open LCD Admin</a>
+          </section>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const SUPABASE = window.TECHM8_SUPABASE || null;
-
     window.Techm8StaffAuth.init({
-      rootSelector: '#app',
+      rootSelector: '[data-auth-protected]',
       title: 'Admin Login',
-      subtitle: 'Sign in with the admin email and password to open the admin page.',
+      subtitle: 'Sign in with the admin email and password to open the backend portal.',
       requireLoginEmail: true,
       loginPlaceholder: 'Admin email',
       sessionKey: 'techm8_admin_session_token',
@@ -454,471 +334,8 @@
       revokeRpc: 'revoke_admin_session'
     });
 
-    new Vue({
-      el: '#app',
-      data() {
-        return {
-          rows: [],
-          keyword: '',
-          brandFilter: '',
-          modelFilter: '',
-          issueFilter: '',
-          loadError: '',
-          loading: false,
-          lastLoadedAt: null,
-          newPassword: '',
-          confirmPassword: '',
-          changingPassword: false,
-          fxRateCnyToAud: null,
-          fxSource: 'Frankfurter (ECB reference data)',
-          fxUpdatedAt: null,
-          fxLoading: false
-        };
-      },
-      computed: {
-        brandOptions() {
-          return Array.from(new Set(this.rows.map(row => row.brand).filter(Boolean)))
-            .sort(this.naturalSort);
-        },
-        modelOptions() {
-          return Array.from(
-            new Set(
-              this.rows
-                .filter(row => {
-                  if (this.brandFilter && row.brand !== this.brandFilter) return false;
-                  if (this.issueFilter && row.issue !== this.issueFilter) return false;
-                  return Boolean(row.model);
-                })
-                .map(row => row.model)
-            )
-          ).sort(this.naturalSort);
-        },
-        issueOptions() {
-          return Array.from(
-            new Set(
-              this.rows
-                .filter(row => {
-                  if (this.brandFilter && row.brand !== this.brandFilter) return false;
-                  if (this.modelFilter && row.model !== this.modelFilter) return false;
-                  return Boolean(row.issue);
-                })
-                .map(row => row.issue)
-            )
-          ).sort(this.naturalSort);
-        },
-        brandCount() {
-          return this.brandOptions.length;
-        },
-        filteredRows() {
-          const keyword = String(this.keyword || '').trim().toLowerCase();
-          return this.rows.filter(row => {
-            if (this.brandFilter && row.brand !== this.brandFilter) return false;
-            if (this.modelFilter && row.model !== this.modelFilter) return false;
-            if (this.issueFilter && row.issue !== this.issueFilter) return false;
-            if (!keyword) return true;
-            const haystack = [
-              row.brand,
-              row.model,
-              row.issue,
-              row.price,
-              row.cny_cost_price,
-              row.aud_cost_price_ex_gst,
-              row.aud_cost_price_inc_gst,
-              this.formatProfit(row)
-            ].join(' ').toLowerCase();
-            return haystack.includes(keyword);
-          });
-        },
-        lastLoadedLabel() {
-          if (!this.lastLoadedAt) return 'Not loaded yet';
-          return new Date(this.lastLoadedAt).toLocaleString();
-        },
-        currentFxRateLabel() {
-          return this.fxRateCnyToAud ? this.fxRateCnyToAud.toFixed(6) : 'Not loaded';
-        },
-        fxUpdatedLabel() {
-          if (!this.fxUpdatedAt) return '';
-          return new Date(this.fxUpdatedAt).toLocaleString();
-        },
-        fxSourceDisplay() {
-          return this.fxSource || 'Unknown';
-        }
-      },
-      watch: {
-        brandFilter() {
-          this.syncFilterSelections();
-        },
-        modelFilter() {
-          this.syncFilterSelections();
-        },
-        issueFilter() {
-          this.syncFilterSelections();
-        }
-      },
-      mounted() {
-        this.refreshFxRate();
-        this.loadFromSupabase();
-      },
-      methods: {
-        naturalSort(a, b) {
-          return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
-        },
-        makeId() {
-          return 'row_' + Math.random().toString(36).slice(2, 10);
-        },
-        normalizeMoneyString(value) {
-          if (value === null || value === undefined) return '';
-          const text = String(value).trim();
-          if (!text) return '';
-          const numeric = Number(text.replace(/[^0-9.\-]/g, ''));
-          return Number.isFinite(numeric) ? numeric.toFixed(2) : '';
-        },
-        normalizeRow(item) {
-          const cnyCost = this.normalizeMoneyString(item.cny_cost_price);
-          const audExGst = this.normalizeMoneyString(item.aud_cost_price_ex_gst);
-          const audIncGst = this.normalizeMoneyString(item.aud_cost_price_inc_gst);
-
-          return {
-            id: item.id || this.makeId(),
-            brand: String(item.brand || '').trim(),
-            model: String(item.model || '').trim(),
-            issue: String(item.issue || '').trim(),
-            price: item.price === null || item.price === undefined ? '' : String(item.price).trim(),
-            cny_cost_price: cnyCost,
-            aud_cost_price_ex_gst: audExGst,
-            aud_cost_price_inc_gst: audIncGst,
-            cost_basis_currency: String(item.cost_basis_currency || '').trim().toUpperCase(),
-            fx_rate_cny_to_aud: item.fx_rate_cny_to_aud === null || item.fx_rate_cny_to_aud === undefined ? '' : String(item.fx_rate_cny_to_aud).trim(),
-            fx_source: String(item.fx_source || '').trim(),
-            fx_updated_at: item.fx_updated_at || '',
-            _originalCnyCostPrice: cnyCost,
-            _originalAudCostPriceExGst: audExGst,
-            _lastEditedCostField: ''
-          };
-        },
-        applyData(data) {
-          this.rows = (Array.isArray(data) ? data : []).map(item => this.normalizeRow(item)).sort((a, b) => {
-            return (
-              this.naturalSort(a.brand, b.brand) ||
-              this.naturalSort(a.model, b.model) ||
-              this.naturalSort(a.issue, b.issue)
-            );
-          });
-          this.lastLoadedAt = Date.now();
-        },
-        authToken() {
-          const token = window.Techm8StaffAuth.getToken();
-          if (!token) {
-            throw new Error('Login expired. Please sign in again.');
-          }
-          return token;
-        },
-        markCostEdit(row, currency) {
-          row._lastEditedCostField = currency;
-        },
-        clearFilters() {
-          this.keyword = '';
-          this.brandFilter = '';
-          this.modelFilter = '';
-          this.issueFilter = '';
-        },
-        syncFilterSelections() {
-          if (this.modelFilter && !this.modelOptions.includes(this.modelFilter)) {
-            this.modelFilter = '';
-            return;
-          }
-          if (this.issueFilter && !this.issueOptions.includes(this.issueFilter)) {
-            this.issueFilter = '';
-          }
-        },
-        parseMoney(value) {
-          if (value === null || value === undefined) return null;
-          const numeric = Number(String(value).trim().replace(/[^0-9.\-]/g, ''));
-          return Number.isFinite(numeric) ? numeric : null;
-        },
-        calculateProfit(row) {
-          const retail = this.parseMoney(row.price);
-          const audInclGst = this.parseMoney(row.aud_cost_price_inc_gst);
-          if (retail === null || audInclGst === null) return null;
-          return Number((retail - audInclGst).toFixed(2));
-        },
-        formatProfit(row) {
-          const profit = this.calculateProfit(row);
-          if (profit === null) return '-';
-          const prefix = profit >= 0 ? '$' : '-$';
-          return prefix + Math.abs(profit).toFixed(2);
-        },
-        profitStyle(row) {
-          const profit = this.calculateProfit(row);
-          if (profit === null) {
-            return {
-              color: '#8a9aa5',
-              fontWeight: 700
-            };
-          }
-          return {
-            color: profit < 0 ? '#c63d2f' : '#126a42',
-            fontWeight: 800
-          };
-        },
-        formatFxTimestamp(value) {
-          if (!value) return '-';
-          return new Date(value).toLocaleString();
-        },
-        async refreshFxRate() {
-          this.fxLoading = true;
-          try {
-            const response = await fetch('https://api.frankfurter.dev/v1/latest?base=CNY&symbols=AUD');
-            const result = await response.json();
-            if (!response.ok || !result || !result.rates || typeof result.rates.AUD !== 'number') {
-              throw new Error('Could not load CNY/AUD exchange rate.');
-            }
-            this.fxRateCnyToAud = Number(result.rates.AUD);
-            this.fxUpdatedAt = new Date().toISOString();
-            this.fxSource = 'Frankfurter (ECB reference data)';
-          } catch (error) {
-            console.error(error);
-            this.$message.error(error.message || 'Failed to refresh exchange rate.');
-          } finally {
-            this.fxLoading = false;
-          }
-        },
-        validateRow(row) {
-          const cleaned = this.normalizeRow(row);
-          if (!cleaned.brand || !cleaned.model || !cleaned.issue) {
-            this.$message.error('Brand, model, and issue are required.');
-            return null;
-          }
-          return cleaned;
-        },
-        addRow() {
-          this.rows.unshift(this.normalizeRow({}));
-        },
-        duplicateRow(row) {
-          this.rows.unshift(this.normalizeRow(row));
-          this.$message.success('Row duplicated.');
-        },
-        async loadFromSupabase() {
-          this.loading = true;
-          try {
-            if (!SUPABASE) throw new Error('Supabase config is missing.');
-            const allRows = [];
-            const pageSize = 1000;
-            let from = 0;
-
-            while (true) {
-              const response = await fetch(
-                SUPABASE.url + '/rest/v1/repair_prices?select=brand,model,issue,price,cny_cost_price,aud_cost_price_ex_gst,aud_cost_price_inc_gst,cost_basis_currency,fx_rate_cny_to_aud,fx_source,fx_updated_at&order=brand.asc&order=model.asc&order=issue.asc&limit=' + pageSize + '&offset=' + from,
-                {
-                  headers: {
-                    apikey: SUPABASE.anonKey,
-                    Authorization: 'Bearer ' + SUPABASE.anonKey
-                  }
-                }
-              );
-
-              const result = await response.json();
-              if (!response.ok) throw new Error((result && result.message) || 'Failed to load Supabase price list.');
-              if (!Array.isArray(result) || !result.length) break;
-
-              allRows.push(...result);
-
-              if (result.length < pageSize) break;
-              from += pageSize;
-            }
-
-            this.applyData(allRows);
-            this.loadError = '';
-          } catch (error) {
-            console.error(error);
-            this.loadError = error.message || 'Could not load Supabase data.';
-            this.$message.error(this.loadError);
-          } finally {
-            this.loading = false;
-          }
-        },
-        async loadFromJson() {
-          this.loading = true;
-          try {
-            const response = await fetch('./data.json?v=' + Date.now(), {
-              cache: 'no-store',
-              headers: { 'Cache-Control': 'no-cache' }
-            });
-            if (!response.ok) throw new Error('Failed to load data.json');
-            const result = await response.json();
-            this.applyData(result);
-            this.loadError = 'Showing local data.json. Cost price fields are empty until you save rows into Supabase.';
-          } catch (error) {
-            console.error(error);
-            this.loadError = error.message || 'Could not load data.json.';
-            this.$message.error(this.loadError);
-          } finally {
-            this.loading = false;
-          }
-        },
-        async prepareCostPayload(row) {
-          if (!this.fxRateCnyToAud) {
-            await this.refreshFxRate();
-          }
-          if (!this.fxRateCnyToAud) {
-            throw new Error('Exchange rate is unavailable.');
-          }
-
-          const originalCny = this.parseMoney(row._originalCnyCostPrice);
-          const originalAudExGst = this.parseMoney(row._originalAudCostPriceExGst);
-          let currentCny = this.parseMoney(row.cny_cost_price);
-          let currentAudExGst = this.parseMoney(row.aud_cost_price_ex_gst);
-          let currentAudIncGst = this.parseMoney(row.aud_cost_price_inc_gst);
-          const cnyChanged = (currentCny ?? null) !== (originalCny ?? null);
-          const audChanged = (currentAudExGst ?? null) !== (originalAudExGst ?? null);
-
-          let basis = row._lastEditedCostField || row.cost_basis_currency || '';
-
-          if (cnyChanged && !audChanged) basis = 'CNY';
-          if (audChanged && !cnyChanged) basis = 'AUD';
-          if (!basis && currentCny !== null && currentAudExGst === null) basis = 'CNY';
-          if (!basis && currentAudExGst !== null && currentCny === null) basis = 'AUD';
-
-          if (basis === 'CNY') {
-            if (currentCny === null) {
-              currentAudExGst = null;
-              currentAudIncGst = null;
-            } else {
-              currentAudExGst = Number((currentCny * this.fxRateCnyToAud).toFixed(2));
-              currentAudIncGst = Number((currentAudExGst * 1.10).toFixed(2));
-            }
-          } else if (basis === 'AUD') {
-            if (currentAudExGst === null) {
-              currentCny = null;
-              currentAudIncGst = null;
-            } else {
-              currentCny = Number((currentAudExGst / this.fxRateCnyToAud).toFixed(2));
-              currentAudIncGst = Number((currentAudExGst * 1.10).toFixed(2));
-            }
-          }
-
-          row.cny_cost_price = currentCny === null ? '' : currentCny.toFixed(2);
-          row.aud_cost_price_ex_gst = currentAudExGst === null ? '' : currentAudExGst.toFixed(2);
-          row.aud_cost_price_inc_gst = currentAudIncGst === null ? '' : currentAudIncGst.toFixed(2);
-          row.cost_basis_currency = basis || '';
-          row.fx_rate_cny_to_aud = this.fxRateCnyToAud.toFixed(6);
-          row.fx_source = this.fxSource;
-          row.fx_updated_at = this.fxUpdatedAt || new Date().toISOString();
-
-          return {
-            cny_cost_price: currentCny,
-            aud_cost_price_ex_gst: currentAudExGst,
-            aud_cost_price_inc_gst: currentAudIncGst,
-            cost_basis_currency: basis || null,
-            fx_rate_cny_to_aud: this.fxRateCnyToAud,
-            fx_source: this.fxSource,
-            fx_updated_at: row.fx_updated_at
-          };
-        },
-        async saveRow(row) {
-          const cleaned = this.validateRow(row);
-          if (!cleaned) return;
-
-          try {
-            const costPayload = await this.prepareCostPayload(row);
-            const result = await window.Techm8StaffAuth.callRpc('upsert_repair_price', {
-              session_token: this.authToken(),
-              row_payload: {
-                brand: cleaned.brand,
-                model: cleaned.model,
-                issue: cleaned.issue,
-                price: cleaned.price,
-                cny_cost_price: costPayload.cny_cost_price,
-                aud_cost_price_ex_gst: costPayload.aud_cost_price_ex_gst,
-                aud_cost_price_inc_gst: costPayload.aud_cost_price_inc_gst,
-                cost_basis_currency: costPayload.cost_basis_currency,
-                fx_rate_cny_to_aud: costPayload.fx_rate_cny_to_aud,
-                fx_source: costPayload.fx_source,
-                fx_updated_at: costPayload.fx_updated_at
-              }
-            });
-            if (!result || !result.ok) throw new Error('Save failed.');
-
-            row.brand = cleaned.brand;
-            row.model = cleaned.model;
-            row.issue = cleaned.issue;
-            row.price = cleaned.price;
-            row._originalCnyCostPrice = row.cny_cost_price;
-            row._originalAudCostPriceExGst = row.aud_cost_price_ex_gst;
-            row._lastEditedCostField = '';
-
-            this.$message.success('Row saved to database.');
-          } catch (error) {
-            console.error(error);
-            this.$message.error(error.message || 'Could not save row.');
-          }
-        },
-        async deleteRow(row) {
-          const cleaned = this.validateRow(row);
-          const removeOnlyLocal = !cleaned;
-
-          if (removeOnlyLocal) {
-            this.rows = this.rows.filter(item => item.id !== row.id);
-            return;
-          }
-
-          this.$confirm(
-            `Delete "${cleaned.brand} / ${cleaned.model} / ${cleaned.issue}" from the database?`,
-            'Confirm',
-            { type: 'warning' }
-          ).then(async () => {
-            try {
-              const result = await window.Techm8StaffAuth.callRpc('delete_repair_price', {
-                session_token: this.authToken(),
-                target_brand: cleaned.brand,
-                target_model: cleaned.model,
-                target_issue: cleaned.issue
-              });
-              if (!result || !result.ok) throw new Error('Delete failed.');
-              this.rows = this.rows.filter(item => item.id !== row.id);
-              this.$message.success('Row deleted from database.');
-            } catch (error) {
-              console.error(error);
-              this.$message.error(error.message || 'Could not delete row.');
-            }
-          }).catch(() => {});
-        },
-        async changePassword() {
-          if (!this.newPassword) {
-            this.$message.error('New password is required.');
-            return;
-          }
-          if (this.newPassword !== this.confirmPassword) {
-            this.$message.error('Password confirmation does not match.');
-            return;
-          }
-
-          this.changingPassword = true;
-          try {
-            const result = await window.Techm8StaffAuth.callRpc('change_admin_account_password', {
-              session_token: this.authToken(),
-              new_password: this.newPassword
-            });
-            if (!result || !result.ok) throw new Error('Password update failed.');
-            this.$alert('Password updated. You need to sign in again.', 'Done', {
-              confirmButtonText: 'OK',
-              callback: async () => {
-                this.newPassword = '';
-                this.confirmPassword = '';
-                await window.Techm8StaffAuth.logout();
-              }
-            });
-          } catch (error) {
-            console.error(error);
-            this.$message.error(error.message || 'Could not update password.');
-          } finally {
-            this.changingPassword = false;
-          }
-        },
-        async logout() {
-          await window.Techm8StaffAuth.logout();
-        }
-      }
+    document.getElementById('logoutButton').addEventListener('click', function () {
+      window.Techm8StaffAuth.logout();
     });
   </script>
 </body>

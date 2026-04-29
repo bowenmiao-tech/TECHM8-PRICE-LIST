@@ -315,7 +315,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if coalesce(trim(login_email), '') = '' then
+  if coalesce(trim(bootstrap_admin_user.login_email), '') = '' then
     raise exception 'Login email is required';
   end if;
 
@@ -329,7 +329,7 @@ begin
 
   insert into public.admin_users (login_email, password_hash, active)
   values (
-    lower(trim(login_email)),
+    lower(trim(bootstrap_admin_user.login_email)),
     extensions.crypt(input_password, extensions.gen_salt('bf')),
     true
   );
@@ -353,7 +353,7 @@ begin
   into admin_record
   from public.admin_users
   where active = true
-    and login_email = lower(coalesce(trim(login_email), ''));
+    and admin_users.login_email = lower(coalesce(trim(create_admin_session.login_email), ''));
 
   if not found then
     return jsonb_build_object('ok', false, 'message', 'Incorrect email or password');
