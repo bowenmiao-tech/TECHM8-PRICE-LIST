@@ -396,7 +396,7 @@
   <script>
     const SUPABASE = window.TECHM8_SUPABASE || null;
 
-    window.Techm8StaffAuth.init({
+    const authReady = window.Techm8StaffAuth.init({
       rootSelector: '#app',
       title: 'Admin Login',
       subtitle: 'Sign in with the admin email and password to open the LCD inventory admin page.',
@@ -408,7 +408,7 @@
       revokeRpc: 'revoke_admin_session'
     });
 
-    new Vue({
+    authReady.then(() => new Vue({
       el: '#app',
       data() {
         return {
@@ -634,6 +634,8 @@
       mounted() {
         this.loadInventory();
       }
+    })).catch(error => {
+      console.error(error);
     });
   </script>
 </body>
