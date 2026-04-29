@@ -138,7 +138,7 @@
 
     .portal-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 18px;
     }
 
@@ -237,7 +237,6 @@
     }
 
     @media (max-width: 991px) {
-      .portal-grid { grid-template-columns: 1fr; }
       .portal-card { min-height: 300px; }
     }
 
@@ -314,6 +313,22 @@
               <li><i class="bi bi-check-circle-fill"></i> Quick reference for common jobs</li>
             </ul>
             <span class="portal-cta">Enter Problem Solving <i class="bi bi-arrow-right"></i></span>
+          </a>
+
+          <a class="portal-card" href="./daily-report.html">
+            <div class="portal-icon"><i class="bi bi-clipboard-data"></i></div>
+            <div class="portal-label">Daily Report</div>
+            <h3 class="portal-title">Open Daily Report</h3>
+            <p class="portal-text">
+              Select the store and staff name, submit today's completed repair rows, and reduce the matching LCD stock
+              items from the same report.
+            </p>
+            <ul class="portal-list">
+              <li><i class="bi bi-check-circle-fill"></i> Store and staff selection before entry</li>
+              <li><i class="bi bi-check-circle-fill"></i> Dynamic repair rows for daily work</li>
+              <li><i class="bi bi-check-circle-fill"></i> LCD sold / send to other / faulty / broken deduction</li>
+            </ul>
+            <span class="portal-cta">Enter Daily Report <i class="bi bi-arrow-right"></i></span>
           </a>
         </div>
       </div>

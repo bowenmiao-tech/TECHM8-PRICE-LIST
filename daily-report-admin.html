@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECHM8 Daily Report Admin</title>
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    :root {
+      --tm-dark: #163129;
+      --tm-dark-2: #24463b;
+      --tm-bg: #f4f7f9;
+      --tm-border: #dce5e9;
+      --tm-muted: #667781;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(239,114,4,0.11), transparent 26%),
+        radial-gradient(circle at top right, rgba(22,49,41,0.10), transparent 28%),
+        linear-gradient(180deg, #f6f8fa 0%, #eef3f6 100%);
+      color: #16242b;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 14px 36px;
+    }
+
+    .shell {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid rgba(220,229,233,0.92);
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 26px 60px rgba(14, 24, 32, 0.12);
+    }
+
+    .hero {
+      padding: 28px;
+      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
+      color: #fff;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .hero p {
+      margin: 12px 0 0;
+      max-width: 760px;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--tm-border);
+      border-radius: 22px;
+      padding: 18px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      background: #fbfdfe;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--tm-muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .report-card {
+      border: 1px solid var(--tm-border);
+      border-radius: 20px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .report-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .report-title {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .report-subtitle {
+      color: var(--tm-muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: #f6f9fb;
+      border: 1px solid var(--tm-border);
+      font-size: 12px;
+      font-weight: 700;
+      color: #31414a;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+    }
+
+    .detail-box {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      padding: 14px;
+      background: #fbfdfe;
+    }
+
+    .detail-title {
+      margin: 0 0 10px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .detail-table th,
+    .detail-table td {
+      padding: 8px 0;
+      border-bottom: 1px solid #e7eef2;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .detail-table th {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .empty-note {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px dashed #ccd9df;
+      color: var(--tm-muted);
+      background: #fbfdfe;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1180px) {
+      .filters,
+      .stats,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" data-auth-protected>
+    <div class="shell">
+      <div class="hero">
+        <h1>Daily Report Admin</h1>
+        <p>Review submitted daily reports, total repair amount, completed repair rows, and LCD stock reduction lines from the staff report page.</p>
+      </div>
+
+      <div class="content">
+        <el-alert
+          v-if="loadError"
+          type="warning"
+          :closable="false"
+          :title="loadError">
+        </el-alert>
+
+        <div class="panel">
+          <div class="filters">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#42535c;">Report Date</label>
+              <el-date-picker
+                v-model="selectedDate"
+                type="date"
+                value-format="yyyy-MM-dd"
+                placeholder="Filter by date"
+                style="width:100%;">
+              </el-date-picker>
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#42535c;">Store</label>
+              <el-select v-model="selectedStoreCode" clearable filterable placeholder="All stores" style="width:100%;">
+                <el-option
+                  v-for="store in stores"
+                  :key="store.store_code"
+                  :label="store.store_name"
+                  :value="store.store_code">
+                </el-option>
+              </el-select>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <el-button type="primary" @click="loadReports" :loading="loading">Load Reports</el-button>
+              <el-button plain @click="clearFilters">Clear</el-button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Reports</div>
+            <div class="stat-value">{{ reports.length }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Repair Rows</div>
+            <div class="stat-value">{{ totalRepairRows }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">LCD Reduction Rows</div>
+            <div class="stat-value">{{ totalLcdRows }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Repair Amount</div>
+            <div class="stat-value">${{ totalAmount.toFixed(2) }}</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div v-if="reports.length" style="display:grid;gap:14px;">
+            <div class="report-card" v-for="report in reports" :key="report.id">
+              <div class="report-head">
+                <div>
+                  <h2 class="report-title">{{ report.report_code || ('Report #' + report.id) }}</h2>
+                  <div class="report-subtitle">
+                    {{ formatDate(report.report_date) }} | {{ report.store_name }} | {{ report.staff_name }} | Submitted {{ formatDateTime(report.submitted_at) }}
+                  </div>
+                </div>
+                <div class="pill-row">
+                  <div class="pill">${{ formatAmount(report.total_amount) }}</div>
+                  <div class="pill">{{ report.repair_count }} repair row(s)</div>
+                  <div class="pill">{{ report.lcd_adjustment_count }} LCD row(s)</div>
+                </div>
+              </div>
+
+              <div v-if="report.notes" style="margin-bottom:12px;color:#42535c;font-size:13px;line-height:1.7;">
+                <strong>Notes:</strong> {{ report.notes }}
+              </div>
+
+              <div class="detail-grid">
+                <div class="detail-box">
+                  <h3 class="detail-title">Repair Lines</h3>
+                  <table class="detail-table" v-if="report.repair_lines && report.repair_lines.length">
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>Problem / Parts</th>
+                        <th>Tech</th>
+                        <th>Invoice</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="line in report.repair_lines" :key="report.id + '-repair-' + line.line_order">
+                        <td>{{ line.model_and_color }}</td>
+                        <td>{{ line.problem_and_parts_used }}</td>
+                        <td>{{ line.tech_name }}</td>
+                        <td>{{ line.invoice_number || '-' }}</td>
+                        <td>${{ formatAmount(line.amount) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="empty-note" v-else>No repair rows in this report.</div>
+                </div>
+
+                <div class="detail-box">
+                  <h3 class="detail-title">LCD Reductions</h3>
+                  <table class="detail-table" v-if="report.lcd_lines && report.lcd_lines.length">
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                        <th>Qty</th>
+                        <th>Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="line in report.lcd_lines" :key="report.id + '-lcd-' + line.line_order">
+                        <td>{{ line.model_name }}</td>
+                        <td>{{ line.variant_name }}</td>
+                        <td>{{ formatAction(line.action_type) }}</td>
+                        <td>{{ line.quantity }}</td>
+                        <td>{{ line.stock_before }} -> {{ line.stock_after }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="empty-note" v-else>No LCD reductions in this report.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="empty-note" v-else>No daily reports found for the current filter.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.Techm8StaffAuth.init({
+      rootSelector: '[data-auth-protected]',
+      title: 'Daily Report Admin Access',
+      subtitle: 'Enter the staff password to review submitted daily reports.'
+    }).then(() => {
+      new Vue({
+        el: '#app',
+        data() {
+          return {
+            stores: [],
+            reports: [],
+            selectedDate: new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Brisbane' }),
+            selectedStoreCode: '',
+            loading: false,
+            loadError: ''
+          };
+        },
+        computed: {
+          totalAmount() {
+            return this.reports.reduce((sum, report) => sum + Number(report.total_amount || 0), 0);
+          },
+          totalRepairRows() {
+            return this.reports.reduce((sum, report) => sum + Number(report.repair_count || 0), 0);
+          },
+          totalLcdRows() {
+            return this.reports.reduce((sum, report) => sum + Number(report.lcd_adjustment_count || 0), 0);
+          }
+        },
+        mounted() {
+          this.loadSetup();
+          this.loadReports();
+        },
+        methods: {
+          async loadSetup() {
+            try {
+              const result = await window.Techm8StaffAuth.callRpc('get_daily_report_setup', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                target_store_code: null
+              });
+              this.stores = Array.isArray(result.stores) ? result.stores : [];
+            } catch (error) {
+              console.error(error);
+              this.loadError = error.message || 'Could not load stores.';
+            }
+          },
+          async loadReports() {
+            this.loading = true;
+            this.loadError = '';
+            try {
+              const result = await window.Techm8StaffAuth.callRpc('get_daily_reports', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                target_date: this.selectedDate || null,
+                target_store_code: this.selectedStoreCode || null
+              });
+              this.reports = Array.isArray(result.reports) ? result.reports : [];
+            } catch (error) {
+              console.error(error);
+              this.loadError = error.message || 'Could not load daily reports.';
+            } finally {
+              this.loading = false;
+            }
+          },
+          clearFilters() {
+            this.selectedDate = '';
+            this.selectedStoreCode = '';
+            this.loadReports();
+          },
+          formatAmount(value) {
+            return Number(value || 0).toFixed(2);
+          },
+          formatAction(value) {
+            return String(value || '').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+          },
+          formatDate(value) {
+            if (!value) return '-';
+            return new Date(value + 'T00:00:00').toLocaleDateString('en-AU', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+          },
+          formatDateTime(value) {
+            if (!value) return '-';
+            return new Date(value).toLocaleString('en-AU');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
