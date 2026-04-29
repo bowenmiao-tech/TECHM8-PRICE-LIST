@@ -1,19 +1,23 @@
 window.Techm8StaffAuth = (function () {
   const SUPABASE = window.TECHM8_SUPABASE || null;
-  const SESSION_KEY = 'techm8_staff_session_token';
+  const DEFAULT_SESSION_KEY = 'techm8_staff_session_token';
+  let activeSessionKey = DEFAULT_SESSION_KEY;
+  let activeCreateRpc = 'create_staff_session';
+  let activeVerifyRpc = 'verify_staff_session';
+  let activeRevokeRpc = 'revoke_staff_session';
 
   function getToken() {
-    return sessionStorage.getItem(SESSION_KEY) || '';
+    return sessionStorage.getItem(activeSessionKey) || '';
   }
 
   function setToken(token) {
     if (token) {
-      sessionStorage.setItem(SESSION_KEY, token);
+      sessionStorage.setItem(activeSessionKey, token);
     }
   }
 
   function clearToken() {
-    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(activeSessionKey);
   }
 
   async function callRpc(name, payload) {
@@ -113,12 +117,14 @@ window.Techm8StaffAuth = (function () {
 
   function buildOverlay(options, onSubmit) {
     const overlay = document.createElement('div');
+    const hasLoginEmail = Boolean(options && options.requireLoginEmail);
     overlay.className = 'tm-auth-overlay';
     overlay.innerHTML = `
       <div class="tm-auth-card">
         <h1 class="tm-auth-title">${options.title || 'Staff Access'}</h1>
         <p class="tm-auth-text">${options.subtitle || 'Enter the staff password to continue.'}</p>
         <div class="tm-auth-stack">
+          ${hasLoginEmail ? `<input class="tm-auth-input tm-auth-email" type="email" placeholder="${options.loginPlaceholder || 'Email'}" autocomplete="username">` : ''}
           <input class="tm-auth-input" type="password" placeholder="Password" autocomplete="current-password">
           <button class="tm-auth-button" type="button">${options.buttonLabel || 'Unlock'}</button>
           <div class="tm-auth-error"></div>
@@ -126,12 +132,18 @@ window.Techm8StaffAuth = (function () {
       </div>
     `;
 
-    const input = overlay.querySelector('.tm-auth-input');
+    const input = overlay.querySelector('.tm-auth-input[type="password"]');
+    const emailInput = overlay.querySelector('.tm-auth-email');
     const button = overlay.querySelector('.tm-auth-button');
     const error = overlay.querySelector('.tm-auth-error');
 
     async function submit() {
       const password = input.value.trim();
+      const loginEmail = emailInput ? emailInput.value.trim() : '';
+      if (hasLoginEmail && !loginEmail) {
+        error.textContent = 'Email is required.';
+        return;
+      }
       if (!password) {
         error.textContent = 'Password is required.';
         return;
@@ -142,7 +154,10 @@ window.Techm8StaffAuth = (function () {
       error.textContent = '';
 
       try {
-        await onSubmit(password);
+        await onSubmit({
+          password,
+          loginEmail
+        });
         overlay.remove();
       } catch (submitError) {
         error.textContent = submitError.message || 'Login failed.';
@@ -153,12 +168,12 @@ window.Techm8StaffAuth = (function () {
     }
 
     button.addEventListener('click', submit);
-    input.addEventListener('keydown', event => {
+    [input, emailInput].filter(Boolean).forEach(field => field.addEventListener('keydown', event => {
       if (event.key === 'Enter') submit();
-    });
+    }));
 
     document.body.appendChild(overlay);
-    input.focus();
+    (emailInput || input).focus();
   }
 
   async function verifyExistingSession() {
@@ -166,7 +181,7 @@ window.Techm8StaffAuth = (function () {
     if (!token) return false;
 
     try {
-      const result = await callRpc('verify_staff_session', { session_token: token });
+      const result = await callRpc(activeVerifyRpc, { session_token: token });
       if (result && result.ok) return true;
     } catch (error) {
       console.error(error);
@@ -180,13 +195,26 @@ window.Techm8StaffAuth = (function () {
     injectStyles();
 
     const settings = options || {};
+    activeSessionKey = settings.sessionKey || DEFAULT_SESSION_KEY;
+    activeCreateRpc = settings.createRpc || 'create_staff_session';
+    activeVerifyRpc = settings.verifyRpc || 'verify_staff_session';
+    activeRevokeRpc = settings.revokeRpc || 'revoke_staff_session';
+
     if (await verifyExistingSession()) {
       return true;
     }
 
     return await new Promise(resolve => {
-      buildOverlay(settings, async password => {
-        const result = await callRpc('create_staff_session', { input_password: password });
+      buildOverlay(settings, async credentials => {
+        const payload = settings.requireLoginEmail
+          ? {
+              login_email: credentials.loginEmail,
+              input_password: credentials.password
+            }
+          : {
+              input_password: credentials.password
+            };
+        const result = await callRpc(activeCreateRpc, payload);
         if (!result || !result.ok || !result.session_token) {
           throw new Error((result && result.message) || 'Incorrect password.');
         }
@@ -200,7 +228,7 @@ window.Techm8StaffAuth = (function () {
     const token = getToken();
     if (token) {
       try {
-        await callRpc('revoke_staff_session', { session_token: token });
+        await callRpc(activeRevokeRpc, { session_token: token });
       } catch (error) {
         console.error(error);
       }

@@ -261,6 +261,8 @@
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <el-button type="primary" @click="loadReports" :loading="loading">Load Reports</el-button>
               <el-button plain @click="clearFilters">Clear</el-button>
+              <el-button plain icon="el-icon-s-home" onclick="window.location.href='./admin.html'">Price Admin</el-button>
+              <el-button plain icon="el-icon-s-grid" onclick="window.location.href='./lcd-inventory-admin.html'">LCD Inventory Admin</el-button>
             </div>
           </div>
         </div>
@@ -512,8 +514,14 @@
   <script>
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
-      title: 'Daily Report Admin Access',
-      subtitle: 'Enter the staff password to review submitted daily reports.'
+      title: 'Daily Report Admin Login',
+      subtitle: 'Sign in with the admin email and password to review submitted daily reports.',
+      requireLoginEmail: true,
+      loginPlaceholder: 'Admin email',
+      sessionKey: 'techm8_admin_session_token',
+      createRpc: 'create_admin_session',
+      verifyRpc: 'verify_admin_session',
+      revokeRpc: 'revoke_admin_session'
     }).then(() => {
       new Vue({
         el: '#app',

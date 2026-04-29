@@ -84,7 +84,13 @@
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
       title: 'Seed Access',
-      subtitle: 'Enter the staff password to sync local files into Supabase.'
+      subtitle: 'Sign in with the admin email and password to sync local files into Supabase.',
+      requireLoginEmail: true,
+      loginPlaceholder: 'Admin email',
+      sessionKey: 'techm8_admin_session_token',
+      createRpc: 'create_admin_session',
+      verifyRpc: 'verify_admin_session',
+      revokeRpc: 'revoke_admin_session'
     });
     const output = document.getElementById('output');
     const button = document.getElementById('syncButton');

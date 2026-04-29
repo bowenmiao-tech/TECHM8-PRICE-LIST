@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECHM8 LCD Inventory Admin</title>
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    :root {
+      --tm-dark: #163129;
+      --tm-dark-2: #25473d;
+      --tm-bg: #f4f7f9;
+      --tm-border: #dfe7eb;
+      --tm-muted: #667781;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top right, rgba(239,114,4,0.10), transparent 24%),
+        radial-gradient(circle at top left, rgba(22,49,41,0.12), transparent 26%),
+        var(--tm-bg);
+      color: #17252d;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #app {
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .shell {
+      background: #fff;
+      border: 1px solid var(--tm-border);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(15, 23, 32, 0.10);
+    }
+
+    .hero {
+      padding: 28px;
+      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
+      color: #fff;
+    }
+
+    .hero-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.05;
+      font-weight: 800;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      max-width: 980px;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .hero-tag {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .03em;
+    }
+
+    .content { padding: 18px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card,
+    .panel {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .stat-card { padding: 16px; }
+
+    .stat-label {
+      color: var(--tm-muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(340px, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .panel { padding: 16px; }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .panel-subtitle {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--tm-muted);
+      margin-bottom: 14px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .table-panel {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .table-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      background: #fafcfd;
+      border-bottom: 1px solid var(--tm-border);
+    }
+
+    .table-title {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .table-subtitle {
+      color: var(--tm-muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .table-wrap { padding: 0 12px 12px; }
+    .alert { margin-bottom: 16px; }
+    .qty-cell { min-width: 110px; }
+
+    @media (max-width: 1180px) {
+      .tool-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      #app { padding: 12px; }
+      .hero, .content { padding: 14px; }
+      .hero h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" data-auth-protected>
+    <div class="shell">
+      <div class="hero">
+        <div class="hero-top">
+          <div>
+            <h1>LCD Inventory Admin</h1>
+            <p>
+              Manage the LCD tracker inventory directly in Supabase. Each row is unique by store, model, and variant,
+              so you can maintain exact stock variants such as black, white, touch, LCD, OLED, and ORI.
+            </p>
+          </div>
+          <div class="hero-tags">
+            <div class="hero-tag">Single row save</div>
+            <div class="hero-tag">Full variant control</div>
+            <div class="hero-tag">Store-specific stock</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <el-alert
+          v-if="loadError"
+          class="alert"
+          type="warning"
+          :closable="false"
+          :title="loadError">
+        </el-alert>
+
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Rows</div>
+            <div class="stat-value">{{ rows.length }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Stores</div>
+            <div class="stat-value">{{ storeOptions.length }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Models</div>
+            <div class="stat-value">{{ modelCount }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Visible Rows</div>
+            <div class="stat-value">{{ filteredRows.length }}</div>
+          </div>
+        </div>
+
+        <div class="tool-grid">
+          <div class="panel">
+            <div class="panel-title">Data Tools</div>
+            <div class="panel-subtitle">
+              Load LCD stock from Supabase, add missing variants, and edit quantity or active status row by row.
+            </div>
+            <div class="button-row">
+              <el-button icon="el-icon-refresh" @click="loadInventory" :loading="loading">Load Inventory</el-button>
+              <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
+              <el-button plain icon="el-icon-s-home" onclick="window.location.href='./admin.html'">Price Admin</el-button>
+              <el-button plain icon="el-icon-tickets" onclick="window.location.href='./daily-report-admin.html'">Daily Report Admin</el-button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">Admin Account Password</div>
+            <div class="stack">
+              <el-input v-model.trim="newPassword" show-password placeholder="New admin password"></el-input>
+              <el-input v-model.trim="confirmPassword" show-password placeholder="Confirm new admin password"></el-input>
+              <div class="button-row">
+                <el-button type="primary" @click="changePassword" :loading="changingPassword">Update Password</el-button>
+                <el-button @click="logout">Logout</el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-grid">
+          <div class="panel">
+            <div class="panel-title">Advanced Filters</div>
+            <div class="stack">
+              <el-input v-model.trim="keyword" clearable placeholder="Search store, model, or variant"></el-input>
+              <el-select v-model="storeFilter" clearable filterable placeholder="Filter by store">
+                <el-option
+                  v-for="store in storeOptions"
+                  :key="store.store_code"
+                  :label="store.store_name"
+                  :value="store.store_code">
+                </el-option>
+              </el-select>
+              <el-select v-model="modelFilter" clearable filterable placeholder="Filter by model" :disabled="!modelOptions.length">
+                <el-option
+                  v-for="model in modelOptions"
+                  :key="model"
+                  :label="model"
+                  :value="model">
+                </el-option>
+              </el-select>
+              <el-select v-model="variantFilter" clearable filterable placeholder="Filter by variant" :disabled="!variantOptions.length">
+                <el-option
+                  v-for="variant in variantOptions"
+                  :key="variant"
+                  :label="variant"
+                  :value="variant">
+                </el-option>
+              </el-select>
+              <el-select v-model="activeFilter" clearable placeholder="Filter by status">
+                <el-option label="Active only" :value="true"></el-option>
+                <el-option label="Inactive only" :value="false"></el-option>
+              </el-select>
+              <div class="button-row">
+                <el-button plain @click="clearFilters">Clear Filters</el-button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">Edit Rules</div>
+            <div class="panel-subtitle" style="margin-bottom:0;">
+              Keep model and variant exactly the way you want staff to see them in the daily report.
+              Quantity must be zero or higher. Inactive rows stay in the database but will not appear for staff.
+            </div>
+          </div>
+        </div>
+
+        <div class="table-panel">
+          <div class="table-head">
+            <div>
+              <div class="table-title">LCD Inventory Rows</div>
+              <div class="table-subtitle">This list feeds the LCD Stock Reduction selector on the daily report page.</div>
+            </div>
+            <div class="table-subtitle">{{ filteredRows.length }} visible row(s)</div>
+          </div>
+
+          <div class="table-wrap">
+            <el-table :data="filteredRows" border stripe height="720">
+              <el-table-column label="Store" min-width="180">
+                <template slot-scope="scope">
+                  <el-select v-model="scope.row.store_code" filterable placeholder="Store">
+                    <el-option
+                      v-for="store in storeOptions"
+                      :key="store.store_code"
+                      :label="store.store_name"
+                      :value="store.store_code">
+                    </el-option>
+                  </el-select>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="Model" min-width="260">
+                <template slot-scope="scope">
+                  <el-input v-model="scope.row.model_name" placeholder="Model name"></el-input>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="Variant" min-width="220">
+                <template slot-scope="scope">
+                  <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="Current Qty" width="130" align="center">
+                <template slot-scope="scope">
+                  <el-input-number
+                    class="qty-cell"
+                    v-model="scope.row.current_qty"
+                    :min="0"
+                    :step="1"
+                    :controls="false">
+                  </el-input-number>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="Active" width="110" align="center">
+                <template slot-scope="scope">
+                  <el-switch v-model="scope.row.active"></el-switch>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="Updated" min-width="180">
+                <template slot-scope="scope">
+                  {{ formatTimestamp(scope.row.updated_at) }}
+                </template>
+              </el-table-column>
+
+              <el-table-column label="Actions" width="220" fixed="right">
+                <template slot-scope="scope">
+                  <div class="button-row">
+                    <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
+                    <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
+                    <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE = window.TECHM8_SUPABASE || null;
+
+    window.Techm8StaffAuth.init({
+      rootSelector: '#app',
+      title: 'Admin Login',
+      subtitle: 'Sign in with the admin email and password to open the LCD inventory admin page.',
+      requireLoginEmail: true,
+      loginPlaceholder: 'Admin email',
+      sessionKey: 'techm8_admin_session_token',
+      createRpc: 'create_admin_session',
+      verifyRpc: 'verify_admin_session',
+      revokeRpc: 'revoke_admin_session'
+    });
+
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          rows: [],
+          keyword: '',
+          storeFilter: '',
+          modelFilter: '',
+          variantFilter: '',
+          activeFilter: '',
+          loadError: '',
+          loading: false,
+          newPassword: '',
+          confirmPassword: '',
+          changingPassword: false
+        };
+      },
+      computed: {
+        storeOptions() {
+          const seen = new Map();
+          this.rows.forEach(row => {
+            if (row.store_code && !seen.has(row.store_code)) {
+              seen.set(row.store_code, {
+                store_code: row.store_code,
+                store_name: row.store_name || row.store_code
+              });
+            }
+          });
+          return Array.from(seen.values()).sort((a, b) => this.naturalSort(a.store_name, b.store_name));
+        },
+        modelOptions() {
+          return Array.from(new Set(
+            this.rows
+              .filter(row => !this.storeFilter || row.store_code === this.storeFilter)
+              .map(row => row.model_name)
+              .filter(Boolean)
+          )).sort(this.naturalSort);
+        },
+        variantOptions() {
+          return Array.from(new Set(
+            this.rows
+              .filter(row => {
+                if (this.storeFilter && row.store_code !== this.storeFilter) return false;
+                if (this.modelFilter && row.model_name !== this.modelFilter) return false;
+                return Boolean(row.variant_name);
+              })
+              .map(row => row.variant_name)
+          )).sort(this.naturalSort);
+        },
+        modelCount() {
+          return Array.from(new Set(this.rows.map(row => row.model_name).filter(Boolean))).length;
+        },
+        filteredRows() {
+          const keyword = String(this.keyword || '').trim().toLowerCase();
+          return this.rows.filter(row => {
+            if (this.storeFilter && row.store_code !== this.storeFilter) return false;
+            if (this.modelFilter && row.model_name !== this.modelFilter) return false;
+            if (this.variantFilter && row.variant_name !== this.variantFilter) return false;
+            if (this.activeFilter !== '' && row.active !== this.activeFilter) return false;
+            if (!keyword) return true;
+            const haystack = [
+              row.store_name,
+              row.store_code,
+              row.model_name,
+              row.variant_name
+            ].join(' ').toLowerCase();
+            return haystack.includes(keyword);
+          });
+        }
+      },
+      methods: {
+        naturalSort(a, b) {
+          return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+        },
+        formatTimestamp(value) {
+          if (!value) return '-';
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return '-';
+          return date.toLocaleString('en-AU', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        },
+        clearFilters() {
+          this.keyword = '';
+          this.storeFilter = '';
+          this.modelFilter = '';
+          this.variantFilter = '';
+          this.activeFilter = '';
+        },
+        normalizeRow(raw) {
+          return {
+            id: raw.id || null,
+            store_id: raw.store_id || null,
+            store_code: raw.store_code || '',
+            store_name: raw.store_name || raw.store_code || '',
+            model_name: raw.model_name || '',
+            variant_name: raw.variant_name || '',
+            current_qty: Number.isFinite(Number(raw.current_qty)) ? Number(raw.current_qty) : 0,
+            active: raw.active !== false,
+            updated_at: raw.updated_at || null
+          };
+        },
+        async loadInventory() {
+          this.loading = true;
+          this.loadError = '';
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('get_lcd_inventory', {
+              session_token: token,
+              target_store_code: ''
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to load LCD inventory.');
+            }
+            this.rows = Array.isArray(result.items) ? result.items.map(this.normalizeRow) : [];
+          } catch (error) {
+            console.error(error);
+            this.loadError = error.message || 'Failed to load LCD inventory.';
+          } finally {
+            this.loading = false;
+          }
+        },
+        addRow() {
+          const fallbackStore = this.storeFilter || (this.storeOptions[0] && this.storeOptions[0].store_code) || '';
+          this.rows.unshift(this.normalizeRow({
+            store_code: fallbackStore,
+            store_name: (this.storeOptions.find(store => store.store_code === fallbackStore) || {}).store_name || '',
+            model_name: '',
+            variant_name: '',
+            current_qty: 0,
+            active: true
+          }));
+        },
+        duplicateRow(row) {
+          this.rows.unshift(this.normalizeRow({
+            store_code: row.store_code,
+            store_name: row.store_name,
+            model_name: row.model_name,
+            variant_name: row.variant_name,
+            current_qty: row.current_qty,
+            active: row.active
+          }));
+        },
+        async saveRow(row) {
+          const payload = {
+            store_code: String(row.store_code || '').trim(),
+            model_name: String(row.model_name || '').trim(),
+            variant_name: String(row.variant_name || '').trim(),
+            current_qty: Number.isFinite(Number(row.current_qty)) ? Number(row.current_qty) : 0,
+            active: row.active !== false
+          };
+
+          if (!payload.store_code || !payload.model_name || !payload.variant_name) {
+            this.$message.error('Store, model, and variant are required.');
+            return;
+          }
+
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('upsert_lcd_inventory_item', {
+              session_token: token,
+              row_payload: payload
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to save LCD inventory row.');
+            }
+            this.$message.success('LCD inventory row saved.');
+            await this.loadInventory();
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to save LCD inventory row.');
+          }
+        },
+        async deleteRow(row) {
+          const storeCode = String(row.store_code || '').trim();
+          const modelName = String(row.model_name || '').trim();
+          const variantName = String(row.variant_name || '').trim();
+
+          if (!storeCode || !modelName || !variantName) {
+            const rowIndex = this.rows.indexOf(row);
+            if (rowIndex >= 0) {
+              this.rows.splice(rowIndex, 1);
+            }
+            return;
+          }
+
+          try {
+            await this.$confirm(
+              `Delete ${modelName} / ${variantName} from ${row.store_name || storeCode}?`,
+              'Delete LCD inventory row',
+              {
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel',
+                type: 'warning'
+              }
+            );
+          } catch (cancelled) {
+            return;
+          }
+
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('delete_lcd_inventory_item', {
+              session_token: token,
+              target_store_code: storeCode,
+              target_model_name: modelName,
+              target_variant_name: variantName
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to delete LCD inventory row.');
+            }
+            this.$message.success('LCD inventory row deleted.');
+            await this.loadInventory();
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to delete LCD inventory row.');
+          }
+        },
+        async changePassword() {
+          if (!this.newPassword || this.newPassword.length < 8) {
+            this.$message.error('Password must be at least 8 characters.');
+            return;
+          }
+          if (this.newPassword !== this.confirmPassword) {
+            this.$message.error('Passwords do not match.');
+            return;
+          }
+
+          this.changingPassword = true;
+          try {
+            const result = await window.Techm8StaffAuth.callRpc('change_admin_account_password', {
+              session_token: window.Techm8StaffAuth.getToken(),
+              new_password: this.newPassword
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to update password.');
+            }
+            this.$message.success('Admin password updated. Please sign in again.');
+            this.newPassword = '';
+            this.confirmPassword = '';
+            setTimeout(() => window.Techm8StaffAuth.logout(), 400);
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to update password.');
+          } finally {
+            this.changingPassword = false;
+          }
+        },
+        logout() {
+          window.Techm8StaffAuth.logout();
+        }
+      },
+      mounted() {
+        this.loadInventory();
+      }
+    });
+  </script>
+</body>
+</html>
