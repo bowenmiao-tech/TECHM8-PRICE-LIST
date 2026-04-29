@@ -13,10 +13,13 @@
     :root {
       --tm-dark: #163129;
       --tm-dark-2: #24463b;
-      --tm-accent: #ef7204;
+      --tm-accent: #2ecc28;
       --tm-bg: #f4f7f9;
       --tm-border: #dce5e9;
       --tm-muted: #667781;
+      --tm-blue: #d7e5ff;
+      --tm-yellow: #ffe49a;
+      --tm-green-soft: #d8f0c2;
     }
 
     * { box-sizing: border-box; }
@@ -32,13 +35,13 @@
     }
 
     #app {
-      max-width: 1380px;
+      max-width: 1480px;
       margin: 0 auto;
-      padding: 22px 14px 36px;
+      padding: 20px 14px 34px;
     }
 
     .shell {
-      background: rgba(255,255,255,0.94);
+      background: rgba(255,255,255,0.95);
       border: 1px solid rgba(220,229,233,0.92);
       border-radius: 30px;
       overflow: hidden;
@@ -53,7 +56,7 @@
 
     .hero-title {
       margin: 0;
-      font-size: clamp(28px, 4vw, 46px);
+      font-size: clamp(28px, 4vw, 44px);
       line-height: 1;
       font-weight: 800;
     }
@@ -97,94 +100,64 @@
       padding: 18px;
     }
 
+    .section-banner {
+      margin: 0 0 12px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: var(--tm-accent);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: .01em;
+    }
+
     .panel-title {
       margin: 0 0 6px;
       font-size: 18px;
       font-weight: 800;
     }
 
-    .panel-subtitle {
-      margin: 0 0 16px;
+    .panel-subtitle,
+    .hint {
+      margin: 0 0 14px;
       color: var(--tm-muted);
       line-height: 1.7;
       font-size: 13px;
     }
 
-    .setup-grid {
+    .setup-grid,
+    .meta-grid,
+    .summary-grid,
+    .two-col-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .meta-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
     }
 
-    .meta-card {
+    .setup-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .meta-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .two-col-grid { grid-template-columns: 1.2fr .9fr; align-items: start; }
+
+    .meta-card,
+    .summary-card {
       border: 1px solid var(--tm-border);
       border-radius: 18px;
       padding: 14px 16px;
       background: #fbfdfe;
     }
 
-    .meta-label {
+    .meta-label,
+    .summary-label {
       color: var(--tm-muted);
       font-size: 12px;
       margin-bottom: 6px;
     }
 
-    .meta-value {
-      font-size: 17px;
-      font-weight: 800;
-      line-height: 1.25;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .section-title {
-      margin: 0;
+    .meta-value,
+    .summary-value {
       font-size: 18px;
       font-weight: 800;
-    }
-
-    .hint {
-      color: var(--tm-muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .line-card {
-      border: 1px solid var(--tm-border);
-      border-radius: 18px;
-      padding: 14px;
-      background: #fcfdfe;
-    }
-
-    .line-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 1.5fr .7fr .65fr .55fr auto;
-      gap: 12px;
-      align-items: end;
-    }
-
-    .lcd-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr .9fr .45fr .6fr auto;
-      gap: 12px;
-      align-items: end;
-    }
-
-    .line-stack {
-      display: grid;
-      gap: 12px;
+      line-height: 1.2;
     }
 
     .field-label {
@@ -194,6 +167,52 @@
       font-weight: 700;
       color: #42535c;
     }
+
+    .toolbar,
+    .section-head,
+    .footer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toolbar { justify-content: flex-start; margin-top: 10px; }
+
+    .line-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .line-card {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      padding: 14px;
+      background: #fcfdfe;
+    }
+
+    .grid-repair,
+    .grid-faulty,
+    .grid-device-sales,
+    .grid-device-buyback,
+    .grid-lcd,
+    .grid-expense,
+    .grid-missing,
+    .grid-timesheet {
+      display: grid;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .grid-repair { grid-template-columns: 1.2fr 1.5fr .7fr .7fr .6fr auto; }
+    .grid-faulty { grid-template-columns: 1.2fr 1fr 1.4fr .7fr auto; }
+    .grid-device-sales { grid-template-columns: 1.2fr 1fr .8fr .7fr .7fr .6fr auto; }
+    .grid-device-buyback { grid-template-columns: 1.35fr .9fr .7fr .7fr .7fr .6fr auto; }
+    .grid-lcd { grid-template-columns: 1.1fr 1fr .9fr .45fr .6fr auto; }
+    .grid-expense { grid-template-columns: 1.4fr .7fr auto; }
+    .grid-missing { grid-template-columns: 1.2fr .8fr .55fr .9fr auto; }
+    .grid-timesheet { grid-template-columns: 1fr .7fr .7fr .55fr auto; }
 
     .lcd-stock {
       min-height: 40px;
@@ -208,30 +227,31 @@
       font-weight: 700;
     }
 
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .footer-actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      margin-top: 8px;
-    }
-
-    .summary-box {
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: #f7fafb;
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 18px;
       border: 1px solid var(--tm-border);
-      color: #31414a;
+    }
+
+    .summary-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #dfe7eb;
       font-size: 14px;
-      font-weight: 700;
+      vertical-align: top;
+    }
+
+    .summary-table tr:last-child td { border-bottom: 0; }
+    .summary-label-cell { font-weight: 800; }
+    .summary-input-row td { background: var(--tm-yellow); }
+    .summary-total-row td { background: #e8f1ff; font-weight: 800; }
+    .summary-sales-row td { background: var(--tm-green-soft); }
+
+    .customer-track-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
     }
 
     .empty-note {
@@ -243,11 +263,30 @@
       font-size: 13px;
     }
 
-    @media (max-width: 1180px) {
+    .draft-note {
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid #f0d79e;
+      background: #fff8dd;
+      color: #6d5b24;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 1280px) {
       .meta-grid,
+      .summary-grid,
+      .customer-track-grid,
+      .two-col-grid,
       .setup-grid,
-      .line-grid,
-      .lcd-grid {
+      .grid-repair,
+      .grid-faulty,
+      .grid-device-sales,
+      .grid-device-buyback,
+      .grid-lcd,
+      .grid-expense,
+      .grid-missing,
+      .grid-timesheet {
         grid-template-columns: 1fr;
       }
     }
@@ -265,12 +304,12 @@
       <div class="hero">
         <h1 class="hero-title">Daily Report</h1>
         <p class="hero-text">
-          Select the store and your name, record the repair work completed today, then submit the LCD movements that
-          should reduce stock. This page only supports stock reduction actions.
+          Select the store and staff member, complete the daily report sections, save a draft at any time, and submit
+          the final report when the day is finished. LCD stock actions only reduce stock.
         </p>
         <div class="hero-badges">
-          <div class="hero-badge">Today only</div>
-          <div class="hero-badge">Dynamic rows</div>
+          <div class="hero-badge">Draft save</div>
+          <div class="hero-badge">Auto formulas</div>
           <div class="hero-badge">LCD stock reduction</div>
         </div>
       </div>
@@ -286,7 +325,7 @@
         <div class="panel" v-if="stage === 'setup'">
           <h2 class="panel-title">Select Store And Staff</h2>
           <p class="panel-subtitle">
-            Choose the shop and the staff member submitting the report. The report date is set automatically to today.
+            Choose the shop and staff name first. The page will then load today's report and any saved draft for the same store and staff.
           </p>
           <div class="setup-grid">
             <div>
@@ -321,14 +360,20 @@
           <div class="panel">
             <div class="section-head">
               <div>
-                <h2 class="section-title">Report Header</h2>
-                <div class="hint">This report is created for the current day and can be submitted once the repair and LCD sections are complete.</div>
+                <h2 class="panel-title">Report Header</h2>
+                <div class="hint">Report date is fixed to today. Drafts are saved per store, staff, and date.</div>
               </div>
               <div class="toolbar">
                 <el-button plain icon="el-icon-back" @click="backToSetup">Change Store / Staff</el-button>
+                <el-button type="warning" plain icon="el-icon-document" @click="saveDraft" :loading="draftSaving">Save Draft</el-button>
               </div>
             </div>
-            <div class="meta-grid">
+
+            <div class="draft-note" v-if="draftLoadedAt">
+              Existing draft loaded. Last saved at {{ formatDateTime(draftLoadedAt) }}.
+            </div>
+
+            <div class="meta-grid" style="margin-top:12px;">
               <div class="meta-card">
                 <div class="meta-label">Store</div>
                 <div class="meta-value">{{ selectedStoreName }}</div>
@@ -342,31 +387,28 @@
                 <div class="meta-value">{{ formattedToday }}</div>
               </div>
               <div class="meta-card">
-                <div class="meta-label">Repair Total</div>
-                <div class="meta-value">{{ totalAmountLabel }}</div>
+                <div class="meta-label">Repair Sales</div>
+                <div class="meta-value">{{ money(repairSalesTotal) }}</div>
               </div>
             </div>
           </div>
 
           <div class="panel">
+            <div class="section-banner">DAILY REPORTING</div>
             <div class="section-head">
-              <div>
-                <h2 class="section-title">Repair Entries</h2>
-                <div class="hint">Add one line per repair, balance payment, inspection fee, or related completed repair charge.</div>
-              </div>
+              <div class="hint">Add one row for each completed repair or related repair charge for the day.</div>
               <el-button type="primary" plain icon="el-icon-plus" @click="addRepairLine">Add Repair Row</el-button>
             </div>
-
             <div class="line-stack" v-if="repairLines.length">
               <div class="line-card" v-for="(line, index) in repairLines" :key="'repair-' + index">
-                <div class="line-grid">
+                <div class="grid-repair">
                   <div>
                     <label class="field-label">Model And Color</label>
-                    <el-input v-model.trim="line.model_and_color" placeholder="e.g. iPhone 14 Plus Blue"></el-input>
+                    <el-input v-model.trim="line.model_and_color" placeholder="e.g. Samsung S23 Black"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Problem And Parts Used</label>
-                    <el-input v-model.trim="line.problem_and_parts_used" placeholder="e.g. LCD / Battery / Inspection / Balance"></el-input>
+                    <el-input v-model.trim="line.problem_and_parts_used" placeholder="e.g. LCD / Battery / Balance / Inspection"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Tech Name</label>
@@ -386,21 +428,344 @@
                 </div>
               </div>
             </div>
-            <div class="empty-note" v-else>No repair rows yet. Add the first repair line to start today's report.</div>
+            <div class="empty-note" v-else>No repair rows yet.</div>
           </div>
 
           <div class="panel">
+            <div class="section-banner">FAULTY & BROKEN LCDS</div>
             <div class="section-head">
-              <div>
-                <h2 class="section-title">LCD Stock Reduction</h2>
-                <div class="hint">Only choose items that should reduce stock today. Allowed actions are sold, send to other, faulty, and broken.</div>
+              <div class="hint">This section records faulty / broken screens for the report itself. It does not replace the stock deduction section below.</div>
+              <el-button type="warning" plain icon="el-icon-plus" @click="addFaultyBrokenLine">Add Faulty Row</el-button>
+            </div>
+            <div class="line-stack" v-if="faultyBrokenLines.length">
+              <div class="line-card" v-for="(line, index) in faultyBrokenLines" :key="'faulty-' + index">
+                <div class="grid-faulty">
+                  <div>
+                    <label class="field-label">Model No / Color</label>
+                    <el-input v-model.trim="line.model_no_color" placeholder="Model / color"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Faulty Part Name</label>
+                    <el-input v-model.trim="line.faulty_part_name" placeholder="Part name"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Mention Issue</label>
+                    <el-input v-model.trim="line.mention_issue" placeholder="Issue description"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Tech Name</label>
+                    <el-input v-model.trim="line.tech_name" placeholder="Tech name"></el-input>
+                  </div>
+                  <div>
+                    <el-button type="danger" plain icon="el-icon-delete" @click="removeFaultyBrokenLine(index)"></el-button>
+                  </div>
+                </div>
               </div>
+            </div>
+            <div class="empty-note" v-else>No faulty / broken LCD rows yet.</div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">DEVICE SALES INFO</div>
+            <div class="section-head">
+              <div class="hint">Record sold devices and the sale amount. Device sales total is calculated automatically.</div>
+              <el-button type="success" plain icon="el-icon-plus" @click="addDeviceSaleLine">Add Device Sale</el-button>
+            </div>
+            <div class="line-stack" v-if="deviceSalesLines.length">
+              <div class="line-card" v-for="(line, index) in deviceSalesLines" :key="'device-sale-' + index">
+                <div class="grid-device-sales">
+                  <div>
+                    <label class="field-label">Model No / Color / GB</label>
+                    <el-input v-model.trim="line.model_color_gb" placeholder="Model / color / GB"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">IMEI No</label>
+                    <el-input v-model.trim="line.imei_no" placeholder="IMEI"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">New Or Used</label>
+                    <el-select v-model="line.new_or_used" placeholder="Choose" style="width:100%;">
+                      <el-option label="New" value="New"></el-option>
+                      <el-option label="Used" value="Used"></el-option>
+                    </el-select>
+                  </div>
+                  <div>
+                    <label class="field-label">Staff Name</label>
+                    <el-input v-model.trim="line.staff_name" placeholder="Staff name"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Invoice Number</label>
+                    <el-input v-model.trim="line.invoice_number" placeholder="POS number"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Amount</label>
+                    <el-input v-model.trim="line.amount" placeholder="599.00"></el-input>
+                  </div>
+                  <div>
+                    <el-button type="danger" plain icon="el-icon-delete" @click="removeDeviceSaleLine(index)"></el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No device sales rows yet.</div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">DEVICE BUY BACK INFO</div>
+            <div class="section-head">
+              <div class="hint">Record device buyback details for the day.</div>
+              <el-button type="success" plain icon="el-icon-plus" @click="addDeviceBuybackLine">Add Buy Back</el-button>
+            </div>
+            <div class="line-stack" v-if="deviceBuybackLines.length">
+              <div class="line-card" v-for="(line, index) in deviceBuybackLines" :key="'device-buyback-' + index">
+                <div class="grid-device-buyback">
+                  <div>
+                    <label class="field-label">Model / Color / GB / Condition</label>
+                    <el-input v-model.trim="line.model_color_gb_condition" placeholder="Model / color / GB / condition"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">IMEI</label>
+                    <el-input v-model.trim="line.imei" placeholder="IMEI"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Buy Back Form Done?</label>
+                    <el-select v-model="line.buy_back_form_done" placeholder="Choose" style="width:100%;">
+                      <el-option label="Yes" value="Yes"></el-option>
+                      <el-option label="No" value="No"></el-option>
+                    </el-select>
+                  </div>
+                  <div>
+                    <label class="field-label">Staff Name</label>
+                    <el-input v-model.trim="line.staff_name" placeholder="Staff name"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Phone Tracker Done?</label>
+                    <el-select v-model="line.phone_tracker_done" placeholder="Choose" style="width:100%;">
+                      <el-option label="Yes" value="Yes"></el-option>
+                      <el-option label="No" value="No"></el-option>
+                    </el-select>
+                  </div>
+                  <div>
+                    <label class="field-label">Amount</label>
+                    <el-input v-model.trim="line.amount" placeholder="250.00"></el-input>
+                  </div>
+                  <div>
+                    <el-button type="danger" plain icon="el-icon-delete" @click="removeDeviceBuybackLine(index)"></el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No device buy back rows yet.</div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">END OF DAY REPORTING</div>
+            <div class="two-col-grid">
+              <div>
+                <table class="summary-table">
+                  <tr class="summary-input-row">
+                    <td class="summary-label-cell">CASH Received from Customers (Enter amount)</td>
+                    <td>{{ money(endOfDay.cash_received) }}</td>
+                  </tr>
+                  <tr class="summary-input-row">
+                    <td class="summary-label-cell">EFTPOS SALES (Don't forget AmEx) Net Amount</td>
+                    <td>{{ money(endOfDay.eftpos_sales) }}</td>
+                  </tr>
+                  <tr class="summary-input-row">
+                    <td class="summary-label-cell">Afterpay Sales (Enter data)</td>
+                    <td>{{ money(endOfDay.afterpay_sales) }}</td>
+                  </tr>
+                  <tr class="summary-total-row">
+                    <td class="summary-label-cell">TOTAL Sales (Do not Enter)</td>
+                    <td>{{ money(endOfDayTotalSalesInput) }}</td>
+                  </tr>
+                  <tr>
+                    <td class="summary-label-cell">To do List need to be finished if sales less than $2000</td>
+                    <td>{{ endOfDayTotalSalesInput < 2000 ? 'Yes' : 'No' }}</td>
+                  </tr>
+                  <tr class="summary-sales-row">
+                    <td class="summary-label-cell">REPAIR SALES (Do not Enter)</td>
+                    <td>{{ money(repairSalesTotal) }}</td>
+                  </tr>
+                  <tr class="summary-sales-row">
+                    <td class="summary-label-cell">ACCESSORIES SALES (Do not Enter)</td>
+                    <td>{{ money(accessoriesSalesTotal) }}</td>
+                  </tr>
+                  <tr class="summary-sales-row">
+                    <td class="summary-label-cell">DEVICE SALES (Do not Enter)</td>
+                    <td>{{ money(deviceSalesTotal) }}</td>
+                  </tr>
+                  <tr class="summary-total-row">
+                    <td class="summary-label-cell">TOTAL Sales (Do not Enter)</td>
+                    <td>{{ money(endOfDayTotalBreakdown) }}</td>
+                  </tr>
+                  <tr>
+                    <td class="summary-label-cell">EXPENSE (Do not Enter)</td>
+                    <td>{{ money(expenseTotal) }}</td>
+                  </tr>
+                  <tr class="summary-sales-row">
+                    <td class="summary-label-cell">CASH TO BE BANKED (Do not Enter)</td>
+                    <td>{{ money(cashToBeBanked) }}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div class="line-stack">
+                <div class="line-card">
+                  <label class="field-label">CASH Received from Customers (Enter amount)</label>
+                  <el-input v-model.trim="endOfDay.cash_received" placeholder="50.00"></el-input>
+                </div>
+                <div class="line-card">
+                  <label class="field-label">EFTPOS SALES (Don't forget AmEx) Net Amount</label>
+                  <el-input v-model.trim="endOfDay.eftpos_sales" placeholder="1212.95"></el-input>
+                </div>
+                <div class="line-card">
+                  <label class="field-label">Afterpay Sales (Enter data)</label>
+                  <el-input v-model.trim="endOfDay.afterpay_sales" placeholder="0.00"></el-input>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">TIME-SHEET</div>
+            <div class="section-head">
+              <div class="hint">Add one row per staff member if needed.</div>
+              <el-button plain icon="el-icon-plus" @click="addTimesheetLine">Add Timesheet Row</el-button>
+            </div>
+            <div class="line-stack" v-if="timesheetLines.length">
+              <div class="line-card" v-for="(line, index) in timesheetLines" :key="'timesheet-' + index">
+                <div class="grid-timesheet">
+                  <div>
+                    <label class="field-label">Name</label>
+                    <el-input v-model.trim="line.name" placeholder="Name"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Start Time</label>
+                    <el-input v-model.trim="line.start_time" placeholder="9"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">End Time</label>
+                    <el-input v-model.trim="line.end_time" placeholder="18"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Break</label>
+                    <el-input v-model.trim="line.break_time" placeholder="0.5"></el-input>
+                  </div>
+                  <div>
+                    <el-button type="danger" plain icon="el-icon-delete" @click="removeTimesheetLine(index)"></el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No timesheet rows yet.</div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">CASH EXPENSES & REFUNDS & DEVICE BUYBACKS ETC</div>
+            <div class="section-head">
+              <div class="hint">Expense total is used for cash to be banked.</div>
+              <el-button plain icon="el-icon-plus" @click="addExpenseLine">Add Expense</el-button>
+            </div>
+            <div class="line-stack" v-if="cashExpenseLines.length">
+              <div class="line-card" v-for="(line, index) in cashExpenseLines" :key="'expense-' + index">
+                <div class="grid-expense">
+                  <div>
+                    <label class="field-label">Expense</label>
+                    <el-input v-model.trim="line.expense" placeholder="Expense description"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Amount</label>
+                    <el-input v-model.trim="line.amount" placeholder="20.00"></el-input>
+                  </div>
+                  <div>
+                    <el-button type="danger" plain icon="el-icon-delete" @click="removeExpenseLine(index)"></el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No expense rows yet.</div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">CUSTOMER TRACKING</div>
+            <div class="customer-track-grid">
+              <div>
+                <label class="field-label">Pay</label>
+                <el-input-number v-model="customerTracking.pay" :min="0" :step="1" controls-position="right" style="width:100%;"></el-input-number>
+              </div>
+              <div>
+                <label class="field-label">Miss</label>
+                <el-input-number v-model="customerTracking.miss" :min="0" :step="1" controls-position="right" style="width:100%;"></el-input-number>
+              </div>
+              <div>
+                <label class="field-label">Pick Up</label>
+                <el-input-number v-model="customerTracking.pick_up" :min="0" :step="1" controls-position="right" style="width:100%;"></el-input-number>
+              </div>
+              <div>
+                <label class="field-label">Question</label>
+                <el-input-number v-model="customerTracking.question" :min="0" :step="1" controls-position="right" style="width:100%;"></el-input-number>
+              </div>
+              <div>
+                <label class="field-label">Warranty</label>
+                <el-input-number v-model="customerTracking.warranty" :min="0" :step="1" controls-position="right" style="width:100%;"></el-input-number>
+              </div>
+              <div>
+                <label class="field-label">Total</label>
+                <div class="lcd-stock">{{ customerTrackingTotal }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">MISSING SALES</div>
+            <div class="section-head">
+              <div class="hint">Missing sales total is calculated automatically.</div>
+              <el-button plain icon="el-icon-plus" @click="addMissingSaleLine">Add Missing Sale</el-button>
+            </div>
+            <div class="line-stack" v-if="missingSalesLines.length">
+              <div class="line-card" v-for="(line, index) in missingSalesLines" :key="'missing-' + index">
+                <div class="grid-missing">
+                  <div>
+                    <label class="field-label">Product Name / Service</label>
+                    <el-input v-model.trim="line.product_name_service" placeholder="Product or service"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Name (Staff)</label>
+                    <el-input v-model.trim="line.staff_name" placeholder="Staff name"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Price</label>
+                    <el-input v-model.trim="line.price" placeholder="49.00"></el-input>
+                  </div>
+                  <div>
+                    <label class="field-label">Comments</label>
+                    <el-input v-model.trim="line.comments" placeholder="Comments"></el-input>
+                  </div>
+                  <div>
+                    <el-button type="danger" plain icon="el-icon-delete" @click="removeMissingSaleLine(index)"></el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No missing sales rows yet.</div>
+            <div class="toolbar">
+              <div class="summary-card" style="min-width:240px;">
+                <div class="summary-label">Missing Sales Total</div>
+                <div class="summary-value">{{ money(missingSalesTotal) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">LCD STOCK REDUCTION</div>
+            <div class="section-head">
+              <div class="hint">Choose the LCD item and action. Only `sold`, `send to other`, `faulty`, and `broken` reduce stock.</div>
               <el-button type="warning" plain icon="el-icon-plus" @click="addLcdLine">Add LCD Row</el-button>
             </div>
-
             <div class="line-stack" v-if="lcdLines.length">
               <div class="line-card" v-for="(line, index) in lcdLines" :key="'lcd-' + index">
-                <div class="lcd-grid">
+                <div class="grid-lcd">
                   <div>
                     <label class="field-label">Model</label>
                     <el-select v-model="line.model_name" filterable placeholder="Choose model" style="width:100%;" @change="onLcdModelChange(line)">
@@ -446,7 +811,7 @@
                 </div>
               </div>
             </div>
-            <div class="empty-note" v-else>No LCD deduction rows yet. Add a row only when stock should be reduced.</div>
+            <div class="empty-note" v-else>No LCD deduction rows yet.</div>
           </div>
 
           <div class="panel">
@@ -459,11 +824,29 @@
               placeholder="Add anything the manager should check for this report.">
             </el-input>
 
-            <div class="footer-actions">
-              <div class="summary-box">
-                {{ repairSummaryText }} | {{ lcdSummaryText }}
+            <div class="summary-grid" style="margin-top:14px;">
+              <div class="summary-card">
+                <div class="summary-label">Repair Sales</div>
+                <div class="summary-value">{{ money(repairSalesTotal) }}</div>
               </div>
+              <div class="summary-card">
+                <div class="summary-label">Device Sales</div>
+                <div class="summary-value">{{ money(deviceSalesTotal) }}</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">Accessories Sales</div>
+                <div class="summary-value">{{ money(accessoriesSalesTotal) }}</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">Cash To Be Banked</div>
+                <div class="summary-value">{{ money(cashToBeBanked) }}</div>
+              </div>
+            </div>
+
+            <div class="footer-actions" style="margin-top:16px;">
+              <div class="hint">Drafts are deleted automatically after final submission.</div>
               <div class="toolbar">
+                <el-button type="warning" plain @click="saveDraft" :loading="draftSaving">Save Draft</el-button>
                 <el-button plain @click="resetForm">Reset Form</el-button>
                 <el-button type="primary" @click="submitReport" :loading="submitting">Submit Daily Report</el-button>
               </div>
@@ -487,15 +870,35 @@
             stage: 'setup',
             setupLoading: false,
             submitting: false,
+            draftSaving: false,
             loadError: '',
             stores: [],
             staffMembers: [],
             lcdItems: [],
             selectedStoreCode: '',
             selectedStaffName: '',
+            draftLoadedAt: '',
             repairLines: [],
+            faultyBrokenLines: [],
+            deviceSalesLines: [],
+            deviceBuybackLines: [],
             lcdLines: [],
-            notes: ''
+            cashExpenseLines: [],
+            missingSalesLines: [],
+            timesheetLines: [],
+            notes: '',
+            endOfDay: {
+              cash_received: '',
+              eftpos_sales: '',
+              afterpay_sales: ''
+            },
+            customerTracking: {
+              pay: 0,
+              miss: 0,
+              pick_up: 0,
+              question: 0,
+              warranty: 0
+            }
           };
         },
         computed: {
@@ -519,32 +922,79 @@
               String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
             );
           },
-          repairLineCount() {
-            return this.repairLines.filter(line => this.hasRepairContent(line)).length;
+          repairSalesTotal() {
+            return this.repairLines.reduce((sum, line) => sum + this.moneyValue(line.amount), 0);
           },
-          lcdLineCount() {
-            return this.lcdLines.filter(line => this.hasLcdContent(line)).length;
+          deviceSalesTotal() {
+            return this.deviceSalesLines.reduce((sum, line) => sum + this.moneyValue(line.amount), 0);
           },
-          totalAmount() {
-            return this.repairLines.reduce((sum, line) => {
-              const amount = this.parseMoney(line.amount);
-              return sum + (amount === null ? 0 : amount);
-            }, 0);
+          expenseTotal() {
+            return this.cashExpenseLines.reduce((sum, line) => sum + this.moneyValue(line.amount), 0);
           },
-          totalAmountLabel() {
-            return '$' + this.totalAmount.toFixed(2);
+          missingSalesTotal() {
+            return this.missingSalesLines.reduce((sum, line) => sum + this.moneyValue(line.price), 0);
           },
-          repairSummaryText() {
-            return this.repairLineCount + ' repair row(s), total ' + this.totalAmountLabel;
+          endOfDayTotalSalesInput() {
+            return this.moneyValue(this.endOfDay.cash_received) + this.moneyValue(this.endOfDay.eftpos_sales) + this.moneyValue(this.endOfDay.afterpay_sales);
           },
-          lcdSummaryText() {
-            return this.lcdLineCount + ' LCD reduction row(s)';
+          accessoriesSalesTotal() {
+            return this.endOfDayTotalSalesInput - this.repairSalesTotal - this.deviceSalesTotal;
+          },
+          endOfDayTotalBreakdown() {
+            return this.repairSalesTotal + this.deviceSalesTotal + this.accessoriesSalesTotal;
+          },
+          cashToBeBanked() {
+            return this.moneyValue(this.endOfDay.cash_received) - this.expenseTotal;
+          },
+          customerTrackingTotal() {
+            return Number(this.customerTracking.pay || 0)
+              + Number(this.customerTracking.miss || 0)
+              + Number(this.customerTracking.pick_up || 0)
+              + Number(this.customerTracking.question || 0)
+              + Number(this.customerTracking.warranty || 0);
           }
         },
         mounted() {
           this.loadSetup();
         },
         methods: {
+          makeRepairLine() {
+            return { model_and_color: '', problem_and_parts_used: '', tech_name: this.selectedStaffName || '', invoice_number: '', amount: '' };
+          },
+          makeFaultyBrokenLine() {
+            return { model_no_color: '', faulty_part_name: '', mention_issue: '', tech_name: this.selectedStaffName || '' };
+          },
+          makeDeviceSaleLine() {
+            return { model_color_gb: '', imei_no: '', new_or_used: '', staff_name: this.selectedStaffName || '', invoice_number: '', amount: '' };
+          },
+          makeDeviceBuybackLine() {
+            return { model_color_gb_condition: '', imei: '', buy_back_form_done: '', staff_name: this.selectedStaffName || '', phone_tracker_done: '', amount: '' };
+          },
+          makeLcdLine() {
+            return { model_name: '', variant_name: '', action_type: '', quantity: 1 };
+          },
+          makeExpenseLine() {
+            return { expense: '', amount: '' };
+          },
+          makeMissingSaleLine() {
+            return { product_name_service: '', staff_name: this.selectedStaffName || '', price: '', comments: '' };
+          },
+          makeTimesheetLine() {
+            return { name: this.selectedStaffName || '', start_time: '', end_time: '', break_time: '' };
+          },
+          moneyValue(value) {
+            if (value === null || value === undefined || String(value).trim() === '') return 0;
+            const numeric = Number(String(value).trim().replace(/[^0-9.\-]/g, ''));
+            return Number.isFinite(numeric) ? numeric : 0;
+          },
+          money(value) {
+            const number = Number(value || 0);
+            const prefix = number < 0 ? '-$' : '$';
+            return prefix + Math.abs(number).toFixed(2);
+          },
+          hasText(values) {
+            return values.some(value => String(value || '').trim() !== '');
+          },
           async loadSetup(storeCode) {
             this.setupLoading = true;
             this.loadError = '';
@@ -563,73 +1013,47 @@
               this.setupLoading = false;
             }
           },
-          makeRepairLine() {
-            return {
-              model_and_color: '',
-              problem_and_parts_used: '',
-              tech_name: this.selectedStaffName || '',
-              invoice_number: '',
-              amount: ''
-            };
-          },
-          makeLcdLine() {
-            return {
-              model_name: '',
-              variant_name: '',
-              action_type: '',
-              quantity: 1
-            };
-          },
           async enterReport() {
-            if (!this.selectedStoreCode) {
-              this.$message.error('Please choose a store.');
-              return;
-            }
-            if (!this.selectedStaffName) {
-              this.$message.error('Please choose your name.');
-              return;
-            }
-
+            if (!this.selectedStoreCode) return this.$message.error('Please choose a store.');
+            if (!this.selectedStaffName) return this.$message.error('Please choose your name.');
             await this.loadSetup(this.selectedStoreCode);
             this.stage = 'report';
-
-            if (!this.repairLines.length) this.repairLines = [this.makeRepairLine()];
+            if (!this.repairLines.length) this.addRepairLine();
+            if (!this.timesheetLines.length) this.addTimesheetLine();
+            await this.loadDraft();
           },
           backToSetup() {
             this.stage = 'setup';
           },
-          addRepairLine() {
-            this.repairLines.push(this.makeRepairLine());
-          },
-          removeRepairLine(index) {
-            this.repairLines.splice(index, 1);
-          },
-          addLcdLine() {
-            this.lcdLines.push(this.makeLcdLine());
-          },
-          removeLcdLine(index) {
-            this.lcdLines.splice(index, 1);
-          },
+          addRepairLine() { this.repairLines.push(this.makeRepairLine()); },
+          removeRepairLine(index) { this.repairLines.splice(index, 1); },
+          addFaultyBrokenLine() { this.faultyBrokenLines.push(this.makeFaultyBrokenLine()); },
+          removeFaultyBrokenLine(index) { this.faultyBrokenLines.splice(index, 1); },
+          addDeviceSaleLine() { this.deviceSalesLines.push(this.makeDeviceSaleLine()); },
+          removeDeviceSaleLine(index) { this.deviceSalesLines.splice(index, 1); },
+          addDeviceBuybackLine() { this.deviceBuybackLines.push(this.makeDeviceBuybackLine()); },
+          removeDeviceBuybackLine(index) { this.deviceBuybackLines.splice(index, 1); },
+          addLcdLine() { this.lcdLines.push(this.makeLcdLine()); },
+          removeLcdLine(index) { this.lcdLines.splice(index, 1); },
+          addExpenseLine() { this.cashExpenseLines.push(this.makeExpenseLine()); },
+          removeExpenseLine(index) { this.cashExpenseLines.splice(index, 1); },
+          addMissingSaleLine() { this.missingSalesLines.push(this.makeMissingSaleLine()); },
+          removeMissingSaleLine(index) { this.missingSalesLines.splice(index, 1); },
+          addTimesheetLine() { this.timesheetLines.push(this.makeTimesheetLine()); },
+          removeTimesheetLine(index) { this.timesheetLines.splice(index, 1); },
           resetForm() {
             this.repairLines = [this.makeRepairLine()];
+            this.faultyBrokenLines = [];
+            this.deviceSalesLines = [];
+            this.deviceBuybackLines = [];
             this.lcdLines = [];
+            this.cashExpenseLines = [];
+            this.missingSalesLines = [];
+            this.timesheetLines = [this.makeTimesheetLine()];
             this.notes = '';
-          },
-          parseMoney(value) {
-            if (value === null || value === undefined || String(value).trim() === '') return null;
-            const numeric = Number(String(value).trim().replace(/[^0-9.\-]/g, ''));
-            return Number.isFinite(numeric) ? numeric : null;
-          },
-          hasRepairContent(line) {
-            return Boolean(
-              String(line.model_and_color || '').trim() ||
-              String(line.problem_and_parts_used || '').trim() ||
-              String(line.invoice_number || '').trim() ||
-              String(line.amount || '').trim()
-            );
-          },
-          hasLcdContent(line) {
-            return Boolean(line.model_name || line.variant_name || line.action_type);
+            this.endOfDay = { cash_received: '', eftpos_sales: '', afterpay_sales: '' };
+            this.customerTracking = { pay: 0, miss: 0, pick_up: 0, question: 0, warranty: 0 };
+            this.draftLoadedAt = '';
           },
           lcdVariantOptions(modelName) {
             return this.lcdItems
@@ -651,66 +1075,124 @@
             if (!item) return 'Choose model and type';
             return String(item.current_qty) + ' in stock';
           },
-          buildRepairPayload() {
-            return this.repairLines
-              .filter(line => this.hasRepairContent(line))
-              .map(line => ({
-                model_and_color: String(line.model_and_color || '').trim(),
-                problem_and_parts_used: String(line.problem_and_parts_used || '').trim(),
-                tech_name: String(line.tech_name || this.selectedStaffName).trim(),
-                invoice_number: String(line.invoice_number || '').trim(),
-                amount: String(line.amount || '').trim()
-              }));
-          },
-          buildLcdPayload() {
-            return this.lcdLines
-              .filter(line => this.hasLcdContent(line))
-              .map(line => {
+          buildPayload() {
+            return {
+              store_code: this.selectedStoreCode,
+              staff_name: this.selectedStaffName,
+              report_date: this.todayIso,
+              notes: this.notes,
+              repair_lines: this.repairLines.filter(line => this.hasText([line.model_and_color, line.problem_and_parts_used, line.invoice_number, line.amount])),
+              faulty_broken_lines: this.faultyBrokenLines.filter(line => this.hasText([line.model_no_color, line.faulty_part_name, line.mention_issue, line.tech_name])),
+              device_sales_lines: this.deviceSalesLines.filter(line => this.hasText([line.model_color_gb, line.imei_no, line.new_or_used, line.staff_name, line.invoice_number, line.amount])),
+              device_buyback_lines: this.deviceBuybackLines.filter(line => this.hasText([line.model_color_gb_condition, line.imei, line.buy_back_form_done, line.staff_name, line.phone_tracker_done, line.amount])),
+              lcd_lines: this.lcdLines.filter(line => this.hasText([line.model_name, line.variant_name, line.action_type]) || Number(line.quantity || 0) > 0).map(line => {
                 const item = this.findLcdItem(line);
                 return {
                   inventory_item_id: item ? item.id : null,
-                  model_name: String(line.model_name || '').trim(),
-                  variant_name: String(line.variant_name || '').trim(),
-                  action_type: String(line.action_type || '').trim(),
+                  model_name: line.model_name,
+                  variant_name: line.variant_name,
+                  action_type: line.action_type,
                   quantity: Number(line.quantity || 0)
                 };
-              });
+              }),
+              end_of_day: {
+                cash_received: this.endOfDay.cash_received,
+                eftpos_sales: this.endOfDay.eftpos_sales,
+                afterpay_sales: this.endOfDay.afterpay_sales,
+                total_sales_input: this.endOfDayTotalSalesInput,
+                repair_sales: this.repairSalesTotal,
+                accessories_sales: this.accessoriesSalesTotal,
+                device_sales: this.deviceSalesTotal,
+                total_sales_breakdown: this.endOfDayTotalBreakdown,
+                expense_total: this.expenseTotal,
+                cash_to_be_banked: this.cashToBeBanked,
+                timesheet_lines: this.timesheetLines.filter(line => this.hasText([line.name, line.start_time, line.end_time, line.break_time]))
+              },
+              cash_expense_lines: this.cashExpenseLines.filter(line => this.hasText([line.expense, line.amount])),
+              customer_tracking: {
+                pay: Number(this.customerTracking.pay || 0),
+                miss: Number(this.customerTracking.miss || 0),
+                pick_up: Number(this.customerTracking.pick_up || 0),
+                question: Number(this.customerTracking.question || 0),
+                warranty: Number(this.customerTracking.warranty || 0),
+                total: this.customerTrackingTotal
+              },
+              missing_sales_lines: this.missingSalesLines.filter(line => this.hasText([line.product_name_service, line.staff_name, line.price, line.comments]))
+            };
           },
-          validateBeforeSubmit(repairPayload, lcdPayload) {
-            if (!repairPayload.length && !lcdPayload.length) {
-              this.$message.error('Add at least one repair row or one LCD reduction row.');
+          applyDraft(draft) {
+            if (!draft || typeof draft !== 'object') return;
+            this.notes = draft.notes || '';
+            this.repairLines = Array.isArray(draft.repair_lines) && draft.repair_lines.length ? draft.repair_lines : [this.makeRepairLine()];
+            this.faultyBrokenLines = Array.isArray(draft.faulty_broken_lines) ? draft.faulty_broken_lines : [];
+            this.deviceSalesLines = Array.isArray(draft.device_sales_lines) ? draft.device_sales_lines : [];
+            this.deviceBuybackLines = Array.isArray(draft.device_buyback_lines) ? draft.device_buyback_lines : [];
+            this.lcdLines = Array.isArray(draft.lcd_lines) ? draft.lcd_lines.map(line => ({
+              model_name: line.model_name || '',
+              variant_name: line.variant_name || '',
+              action_type: line.action_type || '',
+              quantity: Number(line.quantity || 1)
+            })) : [];
+            this.cashExpenseLines = Array.isArray(draft.cash_expense_lines) ? draft.cash_expense_lines : [];
+            this.missingSalesLines = Array.isArray(draft.missing_sales_lines) ? draft.missing_sales_lines : [];
+            this.endOfDay = Object.assign({ cash_received: '', eftpos_sales: '', afterpay_sales: '' }, draft.end_of_day || {});
+            this.customerTracking = Object.assign({ pay: 0, miss: 0, pick_up: 0, question: 0, warranty: 0 }, draft.customer_tracking || {});
+            this.timesheetLines = Array.isArray(draft.end_of_day && draft.end_of_day.timesheet_lines) && draft.end_of_day.timesheet_lines.length
+              ? draft.end_of_day.timesheet_lines
+              : [this.makeTimesheetLine()];
+          },
+          async loadDraft() {
+            try {
+              const result = await window.Techm8StaffAuth.callRpc('get_daily_report_draft', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                target_store_code: this.selectedStoreCode,
+                target_staff_name: this.selectedStaffName,
+                target_date: this.todayIso
+              });
+              if (result && result.has_draft && result.draft) {
+                this.applyDraft(result.draft);
+                this.draftLoadedAt = new Date().toISOString();
+              }
+            } catch (error) {
+              console.error(error);
+            }
+          },
+          async saveDraft() {
+            this.draftSaving = true;
+            try {
+              await window.Techm8StaffAuth.callRpc('save_daily_report_draft', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                payload: this.buildPayload()
+              });
+              this.draftLoadedAt = new Date().toISOString();
+              this.$message.success('Draft saved.');
+            } catch (error) {
+              console.error(error);
+              this.$message.error(error.message || 'Could not save draft.');
+            } finally {
+              this.draftSaving = false;
+            }
+          },
+          validateBeforeSubmit(payload) {
+            if (!payload.repair_lines.length && !payload.device_sales_lines.length && !payload.device_buyback_lines.length && !payload.lcd_lines.length) {
+              this.$message.error('Add at least one report line before submitting.');
               return false;
             }
 
-            for (const line of repairPayload) {
-              if (!line.model_and_color) {
-                this.$message.error('Each repair row needs a model.');
-                return false;
-              }
-              if (!line.problem_and_parts_used) {
-                this.$message.error('Each repair row needs a problem / parts value.');
+            for (const line of payload.repair_lines) {
+              if (!String(line.model_and_color || '').trim() || !String(line.problem_and_parts_used || '').trim()) {
+                this.$message.error('Each repair row needs model and problem / parts.');
                 return false;
               }
             }
 
-            for (const line of lcdPayload) {
+            for (const line of payload.lcd_lines) {
               if (!line.inventory_item_id || !line.model_name || !line.variant_name || !line.action_type) {
                 this.$message.error('Each LCD row must include model, type, and action.');
                 return false;
               }
-
               const item = this.lcdItems.find(entry => entry.id === line.inventory_item_id);
-              if (!item) {
-                this.$message.error('One LCD row does not match the selected inventory item.');
-                return false;
-              }
-
-              if (!Number.isFinite(line.quantity) || line.quantity <= 0) {
-                this.$message.error('LCD quantity must be greater than zero.');
-                return false;
-              }
-
-              if (item.current_qty < line.quantity) {
+              if (!item || item.current_qty < Number(line.quantity || 0)) {
                 this.$message.error(line.model_name + ' (' + line.variant_name + ') does not have enough stock.');
                 return false;
               }
@@ -719,36 +1201,21 @@
             return true;
           },
           async submitReport() {
-            const repairPayload = this.buildRepairPayload();
-            const lcdPayload = this.buildLcdPayload();
-            if (!this.validateBeforeSubmit(repairPayload, lcdPayload)) return;
+            const payload = this.buildPayload();
+            if (!this.validateBeforeSubmit(payload)) return;
 
             this.submitting = true;
             try {
               const result = await window.Techm8StaffAuth.callRpc('submit_daily_report', {
                 session_token: window.Techm8StaffAuth.getToken(),
-                payload: {
-                  store_code: this.selectedStoreCode,
-                  staff_name: this.selectedStaffName,
-                  report_date: this.todayIso,
-                  notes: this.notes,
-                  repair_lines: repairPayload,
-                  lcd_lines: lcdPayload
-                }
+                payload
               });
-
-              if (!result || !result.ok) {
-                throw new Error('Daily report submission failed.');
-              }
-
+              if (!result || !result.ok) throw new Error('Daily report submission failed.');
               this.$alert(
-                'Submitted as ' + result.report_code + '. Total amount: $' + Number(result.total_amount || 0).toFixed(2),
+                'Submitted as ' + result.report_code + '. Repair sales total: ' + this.money(result.total_amount || 0),
                 'Daily Report Saved',
-                {
-                  confirmButtonText: 'OK'
-                }
+                { confirmButtonText: 'OK' }
               );
-
               await this.loadSetup(this.selectedStoreCode);
               this.resetForm();
             } catch (error) {
@@ -757,6 +1224,10 @@
             } finally {
               this.submitting = false;
             }
+          },
+          formatDateTime(value) {
+            if (!value) return '-';
+            return new Date(value).toLocaleString('en-AU');
           }
         }
       });

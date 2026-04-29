@@ -160,6 +160,13 @@
       gap: 16px;
     }
 
+    .detail-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
     .detail-box {
       border: 1px solid var(--tm-border);
       border-radius: 18px;
@@ -205,7 +212,8 @@
     @media (max-width: 1180px) {
       .filters,
       .stats,
-      .detail-grid {
+      .detail-grid,
+      .detail-grid-3 {
         grid-template-columns: 1fr;
       }
     }
@@ -348,6 +356,151 @@
                   <div class="empty-note" v-else>No LCD reductions in this report.</div>
                 </div>
               </div>
+
+              <div class="detail-grid-3">
+                <div class="detail-box">
+                  <h3 class="detail-title">Faulty & Broken LCDs</h3>
+                  <table class="detail-table" v-if="report.faulty_broken_lines && report.faulty_broken_lines.length">
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>Part</th>
+                        <th>Issue</th>
+                        <th>Tech</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(line, index) in report.faulty_broken_lines" :key="report.id + '-faulty-' + index">
+                        <td>{{ line.model_no_color }}</td>
+                        <td>{{ line.faulty_part_name }}</td>
+                        <td>{{ line.mention_issue }}</td>
+                        <td>{{ line.tech_name }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="empty-note" v-else>No faulty / broken LCD rows.</div>
+                </div>
+
+                <div class="detail-box">
+                  <h3 class="detail-title">Device Sales</h3>
+                  <table class="detail-table" v-if="report.device_sales_lines && report.device_sales_lines.length">
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>IMEI</th>
+                        <th>Type</th>
+                        <th>Invoice</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(line, index) in report.device_sales_lines" :key="report.id + '-device-sale-' + index">
+                        <td>{{ line.model_color_gb }}</td>
+                        <td>{{ line.imei_no }}</td>
+                        <td>{{ line.new_or_used }}</td>
+                        <td>{{ line.invoice_number }}</td>
+                        <td>${{ formatAmount(line.amount) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="empty-note" v-else>No device sales rows.</div>
+                </div>
+
+                <div class="detail-box">
+                  <h3 class="detail-title">Device Buy Backs</h3>
+                  <table class="detail-table" v-if="report.device_buyback_lines && report.device_buyback_lines.length">
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>IMEI</th>
+                        <th>Form</th>
+                        <th>Tracker</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(line, index) in report.device_buyback_lines" :key="report.id + '-device-buyback-' + index">
+                        <td>{{ line.model_color_gb_condition }}</td>
+                        <td>{{ line.imei }}</td>
+                        <td>{{ line.buy_back_form_done }}</td>
+                        <td>{{ line.phone_tracker_done }}</td>
+                        <td>${{ formatAmount(line.amount) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="empty-note" v-else>No device buy back rows.</div>
+                </div>
+              </div>
+
+              <div class="detail-grid-3">
+                <div class="detail-box">
+                  <h3 class="detail-title">End Of Day Reporting</h3>
+                  <table class="detail-table">
+                    <tbody>
+                      <tr><th>Cash Received</th><td>${{ formatAmount(report.end_of_day && report.end_of_day.cash_received) }}</td></tr>
+                      <tr><th>EFTPOS Net</th><td>${{ formatAmount(report.end_of_day && report.end_of_day.eftpos_sales) }}</td></tr>
+                      <tr><th>Afterpay</th><td>${{ formatAmount(report.end_of_day && report.end_of_day.afterpay_sales) }}</td></tr>
+                      <tr><th>Total Sales Input</th><td>${{ formatAmount(report.end_of_day && report.end_of_day.total_sales_input) }}</td></tr>
+                      <tr><th>Accessories Sales</th><td>${{ formatAmount(report.end_of_day && report.end_of_day.accessories_sales) }}</td></tr>
+                      <tr><th>Cash To Bank</th><td>${{ formatAmount(report.end_of_day && report.end_of_day.cash_to_be_banked) }}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="detail-box">
+                  <h3 class="detail-title">Expenses / Customer Tracking</h3>
+                  <table class="detail-table">
+                    <tbody>
+                      <tr><th>Expense Total</th><td>${{ formatAmount(report.end_of_day && report.end_of_day.expense_total) }}</td></tr>
+                      <tr><th>Pay</th><td>{{ safeTrack(report.customer_tracking, 'pay') }}</td></tr>
+                      <tr><th>Miss</th><td>{{ safeTrack(report.customer_tracking, 'miss') }}</td></tr>
+                      <tr><th>Pick Up</th><td>{{ safeTrack(report.customer_tracking, 'pick_up') }}</td></tr>
+                      <tr><th>Question</th><td>{{ safeTrack(report.customer_tracking, 'question') }}</td></tr>
+                      <tr><th>Warranty</th><td>{{ safeTrack(report.customer_tracking, 'warranty') }}</td></tr>
+                      <tr><th>Total</th><td>{{ safeTrack(report.customer_tracking, 'total') }}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="detail-box">
+                  <h3 class="detail-title">Timesheet / Missing Sales</h3>
+                  <div class="empty-note" v-if="!(report.end_of_day && report.end_of_day.timesheet_lines && report.end_of_day.timesheet_lines.length) && !(report.missing_sales_lines && report.missing_sales_lines.length)">No rows in these sections.</div>
+                  <table class="detail-table" v-if="report.end_of_day && report.end_of_day.timesheet_lines && report.end_of_day.timesheet_lines.length">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Break</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(line, index) in report.end_of_day.timesheet_lines" :key="report.id + '-timesheet-' + index">
+                        <td>{{ line.name }}</td>
+                        <td>{{ line.start_time }}</td>
+                        <td>{{ line.end_time }}</td>
+                        <td>{{ line.break_time }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <table class="detail-table" v-if="report.missing_sales_lines && report.missing_sales_lines.length" style="margin-top:12px;">
+                    <thead>
+                      <tr>
+                        <th>Product / Service</th>
+                        <th>Staff</th>
+                        <th>Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(line, index) in report.missing_sales_lines" :key="report.id + '-missing-' + index">
+                        <td>{{ line.product_name_service }}</td>
+                        <td>{{ line.staff_name }}</td>
+                        <td>${{ formatAmount(line.price) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
           <div class="empty-note" v-else>No daily reports found for the current filter.</div>
@@ -441,6 +594,10 @@
           formatDateTime(value) {
             if (!value) return '-';
             return new Date(value).toLocaleString('en-AU');
+          },
+          safeTrack(obj, key) {
+            if (!obj || typeof obj !== 'object') return 0;
+            return obj[key] || 0;
           }
         }
       });
