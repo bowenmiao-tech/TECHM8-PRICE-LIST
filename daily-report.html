@@ -60,6 +60,26 @@
       color: #fff;
     }
 
+    .hero-shell {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px 24px;
+    }
+
+    .hero-main {
+      min-width: 0;
+      flex: 1 1 520px;
+    }
+
+    .hero-side {
+      min-width: 320px;
+      flex: 0 1 540px;
+      display: grid;
+      gap: 12px;
+    }
+
     .hero-title {
       margin: 0;
       font-size: clamp(28px, 4vw, 44px);
@@ -91,6 +111,57 @@
       font-weight: 700;
       letter-spacing: .04em;
       text-transform: uppercase;
+    }
+
+    .hero-action-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .hero-action-row .el-button {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+
+    .hero-action-row .el-button:hover,
+    .hero-action-row .el-button:focus {
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(255,255,255,0.28);
+      color: #fff;
+    }
+
+    .hero-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .hero-meta-card {
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .hero-meta-label {
+      color: rgba(255,255,255,0.66);
+      font-size: 11px;
+      margin-bottom: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .hero-meta-value {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -.02em;
     }
 
     .content {
@@ -498,6 +569,7 @@
     }
 
     @media (max-width: 1280px) {
+      .hero-meta-grid,
       .meta-grid,
       .report-meta-grid,
       .summary-grid,
@@ -522,6 +594,8 @@
       .hero, .content { padding: 14px; }
       .panel { padding: 14px; }
       .report-topbar-actions { width: 100%; }
+      .hero-action-row { justify-content: flex-start; }
+      .hero-side { min-width: 0; flex-basis: 100%; }
     }
   </style>
 </head>
@@ -529,15 +603,44 @@
   <div id="app" data-auth-protected>
     <div class="shell">
       <div class="hero">
-        <h1 class="hero-title">Daily Report</h1>
-        <p class="hero-text">
-          Select the store and staff member, complete the daily report sections, save a draft at any time, and submit
-          the final report when the day is finished. LCD stock actions only reduce stock.
-        </p>
-        <div class="hero-badges">
-          <div class="hero-badge">Draft save</div>
-          <div class="hero-badge">Auto formulas</div>
-          <div class="hero-badge">LCD stock reduction</div>
+        <div class="hero-shell">
+          <div class="hero-main">
+            <h1 class="hero-title">Daily Report</h1>
+            <p class="hero-text">
+              Select the store and staff member, complete the daily report sections, save a draft at any time, and submit
+              the final report when the day is finished. LCD stock actions only reduce stock.
+            </p>
+            <div class="hero-badges">
+              <div class="hero-badge">Draft save</div>
+              <div class="hero-badge">Auto formulas</div>
+              <div class="hero-badge">LCD stock reduction</div>
+            </div>
+          </div>
+
+          <div class="hero-side" v-if="stage === 'report'">
+            <div class="hero-action-row">
+              <el-button plain icon="el-icon-back" @click="backToSetup">Change Store / Staff</el-button>
+              <el-button type="warning" plain icon="el-icon-document" @click="saveDraft" :loading="draftSaving">Save Draft</el-button>
+            </div>
+            <div class="hero-meta-grid">
+              <div class="hero-meta-card">
+                <div class="hero-meta-label">Store</div>
+                <div class="hero-meta-value">{{ selectedStoreName }}</div>
+              </div>
+              <div class="hero-meta-card">
+                <div class="hero-meta-label">Staff</div>
+                <div class="hero-meta-value">{{ selectedStaffName }}</div>
+              </div>
+              <div class="hero-meta-card">
+                <div class="hero-meta-label">Report Date</div>
+                <div class="hero-meta-value">{{ formattedToday }}</div>
+              </div>
+              <div class="hero-meta-card">
+                <div class="hero-meta-label">Repair Sales</div>
+                <div class="hero-meta-value">{{ money(repairSalesTotal) }}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -612,32 +715,8 @@
 
         <template v-else-if="stage === 'report'">
           <div class="panel">
-            <div class="report-topbar-actions">
-              <el-button plain icon="el-icon-back" @click="backToSetup">Change Store / Staff</el-button>
-              <el-button type="warning" plain icon="el-icon-document" @click="saveDraft" :loading="draftSaving">Save Draft</el-button>
-            </div>
-
             <div class="draft-note" v-if="draftLoadedAt">
               Existing draft loaded. Last saved at {{ formatDateTime(draftLoadedAt) }}.
-            </div>
-
-            <div class="report-meta-grid">
-              <div class="meta-card">
-                <div class="meta-label">Store</div>
-                <div class="meta-value">{{ selectedStoreName }}</div>
-              </div>
-              <div class="meta-card">
-                <div class="meta-label">Staff</div>
-                <div class="meta-value">{{ selectedStaffName }}</div>
-              </div>
-              <div class="meta-card">
-                <div class="meta-label">Report Date</div>
-                <div class="meta-value">{{ formattedToday }}</div>
-              </div>
-              <div class="meta-card">
-                <div class="meta-label">Repair Sales</div>
-                <div class="meta-value">{{ money(repairSalesTotal) }}</div>
-              </div>
             </div>
           </div>
 
