@@ -185,16 +185,19 @@
     .table-wrap { padding: 0 12px 12px; }
     .alert { margin-bottom: 16px; }
     .qty-cell { min-width: 110px; }
+    .inventory-store-stack,
     .review-stack {
       display: grid;
       gap: 14px;
     }
+    .inventory-store-card,
     .review-card {
       border: 1px solid var(--tm-border);
       border-radius: 18px;
       padding: 16px;
       background: #fbfdfe;
     }
+    .inventory-store-head,
     .review-head {
       display: flex;
       flex-wrap: wrap;
@@ -203,11 +206,13 @@
       gap: 12px;
       margin-bottom: 12px;
     }
+    .inventory-store-title,
     .review-title {
       font-size: 18px;
       font-weight: 800;
       margin: 0 0 6px;
     }
+    .inventory-store-meta,
     .review-meta {
       color: var(--tm-muted);
       font-size: 13px;
@@ -251,6 +256,22 @@
       font-size: 12px;
       font-weight: 700;
       background: #f8fbfc;
+    }
+    .family-section {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .family-title {
+      margin: 0;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: #edf4f7;
+      border: 1px solid var(--tm-border);
+      font-size: 14px;
+      font-weight: 800;
+      color: #29424a;
+      letter-spacing: .02em;
     }
     .delta-up { color: #126a42; font-weight: 800; }
     .delta-down { color: #b2342c; font-weight: 800; }
@@ -397,66 +418,68 @@
           </div>
 
           <div class="table-wrap">
-            <el-table :data="filteredRows" border stripe height="720">
-              <el-table-column label="Store" min-width="180">
-                <template slot-scope="scope">
-                  <el-select v-model="scope.row.store_code" filterable placeholder="Store">
-                    <el-option
-                      v-for="store in storeOptions"
-                      :key="store.store_code"
-                      :label="store.store_name"
-                      :value="store.store_code">
-                    </el-option>
-                  </el-select>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Model" min-width="260">
-                <template slot-scope="scope">
-                  <el-input v-model="scope.row.model_name" placeholder="Model name"></el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Variant" min-width="220">
-                <template slot-scope="scope">
-                  <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Current Qty" width="130" align="center">
-                <template slot-scope="scope">
-                  <el-input-number
-                    class="qty-cell"
-                    v-model="scope.row.current_qty"
-                    :min="0"
-                    :step="1"
-                    :controls="false">
-                  </el-input-number>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Active" width="110" align="center">
-                <template slot-scope="scope">
-                  <el-switch v-model="scope.row.active"></el-switch>
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Updated" min-width="180">
-                <template slot-scope="scope">
-                  {{ formatTimestamp(scope.row.updated_at) }}
-                </template>
-              </el-table-column>
-
-              <el-table-column label="Actions" width="220" fixed="right">
-                <template slot-scope="scope">
-                  <div class="button-row">
-                    <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
-                    <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
-                    <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
+            <div class="inventory-store-stack" v-if="groupedInventorySections.length">
+              <div class="inventory-store-card" v-for="storeSection in groupedInventorySections" :key="'store-section-' + storeSection.store_code">
+                <div class="inventory-store-head">
+                  <div>
+                    <div class="inventory-store-title">{{ storeSection.store_name }}</div>
+                    <div class="inventory-store-meta">{{ storeSection.rows.length }} row(s) in the current filter set.</div>
                   </div>
-                </template>
-              </el-table-column>
-            </el-table>
+                </div>
+
+                <div class="family-section" v-for="familySection in storeSection.families" :key="'family-' + storeSection.store_code + '-' + familySection.key">
+                  <h3 class="family-title">{{ familySection.label }}</h3>
+                  <el-table :data="familySection.rows" border stripe>
+                    <el-table-column label="Model" min-width="260">
+                      <template slot-scope="scope">
+                        <el-input v-model="scope.row.model_name" placeholder="Model name"></el-input>
+                      </template>
+                    </el-table-column>
+
+                    <el-table-column label="Variant" min-width="220">
+                      <template slot-scope="scope">
+                        <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
+                      </template>
+                    </el-table-column>
+
+                    <el-table-column label="Current Qty" width="130" align="center">
+                      <template slot-scope="scope">
+                        <el-input-number
+                          class="qty-cell"
+                          v-model="scope.row.current_qty"
+                          :min="0"
+                          :step="1"
+                          :controls="false">
+                        </el-input-number>
+                      </template>
+                    </el-table-column>
+
+                    <el-table-column label="Active" width="110" align="center">
+                      <template slot-scope="scope">
+                        <el-switch v-model="scope.row.active"></el-switch>
+                      </template>
+                    </el-table-column>
+
+                    <el-table-column label="Updated" min-width="180">
+                      <template slot-scope="scope">
+                        {{ formatTimestamp(scope.row.updated_at) }}
+                      </template>
+                    </el-table-column>
+
+                    <el-table-column label="Actions" width="220" fixed="right">
+                      <template slot-scope="scope">
+                        <div class="button-row">
+                          <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
+                          <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
+                          <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
+                        </div>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </div>
+              </div>
+            </div>
+            <div class="panel-subtitle" v-else style="padding:16px 4px 4px;">No LCD inventory rows found for the current filters.</div>
           </div>
         </div>
 
@@ -512,28 +535,31 @@
                   </div>
                 </div>
 
-                <table class="review-table">
-                  <thead>
-                    <tr>
-                      <th>Model</th>
-                      <th>Variant</th>
-                      <th>System Qty</th>
-                      <th>Counted Qty</th>
-                      <th>Delta</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="line in submission.lines" :key="'count-line-' + submission.id + '-' + line.lcd_inventory_item_id">
-                      <td>{{ line.model_name }}</td>
-                      <td>{{ line.variant_name }}</td>
-                      <td>{{ line.system_qty }}</td>
-                      <td>{{ line.counted_qty }}</td>
-                      <td :class="line.delta_qty > 0 ? 'delta-up' : (line.delta_qty < 0 ? 'delta-down' : '')">
-                        {{ line.delta_qty > 0 ? '+' + line.delta_qty : line.delta_qty }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="family-section" v-for="familySection in submission.family_sections" :key="'review-family-' + submission.id + '-' + familySection.key">
+                  <h3 class="family-title">{{ familySection.label }}</h3>
+                  <table class="review-table">
+                    <thead>
+                      <tr>
+                        <th>Model</th>
+                        <th>Variant</th>
+                        <th>System Qty</th>
+                        <th>Counted Qty</th>
+                        <th>Delta</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="line in familySection.lines" :key="'count-line-' + submission.id + '-' + line.lcd_inventory_item_id">
+                        <td>{{ line.model_name }}</td>
+                        <td>{{ line.variant_name }}</td>
+                        <td>{{ line.system_qty }}</td>
+                        <td>{{ line.counted_qty }}</td>
+                        <td :class="line.delta_qty > 0 ? 'delta-up' : (line.delta_qty < 0 ? 'delta-down' : '')">
+                          {{ line.delta_qty > 0 ? '+' + line.delta_qty : line.delta_qty }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
             <div class="empty-note" v-else>No weekly count submissions found for the current filters.</div>
@@ -594,7 +620,7 @@
               .filter(row => !this.storeFilter || row.store_code === this.storeFilter)
               .map(row => row.model_name)
               .filter(Boolean)
-          )).sort(this.naturalSort);
+          )).sort((a, b) => this.compareLcdModels(a, b));
         },
         variantOptions() {
           return Array.from(new Set(
@@ -605,7 +631,11 @@
                 return Boolean(row.variant_name);
               })
               .map(row => row.variant_name)
-          )).sort(this.naturalSort);
+          )).sort((a, b) => {
+            const rankDiff = this.lcdVariantTypeRank(a) - this.lcdVariantTypeRank(b);
+            if (rankDiff !== 0) return rankDiff;
+            return this.naturalSort(a, b);
+          });
         },
         modelCount() {
           return Array.from(new Set(this.rows.map(row => row.model_name).filter(Boolean))).length;
@@ -625,7 +655,35 @@
               row.variant_name
             ].join(' ').toLowerCase();
             return haystack.includes(keyword);
+          }).slice().sort((a, b) => {
+            const storeDiff = this.naturalSort(a.store_name || a.store_code, b.store_name || b.store_code);
+            if (storeDiff !== 0) return storeDiff;
+            return this.compareLcdRows(a, b);
           });
+        },
+        groupedInventorySections() {
+          const sections = [];
+          this.filteredRows.forEach(row => {
+            let storeSection = sections[sections.length - 1];
+            if (!storeSection || storeSection.store_code !== row.store_code) {
+              storeSection = {
+                store_code: row.store_code,
+                store_name: row.store_name || row.store_code,
+                rows: [],
+                families: []
+              };
+              sections.push(storeSection);
+            }
+            storeSection.rows.push(row);
+            const family = this.lcdFamilyInfo(row.model_name);
+            let familySection = storeSection.families[storeSection.families.length - 1];
+            if (!familySection || familySection.key !== family.key) {
+              familySection = { key: family.key, label: family.label, rows: [] };
+              storeSection.families.push(familySection);
+            }
+            familySection.rows.push(row);
+          });
+          return sections;
         },
         filteredCountSubmissions() {
           return this.countSubmissions;
@@ -642,6 +700,135 @@
       methods: {
         naturalSort(a, b) {
           return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+        },
+        lcdFamilyInfo(modelName) {
+          const text = String(modelName || '').trim();
+          const lower = text.toLowerCase();
+
+          if (/^iphone\b/.test(lower)) return { key: 'iphone', label: 'iPhone', rank: 1 };
+          if (/^(galaxy\s*)?s\d{1,2}\b/i.test(text) || /^galaxy s\b/i.test(lower)) {
+            return { key: 'samsung-s', label: 'Samsung Galaxy S Series', rank: 2 };
+          }
+          if (/^(galaxy\s*)?note\s*\d+\b/i.test(text) || /^galaxy note\b/i.test(lower)) {
+            return { key: 'samsung-note', label: 'Samsung Galaxy Note Series', rank: 3 };
+          }
+          if (/^pixel\b/i.test(text)) return { key: 'pixel', label: 'Google Pixel', rank: 4 };
+          if (/^ipad\b/i.test(lower)) return { key: 'ipad', label: 'iPad', rank: 5 };
+          if (/^oppo\b/i.test(text)) return { key: 'oppo', label: 'Oppo', rank: 6 };
+          return { key: 'other', label: 'Other Models', rank: 99 };
+        },
+        extractLcdSeriesNumber(modelName, familyKey) {
+          const text = String(modelName || '');
+          if (familyKey === 'iphone') {
+            if (/iphone\s*xr/i.test(text)) return 10.1;
+            if (/iphone\s*xs\s*max/i.test(text)) return 10.3;
+            if (/iphone\s*xs/i.test(text)) return 10.2;
+            if (/iphone\s*x\b/i.test(text)) return 10.0;
+            const match = text.match(/iphone\s+(\d+)/i);
+            return match ? Number(match[1]) : 999;
+          }
+          if (familyKey === 'samsung-s') {
+            const match = text.match(/s(\d{1,2})/i);
+            return match ? Number(match[1]) : 999;
+          }
+          if (familyKey === 'samsung-note') {
+            const match = text.match(/note\s*(\d{1,2})/i);
+            return match ? Number(match[1]) : 999;
+          }
+          if (familyKey === 'pixel') {
+            const match = text.match(/pixel\s*(\d+)/i);
+            return match ? Number(match[1]) : 999;
+          }
+          if (familyKey === 'ipad') {
+            const tenth = text.match(/(\d+)(st|nd|rd|th)/i);
+            if (tenth) return Number(tenth[1]);
+            const gen = text.match(/mini\s*(\d+)/i);
+            if (gen) return 200 + Number(gen[1]);
+            return 999;
+          }
+          return 999;
+        },
+        extractLcdVariantRank(modelName, familyKey) {
+          const text = String(modelName || '').toLowerCase();
+          if (familyKey === 'iphone') {
+            if (text.includes('mini')) return 1;
+            if (text.includes('plus')) return 2;
+            if (text.includes('pro max')) return 4;
+            if (text.includes('pro')) return 3;
+            if (/\b16e\b/.test(text) || /iphone\s+se\b/.test(text)) return 0;
+            if (text.includes('ultra')) return 5;
+          }
+          if (familyKey === 'samsung-s' || familyKey === 'samsung-note' || familyKey === 'pixel') {
+            if (text.includes('fe')) return 1;
+            if (text.includes('plus')) return 2;
+            if (text.includes('pro xl')) return 4;
+            if (text.includes('pro')) return 3;
+            if (text.includes('ultra')) return 5;
+            if (/\b5g\b/i.test(modelName)) return 6;
+            if (/\ba\b/i.test(modelName)) return 7;
+          }
+          return 0;
+        },
+        lcdVariantTypeRank(variantName) {
+          const text = String(variantName || '').trim().toLowerCase();
+          const ranks = {
+            'black': 1,
+            'white': 2,
+            'black touch': 3,
+            'white touch': 4,
+            'touch': 5,
+            'mini 1 lcd': 6,
+            'mini 2/3 lcd': 7,
+            'lcd': 8,
+            'lcd(9.7)': 9,
+            'oled': 10,
+            'ori': 11,
+            'standard': 12
+          };
+          return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
+        },
+        compareLcdModels(a, b) {
+          const familyA = this.lcdFamilyInfo(a);
+          const familyB = this.lcdFamilyInfo(b);
+          if (familyA.rank !== familyB.rank) return familyA.rank - familyB.rank;
+
+          const seriesA = this.extractLcdSeriesNumber(a, familyA.key);
+          const seriesB = this.extractLcdSeriesNumber(b, familyB.key);
+          if (seriesA !== seriesB) return seriesA - seriesB;
+
+          const variantA = this.extractLcdVariantRank(a, familyA.key);
+          const variantB = this.extractLcdVariantRank(b, familyB.key);
+          if (variantA !== variantB) return variantA - variantB;
+
+          return this.naturalSort(a, b);
+        },
+        compareLcdRows(a, b) {
+          const modelCompare = this.compareLcdModels(a.model_name, b.model_name);
+          if (modelCompare !== 0) return modelCompare;
+
+          const variantCompare = this.lcdVariantTypeRank(a.variant_name) - this.lcdVariantTypeRank(b.variant_name);
+          if (variantCompare !== 0) return variantCompare;
+
+          return this.naturalSort(a.variant_name, b.variant_name);
+        },
+        groupLcdLinesByFamily(lines) {
+          const groups = [];
+          (Array.isArray(lines) ? lines : [])
+            .slice()
+            .sort((a, b) => this.compareLcdRows(a, b))
+            .forEach(line => {
+              const family = this.lcdFamilyInfo(line.model_name);
+              const lastGroup = groups[groups.length - 1];
+              if (!lastGroup || lastGroup.key !== family.key) {
+                groups.push({
+                  key: family.key,
+                  label: family.label,
+                  lines: []
+                });
+              }
+              groups[groups.length - 1].lines.push(line);
+            });
+          return groups;
         },
         formatTimestamp(value) {
           if (!value) return '-';
@@ -702,7 +889,8 @@
             discrepancy_count: Number(raw.discrepancy_count || 0),
             submitted_at: raw.submitted_at || '',
             reviewed_at: raw.reviewed_at || '',
-            lines: Array.isArray(raw.lines) ? raw.lines : []
+            lines: Array.isArray(raw.lines) ? raw.lines.slice().sort((a, b) => this.compareLcdRows(a, b)) : [],
+            family_sections: this.groupLcdLinesByFamily(Array.isArray(raw.lines) ? raw.lines : [])
           };
         },
         async loadInventory() {
@@ -717,7 +905,13 @@
             if (!result || !result.ok) {
               throw new Error((result && result.message) || 'Failed to load LCD inventory.');
             }
-            this.rows = Array.isArray(result.items) ? result.items.map(this.normalizeRow) : [];
+            this.rows = Array.isArray(result.items)
+              ? result.items.map(this.normalizeRow).sort((a, b) => {
+                  const storeDiff = this.naturalSort(a.store_name || a.store_code, b.store_name || b.store_code);
+                  if (storeDiff !== 0) return storeDiff;
+                  return this.compareLcdRows(a, b);
+                })
+              : [];
           } catch (error) {
             console.error(error);
             this.loadError = error.message || 'Failed to load LCD inventory.';
@@ -738,7 +932,9 @@
             if (!result || !result.ok) {
               throw new Error((result && result.message) || 'Failed to load weekly count submissions.');
             }
-            this.countSubmissions = Array.isArray(result.submissions) ? result.submissions.map(this.normalizeCountSubmission) : [];
+            this.countSubmissions = Array.isArray(result.submissions)
+              ? result.submissions.map(item => this.normalizeCountSubmission(item))
+              : [];
           } catch (error) {
             console.error(error);
             this.loadError = error.message || 'Failed to load weekly count submissions.';

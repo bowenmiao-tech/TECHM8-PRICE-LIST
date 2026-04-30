@@ -335,6 +335,23 @@
       gap: 12px;
     }
 
+    .count-family-section {
+      display: grid;
+      gap: 12px;
+    }
+
+    .count-family-title {
+      margin: 4px 0 0;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: #edf4f7;
+      border: 1px solid var(--tm-border);
+      font-size: 14px;
+      font-weight: 800;
+      color: #29424a;
+      letter-spacing: .02em;
+    }
+
     .count-row {
       display: grid;
       grid-template-columns: 1.2fr .95fr .7fr .7fr;
@@ -1006,22 +1023,25 @@
           <div class="panel">
             <div class="section-banner">LCD INVENTORY COUNT</div>
             <div class="count-grid" v-if="inventoryCountLines.length">
-              <div class="count-row" v-for="(line, index) in inventoryCountLines" :key="'count-' + index">
-                <div>
-                  <label class="field-label">Model</label>
-                  <div class="count-readonly">{{ line.model_name }}</div>
-                </div>
-                <div>
-                  <label class="field-label">Variant</label>
-                  <div class="count-readonly">{{ line.variant_name }}</div>
-                </div>
-                <div>
-                  <label class="field-label">System Qty</label>
-                  <div class="count-readonly">{{ line.system_qty }}</div>
-                </div>
-                <div>
-                  <label class="field-label">Counted Qty</label>
-                  <el-input-number v-model="line.counted_qty" :min="0" :step="1" controls-position="right" style="width:100%;" :disabled="inventoryCountAlreadySubmitted"></el-input-number>
+              <div class="count-family-section" v-for="section in inventoryCountSections" :key="'count-family-' + section.key">
+                <div class="count-family-title">{{ section.label }}</div>
+                <div class="count-row" v-for="(line, index) in section.lines" :key="'count-' + section.key + '-' + index">
+                  <div>
+                    <label class="field-label">Model</label>
+                    <div class="count-readonly">{{ line.model_name }}</div>
+                  </div>
+                  <div>
+                    <label class="field-label">Variant</label>
+                    <div class="count-readonly">{{ line.variant_name }}</div>
+                  </div>
+                  <div>
+                    <label class="field-label">System Qty</label>
+                    <div class="count-readonly">{{ line.system_qty }}</div>
+                  </div>
+                  <div>
+                    <label class="field-label">Counted Qty</label>
+                    <el-input-number v-model="line.counted_qty" :min="0" :step="1" controls-position="right" style="width:100%;" :disabled="inventoryCountAlreadySubmitted"></el-input-number>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1123,7 +1143,7 @@
           },
           lcdModelOptions() {
             return Array.from(new Set(this.lcdItems.map(item => item.model_name))).sort((a, b) =>
-              String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
+              this.compareLcdModels(a, b)
             );
           },
           repairSalesTotal() {
@@ -1167,6 +1187,9 @@
           },
           inventoryCountAlreadySubmitted() {
             return Boolean(this.inventoryCountExistingSubmission && ['pending', 'approved'].includes(this.inventoryCountExistingSubmission.status));
+          },
+          inventoryCountSections() {
+            return this.groupLcdLinesByFamily(this.inventoryCountLines);
           }
         },
         watch: {
@@ -1218,7 +1241,136 @@
               variant_name: item.variant_name || '',
               system_qty: Number(item.current_qty || 0),
               counted_qty: Number(item.current_qty || 0)
-            }));
+            })).sort((a, b) => this.compareLcdRows(a, b));
+          },
+          lcdFamilyInfo(modelName) {
+            const text = String(modelName || '').trim();
+            const lower = text.toLowerCase();
+
+            if (/^iphone\b/.test(lower)) return { key: 'iphone', label: 'iPhone', rank: 1 };
+            if (/^(galaxy\s*)?s\d{1,2}\b/i.test(text) || /^galaxy s\b/i.test(lower)) {
+              return { key: 'samsung-s', label: 'Samsung Galaxy S Series', rank: 2 };
+            }
+            if (/^(galaxy\s*)?note\s*\d+\b/i.test(text) || /^galaxy note\b/i.test(lower)) {
+              return { key: 'samsung-note', label: 'Samsung Galaxy Note Series', rank: 3 };
+            }
+            if (/^pixel\b/i.test(text)) return { key: 'pixel', label: 'Google Pixel', rank: 4 };
+            if (/^ipad\b/i.test(lower)) return { key: 'ipad', label: 'iPad', rank: 5 };
+            if (/^oppo\b/i.test(text)) return { key: 'oppo', label: 'Oppo', rank: 6 };
+            return { key: 'other', label: 'Other Models', rank: 99 };
+          },
+          extractLcdSeriesNumber(modelName, familyKey) {
+            const text = String(modelName || '');
+            if (familyKey === 'iphone') {
+              if (/iphone\s*xr/i.test(text)) return 10.1;
+              if (/iphone\s*xs\s*max/i.test(text)) return 10.3;
+              if (/iphone\s*xs/i.test(text)) return 10.2;
+              if (/iphone\s*x\b/i.test(text)) return 10.0;
+              const match = text.match(/iphone\s+(\d+)/i);
+              return match ? Number(match[1]) : 999;
+            }
+            if (familyKey === 'samsung-s') {
+              const match = text.match(/s(\d{1,2})/i);
+              return match ? Number(match[1]) : 999;
+            }
+            if (familyKey === 'samsung-note') {
+              const match = text.match(/note\s*(\d{1,2})/i);
+              return match ? Number(match[1]) : 999;
+            }
+            if (familyKey === 'pixel') {
+              const match = text.match(/pixel\s*(\d+)/i);
+              return match ? Number(match[1]) : 999;
+            }
+            if (familyKey === 'ipad') {
+              const tenth = text.match(/(\d+)(st|nd|rd|th)/i);
+              if (tenth) return Number(tenth[1]);
+              const gen = text.match(/mini\s*(\d+)/i);
+              if (gen) return 200 + Number(gen[1]);
+              return 999;
+            }
+            return 999;
+          },
+          extractLcdVariantRank(modelName, familyKey) {
+            const text = String(modelName || '').toLowerCase();
+            if (familyKey === 'iphone') {
+              if (text.includes('mini')) return 1;
+              if (text.includes('plus')) return 2;
+              if (text.includes('pro max')) return 4;
+              if (text.includes('pro')) return 3;
+              if (/\b16e\b/.test(text) || /iphone\s+se\b/.test(text)) return 0;
+              if (text.includes('ultra')) return 5;
+            }
+            if (familyKey === 'samsung-s' || familyKey === 'samsung-note' || familyKey === 'pixel') {
+              if (text.includes('fe')) return 1;
+              if (text.includes('plus')) return 2;
+              if (text.includes('pro xl')) return 4;
+              if (text.includes('pro')) return 3;
+              if (text.includes('ultra')) return 5;
+              if (/\b5g\b/i.test(modelName)) return 6;
+              if (/\ba\b/i.test(modelName)) return 7;
+            }
+            return 0;
+          },
+          lcdVariantTypeRank(variantName) {
+            const text = String(variantName || '').trim().toLowerCase();
+            const ranks = {
+              'black': 1,
+              'white': 2,
+              'black touch': 3,
+              'white touch': 4,
+              'touch': 5,
+              'mini 1 lcd': 6,
+              'mini 2/3 lcd': 7,
+              'lcd': 8,
+              'lcd(9.7)': 9,
+              'oled': 10,
+              'ori': 11,
+              'standard': 12
+            };
+            return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
+          },
+          compareLcdModels(a, b) {
+            const familyA = this.lcdFamilyInfo(a);
+            const familyB = this.lcdFamilyInfo(b);
+            if (familyA.rank !== familyB.rank) return familyA.rank - familyB.rank;
+
+            const seriesA = this.extractLcdSeriesNumber(a, familyA.key);
+            const seriesB = this.extractLcdSeriesNumber(b, familyB.key);
+            if (seriesA !== seriesB) return seriesA - seriesB;
+
+            const variantA = this.extractLcdVariantRank(a, familyA.key);
+            const variantB = this.extractLcdVariantRank(b, familyB.key);
+            if (variantA !== variantB) return variantA - variantB;
+
+            return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+          },
+          compareLcdRows(a, b) {
+            const modelCompare = this.compareLcdModels(a.model_name, b.model_name);
+            if (modelCompare !== 0) return modelCompare;
+
+            const variantCompare = this.lcdVariantTypeRank(a.variant_name) - this.lcdVariantTypeRank(b.variant_name);
+            if (variantCompare !== 0) return variantCompare;
+
+            return String(a.variant_name || '').localeCompare(String(b.variant_name || ''), undefined, { numeric: true, sensitivity: 'base' });
+          },
+          groupLcdLinesByFamily(lines) {
+            const groups = [];
+            (Array.isArray(lines) ? lines : [])
+              .slice()
+              .sort((a, b) => this.compareLcdRows(a, b))
+              .forEach(line => {
+                const family = this.lcdFamilyInfo(line.model_name);
+                const lastGroup = groups[groups.length - 1];
+                if (!lastGroup || lastGroup.key !== family.key) {
+                  groups.push({
+                    key: family.key,
+                    label: family.label,
+                    lines: []
+                  });
+                }
+                groups[groups.length - 1].lines.push(line);
+              });
+            return groups;
           },
           moneyValue(value) {
             if (value === null || value === undefined || String(value).trim() === '') return 0;
@@ -1243,7 +1395,7 @@
               });
               this.stores = Array.isArray(result.stores) ? result.stores : [];
               this.staffMembers = Array.isArray(result.staff) ? result.staff : [];
-              this.lcdItems = Array.isArray(result.lcd_items) ? result.lcd_items : [];
+              this.lcdItems = Array.isArray(result.lcd_items) ? result.lcd_items.slice().sort((a, b) => this.compareLcdRows(a, b)) : [];
             } catch (error) {
               console.error(error);
               this.loadError = error.message || 'Could not load daily report setup.';
@@ -1352,7 +1504,11 @@
             return this.lcdItems
               .filter(item => item.model_name === modelName)
               .map(item => item.variant_name)
-              .sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }));
+              .sort((a, b) => {
+                const rankDiff = this.lcdVariantTypeRank(a) - this.lcdVariantTypeRank(b);
+                if (rankDiff !== 0) return rankDiff;
+                return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+              });
           },
           onLcdModelChange(line) {
             line.variant_name = '';
