@@ -640,13 +640,13 @@
 
   <script>
     const SUPABASE = window.TECHM8_SUPABASE || null
-    window.Techm8StaffAuth.init({
+    const authReady = window.Techm8StaffAuth.init({
       rootSelector: '#app',
       title: 'Staff Access',
       subtitle: 'Enter the staff password to open the quote desk.'
     })
 
-    new Vue({
+    authReady.then(() => new Vue({
       el: '#app',
       data() {
         return {
@@ -1107,6 +1107,8 @@
           this.currentIssue = null
         }
       }
+    })).catch(error => {
+      console.error(error)
     })
   </script>
 </body>

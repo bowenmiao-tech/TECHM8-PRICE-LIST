@@ -419,13 +419,13 @@
   </div>
 
   <script>
-    window.Techm8StaffAuth.init({
+    const authReady = window.Techm8StaffAuth.init({
       rootSelector: '#app',
       title: 'Backup Lookup Access',
       subtitle: 'Enter the staff password to use the backup lookup page.'
     });
 
-    new Vue({
+    authReady.then(() => new Vue({
       el: '#app',
       data() {
         return {
@@ -640,6 +640,8 @@
           this.appleModelMap = result || {};
         }
       }
+    })).catch(error => {
+      console.error(error);
     });
   </script>
 </body>
