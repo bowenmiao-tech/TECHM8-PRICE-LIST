@@ -1123,6 +1123,34 @@ set
   active = excluded.active,
   updated_at = now();
 
+insert into public.lcd_inventory_items (store_id, model_name, variant_name, current_qty, active)
+select
+  stores.id,
+  extra_seed.model_name,
+  extra_seed.variant_name,
+  0,
+  true
+from public.store_locations stores
+cross join (
+  values
+    ('iPhone 17', 'LCD'),
+    ('iPhone 17', 'OLED'),
+    ('iPhone 17', 'ORI'),
+    ('iPhone 17 Air', 'LCD'),
+    ('iPhone 17 Air', 'OLED'),
+    ('iPhone 17 Air', 'ORI'),
+    ('iPhone 17 Pro', 'LCD'),
+    ('iPhone 17 Pro', 'OLED'),
+    ('iPhone 17 Pro', 'ORI'),
+    ('iPhone 17 Pro Max', 'LCD'),
+    ('iPhone 17 Pro Max', 'OLED'),
+    ('iPhone 17 Pro Max', 'ORI')
+) as extra_seed(model_name, variant_name)
+on conflict (store_id, model_name, variant_name) do update
+set
+  active = excluded.active,
+  updated_at = now();
+
 create or replace function public.get_daily_report_setup(session_token text, target_store_code text default null)
 returns jsonb
 language plpgsql
@@ -3132,7 +3160,103 @@ begin
 end;
 $$;
 
+create or replace function public.reset_lcd_inventory_count_submission(
+  session_token text,
+  target_submission_id bigint
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  submission_row public.lcd_inventory_count_submissions%rowtype;
+begin
+  if not public.is_valid_admin_session(session_token) then
+    raise exception 'Invalid admin session';
+  end if;
+
+  select *
+  into submission_row
+  from public.lcd_inventory_count_submissions
+  where id = target_submission_id
+  for update;
+
+  if not found then
+    raise exception 'Inventory count submission not found';
+  end if;
+
+  delete from public.lcd_inventory_count_submissions
+  where id = submission_row.id;
+
+  return jsonb_build_object(
+    'ok', true,
+    'store_name', submission_row.store_name,
+    'week_start', submission_row.week_start
+  );
+end;
+$$;
+
+create or replace function public.reset_current_week_lcd_count_submissions(
+  target_date date default current_date
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  week_start_value date;
+  deleted_count integer := 0;
+begin
+  week_start_value := target_date - ((extract(isodow from target_date)::integer) - 1);
+
+  delete from public.lcd_inventory_count_submissions
+  where week_start = week_start_value;
+
+  get diagnostics deleted_count = row_count;
+
+  return jsonb_build_object(
+    'ok', true,
+    'week_start', week_start_value,
+    'deleted_submissions', deleted_count
+  );
+end;
+$$;
+
+do $$
+begin
+  begin
+    create extension if not exists pg_cron;
+  exception when others then
+    null;
+  end;
+
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    begin
+      perform cron.unschedule(jobid)
+      from cron.job
+      where jobname = 'techm8_weekly_lcd_count_reset';
+    exception when others then
+      null;
+    end;
+
+    begin
+      perform cron.schedule(
+        'techm8_weekly_lcd_count_reset',
+        '0 23 * * 6',
+        $cron$select public.reset_current_week_lcd_count_submissions(current_date);$cron$
+      );
+    exception when others then
+      null;
+    end;
+  end if;
+end;
+$$;
+
 grant execute on function public.get_lcd_inventory_count_form(text, text) to anon, authenticated;
 grant execute on function public.submit_lcd_inventory_count(text, jsonb) to anon, authenticated;
 grant execute on function public.get_lcd_inventory_count_submissions(text, text, text) to anon, authenticated;
 grant execute on function public.review_lcd_inventory_count(text, bigint, text, text) to anon, authenticated;
+grant execute on function public.reset_lcd_inventory_count_submission(text, bigint) to anon, authenticated;
+grant execute on function public.reset_current_week_lcd_count_submissions(date) to anon, authenticated;

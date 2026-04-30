@@ -532,6 +532,7 @@
                     <span class="review-pill" :class="submission.status">{{ submission.status }}</span>
                     <el-button v-if="submission.status === 'pending'" type="success" plain @click="approveCountSubmission(submission)">Approve</el-button>
                     <el-button v-if="submission.status === 'pending'" type="danger" plain @click="rejectCountSubmission(submission)">Reject</el-button>
+                    <el-button type="warning" plain @click="resetCountSubmission(submission)">Reset Weekly Count</el-button>
                   </div>
                 </div>
 
@@ -1105,6 +1106,37 @@
           } catch (error) {
             console.error(error);
             this.$message.error(error.message || 'Failed to reject weekly count.');
+          }
+        },
+        async resetCountSubmission(submission) {
+          try {
+            await this.$confirm(
+              `Reset the weekly LCD count for ${submission.store_name} (${this.formatDate(submission.week_start)})? Staff will be able to submit a new count immediately.`,
+              'Reset Weekly Count',
+              {
+                confirmButtonText: 'Reset',
+                cancelButtonText: 'Cancel',
+                type: 'warning'
+              }
+            );
+          } catch (cancelled) {
+            return;
+          }
+
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('reset_lcd_inventory_count_submission', {
+              session_token: token,
+              target_submission_id: submission.id
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to reset weekly count.');
+            }
+            this.$message.success('Weekly count reset. Staff can submit a new count now.');
+            await this.loadCountSubmissions();
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to reset weekly count.');
           }
         },
         logout() {
