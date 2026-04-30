@@ -3119,7 +3119,7 @@ begin
   update public.lcd_inventory_count_submissions
   set
     status = normalized_decision,
-    review_note = nullif(trim(coalesce(review_note, '')), ''),
+    review_note = nullif(trim(coalesce(review_lcd_inventory_count.review_note, '')), ''),
     reviewed_at = now(),
     updated_at = now()
   where id = submission_row.id;
