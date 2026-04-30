@@ -418,67 +418,74 @@
           </div>
 
           <div class="table-wrap">
-            <div class="inventory-store-stack" v-if="groupedInventorySections.length">
-              <div class="inventory-store-card" v-for="storeSection in groupedInventorySections" :key="'store-section-' + storeSection.store_code">
-                <div class="inventory-store-head">
-                  <div>
-                    <div class="inventory-store-title">{{ storeSection.store_name }}</div>
-                    <div class="inventory-store-meta">{{ storeSection.rows.length }} row(s) in the current filter set.</div>
+            <el-collapse v-if="groupedInventorySections.length" v-model="expandedStoreSections">
+              <el-collapse-item
+                v-for="storeSection in groupedInventorySections"
+                :key="'store-section-' + storeSection.store_code"
+                :name="storeSection.store_code">
+                <template slot="title">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;width:100%;padding-right:16px;">
+                    <div>
+                      <div class="inventory-store-title" style="margin:0;">{{ storeSection.store_name }}</div>
+                      <div class="inventory-store-meta">{{ storeSection.rows.length }} row(s) in the current filter set.</div>
+                    </div>
+                  </div>
+                </template>
+
+                <div class="inventory-store-card" style="border:none;padding:0;background:transparent;">
+                  <div class="family-section" v-for="familySection in storeSection.families" :key="'family-' + storeSection.store_code + '-' + familySection.key">
+                    <h3 class="family-title">{{ familySection.label }}</h3>
+                    <el-table :data="familySection.rows" border stripe>
+                      <el-table-column label="Model" min-width="260">
+                        <template slot-scope="scope">
+                          <el-input v-model="scope.row.model_name" placeholder="Model name"></el-input>
+                        </template>
+                      </el-table-column>
+
+                      <el-table-column label="Variant" min-width="220">
+                        <template slot-scope="scope">
+                          <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
+                        </template>
+                      </el-table-column>
+
+                      <el-table-column label="Current Qty" width="130" align="center">
+                        <template slot-scope="scope">
+                          <el-input-number
+                            class="qty-cell"
+                            v-model="scope.row.current_qty"
+                            :min="0"
+                            :step="1"
+                            :controls="false">
+                          </el-input-number>
+                        </template>
+                      </el-table-column>
+
+                      <el-table-column label="Active" width="110" align="center">
+                        <template slot-scope="scope">
+                          <el-switch v-model="scope.row.active"></el-switch>
+                        </template>
+                      </el-table-column>
+
+                      <el-table-column label="Updated" min-width="180">
+                        <template slot-scope="scope">
+                          {{ formatTimestamp(scope.row.updated_at) }}
+                        </template>
+                      </el-table-column>
+
+                      <el-table-column label="Actions" width="220" fixed="right">
+                        <template slot-scope="scope">
+                          <div class="button-row">
+                            <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
+                            <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
+                            <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
+                          </div>
+                        </template>
+                      </el-table-column>
+                    </el-table>
                   </div>
                 </div>
-
-                <div class="family-section" v-for="familySection in storeSection.families" :key="'family-' + storeSection.store_code + '-' + familySection.key">
-                  <h3 class="family-title">{{ familySection.label }}</h3>
-                  <el-table :data="familySection.rows" border stripe>
-                    <el-table-column label="Model" min-width="260">
-                      <template slot-scope="scope">
-                        <el-input v-model="scope.row.model_name" placeholder="Model name"></el-input>
-                      </template>
-                    </el-table-column>
-
-                    <el-table-column label="Variant" min-width="220">
-                      <template slot-scope="scope">
-                        <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
-                      </template>
-                    </el-table-column>
-
-                    <el-table-column label="Current Qty" width="130" align="center">
-                      <template slot-scope="scope">
-                        <el-input-number
-                          class="qty-cell"
-                          v-model="scope.row.current_qty"
-                          :min="0"
-                          :step="1"
-                          :controls="false">
-                        </el-input-number>
-                      </template>
-                    </el-table-column>
-
-                    <el-table-column label="Active" width="110" align="center">
-                      <template slot-scope="scope">
-                        <el-switch v-model="scope.row.active"></el-switch>
-                      </template>
-                    </el-table-column>
-
-                    <el-table-column label="Updated" min-width="180">
-                      <template slot-scope="scope">
-                        {{ formatTimestamp(scope.row.updated_at) }}
-                      </template>
-                    </el-table-column>
-
-                    <el-table-column label="Actions" width="220" fixed="right">
-                      <template slot-scope="scope">
-                        <div class="button-row">
-                          <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
-                          <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
-                          <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
-                        </div>
-                      </template>
-                    </el-table-column>
-                  </el-table>
-                </div>
-              </div>
-            </div>
+              </el-collapse-item>
+            </el-collapse>
             <div class="panel-subtitle" v-else style="padding:16px 4px 4px;">No LCD inventory rows found for the current filters.</div>
           </div>
         </div>
@@ -590,6 +597,7 @@
       data() {
         return {
           rows: [],
+          expandedStoreSections: [],
           keyword: '',
           storeFilter: '',
           modelFilter: '',
