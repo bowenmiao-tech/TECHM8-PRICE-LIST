@@ -449,25 +449,12 @@
       padding: 9px 16px;
     }
 
-    .report-topbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px 16px;
-    }
-
-    .report-topbar-main {
-      min-width: 0;
-      flex: 1 1 420px;
-    }
-
     .report-topbar-actions {
-      flex: 0 0 auto;
       display: flex;
       flex-wrap: wrap;
-      justify-content: flex-end;
+      justify-content: flex-start;
       gap: 8px;
+      margin-bottom: 8px;
     }
 
     .report-meta-grid {
@@ -534,10 +521,7 @@
       #app { padding: 12px; }
       .hero, .content { padding: 14px; }
       .panel { padding: 14px; }
-      .report-topbar-actions {
-        width: 100%;
-        justify-content: flex-start;
-      }
+      .report-topbar-actions { width: 100%; }
     }
   </style>
 </head>
@@ -628,15 +612,9 @@
 
         <template v-else-if="stage === 'report'">
           <div class="panel">
-            <div class="report-topbar">
-              <div class="report-topbar-main">
-                <h2 class="panel-title">Daily Report</h2>
-                <div class="hint">Report date is fixed to today. Drafts are saved per store, staff, and date.</div>
-              </div>
-              <div class="report-topbar-actions">
-                <el-button plain icon="el-icon-back" @click="backToSetup">Change Store / Staff</el-button>
-                <el-button type="warning" plain icon="el-icon-document" @click="saveDraft" :loading="draftSaving">Save Draft</el-button>
-              </div>
+            <div class="report-topbar-actions">
+              <el-button plain icon="el-icon-back" @click="backToSetup">Change Store / Staff</el-button>
+              <el-button type="warning" plain icon="el-icon-document" @click="saveDraft" :loading="draftSaving">Save Draft</el-button>
             </div>
 
             <div class="draft-note" v-if="draftLoadedAt">
