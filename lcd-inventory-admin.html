@@ -185,6 +185,75 @@
     .table-wrap { padding: 0 12px 12px; }
     .alert { margin-bottom: 16px; }
     .qty-cell { min-width: 110px; }
+    .review-stack {
+      display: grid;
+      gap: 14px;
+    }
+    .review-card {
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fbfdfe;
+    }
+    .review-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .review-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 6px;
+    }
+    .review-meta {
+      color: var(--tm-muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .review-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--tm-border);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .review-pill.pending { color: #8a5b00; background: #fff8dd; border-color: #f0d79e; }
+    .review-pill.approved { color: #126a42; background: #e7f7ef; border-color: #bfe4cf; }
+    .review-pill.rejected { color: #b2342c; background: #fff0ee; border-color: #f0c7c2; }
+    .review-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: #fff;
+      border: 1px solid var(--tm-border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .review-table th,
+    .review-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e7eef2;
+      text-align: left;
+      vertical-align: top;
+    }
+    .review-table tr:last-child td { border-bottom: 0; }
+    .review-table th {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 700;
+      background: #f8fbfc;
+    }
+    .delta-up { color: #126a42; font-weight: 800; }
+    .delta-down { color: #b2342c; font-weight: 800; }
 
     @media (max-width: 1180px) {
       .tool-grid { grid-template-columns: 1fr; }
@@ -253,6 +322,7 @@
             </div>
             <div class="button-row">
               <el-button icon="el-icon-refresh" @click="loadInventory" :loading="loading">Load Inventory</el-button>
+              <el-button plain icon="el-icon-document-checked" @click="loadCountSubmissions" :loading="countLoading">Load Count Reviews</el-button>
               <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
               <el-button plain icon="el-icon-s-home" onclick="window.location.href='./admin.html'">Back To Admin Portal</el-button>
             </div>
@@ -389,6 +459,86 @@
             </el-table>
           </div>
         </div>
+
+        <div class="table-panel">
+          <div class="table-head">
+            <div>
+              <div class="table-title">Weekly Count Reviews</div>
+              <div class="table-subtitle">Approve or reject weekly LCD inventory counts submitted by staff. Approval updates the real LCD inventory quantities.</div>
+            </div>
+            <div class="table-subtitle">{{ filteredCountSubmissions.length }} submission(s)</div>
+          </div>
+
+          <div class="content" style="padding-top:16px;">
+            <div class="tool-grid" style="margin-bottom:16px;">
+              <div class="panel">
+                <div class="panel-title">Review Filters</div>
+                <div class="stack">
+                  <el-select v-model="countStatusFilter" clearable placeholder="Filter by review status">
+                    <el-option label="Pending" value="pending"></el-option>
+                    <el-option label="Approved" value="approved"></el-option>
+                    <el-option label="Rejected" value="rejected"></el-option>
+                  </el-select>
+                  <div class="button-row">
+                    <el-button plain @click="clearCountFilters">Clear Review Filters</el-button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-title">Approval Logic</div>
+                <div class="panel-subtitle" style="margin-bottom:0;">
+                  Staff submissions do not change live LCD stock immediately. When you approve a submission, each counted quantity becomes the new live store quantity.
+                </div>
+              </div>
+            </div>
+
+            <div class="review-stack" v-if="filteredCountSubmissions.length">
+              <div class="review-card" v-for="submission in filteredCountSubmissions" :key="'count-submission-' + submission.id">
+                <div class="review-head">
+                  <div>
+                    <div class="review-title">{{ submission.store_name }} | Week Of {{ formatDate(submission.week_start) }}</div>
+                    <div class="review-meta">
+                      Submitted by {{ submission.staff_name }} on {{ formatTimestamp(submission.submitted_at) }}<br>
+                      Count date: {{ formatDate(submission.count_date) }} | Mismatch rows: {{ submission.discrepancy_count || 0 }}
+                      <span v-if="submission.notes"><br>Staff note: {{ submission.notes }}</span>
+                      <span v-if="submission.review_note"><br>Review note: {{ submission.review_note }}</span>
+                    </div>
+                  </div>
+                  <div class="button-row">
+                    <span class="review-pill" :class="submission.status">{{ submission.status }}</span>
+                    <el-button v-if="submission.status === 'pending'" type="success" plain @click="approveCountSubmission(submission)">Approve</el-button>
+                    <el-button v-if="submission.status === 'pending'" type="danger" plain @click="rejectCountSubmission(submission)">Reject</el-button>
+                  </div>
+                </div>
+
+                <table class="review-table">
+                  <thead>
+                    <tr>
+                      <th>Model</th>
+                      <th>Variant</th>
+                      <th>System Qty</th>
+                      <th>Counted Qty</th>
+                      <th>Delta</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="line in submission.lines" :key="'count-line-' + submission.id + '-' + line.lcd_inventory_item_id">
+                      <td>{{ line.model_name }}</td>
+                      <td>{{ line.variant_name }}</td>
+                      <td>{{ line.system_qty }}</td>
+                      <td>{{ line.counted_qty }}</td>
+                      <td :class="line.delta_qty > 0 ? 'delta-up' : (line.delta_qty < 0 ? 'delta-down' : '')">
+                        {{ line.delta_qty > 0 ? '+' + line.delta_qty : line.delta_qty }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No weekly count submissions found for the current filters.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -418,8 +568,11 @@
           modelFilter: '',
           variantFilter: '',
           activeFilter: '',
+          countStatusFilter: 'pending',
           loadError: '',
-          loading: false
+          loading: false,
+          countLoading: false,
+          countSubmissions: []
         };
       },
       computed: {
@@ -473,6 +626,17 @@
             ].join(' ').toLowerCase();
             return haystack.includes(keyword);
           });
+        },
+        filteredCountSubmissions() {
+          return this.countSubmissions;
+        }
+      },
+      watch: {
+        storeFilter() {
+          this.loadCountSubmissions();
+        },
+        countStatusFilter() {
+          this.loadCountSubmissions();
         }
       },
       methods: {
@@ -491,12 +655,25 @@
             minute: '2-digit'
           });
         },
+        formatDate(value) {
+          if (!value) return '-';
+          const date = new Date(value + 'T00:00:00');
+          if (Number.isNaN(date.getTime())) return '-';
+          return date.toLocaleDateString('en-AU', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit'
+          });
+        },
         clearFilters() {
           this.keyword = '';
           this.storeFilter = '';
           this.modelFilter = '';
           this.variantFilter = '';
           this.activeFilter = '';
+        },
+        clearCountFilters() {
+          this.countStatusFilter = 'pending';
         },
         normalizeRow(raw) {
           return {
@@ -509,6 +686,23 @@
             current_qty: Number.isFinite(Number(raw.current_qty)) ? Number(raw.current_qty) : 0,
             active: raw.active !== false,
             updated_at: raw.updated_at || null
+          };
+        },
+        normalizeCountSubmission(raw) {
+          return {
+            id: raw.id,
+            store_code: raw.store_code || '',
+            store_name: raw.store_name || '',
+            staff_name: raw.staff_name || '',
+            week_start: raw.week_start || '',
+            count_date: raw.count_date || '',
+            status: raw.status || 'pending',
+            notes: raw.notes || '',
+            review_note: raw.review_note || '',
+            discrepancy_count: Number(raw.discrepancy_count || 0),
+            submitted_at: raw.submitted_at || '',
+            reviewed_at: raw.reviewed_at || '',
+            lines: Array.isArray(raw.lines) ? raw.lines : []
           };
         },
         async loadInventory() {
@@ -529,6 +723,27 @@
             this.loadError = error.message || 'Failed to load LCD inventory.';
           } finally {
             this.loading = false;
+          }
+        },
+        async loadCountSubmissions() {
+          this.countLoading = true;
+          this.loadError = '';
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('get_lcd_inventory_count_submissions', {
+              session_token: token,
+              target_status: this.countStatusFilter || '',
+              target_store_code: this.storeFilter || ''
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to load weekly count submissions.');
+            }
+            this.countSubmissions = Array.isArray(result.submissions) ? result.submissions.map(this.normalizeCountSubmission) : [];
+          } catch (error) {
+            console.error(error);
+            this.loadError = error.message || 'Failed to load weekly count submissions.';
+          } finally {
+            this.countLoading = false;
           }
         },
         addRow() {
@@ -627,12 +842,82 @@
             this.$message.error(error.message || 'Failed to delete LCD inventory row.');
           }
         },
+        async approveCountSubmission(submission) {
+          try {
+            await this.$confirm(
+              `Approve the weekly LCD count for ${submission.store_name}? This will update the live LCD quantities for ${submission.lines.length} row(s).`,
+              'Approve Weekly Count',
+              {
+                confirmButtonText: 'Approve',
+                cancelButtonText: 'Cancel',
+                type: 'warning'
+              }
+            );
+          } catch (cancelled) {
+            return;
+          }
+
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('review_lcd_inventory_count', {
+              session_token: token,
+              target_submission_id: submission.id,
+              decision: 'approved',
+              review_note: ''
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to approve weekly count.');
+            }
+            this.$message.success('Weekly count approved.');
+            await this.loadInventory();
+            await this.loadCountSubmissions();
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to approve weekly count.');
+          }
+        },
+        async rejectCountSubmission(submission) {
+          let reviewNote = '';
+          try {
+            const promptResult = await this.$prompt(
+              `Add an optional review note for ${submission.store_name}.`,
+              'Reject Weekly Count',
+              {
+                confirmButtonText: 'Reject',
+                cancelButtonText: 'Cancel',
+                inputPlaceholder: 'Optional review note'
+              }
+            );
+            reviewNote = promptResult.value || '';
+          } catch (cancelled) {
+            return;
+          }
+
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('review_lcd_inventory_count', {
+              session_token: token,
+              target_submission_id: submission.id,
+              decision: 'rejected',
+              review_note: reviewNote
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to reject weekly count.');
+            }
+            this.$message.success('Weekly count rejected.');
+            await this.loadCountSubmissions();
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to reject weekly count.');
+          }
+        },
         logout() {
           window.Techm8StaffAuth.logout();
         }
       },
       mounted() {
         this.loadInventory();
+        this.loadCountSubmissions();
       }
     })).catch(error => {
       console.error(error);

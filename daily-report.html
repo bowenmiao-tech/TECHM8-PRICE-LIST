@@ -330,6 +330,35 @@
       line-height: 1.6;
     }
 
+    .count-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .count-row {
+      display: grid;
+      grid-template-columns: 1.2fr .95fr .7fr .7fr;
+      gap: 12px;
+      align-items: end;
+      border: 1px solid var(--tm-border);
+      border-radius: 18px;
+      background: #fcfdfe;
+      padding: 14px;
+    }
+
+    .count-readonly {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: 14px;
+      background: #f5f9fb;
+      border: 1px solid var(--tm-border);
+      font-size: 13px;
+      color: #31414a;
+      font-weight: 700;
+    }
+
     @media (max-width: 1280px) {
       .meta-grid,
       .summary-grid,
@@ -343,7 +372,8 @@
       .grid-lcd,
       .grid-expense,
       .grid-missing,
-      .grid-timesheet {
+      .grid-timesheet,
+      .count-row {
         grid-template-columns: 1fr;
       }
     }
@@ -410,6 +440,7 @@
           </div>
           <div class="toolbar">
             <el-button type="primary" @click="enterReport" :loading="setupLoading">Continue To Report</el-button>
+            <el-button type="success" plain @click="enterInventoryCount" :loading="setupLoading">LCD Inventory Count</el-button>
           </div>
 
           <div class="draft-list" v-if="selectedStoreCode">
@@ -439,7 +470,7 @@
           </div>
         </div>
 
-        <template v-else>
+        <template v-else-if="stage === 'report'">
           <div class="panel">
             <div class="section-head">
               <div>
@@ -932,6 +963,93 @@
             </div>
           </div>
         </template>
+
+        <template v-else-if="stage === 'count'">
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <h2 class="panel-title">Weekly LCD Inventory Count</h2>
+                <div class="hint">Count every active LCD row for this store. Only the counted quantity can be edited here. The result stays pending until manager approval.</div>
+              </div>
+              <div class="toolbar">
+                <el-button plain icon="el-icon-back" @click="backToSetup">Change Store / Staff</el-button>
+              </div>
+            </div>
+
+            <div class="meta-grid" style="margin-top:12px;">
+              <div class="meta-card">
+                <div class="meta-label">Store</div>
+                <div class="meta-value">{{ selectedStoreName }}</div>
+              </div>
+              <div class="meta-card">
+                <div class="meta-label">Staff</div>
+                <div class="meta-value">{{ selectedStaffName }}</div>
+              </div>
+              <div class="meta-card">
+                <div class="meta-label">Week Start</div>
+                <div class="meta-value">{{ inventoryCountWeekLabel }}</div>
+              </div>
+              <div class="meta-card">
+                <div class="meta-label">Rows To Count</div>
+                <div class="meta-value">{{ inventoryCountLines.length }}</div>
+              </div>
+            </div>
+
+            <div class="draft-note" v-if="inventoryCountExistingSubmission && inventoryCountExistingSubmission.status === 'pending'" style="margin-top:14px;">
+              This store already has a pending LCD count for this week, submitted by {{ inventoryCountExistingSubmission.staff_name }} on {{ formatDateTime(inventoryCountExistingSubmission.submitted_at) }}.
+            </div>
+            <div class="draft-note" v-else-if="inventoryCountExistingSubmission && inventoryCountExistingSubmission.status === 'approved'" style="margin-top:14px;">
+              This store already has an approved LCD count for this week, submitted by {{ inventoryCountExistingSubmission.staff_name }} on {{ formatDateTime(inventoryCountExistingSubmission.submitted_at) }}.
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-banner">LCD INVENTORY COUNT</div>
+            <div class="count-grid" v-if="inventoryCountLines.length">
+              <div class="count-row" v-for="(line, index) in inventoryCountLines" :key="'count-' + index">
+                <div>
+                  <label class="field-label">Model</label>
+                  <div class="count-readonly">{{ line.model_name }}</div>
+                </div>
+                <div>
+                  <label class="field-label">Variant</label>
+                  <div class="count-readonly">{{ line.variant_name }}</div>
+                </div>
+                <div>
+                  <label class="field-label">System Qty</label>
+                  <div class="count-readonly">{{ line.system_qty }}</div>
+                </div>
+                <div>
+                  <label class="field-label">Counted Qty</label>
+                  <el-input-number v-model="line.counted_qty" :min="0" :step="1" controls-position="right" style="width:100%;" :disabled="inventoryCountAlreadySubmitted"></el-input-number>
+                </div>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No active LCD inventory rows found for this store.</div>
+          </div>
+
+          <div class="panel">
+            <h2 class="panel-title">Count Notes</h2>
+            <p class="panel-subtitle">Optional notes for the manager before approval.</p>
+            <el-input
+              type="textarea"
+              :rows="4"
+              v-model.trim="inventoryCountNotes"
+              :disabled="inventoryCountAlreadySubmitted"
+              placeholder="Add notes for mismatches, damaged stock, or anything the manager should review.">
+            </el-input>
+
+            <div class="footer-actions" style="margin-top:16px;">
+              <div class="hint">
+                If your counted quantities do not match the current system quantities, the system will ask for confirmation before submission.
+              </div>
+              <div class="toolbar">
+                <el-button plain @click="resetInventoryCount" :disabled="inventoryCountAlreadySubmitted">Reset Count</el-button>
+                <el-button type="primary" @click="submitInventoryCount" :loading="inventoryCountSubmitting" :disabled="inventoryCountAlreadySubmitted || !inventoryCountLines.length">Submit Weekly Count</el-button>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -959,6 +1077,11 @@
             draftLoadedAt: '',
             storeDrafts: [],
             submittedTodayForStore: false,
+            inventoryCountLines: [],
+            inventoryCountNotes: '',
+            inventoryCountWeekStart: '',
+            inventoryCountExistingSubmission: null,
+            inventoryCountSubmitting: false,
             repairLines: [],
             faultyBrokenLines: [],
             deviceSalesLines: [],
@@ -1033,6 +1156,17 @@
               + Number(this.customerTracking.pick_up || 0)
               + Number(this.customerTracking.question || 0)
               + Number(this.customerTracking.warranty || 0);
+          },
+          inventoryCountWeekLabel() {
+            if (!this.inventoryCountWeekStart) return '-';
+            return new Date(this.inventoryCountWeekStart + 'T00:00:00').toLocaleDateString('en-AU', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+          },
+          inventoryCountAlreadySubmitted() {
+            return Boolean(this.inventoryCountExistingSubmission && ['pending', 'approved'].includes(this.inventoryCountExistingSubmission.status));
           }
         },
         watch: {
@@ -1040,6 +1174,10 @@
             this.selectedStaffName = '';
             this.storeDrafts = [];
             this.submittedTodayForStore = false;
+            this.inventoryCountLines = [];
+            this.inventoryCountNotes = '';
+            this.inventoryCountWeekStart = '';
+            this.inventoryCountExistingSubmission = null;
             if (newValue) {
               this.loadStoreDrafts(newValue);
             }
@@ -1072,6 +1210,15 @@
           },
           makeTimesheetLine() {
             return { name: this.selectedStaffName || '', start_time: '', end_time: '', break_time: '' };
+          },
+          makeInventoryCountLines(items) {
+            return (Array.isArray(items) ? items : []).map(item => ({
+              inventory_item_id: item.inventory_item_id,
+              model_name: item.model_name || '',
+              variant_name: item.variant_name || '',
+              system_qty: Number(item.current_qty || 0),
+              counted_qty: Number(item.current_qty || 0)
+            }));
           },
           moneyValue(value) {
             if (value === null || value === undefined || String(value).trim() === '') return 0;
@@ -1113,6 +1260,13 @@
             if (!this.timesheetLines.length) this.addTimesheetLine();
             await this.loadDraft();
           },
+          async enterInventoryCount() {
+            if (!this.selectedStoreCode) return this.$message.error('Please choose a store.');
+            if (!this.selectedStaffName) return this.$message.error('Please choose your name.');
+            await this.loadSetup(this.selectedStoreCode);
+            await this.loadInventoryCountForm();
+            this.stage = 'count';
+          },
           async loadStoreDrafts(storeCode) {
             try {
               const result = await window.Techm8StaffAuth.callRpc('list_daily_report_drafts', {
@@ -1138,6 +1292,31 @@
           },
           backToSetup() {
             this.stage = 'setup';
+            this.inventoryCountSubmitting = false;
+          },
+          async loadInventoryCountForm() {
+            try {
+              const result = await window.Techm8StaffAuth.callRpc('get_lcd_inventory_count_form', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                target_store_code: this.selectedStoreCode
+              });
+              this.inventoryCountWeekStart = result.week_start || '';
+              this.inventoryCountExistingSubmission = result.current_week_submission || null;
+              this.inventoryCountLines = this.makeInventoryCountLines(result.items);
+              this.inventoryCountNotes = '';
+            } catch (error) {
+              console.error(error);
+              this.$message.error(error.message || 'Could not load weekly LCD count form.');
+            }
+          },
+          resetInventoryCount() {
+            this.inventoryCountLines = this.makeInventoryCountLines(this.lcdItems.map(item => ({
+              inventory_item_id: item.id,
+              model_name: item.model_name,
+              variant_name: item.variant_name,
+              current_qty: item.current_qty
+            })));
+            this.inventoryCountNotes = '';
           },
           addRepairLine() { this.repairLines.push(this.makeRepairLine()); },
           removeRepairLine(index) { this.repairLines.splice(index, 1); },
@@ -1339,6 +1518,73 @@
               this.$message.error(error.message || 'Could not submit daily report.');
             } finally {
               this.submitting = false;
+            }
+          },
+          buildInventoryCountPayload(confirmed) {
+            return {
+              store_code: this.selectedStoreCode,
+              staff_name: this.selectedStaffName,
+              count_date: this.todayIso,
+              notes: this.inventoryCountNotes,
+              confirmed: Boolean(confirmed),
+              lines: this.inventoryCountLines.map(line => ({
+                inventory_item_id: line.inventory_item_id,
+                counted_qty: Number(line.counted_qty || 0)
+              }))
+            };
+          },
+          async submitInventoryCount(forceConfirm) {
+            if (!this.inventoryCountLines.length) {
+              this.$message.error('No LCD rows found to count.');
+              return;
+            }
+
+            this.inventoryCountSubmitting = true;
+            try {
+              const result = await window.Techm8StaffAuth.callRpc('submit_lcd_inventory_count', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                payload: this.buildInventoryCountPayload(forceConfirm)
+              });
+
+              if (result && result.confirm_required && Array.isArray(result.discrepancies)) {
+                const html = result.discrepancies
+                  .map(item => `${item.model_name} / ${item.variant_name}: system ${item.system_qty}, counted ${item.counted_qty}`)
+                  .join('<br>');
+
+                await this.$confirm(
+                  `The following rows do not match the current inventory:<br><br>${html}<br><br>Submit anyway for manager review?`,
+                  'LCD Count Mismatch',
+                  {
+                    dangerouslyUseHTMLString: true,
+                    confirmButtonText: 'Submit Anyway',
+                    cancelButtonText: 'Go Back And Edit',
+                    type: 'warning'
+                  }
+                );
+
+                return await this.submitInventoryCount(true);
+              }
+
+              if (!result || !result.ok) {
+                throw new Error((result && result.message) || 'Weekly LCD count submission failed.');
+              }
+
+              this.$alert(
+                `Weekly LCD count submitted. ${result.discrepancy_count || 0} mismatch row(s) are waiting for manager approval.`,
+                'LCD Count Submitted',
+                { confirmButtonText: 'OK' }
+              );
+
+              await this.loadSetup(this.selectedStoreCode);
+              await this.loadInventoryCountForm();
+            } catch (error) {
+              if (error === 'cancel' || error === 'close') {
+                return;
+              }
+              console.error(error);
+              this.$message.error(error.message || 'Could not submit weekly LCD count.');
+            } finally {
+              this.inventoryCountSubmitting = false;
             }
           },
           formatDateTime(value) {
