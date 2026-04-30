@@ -707,7 +707,7 @@
           const lower = text.toLowerCase();
 
           if (/^iphone\b/.test(lower)) return { key: 'iphone', label: 'iPhone', rank: 1 };
-          if (/^(galaxy\s*)?s\d{1,2}\b/i.test(text) || /^galaxy s\b/i.test(lower)) {
+          if (/^(galaxy\s*)?s\d{1,2}(\s|$|fe\b|plus\b|ultra\b)/i.test(text) || /^galaxy s\b/i.test(lower)) {
             return { key: 'samsung-s', label: 'Samsung Galaxy S Series', rank: 2 };
           }
           if (/^(galaxy\s*)?note\s*\d+\b/i.test(text) || /^galaxy note\b/i.test(lower)) {
