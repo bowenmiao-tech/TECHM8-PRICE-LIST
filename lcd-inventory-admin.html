@@ -184,7 +184,10 @@
 
     .table-wrap { padding: 0 12px 12px; }
     .alert { margin-bottom: 16px; }
-    .qty-cell { min-width: 110px; }
+    .qty-cell {
+      width: 100%;
+      min-width: 0;
+    }
     .inventory-store-stack,
     .review-stack {
       display: grid;
@@ -217,6 +220,31 @@
       color: var(--tm-muted);
       font-size: 13px;
       line-height: 1.7;
+    }
+    .collapse-title-wrap {
+      width: 100%;
+      padding-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .collapse-title-main {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .collapse-title-side {
+      flex: 0 0 auto;
+      color: var(--tm-muted);
+      font-size: 13px;
+      white-space: nowrap;
+      text-align: right;
+    }
+    .updated-cell {
+      color: #566973;
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: nowrap;
     }
     .review-pill {
       display: inline-flex;
@@ -424,11 +452,11 @@
                 :key="'store-section-' + storeSection.store_code"
                 :name="storeSection.store_code">
                 <template slot="title">
-                  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;width:100%;padding-right:16px;">
-                    <div>
+                  <div class="collapse-title-wrap">
+                    <div class="collapse-title-main">
                       <div class="inventory-store-title" style="margin:0;">{{ storeSection.store_name }}</div>
-                      <div class="inventory-store-meta">{{ storeSection.rows.length }} row(s) in the current filter set.</div>
                     </div>
+                    <div class="collapse-title-side">{{ storeSection.rows.length }} row(s)</div>
                   </div>
                 </template>
 
@@ -448,14 +476,14 @@
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Current Qty" width="130" align="center">
+                      <el-table-column label="Current Qty" width="160" align="center">
                         <template slot-scope="scope">
                           <el-input-number
                             class="qty-cell"
                             v-model="scope.row.current_qty"
                             :min="0"
                             :step="1"
-                            :controls="false">
+                            controls-position="right">
                           </el-input-number>
                         </template>
                       </el-table-column>
@@ -466,9 +494,9 @@
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Updated" min-width="180">
+                      <el-table-column label="Updated" width="150">
                         <template slot-scope="scope">
-                          {{ formatTimestamp(scope.row.updated_at) }}
+                          <div class="updated-cell">{{ formatTimestampCompact(scope.row.updated_at) }}</div>
                         </template>
                       </el-table-column>
 
@@ -715,7 +743,7 @@
           const lower = text.toLowerCase();
 
           if (/^iphone\b/.test(lower)) return { key: 'iphone', label: 'iPhone', rank: 1 };
-          if (/^(galaxy\s*)?s\d{1,2}(\s|$|fe\b|plus\b|ultra\b)/i.test(text) || /^galaxy s\b/i.test(lower)) {
+          if (/^(galaxy\s*)?s\d{1,2}(\+|\s|$|fe\b|plus\b|ultra\b)/i.test(text) || /^galaxy s\b/i.test(lower)) {
             return { key: 'samsung-s', label: 'Samsung Galaxy S Series', rank: 2 };
           }
           if (/^(galaxy\s*)?note\s*\d+\b/i.test(text) || /^galaxy note\b/i.test(lower)) {
@@ -847,6 +875,17 @@
             year: 'numeric',
             month: 'short',
             day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        },
+        formatTimestampCompact(value) {
+          if (!value) return '-';
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return '-';
+          return date.toLocaleString('en-AU', {
+            day: '2-digit',
+            month: 'short',
             hour: '2-digit',
             minute: '2-digit'
           });
