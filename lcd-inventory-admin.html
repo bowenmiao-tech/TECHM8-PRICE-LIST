@@ -371,6 +371,7 @@
             </div>
             <div class="button-row">
               <el-button icon="el-icon-refresh" @click="loadInventory" :loading="loading">Load Inventory</el-button>
+              <el-button type="primary" plain icon="el-icon-folder-checked" @click="saveAllRows" :loading="savingAllRows">Save All LCD Rows</el-button>
               <el-button plain icon="el-icon-document-checked" @click="loadCountSubmissions" :loading="countLoading">Load Count Reviews</el-button>
               <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
               <el-button plain icon="el-icon-s-home" onclick="window.location.href='./admin.html'">Back To Admin Portal</el-button>
@@ -634,6 +635,7 @@
           countStatusFilter: 'pending',
           loadError: '',
           loading: false,
+          savingAllRows: false,
           countLoading: false,
           countSubmissions: []
         };
@@ -1011,14 +1013,17 @@
             active: row.active
           }));
         },
-        async saveRow(row) {
-          const payload = {
+        buildRowPayload(row) {
+          return {
             store_code: String(row.store_code || '').trim(),
             model_name: String(row.model_name || '').trim(),
             variant_name: String(row.variant_name || '').trim(),
             current_qty: Number.isFinite(Number(row.current_qty)) ? Number(row.current_qty) : 0,
             active: row.active !== false
           };
+        },
+        async saveRow(row) {
+          const payload = this.buildRowPayload(row);
 
           if (!payload.store_code || !payload.model_name || !payload.variant_name) {
             this.$message.error('Store, model, and variant are required.');
@@ -1039,6 +1044,43 @@
           } catch (error) {
             console.error(error);
             this.$message.error(error.message || 'Failed to save LCD inventory row.');
+          }
+        },
+        async saveAllRows() {
+          if (!this.filteredRows.length) {
+            this.$message.error('No visible LCD rows to save.');
+            return;
+          }
+
+          const invalidRow = this.filteredRows.find(row => {
+            const payload = this.buildRowPayload(row);
+            return !payload.store_code || !payload.model_name || !payload.variant_name;
+          });
+
+          if (invalidRow) {
+            this.$message.error('Every visible row needs store, model, and variant before bulk save.');
+            return;
+          }
+
+          this.savingAllRows = true;
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            for (const row of this.filteredRows) {
+              const result = await window.Techm8StaffAuth.callRpc('upsert_lcd_inventory_item', {
+                session_token: token,
+                row_payload: this.buildRowPayload(row)
+              });
+              if (!result || !result.ok) {
+                throw new Error((result && result.message) || `Failed to save ${row.model_name} / ${row.variant_name}.`);
+              }
+            }
+            await this.loadInventory();
+            this.$message.success(`Saved ${this.filteredRows.length} LCD row(s).`);
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to bulk save LCD rows.');
+          } finally {
+            this.savingAllRows = false;
           }
         },
         async deleteRow(row) {
