@@ -456,7 +456,7 @@
             </div>
           </div>
           <div class="toolbar">
-            <el-button type="primary" @click="enterReport" :loading="setupLoading">Continue To Report</el-button>
+            <el-button type="primary" @click="enterReport" :loading="setupLoading">{{ reportEntryButtonLabel }}</el-button>
             <el-button type="success" plain @click="enterInventoryCount" :loading="setupLoading">LCD Inventory Count</el-button>
           </div>
 
@@ -1187,6 +1187,15 @@
           },
           inventoryCountAlreadySubmitted() {
             return Boolean(this.inventoryCountExistingSubmission && ['pending', 'approved'].includes(this.inventoryCountExistingSubmission.status));
+          },
+          selectedDraftForStaff() {
+            if (!this.selectedStaffName) return null;
+            return this.storeDrafts.find(draft =>
+              String(draft.staff_name || '').trim().toLowerCase() === String(this.selectedStaffName || '').trim().toLowerCase()
+            ) || null;
+          },
+          reportEntryButtonLabel() {
+            return this.selectedDraftForStaff ? 'Continue Report' : 'Start Report';
           },
           inventoryCountSections() {
             return this.groupLcdLinesByFamily(this.inventoryCountLines);
