@@ -183,6 +183,13 @@
     }
 
     .table-wrap { padding: 0 12px 12px; }
+    .table-wrap .el-collapse-item__header {
+      height: auto;
+      min-height: 72px;
+      padding: 12px 0;
+      align-items: flex-start;
+      line-height: 1.3;
+    }
     .alert { margin-bottom: 16px; }
     .qty-cell {
       width: 100%;
@@ -279,6 +286,19 @@
     }
     .store-reset-button {
       margin-top: 2px;
+    }
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
+    .row-actions .el-button,
+    .row-actions .el-button + .el-button {
+      margin: 0;
+      padding-left: 0;
+      padding-right: 0;
     }
     .store-status-pill.pending {
       color: #8a5b00;
@@ -596,9 +616,9 @@
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Actions" width="190" fixed="right">
+                      <el-table-column label="Actions" width="220" fixed="right">
                         <template slot-scope="scope">
-                          <div class="button-row">
+                          <div class="row-actions">
                             <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
                             <el-button type="text" @click="duplicateRow(scope.row)">Duplicate</el-button>
                             <el-button type="text" style="color:#d03050;" @click="deleteRow(scope.row)">Delete</el-button>
@@ -808,28 +828,44 @@
           });
         },
         groupedInventorySections() {
-          const sections = [];
+          const storeMap = new Map();
           this.filteredRows.forEach(row => {
-            let storeSection = sections[sections.length - 1];
-            if (!storeSection || storeSection.store_code !== row.store_code) {
-              storeSection = {
-                store_code: row.store_code,
-                store_name: row.store_name || row.store_code,
+            const storeCode = row.store_code || '';
+            if (!storeMap.has(storeCode)) {
+              storeMap.set(storeCode, {
+                store_code: storeCode,
+                store_name: row.store_name || storeCode,
                 rows: [],
-                families: []
-              };
-              sections.push(storeSection);
+                familyMap: new Map()
+              });
             }
+            const storeSection = storeMap.get(storeCode);
             storeSection.rows.push(row);
             const family = this.lcdFamilyInfo(row);
-            let familySection = storeSection.families[storeSection.families.length - 1];
-            if (!familySection || familySection.key !== family.key) {
-              familySection = { key: family.key, label: family.label, rows: [] };
-              storeSection.families.push(familySection);
+            if (!storeSection.familyMap.has(family.key)) {
+              storeSection.familyMap.set(family.key, {
+                key: family.key,
+                label: family.label,
+                rank: family.rank,
+                rows: []
+              });
             }
-            familySection.rows.push(row);
+            storeSection.familyMap.get(family.key).rows.push(row);
           });
-          return sections;
+
+          return Array.from(storeMap.values()).map(storeSection => ({
+            store_code: storeSection.store_code,
+            store_name: storeSection.store_name,
+            rows: storeSection.rows,
+            families: Array.from(storeSection.familyMap.values())
+              .map(familySection => ({
+                key: familySection.key,
+                label: familySection.label,
+                rank: familySection.rank,
+                rows: familySection.rows.slice().sort((a, b) => this.compareLcdRows(a, b))
+              }))
+              .sort((a, b) => a.rank - b.rank)
+          }));
         },
         storeCountStatusMap() {
           const map = {};
@@ -972,8 +1008,8 @@
           return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
         },
         compareLcdModels(a, b) {
-          const familyA = this.lcdFamilyInfo(a && typeof a === 'object' ? a : null, a && typeof a === 'object' ? a.category_key : '');
-          const familyB = this.lcdFamilyInfo(b && typeof b === 'object' ? b : null, b && typeof b === 'object' ? b.category_key : '');
+          const familyA = this.lcdFamilyInfo(a, a && typeof a === 'object' ? a.category_key : '');
+          const familyB = this.lcdFamilyInfo(b, b && typeof b === 'object' ? b.category_key : '');
           const modelNameA = a && typeof a === 'object' ? a.model_name : a;
           const modelNameB = b && typeof b === 'object' ? b.model_name : b;
           if (familyA.rank !== familyB.rank) return familyA.rank - familyB.rank;
@@ -998,23 +1034,27 @@
           return this.naturalSort(a.variant_name, b.variant_name);
         },
         groupLcdLinesByFamily(lines) {
-          const groups = [];
-          (Array.isArray(lines) ? lines : [])
-            .slice()
-            .sort((a, b) => this.compareLcdRows(a, b))
-            .forEach(line => {
-              const family = this.lcdFamilyInfo(line);
-              const lastGroup = groups[groups.length - 1];
-              if (!lastGroup || lastGroup.key !== family.key) {
-                groups.push({
-                  key: family.key,
-                  label: family.label,
-                  lines: []
-                });
-              }
-              groups[groups.length - 1].lines.push(line);
-            });
-          return groups;
+          const groups = new Map();
+          (Array.isArray(lines) ? lines : []).forEach(line => {
+            const family = this.lcdFamilyInfo(line);
+            if (!groups.has(family.key)) {
+              groups.set(family.key, {
+                key: family.key,
+                label: family.label,
+                rank: family.rank,
+                lines: []
+              });
+            }
+            groups.get(family.key).lines.push(line);
+          });
+          return Array.from(groups.values())
+            .map(group => ({
+              key: group.key,
+              label: group.label,
+              rank: group.rank,
+              lines: group.lines.slice().sort((a, b) => this.compareLcdRows(a, b))
+            }))
+            .sort((a, b) => a.rank - b.rank);
         },
         formatTimestamp(value) {
           if (!value) return '-';

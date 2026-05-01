@@ -1561,8 +1561,8 @@
             return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
           },
           compareLcdModels(a, b) {
-            const familyA = this.lcdFamilyInfo(a && typeof a === 'object' ? a : null, a && typeof a === 'object' ? a.category_key : '');
-            const familyB = this.lcdFamilyInfo(b && typeof b === 'object' ? b : null, b && typeof b === 'object' ? b.category_key : '');
+            const familyA = this.lcdFamilyInfo(a, a && typeof a === 'object' ? a.category_key : '');
+            const familyB = this.lcdFamilyInfo(b, b && typeof b === 'object' ? b.category_key : '');
             const modelNameA = a && typeof a === 'object' ? a.model_name : a;
             const modelNameB = b && typeof b === 'object' ? b.model_name : b;
             if (familyA.rank !== familyB.rank) return familyA.rank - familyB.rank;
@@ -1587,23 +1587,27 @@
             return String(a.variant_name || '').localeCompare(String(b.variant_name || ''), undefined, { numeric: true, sensitivity: 'base' });
           },
           groupLcdLinesByFamily(lines) {
-            const groups = [];
-            (Array.isArray(lines) ? lines : [])
-              .slice()
-              .sort((a, b) => this.compareLcdRows(a, b))
-              .forEach(line => {
-                const family = this.lcdFamilyInfo(line);
-                const lastGroup = groups[groups.length - 1];
-                if (!lastGroup || lastGroup.key !== family.key) {
-                  groups.push({
-                    key: family.key,
-                    label: family.label,
-                    lines: []
-                  });
-                }
-                groups[groups.length - 1].lines.push(line);
-              });
-            return groups;
+            const groups = new Map();
+            (Array.isArray(lines) ? lines : []).forEach(line => {
+              const family = this.lcdFamilyInfo(line);
+              if (!groups.has(family.key)) {
+                groups.set(family.key, {
+                  key: family.key,
+                  label: family.label,
+                  rank: family.rank,
+                  lines: []
+                });
+              }
+              groups.get(family.key).lines.push(line);
+            });
+            return Array.from(groups.values())
+              .map(group => ({
+                key: group.key,
+                label: group.label,
+                rank: group.rank,
+                lines: group.lines.slice().sort((a, b) => this.compareLcdRows(a, b))
+              }))
+              .sort((a, b) => a.rank - b.rank);
           },
           moneyValue(value) {
             if (value === null || value === undefined || String(value).trim() === '') return 0;
