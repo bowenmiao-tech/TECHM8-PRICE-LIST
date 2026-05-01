@@ -1,0 +1,113 @@
+A13 5G
+A53 5G
+Dell 5420/5421/5430/3420
+Fold 7 front
+Galaxy S10
+Galaxy S10 5G
+Galaxy S10 E
+Galaxy S10+
+Galaxy S20
+Galaxy S20 Ultra
+Galaxy S20+
+Galaxy S20FE
+Galaxy S21
+Galaxy S21 PLUS
+Galaxy S21 Ultra
+Galaxy S21FE
+Galaxy S22
+Galaxy S22 plus
+Galaxy S22 Ultra
+Galaxy S23
+Galaxy S23 FE
+Galaxy S23 Plus
+Galaxy S23 Ultra
+Galaxy S24
+Galaxy S24 FE
+Galaxy S24 Plus
+Galaxy S24 Ultra
+Galaxy S25
+Galaxy S25 FE
+Galaxy S25 Plus
+Galaxy S25 Ultra
+Galaxy S6
+Galaxy S7 Edge
+Galaxy S8
+Galaxy S8 Plus
+Galaxy S9
+Galaxy S9 Plus
+iPad 10th
+iPad 2
+iPad 3/4
+iPad 6th Gen
+iPad 7,8,9 Gen(10.2)
+Ipad 9.7 pro
+iPad Air 4/ Air 5
+iPad Air1 / iPad 5th
+iPad Mini 3
+iPad Mini 4
+Ipad Mini 5
+iPad Mini1/2
+iPad Pro 11 (2018) / (2020)
+iPad Pro 11 (2021) / (2022)
+iPad Pro 12.9 (2018) / (2020)
+iPad Pro 12.9 (2021) / (2022)
+Iphone 11
+Iphone 11 Pro
+Iphone 11 Pro Max
+Iphone 12
+Iphone 12 Mini
+Iphone 12 Pro Max
+Iphone 13
+Iphone 13 Mini
+Iphone 13 Pro
+Iphone 13 Pro Max
+iPhone 14
+iPhone 14 Plus
+iPhone 14 Pro
+iPhone 14 Pro Max
+iPhone 15
+iPhone 15 Plus
+iPhone 15 Pro
+iPhone 15 Pro Max
+iPhone 16
+iPhone 16 Plus
+iPhone 16 Pro
+iPhone 16 Pro Max
+IPhone 16E
+iPhone 17
+iPhone 17 Air
+iPhone 17 Pro
+iPhone 17 Pro Max
+iPhone 5
+iPhone 5C
+iPhone 5S/SE
+iPhone 6
+iPhone 6 plus
+iPhone 6S
+iPhone 6S plus
+iPhone 7
+iPhone 7 plus
+iPhone 8
+iPhone 8 plus
+iPhone X
+iPhone XR
+iPhone XS
+iPhone Xs Max
+Lenovo Yoga slim 6 series
+Note 10
+Note 10 Plus
+Note 20
+Note 20 Ultra
+Note 8
+Note 9
+Oppo A16s
+Oppo A2pro/A3 pro/reno 11/F21 p+
+Pixel 7A
+Pixel 8
+Pixel 8 Pro
+Pixel 8A
+Pixel 9
+Pixel 9 Pro
+Pixel 9 Pro XL
+Pixel 9A
+samsung A53
