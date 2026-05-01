@@ -235,6 +235,9 @@
     }
     .collapse-title-side {
       flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       color: var(--tm-muted);
       font-size: 13px;
       white-space: nowrap;
@@ -457,7 +460,12 @@
                     <div class="collapse-title-main">
                       <div class="inventory-store-title" style="margin:0;">{{ storeSection.store_name }}</div>
                     </div>
-                    <div class="collapse-title-side">{{ storeSection.rows.length }} row(s)</div>
+                    <div class="collapse-title-side">
+                      <el-button type="warning" plain size="mini" @click.stop="resetStoreWeeklyCount(storeSection)">
+                        Reset This Week Count
+                      </el-button>
+                      <span>{{ storeSection.rows.length }} row(s)</span>
+                    </div>
                   </div>
                 </template>
 
@@ -1334,6 +1342,37 @@
           } catch (error) {
             console.error(error);
             this.$message.error(error.message || 'Failed to reset weekly count.');
+          }
+        },
+        async resetStoreWeeklyCount(storeSection) {
+          try {
+            await this.$confirm(
+              `Reset this week's LCD count task for ${storeSection.store_name}? Staff at this store will be able to submit a new weekly count immediately.`,
+              'Reset Store Weekly Count',
+              {
+                confirmButtonText: 'Reset',
+                cancelButtonText: 'Cancel',
+                type: 'warning'
+              }
+            );
+          } catch (cancelled) {
+            return;
+          }
+
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('reset_store_current_week_lcd_count_submissions', {
+              session_token: token,
+              target_store_code: storeSection.store_code
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to reset this store weekly count.');
+            }
+            this.$message.success(`Reset ${result.deleted_submissions || 0} weekly count submission(s) for ${storeSection.store_name}.`);
+            await this.loadCountSubmissions();
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to reset this store weekly count.');
           }
         },
         logout() {

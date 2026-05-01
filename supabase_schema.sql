@@ -3445,6 +3445,52 @@ begin
 end;
 $$;
 
+create or replace function public.reset_store_current_week_lcd_count_submissions(
+  session_token text,
+  target_store_code text,
+  target_date date default current_date
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  week_start_value date;
+  selected_store public.store_locations%rowtype;
+  deleted_submissions integer := 0;
+begin
+  if not public.is_valid_admin_session(session_token) then
+    raise exception 'Invalid admin session';
+  end if;
+
+  select *
+  into selected_store
+  from public.store_locations
+  where store_code = coalesce(trim(target_store_code), '');
+
+  if not found then
+    raise exception 'Store not found';
+  end if;
+
+  week_start_value := target_date - ((extract(isodow from target_date)::integer) - 1);
+
+  delete from public.lcd_inventory_count_submissions
+  where store_id = selected_store.id
+    and week_start = week_start_value;
+
+  get diagnostics deleted_submissions = row_count;
+
+  return jsonb_build_object(
+    'ok', true,
+    'store_code', selected_store.store_code,
+    'store_name', selected_store.store_name,
+    'week_start', week_start_value,
+    'deleted_submissions', deleted_submissions
+  );
+end;
+$$;
+
 do $$
 begin
   begin
@@ -3481,3 +3527,4 @@ grant execute on function public.get_lcd_inventory_count_submissions(text, text,
 grant execute on function public.review_lcd_inventory_count(text, bigint, text, text) to anon, authenticated;
 grant execute on function public.reset_lcd_inventory_count_submission(text, bigint) to anon, authenticated;
 grant execute on function public.reset_current_week_lcd_count_submissions(date) to anon, authenticated;
+grant execute on function public.reset_store_current_week_lcd_count_submissions(text, text, date) to anon, authenticated;
