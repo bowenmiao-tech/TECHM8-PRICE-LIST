@@ -306,10 +306,10 @@
                 <strong>Notes:</strong> {{ report.notes }}
               </div>
 
-              <div class="detail-grid">
-                <div class="detail-box">
+              <div class="detail-grid" v-if="hasRepairLines(report) || hasLcdReductions(report)">
+                <div class="detail-box" v-if="hasRepairLines(report)">
                   <h3 class="detail-title">Repair Lines</h3>
-                  <table class="detail-table" v-if="report.repair_lines && report.repair_lines.length">
+                  <table class="detail-table">
                     <thead>
                       <tr>
                         <th>Model</th>
@@ -329,12 +329,11 @@
                       </tr>
                     </tbody>
                   </table>
-                  <div class="empty-note" v-else>No repair rows in this report.</div>
                 </div>
 
-                <div class="detail-box">
+                <div class="detail-box" v-if="hasLcdReductions(report)">
                   <h3 class="detail-title">LCD Reductions</h3>
-                  <table class="detail-table" v-if="report.lcd_lines && report.lcd_lines.length">
+                  <table class="detail-table">
                     <thead>
                       <tr>
                         <th>Model</th>
@@ -354,14 +353,13 @@
                       </tr>
                     </tbody>
                   </table>
-                  <div class="empty-note" v-else>No LCD reductions in this report.</div>
                 </div>
               </div>
 
-              <div class="detail-grid-3">
-                <div class="detail-box">
+              <div class="detail-grid-3" v-if="hasFaultyBroken(report) || hasDeviceSales(report) || hasDeviceBuyBacks(report)">
+                <div class="detail-box" v-if="hasFaultyBroken(report)">
                   <h3 class="detail-title">Faulty & Broken LCDs</h3>
-                  <table class="detail-table" v-if="report.faulty_broken_lines && report.faulty_broken_lines.length">
+                  <table class="detail-table">
                     <thead>
                       <tr>
                         <th>Model</th>
@@ -379,12 +377,11 @@
                       </tr>
                     </tbody>
                   </table>
-                  <div class="empty-note" v-else>No faulty / broken LCD rows.</div>
                 </div>
 
-                <div class="detail-box">
+                <div class="detail-box" v-if="hasDeviceSales(report)">
                   <h3 class="detail-title">Device Sales</h3>
-                  <table class="detail-table" v-if="report.device_sales_lines && report.device_sales_lines.length">
+                  <table class="detail-table">
                     <thead>
                       <tr>
                         <th>Model</th>
@@ -404,12 +401,11 @@
                       </tr>
                     </tbody>
                   </table>
-                  <div class="empty-note" v-else>No device sales rows.</div>
                 </div>
 
-                <div class="detail-box">
+                <div class="detail-box" v-if="hasDeviceBuyBacks(report)">
                   <h3 class="detail-title">Device Buy Backs</h3>
-                  <table class="detail-table" v-if="report.device_buyback_lines && report.device_buyback_lines.length">
+                  <table class="detail-table">
                     <thead>
                       <tr>
                         <th>Model</th>
@@ -429,11 +425,10 @@
                       </tr>
                     </tbody>
                   </table>
-                  <div class="empty-note" v-else>No device buy back rows.</div>
                 </div>
               </div>
 
-              <div class="detail-grid-3">
+              <div class="detail-grid-3" v-if="hasEndOfDay(report) || hasExpenseTracking(report) || hasTimesheetMissingSales(report)">
                 <div class="detail-box">
                   <h3 class="detail-title">End Of Day Reporting</h3>
                   <table class="detail-table">
@@ -448,7 +443,7 @@
                   </table>
                 </div>
 
-                <div class="detail-box">
+                <div class="detail-box" v-if="hasExpenseTracking(report)">
                   <h3 class="detail-title">Expenses / Customer Tracking</h3>
                   <table class="detail-table">
                     <tbody>
@@ -463,9 +458,8 @@
                   </table>
                 </div>
 
-                <div class="detail-box">
+                <div class="detail-box" v-if="hasTimesheetMissingSales(report)">
                   <h3 class="detail-title">Timesheet / Missing Sales</h3>
-                  <div class="empty-note" v-if="!(report.end_of_day && report.end_of_day.timesheet_lines && report.end_of_day.timesheet_lines.length) && !(report.missing_sales_lines && report.missing_sales_lines.length)">No rows in these sections.</div>
                   <table class="detail-table" v-if="report.end_of_day && report.end_of_day.timesheet_lines && report.end_of_day.timesheet_lines.length">
                     <thead>
                       <tr>
@@ -601,6 +595,45 @@
           formatDateTime(value) {
             if (!value) return '-';
             return new Date(value).toLocaleString('en-AU');
+          },
+          hasRows(value) {
+            return Array.isArray(value) && value.length > 0;
+          },
+          hasPositiveNumber(value) {
+            return Number(value || 0) > 0;
+          },
+          hasRepairLines(report) {
+            return this.hasRows(report && report.repair_lines);
+          },
+          hasLcdReductions(report) {
+            return this.hasRows(report && report.lcd_lines);
+          },
+          hasFaultyBroken(report) {
+            return this.hasRows(report && report.faulty_broken_lines);
+          },
+          hasDeviceSales(report) {
+            return this.hasRows(report && report.device_sales_lines);
+          },
+          hasDeviceBuyBacks(report) {
+            return this.hasRows(report && report.device_buyback_lines);
+          },
+          hasEndOfDay(report) {
+            return Boolean(report && report.end_of_day);
+          },
+          hasExpenseTracking(report) {
+            const endOfDay = report && report.end_of_day ? report.end_of_day : {};
+            const tracking = report && report.customer_tracking ? report.customer_tracking : {};
+            return this.hasPositiveNumber(endOfDay.expense_total)
+              || this.hasPositiveNumber(tracking.pay)
+              || this.hasPositiveNumber(tracking.miss)
+              || this.hasPositiveNumber(tracking.pick_up)
+              || this.hasPositiveNumber(tracking.question)
+              || this.hasPositiveNumber(tracking.warranty)
+              || this.hasPositiveNumber(tracking.total);
+          },
+          hasTimesheetMissingSales(report) {
+            const endOfDay = report && report.end_of_day ? report.end_of_day : {};
+            return this.hasRows(endOfDay.timesheet_lines) || this.hasRows(report && report.missing_sales_lines);
           },
           safeTrack(obj, key) {
             if (!obj || typeof obj !== 'object') return 0;
