@@ -465,18 +465,6 @@
                   <div class="family-section" v-for="familySection in storeSection.families" :key="'family-' + storeSection.store_code + '-' + familySection.key">
                     <h3 class="family-title">{{ familySection.label }}</h3>
                     <el-table :data="familySection.rows" border stripe>
-                      <el-table-column label="Model" min-width="260">
-                        <template slot-scope="scope">
-                          <el-input v-model="scope.row.model_name" placeholder="Model name"></el-input>
-                        </template>
-                      </el-table-column>
-
-                      <el-table-column label="Variant" min-width="220">
-                        <template slot-scope="scope">
-                          <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
-                        </template>
-                      </el-table-column>
-
                       <el-table-column label="Category" min-width="170">
                         <template slot-scope="scope">
                           <el-select v-model="scope.row.category_key" placeholder="Choose category" style="width:100%;">
@@ -487,6 +475,18 @@
                               :value="option.value">
                             </el-option>
                           </el-select>
+                        </template>
+                      </el-table-column>
+
+                      <el-table-column label="Model" min-width="260">
+                        <template slot-scope="scope">
+                          <el-input v-model="scope.row.model_name" placeholder="Model name"></el-input>
+                        </template>
+                      </el-table-column>
+
+                      <el-table-column label="Variant" min-width="220">
+                        <template slot-scope="scope">
+                          <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
                         </template>
                       </el-table-column>
 
