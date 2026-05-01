@@ -225,51 +225,60 @@
       width: 100%;
       padding-right: 10px;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
+      gap: 16px;
     }
     .collapse-title-main {
       min-width: 0;
       flex: 1 1 auto;
+      padding-top: 4px;
     }
     .collapse-title-side {
-      flex: 0 0 auto;
+      flex: 0 0 360px;
       display: grid;
       justify-items: end;
-      gap: 6px;
+      gap: 4px;
       color: var(--tm-muted);
-      font-size: 13px;
+      font-size: 12px;
       text-align: right;
     }
     .store-side-top {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
     .store-status-text {
       color: #566973;
-      font-size: 12px;
+      font-size: 11px;
       white-space: normal;
       text-align: right;
-      line-height: 1.45;
-      max-width: 290px;
+      line-height: 1.35;
+      max-width: 360px;
+    }
+    .store-row-count {
+      color: #6a7a83;
+      font-size: 12px;
+      font-weight: 700;
     }
     .store-status-pill {
       display: inline-flex;
       align-items: center;
-      min-height: 28px;
-      padding: 0 10px;
+      min-height: 24px;
+      padding: 0 8px;
       border-radius: 999px;
       border: 1px solid var(--tm-border);
       background: #f7fbfc;
       color: #31414a;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
       letter-spacing: .04em;
       text-transform: uppercase;
+    }
+    .store-reset-button {
+      margin-top: 2px;
     }
     .store-status-pill.pending {
       color: #8a5b00;
@@ -357,6 +366,17 @@
 
     @media (max-width: 1180px) {
       .tool-grid { grid-template-columns: 1fr; }
+      .collapse-title-side {
+        flex-basis: 100%;
+        justify-items: start;
+        text-align: left;
+      }
+      .store-side-top {
+        justify-content: flex-start;
+      }
+      .store-status-text {
+        text-align: left;
+      }
     }
 
     @media (max-width: 640px) {
@@ -513,12 +533,12 @@
                         <span class="store-status-pill" :class="storeCountStatusMeta(storeSection.store_code).className">
                           {{ storeCountStatusMeta(storeSection.store_code).label }}
                         </span>
-                        <el-button type="warning" plain size="mini" @click.stop="resetStoreWeeklyCount(storeSection)">
-                          Reset This Week Count
-                        </el-button>
-                        <span>{{ storeSection.rows.length }} row(s)</span>
+                        <span class="store-row-count">{{ storeSection.rows.length }} row(s)</span>
                       </div>
                       <span class="store-status-text">{{ storeCountStatusMeta(storeSection.store_code).detail }}</span>
+                      <el-button class="store-reset-button" type="warning" plain size="mini" @click.stop="resetStoreWeeklyCount(storeSection)">
+                        Reset This Week Count
+                      </el-button>
                     </div>
                   </div>
                 </template>
@@ -526,8 +546,8 @@
                 <div class="inventory-store-card" style="border:none;padding:0;background:transparent;">
                   <div class="family-section" v-for="familySection in storeSection.families" :key="'family-' + storeSection.store_code + '-' + familySection.key">
                     <h3 class="family-title">{{ familySection.label }}</h3>
-                    <el-table :data="familySection.rows" border stripe>
-                      <el-table-column label="Category" min-width="170">
+                    <el-table :data="familySection.rows" border stripe size="mini">
+                      <el-table-column label="Category" min-width="150">
                         <template slot-scope="scope">
                           <el-select v-model="scope.row.category_key" placeholder="Choose category" style="width:100%;">
                             <el-option
@@ -540,19 +560,19 @@
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Model" min-width="260">
+                      <el-table-column label="Model" min-width="230">
                         <template slot-scope="scope">
                           <el-input v-model="scope.row.model_name" placeholder="Model name"></el-input>
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Variant" min-width="220">
+                      <el-table-column label="Variant" min-width="180">
                         <template slot-scope="scope">
                           <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Current Qty" width="160" align="center">
+                      <el-table-column label="Current Qty" width="150" align="center">
                         <template slot-scope="scope">
                           <el-input-number
                             class="qty-cell"
@@ -570,13 +590,13 @@
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Updated" width="150">
+                      <el-table-column label="Updated" width="132">
                         <template slot-scope="scope">
                           <div class="updated-cell">{{ formatTimestampCompact(scope.row.updated_at) }}</div>
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Actions" width="220" fixed="right">
+                      <el-table-column label="Actions" width="190" fixed="right">
                         <template slot-scope="scope">
                           <div class="button-row">
                             <el-button type="text" @click="saveRow(scope.row)">Save</el-button>
