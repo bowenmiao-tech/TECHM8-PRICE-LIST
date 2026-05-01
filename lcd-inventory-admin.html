@@ -626,6 +626,8 @@
       data() {
         return {
           rows: [],
+          originalRowState: {},
+          nextDraftKey: 1,
           expandedStoreSections: [],
           keyword: '',
           storeFilter: '',
@@ -913,8 +915,10 @@
           this.countStatusFilter = 'pending';
         },
         normalizeRow(raw) {
+          const hasPersistentId = raw.id !== null && raw.id !== undefined && raw.id !== '';
           return {
-            id: raw.id || null,
+            id: hasPersistentId ? raw.id : null,
+            _clientKey: hasPersistentId ? null : (raw._clientKey || `draft-${this.nextDraftKey++}`),
             store_id: raw.store_id || null,
             store_code: raw.store_code || '',
             store_name: raw.store_name || raw.store_code || '',
@@ -924,6 +928,47 @@
             active: raw.active !== false,
             updated_at: raw.updated_at || null
           };
+        },
+        getRowIdentity(row) {
+          if (row && row.id) return `id:${row.id}`;
+          return `draft:${row && row._clientKey ? row._clientKey : 'unknown'}`;
+        },
+        buildRowSnapshot(row) {
+          const payload = this.buildRowPayload(row);
+          return JSON.stringify({
+            id: row && row.id ? Number(row.id) : null,
+            store_code: payload.store_code,
+            model_name: payload.model_name,
+            variant_name: payload.variant_name,
+            current_qty: payload.current_qty,
+            active: payload.active
+          });
+        },
+        rebuildOriginalRowState() {
+          const nextState = {};
+          this.rows.forEach(row => {
+            nextState[this.getRowIdentity(row)] = this.buildRowSnapshot(row);
+          });
+          this.originalRowState = nextState;
+        },
+        isRowDirty(row) {
+          const identity = this.getRowIdentity(row);
+          const currentSnapshot = this.buildRowSnapshot(row);
+          const originalSnapshot = this.originalRowState[identity];
+          if (!originalSnapshot) return true;
+          return currentSnapshot !== originalSnapshot;
+        },
+        replaceRowAfterSave(targetRow, savedItem) {
+          const nextRow = this.normalizeRow(savedItem || {});
+          const rowIndex = this.rows.indexOf(targetRow);
+          if (rowIndex >= 0) {
+            this.$set(this.rows, rowIndex, nextRow);
+          }
+          const nextState = { ...this.originalRowState };
+          delete nextState[this.getRowIdentity(targetRow)];
+          nextState[this.getRowIdentity(nextRow)] = this.buildRowSnapshot(nextRow);
+          this.originalRowState = nextState;
+          return nextRow;
         },
         normalizeCountSubmission(raw) {
           return {
@@ -962,6 +1007,7 @@
                   return this.compareLcdRows(a, b);
                 })
               : [];
+            this.rebuildOriginalRowState();
           } catch (error) {
             console.error(error);
             this.loadError = error.message || 'Failed to load LCD inventory.';
@@ -1039,33 +1085,35 @@
             if (!result || !result.ok) {
               throw new Error((result && result.message) || 'Failed to save LCD inventory row.');
             }
+            this.replaceRowAfterSave(row, result.item || result.row || payload);
             this.$message.success('LCD inventory row saved.');
-            await this.loadInventory();
           } catch (error) {
             console.error(error);
             this.$message.error(error.message || 'Failed to save LCD inventory row.');
           }
         },
         async saveAllRows() {
-          if (!this.filteredRows.length) {
-            this.$message.error('No visible LCD rows to save.');
+          const dirtyRows = this.filteredRows.filter(row => this.isRowDirty(row));
+
+          if (!dirtyRows.length) {
+            this.$message.info('No modified LCD rows to save.');
             return;
           }
 
-          const invalidRow = this.filteredRows.find(row => {
+          const invalidRow = dirtyRows.find(row => {
             const payload = this.buildRowPayload(row);
             return !payload.store_code || !payload.model_name || !payload.variant_name;
           });
 
           if (invalidRow) {
-            this.$message.error('Every visible row needs store, model, and variant before bulk save.');
+            this.$message.error('Every modified row needs store, model, and variant before bulk save.');
             return;
           }
 
           this.savingAllRows = true;
           try {
             const token = window.Techm8StaffAuth.getToken();
-            for (const row of this.filteredRows) {
+            for (const row of dirtyRows) {
               const result = await window.Techm8StaffAuth.callRpc('upsert_lcd_inventory_item', {
                 session_token: token,
                 row_payload: this.buildRowPayload(row)
@@ -1073,9 +1121,14 @@
               if (!result || !result.ok) {
                 throw new Error((result && result.message) || `Failed to save ${row.model_name} / ${row.variant_name}.`);
               }
+              this.replaceRowAfterSave(row, result.item || result.row || this.buildRowPayload(row));
             }
-            await this.loadInventory();
-            this.$message.success(`Saved ${this.filteredRows.length} LCD row(s).`);
+            this.rows = this.rows.slice().sort((a, b) => {
+              const storeDiff = this.naturalSort(a.store_name || a.store_code, b.store_name || b.store_code);
+              if (storeDiff !== 0) return storeDiff;
+              return this.compareLcdRows(a, b);
+            });
+            this.$message.success(`Saved ${dirtyRows.length} modified LCD row(s).`);
           } catch (error) {
             console.error(error);
             this.$message.error(error.message || 'Failed to bulk save LCD rows.');
