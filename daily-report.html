@@ -1444,20 +1444,48 @@
               inventory_item_id: item.inventory_item_id,
               model_name: item.model_name || '',
               variant_name: item.variant_name || '',
+              category_key: item.category_key || '',
               system_qty: Number(item.current_qty || 0),
               counted_qty: Number(item.current_qty || 0)
             })).sort((a, b) => this.compareLcdRows(a, b));
           },
-          lcdFamilyInfo(modelName) {
+          lcdFamilyInfo(itemOrModelName, explicitCategoryKey) {
+            const item = (itemOrModelName && typeof itemOrModelName === 'object') ? itemOrModelName : null;
+            const modelName = item ? item.model_name : itemOrModelName;
+            const categoryKey = String(explicitCategoryKey || (item && item.category_key) || '').trim().toLowerCase();
+            const categoryLabels = {
+              'iphone': 'iPhone',
+              'samsung': 'Samsung',
+              'pixel': 'Google Pixel',
+              'ipad': 'iPad',
+              'oppo': 'Oppo',
+              'other': 'Other Models'
+            };
+            const categoryRanks = {
+              'iphone': 1,
+              'samsung': 2,
+              'pixel': 4,
+              'ipad': 5,
+              'oppo': 6,
+              'other': 99
+            };
+            if (categoryKey && categoryLabels[categoryKey]) {
+              return {
+                key: categoryKey,
+                label: categoryLabels[categoryKey],
+                rank: categoryRanks[categoryKey]
+              };
+            }
+
             const text = String(modelName || '').trim();
             const lower = text.toLowerCase();
 
             if (/^iphone\b/.test(lower)) return { key: 'iphone', label: 'iPhone', rank: 1 };
             if (/^(galaxy\s*)?s\d{1,2}(\+|\s|$|fe\b|plus\b|ultra\b)/i.test(text) || /^galaxy s\b/i.test(lower)) {
-              return { key: 'samsung-s', label: 'Samsung Galaxy S Series', rank: 2 };
+              return { key: 'samsung', label: 'Samsung', rank: 2 };
             }
             if (/^(galaxy\s*)?note\s*\d+\b/i.test(text) || /^galaxy note\b/i.test(lower)) {
-              return { key: 'samsung-note', label: 'Samsung Galaxy Note Series', rank: 3 };
+              return { key: 'samsung', label: 'Samsung', rank: 2 };
             }
             if (/^pixel\b/i.test(text)) return { key: 'pixel', label: 'Google Pixel', rank: 4 };
             if (/^ipad\b/i.test(lower)) return { key: 'ipad', label: 'iPad', rank: 5 };
@@ -1474,13 +1502,11 @@
               const match = text.match(/iphone\s+(\d+)/i);
               return match ? Number(match[1]) : 999;
             }
-            if (familyKey === 'samsung-s') {
+            if (familyKey === 'samsung') {
               const match = text.match(/s(\d{1,2})/i);
-              return match ? Number(match[1]) : 999;
-            }
-            if (familyKey === 'samsung-note') {
-              const match = text.match(/note\s*(\d{1,2})/i);
-              return match ? Number(match[1]) : 999;
+              if (match) return Number(match[1]);
+              const noteMatch = text.match(/note\s*(\d{1,2})/i);
+              return noteMatch ? 100 + Number(noteMatch[1]) : 999;
             }
             if (familyKey === 'pixel') {
               const match = text.match(/pixel\s*(\d+)/i);
@@ -1505,7 +1531,7 @@
               if (/\b16e\b/.test(text) || /iphone\s+se\b/.test(text)) return 0;
               if (text.includes('ultra')) return 5;
             }
-            if (familyKey === 'samsung-s' || familyKey === 'samsung-note' || familyKey === 'pixel') {
+            if (familyKey === 'samsung' || familyKey === 'pixel') {
               if (text.includes('fe')) return 1;
               if (text.includes('plus')) return 2;
               if (text.includes('pro xl')) return 4;
@@ -1535,19 +1561,21 @@
             return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
           },
           compareLcdModels(a, b) {
-            const familyA = this.lcdFamilyInfo(a);
-            const familyB = this.lcdFamilyInfo(b);
+            const familyA = this.lcdFamilyInfo(a && typeof a === 'object' ? a : null, a && typeof a === 'object' ? a.category_key : '');
+            const familyB = this.lcdFamilyInfo(b && typeof b === 'object' ? b : null, b && typeof b === 'object' ? b.category_key : '');
+            const modelNameA = a && typeof a === 'object' ? a.model_name : a;
+            const modelNameB = b && typeof b === 'object' ? b.model_name : b;
             if (familyA.rank !== familyB.rank) return familyA.rank - familyB.rank;
 
-            const seriesA = this.extractLcdSeriesNumber(a, familyA.key);
-            const seriesB = this.extractLcdSeriesNumber(b, familyB.key);
+            const seriesA = this.extractLcdSeriesNumber(modelNameA, familyA.key);
+            const seriesB = this.extractLcdSeriesNumber(modelNameB, familyB.key);
             if (seriesA !== seriesB) return seriesA - seriesB;
 
-            const variantA = this.extractLcdVariantRank(a, familyA.key);
-            const variantB = this.extractLcdVariantRank(b, familyB.key);
+            const variantA = this.extractLcdVariantRank(modelNameA, familyA.key);
+            const variantB = this.extractLcdVariantRank(modelNameB, familyB.key);
             if (variantA !== variantB) return variantA - variantB;
 
-            return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+            return String(modelNameA || '').localeCompare(String(modelNameB || ''), undefined, { numeric: true, sensitivity: 'base' });
           },
           compareLcdRows(a, b) {
             const modelCompare = this.compareLcdModels(a.model_name, b.model_name);
@@ -1564,7 +1592,7 @@
               .slice()
               .sort((a, b) => this.compareLcdRows(a, b))
               .forEach(line => {
-                const family = this.lcdFamilyInfo(line.model_name);
+                const family = this.lcdFamilyInfo(line);
                 const lastGroup = groups[groups.length - 1];
                 if (!lastGroup || lastGroup.key !== family.key) {
                   groups.push({
