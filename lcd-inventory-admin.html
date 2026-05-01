@@ -235,13 +235,61 @@
     }
     .collapse-title-side {
       flex: 0 0 auto;
+      display: grid;
+      justify-items: end;
+      gap: 6px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      text-align: right;
+    }
+    .store-side-top {
       display: flex;
       align-items: center;
       gap: 10px;
-      color: var(--tm-muted);
-      font-size: 13px;
-      white-space: nowrap;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .store-status-text {
+      color: #566973;
+      font-size: 12px;
+      white-space: normal;
       text-align: right;
+      line-height: 1.45;
+      max-width: 290px;
+    }
+    .store-status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--tm-border);
+      background: #f7fbfc;
+      color: #31414a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .store-status-pill.pending {
+      color: #8a5b00;
+      background: #fff8dd;
+      border-color: #f0d79e;
+    }
+    .store-status-pill.approved {
+      color: #126a42;
+      background: #e7f7ef;
+      border-color: #bfe4cf;
+    }
+    .store-status-pill.rejected {
+      color: #b2342c;
+      background: #fff0ee;
+      border-color: #f0c7c2;
+    }
+    .store-status-pill.waiting {
+      color: #566973;
+      background: #f4f7f9;
+      border-color: #d9e4e9;
     }
     .updated-cell {
       color: #566973;
@@ -461,10 +509,16 @@
                       <div class="inventory-store-title" style="margin:0;">{{ storeSection.store_name }}</div>
                     </div>
                     <div class="collapse-title-side">
-                      <el-button type="warning" plain size="mini" @click.stop="resetStoreWeeklyCount(storeSection)">
-                        Reset This Week Count
-                      </el-button>
-                      <span>{{ storeSection.rows.length }} row(s)</span>
+                      <div class="store-side-top">
+                        <span class="store-status-pill" :class="storeCountStatusMeta(storeSection.store_code).className">
+                          {{ storeCountStatusMeta(storeSection.store_code).label }}
+                        </span>
+                        <el-button type="warning" plain size="mini" @click.stop="resetStoreWeeklyCount(storeSection)">
+                          Reset This Week Count
+                        </el-button>
+                        <span>{{ storeSection.rows.length }} row(s)</span>
+                      </div>
+                      <span class="store-status-text">{{ storeCountStatusMeta(storeSection.store_code).detail }}</span>
                     </div>
                   </div>
                 </template>
@@ -757,8 +811,21 @@
           });
           return sections;
         },
+        storeCountStatusMap() {
+          const map = {};
+          this.countSubmissions.forEach(submission => {
+            const storeCode = submission.store_code || '';
+            if (!storeCode || map[storeCode]) return;
+            map[storeCode] = submission;
+          });
+          return map;
+        },
         filteredCountSubmissions() {
-          return this.countSubmissions;
+          return this.countSubmissions.filter(submission => {
+            if (this.storeFilter && submission.store_code !== this.storeFilter) return false;
+            if (this.countStatusFilter && submission.status !== this.countStatusFilter) return false;
+            return true;
+          });
         }
       },
       watch: {
@@ -952,6 +1019,43 @@
             minute: '2-digit'
           });
         },
+        storeCountStatusMeta(storeCode) {
+          const submission = this.storeCountStatusMap[storeCode];
+          if (!submission) {
+            return {
+              className: 'waiting',
+              label: 'Waiting',
+              detail: 'Waiting for staff update'
+            };
+          }
+
+          if (submission.status === 'approved') {
+            return {
+              className: 'approved',
+              label: 'Approved',
+              detail: `Updated ${this.formatTimestampCompact(submission.reviewed_at || submission.submitted_at)} by ${submission.staff_name}`
+            };
+          }
+          if (submission.status === 'pending') {
+            return {
+              className: 'pending',
+              label: 'Pending',
+              detail: `Submitted ${this.formatTimestampCompact(submission.submitted_at)} by ${submission.staff_name} · waiting for review`
+            };
+          }
+          if (submission.status === 'rejected') {
+            return {
+              className: 'rejected',
+              label: 'Rejected',
+              detail: `Rejected ${this.formatTimestampCompact(submission.reviewed_at || submission.submitted_at)} · waiting for staff update`
+            };
+          }
+          return {
+            className: 'waiting',
+            label: 'Waiting',
+            detail: 'Waiting for staff update'
+          };
+        },
         formatDate(value) {
           if (!value) return '-';
           const date = new Date(value + 'T00:00:00');
@@ -1082,8 +1186,8 @@
             const token = window.Techm8StaffAuth.getToken();
             const result = await window.Techm8StaffAuth.callRpc('get_lcd_inventory_count_submissions', {
               session_token: token,
-              target_status: this.countStatusFilter || '',
-              target_store_code: this.storeFilter || ''
+              target_status: '',
+              target_store_code: ''
             });
             if (!result || !result.ok) {
               throw new Error((result && result.message) || 'Failed to load weekly count submissions.');
