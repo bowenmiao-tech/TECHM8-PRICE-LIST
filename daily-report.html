@@ -731,23 +731,23 @@
                 <div class="grid-repair">
                   <div>
                     <label class="field-label">Model And Color</label>
-                    <el-input v-model.trim="line.model_and_color" placeholder="e.g. Samsung S23 Black"></el-input>
+                    <el-input v-model="line.model_and_color" placeholder="e.g. Samsung S23 Black"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Problem And Parts Used</label>
-                    <el-input v-model.trim="line.problem_and_parts_used" placeholder="e.g. LCD / Battery / Balance / Inspection"></el-input>
+                    <el-input v-model="line.problem_and_parts_used" placeholder="e.g. LCD / Battery / Balance / Inspection"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Tech Name</label>
-                    <el-input v-model.trim="line.tech_name" placeholder="Tech name"></el-input>
+                    <el-input v-model="line.tech_name" placeholder="Tech name"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Invoice Number</label>
-                    <el-input v-model.trim="line.invoice_number" placeholder="POS number"></el-input>
+                    <el-input v-model="line.invoice_number" placeholder="POS number"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Amount</label>
-                    <el-input v-model.trim="line.amount" placeholder="339.00"></el-input>
+                    <el-input v-model="line.amount" placeholder="339.00"></el-input>
                   </div>
                   <div>
                     <el-button type="danger" plain icon="el-icon-delete" @click="removeRepairLine(index)"></el-button>
@@ -769,19 +769,19 @@
                 <div class="grid-faulty">
                   <div>
                     <label class="field-label">Model No / Color</label>
-                    <el-input v-model.trim="line.model_no_color" placeholder="Model / color"></el-input>
+                    <el-input v-model="line.model_no_color" placeholder="Model / color"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Faulty Part Name</label>
-                    <el-input v-model.trim="line.faulty_part_name" placeholder="Part name"></el-input>
+                    <el-input v-model="line.faulty_part_name" placeholder="Part name"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Mention Issue</label>
-                    <el-input v-model.trim="line.mention_issue" placeholder="Issue description"></el-input>
+                    <el-input v-model="line.mention_issue" placeholder="Issue description"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Tech Name</label>
-                    <el-input v-model.trim="line.tech_name" placeholder="Tech name"></el-input>
+                    <el-input v-model="line.tech_name" placeholder="Tech name"></el-input>
                   </div>
                   <div>
                     <el-button type="danger" plain icon="el-icon-delete" @click="removeFaultyBrokenLine(index)"></el-button>
@@ -807,7 +807,7 @@
                   </div>
                   <div>
                     <label class="field-label">IMEI No</label>
-                    <el-input v-model.trim="line.imei_no" placeholder="IMEI"></el-input>
+                    <el-input v-model="line.imei_no" placeholder="IMEI"></el-input>
                   </div>
                   <div>
                     <label class="field-label">New Or Used</label>
@@ -818,15 +818,15 @@
                   </div>
                   <div>
                     <label class="field-label">Staff Name</label>
-                    <el-input v-model.trim="line.staff_name" placeholder="Staff name"></el-input>
+                    <el-input v-model="line.staff_name" placeholder="Staff name"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Invoice Number</label>
-                    <el-input v-model.trim="line.invoice_number" placeholder="POS number"></el-input>
+                    <el-input v-model="line.invoice_number" placeholder="POS number"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Amount</label>
-                    <el-input v-model.trim="line.amount" placeholder="599.00"></el-input>
+                    <el-input v-model="line.amount" placeholder="599.00"></el-input>
                   </div>
                   <div>
                     <el-button type="danger" plain icon="el-icon-delete" @click="removeDeviceSaleLine(index)"></el-button>
@@ -852,7 +852,7 @@
                   </div>
                   <div>
                     <label class="field-label">IMEI</label>
-                    <el-input v-model.trim="line.imei" placeholder="IMEI"></el-input>
+                    <el-input v-model="line.imei" placeholder="IMEI"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Buy Back Form Done?</label>
@@ -863,7 +863,7 @@
                   </div>
                   <div>
                     <label class="field-label">Staff Name</label>
-                    <el-input v-model.trim="line.staff_name" placeholder="Staff name"></el-input>
+                    <el-input v-model="line.staff_name" placeholder="Staff name"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Phone Tracker Done?</label>
@@ -874,7 +874,7 @@
                   </div>
                   <div>
                     <label class="field-label">Amount</label>
-                    <el-input v-model.trim="line.amount" placeholder="250.00"></el-input>
+                    <el-input v-model="line.amount" placeholder="250.00"></el-input>
                   </div>
                   <div>
                     <el-button type="danger" plain icon="el-icon-delete" @click="removeDeviceBuybackLine(index)"></el-button>
@@ -936,15 +936,15 @@
               <div class="eod-input-panel">
                 <div class="eod-input-card">
                   <label class="field-label">CASH Received from Customers (Enter amount)</label>
-                  <el-input v-model.trim="endOfDay.cash_received" placeholder="50.00"></el-input>
+                  <el-input v-model="endOfDay.cash_received" placeholder="50.00"></el-input>
                 </div>
                 <div class="eod-input-card">
                   <label class="field-label">EFTPOS SALES (Don't forget AmEx) Net Amount</label>
-                  <el-input v-model.trim="endOfDay.eftpos_sales" placeholder="1212.95"></el-input>
+                  <el-input v-model="endOfDay.eftpos_sales" placeholder="1212.95"></el-input>
                 </div>
                 <div class="eod-input-card">
                   <label class="field-label">Afterpay Sales (Enter data)</label>
-                  <el-input v-model.trim="endOfDay.afterpay_sales" placeholder="0.00"></el-input>
+                  <el-input v-model="endOfDay.afterpay_sales" placeholder="0.00"></el-input>
                 </div>
               </div>
             </div>
@@ -961,19 +961,19 @@
                 <div class="grid-timesheet">
                   <div>
                     <label class="field-label">Name</label>
-                    <el-input v-model.trim="line.name" placeholder="Name"></el-input>
+                    <el-input v-model="line.name" placeholder="Name"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Start Time</label>
-                    <el-input v-model.trim="line.start_time" placeholder="9"></el-input>
+                    <el-input v-model="line.start_time" placeholder="9"></el-input>
                   </div>
                   <div>
                     <label class="field-label">End Time</label>
-                    <el-input v-model.trim="line.end_time" placeholder="18"></el-input>
+                    <el-input v-model="line.end_time" placeholder="18"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Break</label>
-                    <el-input v-model.trim="line.break_time" placeholder="0.5"></el-input>
+                    <el-input v-model="line.break_time" placeholder="0.5"></el-input>
                   </div>
                   <div>
                     <el-button type="danger" plain icon="el-icon-delete" @click="removeTimesheetLine(index)"></el-button>
@@ -995,11 +995,11 @@
                 <div class="grid-expense">
                   <div>
                     <label class="field-label">Expense</label>
-                    <el-input v-model.trim="line.expense" placeholder="Expense description"></el-input>
+                    <el-input v-model="line.expense" placeholder="Expense description"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Amount</label>
-                    <el-input v-model.trim="line.amount" placeholder="20.00"></el-input>
+                    <el-input v-model="line.amount" placeholder="20.00"></el-input>
                   </div>
                   <div>
                     <el-button type="danger" plain icon="el-icon-delete" @click="removeExpenseLine(index)"></el-button>
@@ -1055,15 +1055,15 @@
                   </div>
                   <div>
                     <label class="field-label">Name (Staff)</label>
-                    <el-input v-model.trim="line.staff_name" placeholder="Staff name"></el-input>
+                    <el-input v-model="line.staff_name" placeholder="Staff name"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Price</label>
-                    <el-input v-model.trim="line.price" placeholder="49.00"></el-input>
+                    <el-input v-model="line.price" placeholder="49.00"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Comments</label>
-                    <el-input v-model.trim="line.comments" placeholder="Comments"></el-input>
+                    <el-input v-model="line.comments" placeholder="Comments"></el-input>
                   </div>
                   <div>
                     <el-button type="danger" plain icon="el-icon-delete" @click="removeMissingSaleLine(index)"></el-button>
@@ -1143,7 +1143,7 @@
             <el-input
               type="textarea"
               :rows="4"
-              v-model.trim="notes"
+              v-model="notes"
               placeholder="Add anything the manager should check for this report.">
             </el-input>
 
@@ -1250,7 +1250,7 @@
             <el-input
               type="textarea"
               :rows="4"
-              v-model.trim="inventoryCountNotes"
+              v-model="inventoryCountNotes"
               :disabled="inventoryCountAlreadySubmitted"
               placeholder="Add notes for mismatches, damaged stock, or anything the manager should review.">
             </el-input>
