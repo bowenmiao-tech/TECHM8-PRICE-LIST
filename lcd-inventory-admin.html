@@ -197,7 +197,8 @@
     }
     .qty-wrap {
       border-radius: 12px;
-      padding: 4px;
+      padding: 0;
+      overflow: hidden;
       transition: background-color .18s ease, box-shadow .18s ease;
     }
     .qty-wrap.qty-zero {
@@ -215,9 +216,34 @@
     .qty-wrap .el-input-number {
       width: 100%;
     }
+    .qty-wrap .el-input-number .el-input {
+      background: transparent;
+    }
     .qty-wrap .el-input-number .el-input__inner {
-      background: rgba(255,255,255,0.84);
+      background: transparent;
       font-weight: 700;
+      border: 0;
+    }
+    .qty-wrap .el-input-number.is-controls-right .el-input__inner {
+      padding-right: 36px;
+    }
+    .qty-wrap .el-input-number__decrease,
+    .qty-wrap .el-input-number__increase {
+      border: 0;
+      background: rgba(255,255,255,0.28);
+      color: #51616a;
+    }
+    .qty-wrap.qty-zero .el-input-number__decrease,
+    .qty-wrap.qty-zero .el-input-number__increase {
+      background: rgba(255,255,255,0.16);
+    }
+    .qty-wrap.qty-one .el-input-number__decrease,
+    .qty-wrap.qty-one .el-input-number__increase {
+      background: rgba(255,255,255,0.18);
+    }
+    .qty-wrap.qty-two .el-input-number__decrease,
+    .qty-wrap.qty-two .el-input-number__increase {
+      background: rgba(255,255,255,0.18);
     }
     .inventory-store-stack,
     .review-stack {
