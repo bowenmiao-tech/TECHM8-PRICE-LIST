@@ -390,6 +390,39 @@
       font-size: 13px;
       line-height: 1.6;
     }
+    .success-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+    .success-box {
+      border: 1px solid var(--tm-border);
+      border-radius: 22px;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfc 100%);
+      padding: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    .success-message {
+      margin-top: 18px;
+      padding: 18px 20px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #f7fbf8 0%, #eef7f1 100%);
+      border: 1px solid #d7e8dc;
+      color: #214437;
+      font-size: 15px;
+      line-height: 1.7;
+      text-align: center;
+      font-weight: 600;
+    }
+    .success-grid + .success-message {
+      display: none;
+    }
+    .success-close {
+      display: flex;
+      justify-content: center;
+      margin-top: 18px;
+    }
 
     .draft-list {
       display: grid;
@@ -584,7 +617,8 @@
       .grid-expense,
       .grid-missing,
       .grid-timesheet,
-      .count-row {
+      .count-row,
+      .success-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -1266,6 +1300,64 @@
             </div>
           </div>
         </template>
+
+        <template v-else-if="stage === 'report-success'">
+          <div class="panel">
+            <div class="section-head">
+              <div>
+                <h2 class="panel-title">Daily Report Submitted</h2>
+                <div class="hint">
+                  {{ formattedToday }} | {{ selectedStoreName }} | {{ selectedStaffName }}
+                  <span v-if="submissionSuccess.report_code">| {{ submissionSuccess.report_code }}</span>
+                  <span v-if="submissionSuccess.submitted_at">| Submitted {{ formatDateTime(submissionSuccess.submitted_at) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="success-grid" style="margin-top:16px;">
+              <div class="success-box">
+                <h3 class="panel-title" style="font-size:18px;">Repair Lines</h3>
+                <table class="summary-table" v-if="submissionSuccess.repair_lines && submissionSuccess.repair_lines.length">
+                  <tr>
+                    <th style="text-align:left;">Model</th>
+                    <th style="text-align:left;">Problem / Parts</th>
+                    <th style="text-align:left;">Tech</th>
+                    <th style="text-align:left;">Invoice</th>
+                    <th style="text-align:right;">Amount</th>
+                  </tr>
+                  <tr v-for="(line, index) in submissionSuccess.repair_lines" :key="'success-repair-' + index">
+                    <td>{{ line.model_and_color }}</td>
+                    <td>{{ line.problem_and_parts_used }}</td>
+                    <td>{{ line.tech_name }}</td>
+                    <td>{{ line.invoice_number || '-' }}</td>
+                    <td style="text-align:right;">{{ money(line.amount) }}</td>
+                  </tr>
+                </table>
+                <div class="empty-note" v-else>No repair rows in this report.</div>
+              </div>
+
+              <div class="success-box">
+                <h3 class="panel-title" style="font-size:18px;">End Of Day Reporting</h3>
+                <table class="summary-table">
+                  <tr><td class="summary-label-cell">Cash Received</td><td class="summary-money">{{ money(submissionSuccess.end_of_day.cash_received) }}</td></tr>
+                  <tr><td class="summary-label-cell">EFTPOS Net</td><td class="summary-money">{{ money(submissionSuccess.end_of_day.eftpos_sales) }}</td></tr>
+                  <tr><td class="summary-label-cell">Afterpay</td><td class="summary-money">{{ money(submissionSuccess.end_of_day.afterpay_sales) }}</td></tr>
+                  <tr><td class="summary-label-cell">Total Sales Input</td><td class="summary-money">{{ money(submissionSuccess.end_of_day.total_sales_input) }}</td></tr>
+                  <tr><td class="summary-label-cell">Accessories Sales</td><td class="summary-money">{{ money(submissionSuccess.end_of_day.accessories_sales) }}</td></tr>
+                  <tr><td class="summary-label-cell">Cash To Bank</td><td class="summary-money">{{ money(submissionSuccess.end_of_day.cash_to_be_banked) }}</td></tr>
+                </table>
+              </div>
+            </div>
+
+            <div class="success-message">辛苦你今天的工作啦，下班快乐。</div>
+
+            <div class="success-message">{{ submissionSuccess.encouragement_message }}</div>
+
+            <div class="success-close">
+              <el-button type="primary" @click="closeSubmissionSuccess">Close</el-button>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -1293,6 +1385,20 @@
             draftLoadedAt: '',
             storeDrafts: [],
             submittedTodayForStore: false,
+            submissionSuccess: {
+              report_code: '',
+              submitted_at: '',
+              encouragement_message: 'Thanks for your work today. Have a good evening.',
+              repair_lines: [],
+              end_of_day: {
+                cash_received: 0,
+                eftpos_sales: 0,
+                afterpay_sales: 0,
+                total_sales_input: 0,
+                accessories_sales: 0,
+                cash_to_be_banked: 0
+              }
+            },
             inventoryCountLines: [],
             inventoryCountNotes: '',
             inventoryCountWeekStart: '',
@@ -1737,6 +1843,43 @@
             this.customerTracking = { pay: 0, miss: 0, pick_up: 0, question: 0, warranty: 0 };
             this.draftLoadedAt = '';
           },
+          buildSubmissionSuccessState(payload, result) {
+            return {
+              report_code: result && result.report_code ? result.report_code : '',
+              submitted_at: result && result.submitted_at ? result.submitted_at : new Date().toISOString(),
+              encouragement_message: result && result.encouragement_message
+                ? result.encouragement_message
+                : 'Thanks for your work today. Have a good evening.',
+              repair_lines: Array.isArray(payload.repair_lines) ? payload.repair_lines.slice() : [],
+              end_of_day: {
+                cash_received: this.moneyValue(payload.end_of_day && payload.end_of_day.cash_received),
+                eftpos_sales: this.moneyValue(payload.end_of_day && payload.end_of_day.eftpos_sales),
+                afterpay_sales: this.moneyValue(payload.end_of_day && payload.end_of_day.afterpay_sales),
+                total_sales_input: this.moneyValue(payload.end_of_day && payload.end_of_day.total_sales_input),
+                accessories_sales: this.moneyValue(payload.end_of_day && payload.end_of_day.accessories_sales),
+                cash_to_be_banked: this.moneyValue(payload.end_of_day && payload.end_of_day.cash_to_be_banked)
+              }
+            };
+          },
+          closeSubmissionSuccess() {
+            this.stage = 'setup';
+            this.selectedStaffName = '';
+            this.submissionSuccess = {
+              report_code: '',
+              submitted_at: '',
+              encouragement_message: 'Thanks for your work today. Have a good evening.',
+              repair_lines: [],
+              end_of_day: {
+                cash_received: 0,
+                eftpos_sales: 0,
+                afterpay_sales: 0,
+                total_sales_input: 0,
+                accessories_sales: 0,
+                cash_to_be_banked: 0
+              }
+            };
+            this.resetForm();
+          },
           lcdVariantOptions(modelName) {
             return this.lcdItems
               .filter(item => item.model_name === modelName)
@@ -1898,14 +2041,11 @@
                 payload
               });
               if (!result || !result.ok) throw new Error('Daily report submission failed.');
-              this.$alert(
-                'Submitted as ' + result.report_code + '. Repair sales total: ' + this.money(result.total_amount || 0),
-                'Daily Report Saved',
-                { confirmButtonText: 'OK' }
-              );
+              this.submissionSuccess = this.buildSubmissionSuccessState(payload, result);
               await this.loadSetup(this.selectedStoreCode);
               await this.loadStoreDrafts(this.selectedStoreCode);
               this.resetForm();
+              this.stage = 'report-success';
             } catch (error) {
               console.error(error);
               this.$message.error(error.message || 'Could not submit daily report.');
