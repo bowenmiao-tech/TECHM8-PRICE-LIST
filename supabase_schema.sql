@@ -3028,7 +3028,7 @@ begin
     raise exception 'Store not found';
   end if;
 
-  week_start_value := current_date - ((extract(isodow from current_date)::integer) - 1);
+  week_start_value := current_date - ((extract(dow from current_date)::integer + 1) % 7);
 
   select coalesce(
     jsonb_agg(
@@ -3136,7 +3136,7 @@ begin
   end if;
 
   count_date_value := coalesce(nullif(payload->>'count_date', '')::date, current_date);
-  week_start_value := count_date_value - ((extract(isodow from count_date_value)::integer) - 1);
+  week_start_value := count_date_value - ((extract(dow from count_date_value)::integer + 1) % 7);
   notes_value := coalesce(trim(payload->>'notes'), '');
   confirmed_value := coalesce((payload->>'confirmed')::boolean, false);
   lines_payload := coalesce(payload->'lines', '[]'::jsonb);
@@ -3503,7 +3503,7 @@ declare
   week_start_value date;
   deleted_count integer := 0;
 begin
-  week_start_value := target_date - ((extract(isodow from target_date)::integer) - 1);
+  week_start_value := target_date - ((extract(dow from target_date)::integer + 1) % 7);
 
   delete from public.lcd_inventory_count_submissions
   where week_start = week_start_value;
@@ -3546,7 +3546,7 @@ begin
     raise exception 'Store not found';
   end if;
 
-  week_start_value := target_date - ((extract(isodow from target_date)::integer) - 1);
+  week_start_value := target_date - ((extract(dow from target_date)::integer + 1) % 7);
 
   delete from public.lcd_inventory_count_submissions
   where store_id = selected_store.id
@@ -3584,7 +3584,7 @@ begin
     begin
       perform cron.schedule(
         'techm8_weekly_lcd_count_reset',
-        '0 23 * * 6',
+        '0 14 * * 5',
         $cron$select public.reset_current_week_lcd_count_submissions(current_date);$cron$
       );
     exception when others then
