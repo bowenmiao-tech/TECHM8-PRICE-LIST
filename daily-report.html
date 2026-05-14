@@ -2004,11 +2004,6 @@
             }
           },
           validateBeforeSubmit(payload) {
-            if (!payload.repair_lines.length && !payload.device_sales_lines.length && !payload.device_buyback_lines.length && !payload.lcd_lines.length) {
-              this.$message.error('Add at least one report line before submitting.');
-              return false;
-            }
-
             for (const line of payload.repair_lines) {
               if (!String(line.model_and_color || '').trim() || !String(line.problem_and_parts_used || '').trim()) {
                 this.$message.error('Each repair row needs model and problem / parts.');
