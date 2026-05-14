@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -389,7 +389,7 @@
               <div class="quick-card">
                 <h3>Where To Find The Panic Log</h3>
                 <p>
-                  Settings → Privacy &amp; Security → Analytics &amp; Improvements → Analytics Data →
+                  Settings 鈫?Privacy &amp; Security 鈫?Analytics &amp; Improvements 鈫?Analytics Data 鈫?
                   open the newest file starting with <strong>panic-full</strong>.
                 </p>
               </div>
@@ -416,30 +416,29 @@
           <section class="panel">
             <h2 class="panel-title" style="font-size:22px;">Example Panic Log Screens</h2>
             <p class="panel-subtitle">
-              These reference visuals are based on the Repair Wiki examples. Use them to quickly recognize the kind of panic
-              log line or sensor-array code the customer device is showing.
+              These are actual images taken from the linked Repair Wiki pages. Use them to quickly recognize the kind of
+              panic-log screen, sensor-array code, or part location the customer device is showing.
             </p>
             <div class="example-grid">
               <div class="example-card">
-                <img src="./assets/guides/panic-logs/panic-missing-sensors.svg" alt="Missing sensors panic log example">
+                <img src="./assets/guides/panic-logs/panic-log-list.png" alt="Panic log list example from repair wiki">
                 <div class="example-caption">
-                  Older models often show <strong>Missing sensor(s)</strong> lines such as <strong>mic1</strong>,
-                  <strong>prs0</strong>, or <strong>mic2</strong>. These usually point you toward charging-port, screen,
-                  or button-flex paths first.
+                  This is the actual panic-log list example from the linked guide. Staff should open the newest
+                  <strong>panic-full</strong> file first, then match the content to the model section below.
                 </div>
               </div>
               <div class="example-card">
-                <img src="./assets/guides/panic-logs/panic-battery-data.svg" alt="Battery data panic log example">
+                <img src="./assets/guides/panic-logs/panic-0x41.png" alt="0x41 battery data panic log example from repair wiki">
                 <div class="example-caption">
-                  On newer models, <strong>sensor array 0x41</strong> is a battery-data pattern. First checks are the
-                  battery, battery connector, and battery data line path.
+                  This is the actual <strong>0x41</strong> panic-log example from the linked page. It is used for
+                  battery-data related faults on newer models.
                 </div>
               </div>
               <div class="example-card">
-                <img src="./assets/guides/panic-logs/panic-prox-charge.svg" alt="Proximity and charging related panic log example">
+                <img src="./assets/guides/panic-logs/iphone15-air-pressure.png" alt="iPhone 15 air pressure sensor image from repair wiki">
                 <div class="example-caption">
-                  Newer families can show hex codes like <strong>0x80000</strong> or <strong>0x100000</strong>. Use the
-                  model section below to decide whether the first suspect is proximity, button flex, or charge-port path.
+                  This is the actual iPhone 15 air-pressure-sensor image from the linked model page. It helps staff
+                  identify the part tied to newer charging-port and air-pressure panic patterns.
                 </div>
               </div>
             </div>
@@ -466,7 +465,7 @@
               <span class="code-chip">0x4000 (16384) = Battery sensor</span>
               <span class="code-chip">0x20000 (131072) = Gyro (14 Pro+)</span>
               <span class="code-chip">0x40000 (262144) = Charge port (14 Pro+)</span>
-              <span class="code-chip">0x80000 (524288) = Proximity (14–17)</span>
+              <span class="code-chip">0x80000 (524288) = Proximity (14鈥?7)</span>
               <span class="code-chip">0x100000 (1048576) = Power button</span>
               <span class="code-chip">0x200000 (2097152) = Front sensor / Wireless coil</span>
               <span class="code-chip">0x300000 (3145728) = USB-C / charge port on Pro models</span>
@@ -998,3 +997,4 @@
   </script>
 </body>
 </html>
+
