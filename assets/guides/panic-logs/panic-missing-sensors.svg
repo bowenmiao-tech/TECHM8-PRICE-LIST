@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" fill="none">
+  <rect width="1200" height="760" rx="40" fill="#0F1B21"/>
+  <rect x="62" y="48" width="1076" height="664" rx="30" fill="#162730" stroke="#30424B" stroke-width="4"/>
+  <text x="104" y="114" fill="#F4FBFF" font-size="34" font-family="Arial, Helvetica, sans-serif" font-weight="700">Older model missing-sensor example</text>
+  <rect x="102" y="146" width="646" height="438" rx="26" fill="#0C1216" stroke="#30424B" stroke-width="3"/>
+  <text x="138" y="206" fill="#B7C8D1" font-size="22" font-family="Courier New, monospace">panicString: userspace watchdog timeout</text>
+  <rect x="132" y="238" width="384" height="46" rx="12" fill="#FFE0E0"/>
+  <text x="150" y="268" fill="#6C2424" font-size="22" font-family="Courier New, monospace" font-weight="700">Missing sensor(s): mic1</text>
+  <rect x="132" y="304" width="384" height="46" rx="12" fill="#FFF0B5"/>
+  <text x="150" y="334" fill="#634500" font-size="22" font-family="Courier New, monospace" font-weight="700">Missing sensor(s): prs0</text>
+  <rect x="132" y="370" width="384" height="46" rx="12" fill="#E0ECFF"/>
+  <text x="150" y="400" fill="#294D82" font-size="22" font-family="Courier New, monospace" font-weight="700">Missing sensor(s): mic2</text>
+  <text x="138" y="464" fill="#93A6B0" font-size="21" font-family="Courier New, monospace">Common pattern on iPhone X to 12-series phones</text>
+  <path d="M544 260C618 244 696 220 794 176" stroke="#F04E4E" stroke-width="8" stroke-linecap="round"/>
+  <path d="M544 328C618 332 702 334 790 334" stroke="#F4B000" stroke-width="8" stroke-linecap="round"/>
+  <path d="M544 392C620 414 686 438 794 492" stroke="#5A8DF0" stroke-width="8" stroke-linecap="round"/>
+  <rect x="806" y="126" width="248" height="122" rx="22" fill="#FFF7DE" stroke="#F2D699" stroke-width="3"/>
+  <text x="838" y="178" fill="#513A12" font-size="28" font-family="Arial, Helvetica, sans-serif" font-weight="700">mic1</text>
+  <text x="838" y="216" fill="#6B5429" font-size="22" font-family="Arial, Helvetica, sans-serif">Usually charging port flex</text>
+  <rect x="806" y="274" width="248" height="122" rx="22" fill="#FFF7DE" stroke="#F2D699" stroke-width="3"/>
+  <text x="838" y="326" fill="#513A12" font-size="28" font-family="Arial, Helvetica, sans-serif" font-weight="700">prs0</text>
+  <text x="838" y="364" fill="#6B5429" font-size="22" font-family="Arial, Helvetica, sans-serif">Pressure / screen path on some families</text>
+  <rect x="806" y="424" width="248" height="122" rx="22" fill="#FFF7DE" stroke="#F2D699" stroke-width="3"/>
+  <text x="838" y="476" fill="#513A12" font-size="28" font-family="Arial, Helvetica, sans-serif" font-weight="700">mic2</text>
+  <text x="838" y="514" fill="#6B5429" font-size="22" font-family="Arial, Helvetica, sans-serif">Often power button flex</text>
+  <text x="104" y="642" fill="#93A6B0" font-size="21" font-family="Arial, Helvetica, sans-serif">Reference visual based on the Repair Wiki panic log examples.</text>
+</svg>

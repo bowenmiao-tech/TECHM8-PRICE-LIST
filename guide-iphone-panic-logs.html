@@ -179,7 +179,8 @@
       line-height: 1.8;
     }
 
-    .quick-grid {
+    .quick-grid,
+      .example-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
@@ -294,19 +295,40 @@
       padding-left: 18px;
     }
 
-    .source-list {
+    .example-grid {
       display: grid;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--tm-muted);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
     }
 
-    .source-list a {
-      color: inherit;
+    .example-card {
+      border: 1px solid var(--tm-border);
+      border-radius: 20px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(12, 21, 29, 0.06);
+    }
+
+    .example-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #f7fafb;
+    }
+
+    .example-caption {
+      padding: 14px 16px 16px;
+      color: #4c5d66;
+      font-size: 14px;
+      line-height: 1.75;
+      background: #fafcfd;
+      border-top: 1px solid var(--tm-border);
     }
 
     @media (max-width: 1080px) {
-      .quick-grid {
+      .quick-grid,
+      .example-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -389,6 +411,40 @@
             </div>
           </section>
 
+
+
+          <section class="panel">
+            <h2 class="panel-title" style="font-size:22px;">Example Panic Log Screens</h2>
+            <p class="panel-subtitle">
+              These reference visuals are based on the Repair Wiki examples. Use them to quickly recognize the kind of panic
+              log line or sensor-array code the customer device is showing.
+            </p>
+            <div class="example-grid">
+              <div class="example-card">
+                <img src="./assets/guides/panic-logs/panic-missing-sensors.svg" alt="Missing sensors panic log example">
+                <div class="example-caption">
+                  Older models often show <strong>Missing sensor(s)</strong> lines such as <strong>mic1</strong>,
+                  <strong>prs0</strong>, or <strong>mic2</strong>. These usually point you toward charging-port, screen,
+                  or button-flex paths first.
+                </div>
+              </div>
+              <div class="example-card">
+                <img src="./assets/guides/panic-logs/panic-battery-data.svg" alt="Battery data panic log example">
+                <div class="example-caption">
+                  On newer models, <strong>sensor array 0x41</strong> is a battery-data pattern. First checks are the
+                  battery, battery connector, and battery data line path.
+                </div>
+              </div>
+              <div class="example-card">
+                <img src="./assets/guides/panic-logs/panic-prox-charge.svg" alt="Proximity and charging related panic log example">
+                <div class="example-caption">
+                  Newer families can show hex codes like <strong>0x80000</strong> or <strong>0x100000</strong>. Use the
+                  model section below to decide whether the first suspect is proximity, button flex, or charge-port path.
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section class="panel content-section">
             <div id="content-header"></div>
             <div id="content-chips" class="chips"></div>
@@ -416,24 +472,6 @@
               <span class="code-chip">0x300000 (3145728) = USB-C / charge port on Pro models</span>
               <span class="code-chip">0x400000 (4194304) = Wireless coil</span>
               <span class="code-chip">0x500000 (5242880) = Battery</span>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h2 class="panel-title" style="font-size:22px;">Sources</h2>
-            <div class="source-list">
-              <a href="https://repair.wiki/w/How_to_Troubleshoot_And_Fix_iPhone_Random_Restarts_Using_Panic_Logs" target="_blank" rel="noopener noreferrer">Repair Wiki main panic log guide</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_X_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone X</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_XS_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone XS / XS Max</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_11_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone 11</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_11_Pro_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone 11 Pro / Pro Max</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_12_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone 12 series</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_13_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone 13 series</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_14_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone 14 / 14 Plus</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_14_Pro_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone 14 Pro / Pro Max</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_15_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone 15 / 15 Plus</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_15_Pro_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone 15 Pro / Pro Max</a>
-              <a href="https://repair.wiki/w/How_To_Fix_an_iPhone_SE_2020_That_Randomly_Restarts" target="_blank" rel="noopener noreferrer">iPhone SE 2020</a>
             </div>
           </section>
         </main>
