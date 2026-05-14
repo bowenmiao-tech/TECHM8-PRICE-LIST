@@ -413,41 +413,11 @@
 
 
 
-          <section class="panel">
-            <h2 class="panel-title" style="font-size:22px;">Example Panic Log Screens</h2>
-            <p class="panel-subtitle">
-              These are actual images taken from the linked Repair Wiki pages. Use them to quickly recognize the kind of
-              panic-log screen, sensor-array code, or part location the customer device is showing.
-            </p>
-            <div class="example-grid">
-              <div class="example-card">
-                <img src="./assets/guides/panic-logs/panic-log-list.png" alt="Panic log list example from repair wiki">
-                <div class="example-caption">
-                  This is the actual panic-log list example from the linked guide. Staff should open the newest
-                  <strong>panic-full</strong> file first, then match the content to the model section below.
-                </div>
-              </div>
-              <div class="example-card">
-                <img src="./assets/guides/panic-logs/panic-0x41.png" alt="0x41 battery data panic log example from repair wiki">
-                <div class="example-caption">
-                  This is the actual <strong>0x41</strong> panic-log example from the linked page. It is used for
-                  battery-data related faults on newer models.
-                </div>
-              </div>
-              <div class="example-card">
-                <img src="./assets/guides/panic-logs/iphone15-air-pressure.png" alt="iPhone 15 air pressure sensor image from repair wiki">
-                <div class="example-caption">
-                  This is the actual iPhone 15 air-pressure-sensor image from the linked model page. It helps staff
-                  identify the part tied to newer charging-port and air-pressure panic patterns.
-                </div>
-              </div>
-            </div>
-          </section>
-
           <section class="panel content-section">
             <div id="content-header"></div>
             <div id="content-chips" class="chips"></div>
             <div id="content-alert" class="alert-box"></div>
+            <div id="content-images"></div>
             <div id="content-table"></div>
           </section>
 
@@ -800,6 +770,23 @@
         title: 'iPhone 15 and 15 Plus',
         logStyle: 'Look for "SMC PANIC - ASSERTION FAILED" and "Sensor Array" with a hex code.',
         focus: 'Wireless charging flex, charge port, air pressure sensor, proximity, and combined flex faults are the main matches here.',
+        images: [
+          {
+            src: './assets/guides/panic-logs/panic-log-list.png',
+            alt: 'Panic log list example from iPhone 15 Repair Wiki page',
+            caption: 'Open the newest <strong>panic-full</strong> file first. This list image is from the iPhone 15 guide page.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone15-charge-port.png',
+            alt: 'iPhone 15 charging port flex image from Repair Wiki',
+            caption: 'iPhone 15 charging port flex from the linked iPhone 15 page. Use it when checking <strong>0x80000</strong> and related charge-path faults.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone15-air-pressure.png',
+            alt: 'iPhone 15 air pressure sensor image from Repair Wiki',
+            caption: 'iPhone 15 air pressure sensor from the linked iPhone 15 page. This is part of the same charge-path check for <strong>0x80000</strong>.'
+          }
+        ],
         rows: [
           {
             code: '0x200000 / 2097152',
@@ -856,6 +843,33 @@
         title: 'iPhone 15 Pro and 15 Pro Max',
         logStyle: 'Look for "SMC PANIC - ASSERTION FAILED" and "Sensor Array" with a hex code.',
         focus: 'Proximity, USB-C charge port, wireless charging flex, and battery data are the main matches for this family.',
+        images: [
+          {
+            src: './assets/guides/panic-logs/iphone15pro-wireless.png',
+            alt: 'iPhone 15 Pro Max wireless flex diagram from Repair Wiki',
+            caption: 'Wireless charging flex diagram from the iPhone 15 Pro / Pro Max page. This is tied to <strong>0x400000</strong> faults.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone15pro-prox-0x200000.png',
+            alt: 'iPhone 15 Pro proximity 0x200000 panic log example from Repair Wiki',
+            caption: 'Actual <strong>0x200000</strong> example from the iPhone 15 Pro / Pro Max page. This points to the proximity flex.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone15pro-charge-0x300000.png',
+            alt: 'iPhone 15 Pro charging port flex 0x300000 image from Repair Wiki',
+            caption: 'Charging port flex diagram from the iPhone 15 Pro / Pro Max page. This is used for <strong>0x300000</strong> or <strong>0x100000</strong>.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone15pro-wireless-0x400000.png',
+            alt: 'iPhone 15 Pro 0x400000 wireless charging panic log example from Repair Wiki',
+            caption: 'Actual <strong>0x400000</strong> panic-log example from the iPhone 15 Pro / Pro Max page. This points to the wireless charging flex.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone15pro-battery-0xa1.png',
+            alt: 'iPhone 15 Pro battery 0xa1 panic log image from Repair Wiki',
+            caption: 'Actual <strong>0xa1</strong> battery-data example from the iPhone 15 Pro / Pro Max page.'
+          }
+        ],
         rows: [
           {
             code: '0x200000 / 2097152',
@@ -960,6 +974,21 @@
       `;
 
       document.getElementById('content-alert').innerHTML = `<strong>Focus:</strong> ${model.focus}`;
+
+      document.getElementById('content-images').innerHTML = model.images && model.images.length ? `
+        <div style="margin:18px 0 8px;">
+          <h3 class="panel-title" style="font-size:18px;">Model Images</h3>
+          <p class="panel-subtitle">Only images from this model's linked Repair Wiki page are shown here.</p>
+          <div class="example-grid">
+            ${model.images.map(image => `
+              <div class="example-card">
+                <img src="${image.src}" alt="${image.alt}">
+                <div class="example-caption">${image.caption}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : '';
 
       document.getElementById('content-table').innerHTML = `
         <table class="fault-table">
