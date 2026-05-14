@@ -117,6 +117,35 @@ window.Techm8StaffAuth = (function () {
         display: grid;
         gap: 12px;
       }
+      .tm-auth-extra {
+        margin: 0 0 18px;
+        display: grid;
+        gap: 12px;
+      }
+      .tm-auth-note {
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: #f5f8fa;
+        border: 1px solid #d8e1e6;
+        color: #42545d;
+        font-size: 13px;
+        line-height: 1.7;
+      }
+      .tm-auth-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 0 16px;
+        border-radius: 16px;
+        background: #eef4f7;
+        border: 1px solid #d8e1e6;
+        color: #163129;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -129,6 +158,7 @@ window.Techm8StaffAuth = (function () {
       <div class="tm-auth-card">
         <h1 class="tm-auth-title">${options.title || 'Staff Access'}</h1>
         <p class="tm-auth-text">${options.subtitle || 'Enter the staff password to continue.'}</p>
+        ${options.extraHtml ? `<div class="tm-auth-extra">${options.extraHtml}</div>` : ''}
         <div class="tm-auth-stack">
           ${hasLoginEmail ? `<input class="tm-auth-input tm-auth-email" type="email" placeholder="${options.loginPlaceholder || 'Email'}" autocomplete="username">` : ''}
           <input class="tm-auth-input" type="password" placeholder="Password" autocomplete="current-password">

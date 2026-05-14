@@ -114,41 +114,6 @@
       font-weight: 700;
     }
 
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .hero-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      border-radius: 999px;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 14px;
-      transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease;
-    }
-
-    .hero-btn:hover {
-      transform: translateY(-1px);
-    }
-
-    .hero-btn-primary {
-      background: #ffffff;
-      color: var(--tm-dark);
-      box-shadow: 0 12px 24px rgba(9, 18, 24, 0.14);
-    }
-
-    .hero-btn-secondary {
-      background: rgba(255,255,255,0.10);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.16);
-    }
-
     .content {
       padding: 24px;
     }
@@ -290,31 +255,20 @@
           <i class="bi bi-grid-1x2-fill"></i>
           TECHM8 Staff Portal
         </div>
-        <h1 class="hero-title">This is the <span class="accent">internal staff</span> website.</h1>
+        <h1 class="hero-title">Choose the <span class="accent">workflow</span> you need.</h1>
         <p class="hero-text">
-          This portal is for TECHM8 staff only. Use it for quoting, intake, daily reporting, LCD count, and internal
-          troubleshooting guides. If you need the public company website, use the official website button below.
+          Start from quote and intake when the customer already knows the device issue, or open problem solving when
+          the job needs diagnosis steps, activation help, or guided troubleshooting.
         </p>
-
-        <div class="hero-actions">
-          <a class="hero-btn hero-btn-primary" href="https://www.techm8australia.com/" target="_blank" rel="noopener noreferrer">
-            <i class="bi bi-box-arrow-up-right"></i>
-            Open Official Website
-          </a>
-          <span class="hero-btn hero-btn-secondary">
-            <i class="bi bi-shield-lock-fill"></i>
-            Staff login remains required
-          </span>
-        </div>
 
         <div class="hero-meta">
           <div class="hero-meta-item">
-            <div class="hero-meta-label">Portal Type</div>
-            <div class="hero-meta-value">Internal Staff Site</div>
+            <div class="hero-meta-label">Quote Desk</div>
+            <div class="hero-meta-value">Pricing + Intake</div>
           </div>
           <div class="hero-meta-item">
-            <div class="hero-meta-label">Public Website</div>
-            <div class="hero-meta-value">techm8australia.com</div>
+            <div class="hero-meta-label">Problem Solving</div>
+            <div class="hero-meta-value">Guides + Quick Fixes</div>
           </div>
         </div>
       </div>
@@ -323,8 +277,8 @@
         <div class="section-head">
           <h2 class="section-title">Staff Entry</h2>
           <p class="section-subtitle">
-            This page is the internal staff entry point. Use the pricing side for quoting and booking repairs. Use
-            problem solving when the device needs step-by-step instructions before you can quote or complete the job.
+            Use the pricing side for quoting and booking repairs. Use problem solving when the device needs step-by-step
+            instructions before you can quote or complete the job.
           </p>
         </div>
 
@@ -385,7 +339,16 @@
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
       title: 'Staff Access',
-      subtitle: 'Enter the staff password to open the TECHM8 staff portal.'
+      subtitle: 'This page is for TECHM8 staff only. If you are looking for the public company website, use the official website button below.',
+      extraHtml: `
+        <div class="tm-auth-note">
+          This is the internal staff website. Customers should use the official TECHM8 website instead.
+        </div>
+        <a class="tm-auth-link" href="https://www.techm8australia.com/" target="_blank" rel="noopener noreferrer">
+          <i class="bi bi-box-arrow-up-right"></i>
+          Open Official Website
+        </a>
+      `
     });
   </script>
 </body>
