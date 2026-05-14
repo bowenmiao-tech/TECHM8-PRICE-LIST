@@ -456,6 +456,7 @@
         title: 'iPhone X',
         logStyle: 'Look for "Missing Sensors" in the panic log.',
         focus: 'Most common faults are charging port flex and battery data / battery connection faults.',
+        images: [],
         rows: [
           {
             code: 'Prs0 / Mic1',
@@ -482,6 +483,7 @@
         title: 'iPhone XS and XS Max',
         logStyle: 'Look for "Missing Sensors" in the panic log.',
         focus: 'Same main pattern as iPhone X: charging port flex and battery communication faults are the first checks.',
+        images: [],
         rows: [
           {
             code: 'Prs0 / Mic1',
@@ -508,6 +510,13 @@
         title: 'iPhone 11',
         logStyle: 'Look for "Missing Sensors" in the panic log.',
         focus: 'iPhone 11 adds a common Mic2 path tied to the power button flex and possible sandwich separation after a hard drop.',
+        images: [
+          {
+            src: './assets/guides/panic-logs/iphone12-panic-list.png',
+            alt: 'Panic log list example from iPhone 11 Repair Wiki page',
+            caption: 'Panic-log list example from the linked iPhone 11 page. Open the newest <strong>panic-full</strong> file first.'
+          }
+        ],
         rows: [
           {
             code: 'Prs0 / Mic1',
@@ -544,6 +553,13 @@
         title: 'iPhone 11 Pro and 11 Pro Max',
         logStyle: 'Look for "Missing Sensors" in the panic log.',
         focus: 'This family commonly points to battery, charging port flex, or Mic2 on the power button flex.',
+        images: [
+          {
+            src: './assets/guides/panic-logs/iphone12-panic-list.png',
+            alt: 'Panic log list example from iPhone 11 Pro Repair Wiki page',
+            caption: 'Panic-log list example from the linked iPhone 11 Pro / Pro Max page. Open the newest <strong>panic-full</strong> file first.'
+          }
+        ],
         rows: [
           {
             code: 'Prs0 / Mic1',
@@ -578,6 +594,13 @@
         title: 'iPhone 12 Series',
         logStyle: 'Look for "Missing Sensors" in the panic log.',
         focus: 'The 12 series still uses Missing Sensors, but Eiger also points to the charging port path.',
+        images: [
+          {
+            src: './assets/guides/panic-logs/iphone12-panic-list.png',
+            alt: 'Panic log list example from iPhone 12 Repair Wiki page',
+            caption: 'Panic-log list example from the linked iPhone 12 page. Open the newest <strong>panic-full</strong> file first.'
+          }
+        ],
         rows: [
           {
             code: 'Prs0 / Mic1',
@@ -614,6 +637,13 @@
         title: 'iPhone 13 Series',
         logStyle: 'Look for "SMC PANIC - ASSERTION FAILED" and "Sensor Array" with a hex code.',
         focus: 'This is where the newer hex-style panic codes become the main reference.',
+        images: [
+          {
+            src: './assets/guides/panic-logs/iphone13-panic-list.png',
+            alt: 'Panic log list example from iPhone 13 Repair Wiki page',
+            caption: 'Panic-log list example from the linked iPhone 13 page. Open the newest <strong>panic-full</strong> file first.'
+          }
+        ],
         rows: [
           {
             code: '0x1000',
@@ -659,6 +689,7 @@
         title: 'iPhone 14 and 14 Plus',
         logStyle: 'Look for "SMC PANIC - ASSERTION FAILED" and "Sensor Array" with a hex code.',
         focus: 'Wireless charging flex, charge port, battery communication, and proximity flex are the main restart triggers here.',
+        images: [],
         rows: [
           {
             code: '0x400000 / 4194304',
@@ -702,6 +733,33 @@
         title: 'iPhone 14 Pro and 14 Pro Max',
         logStyle: 'Look for "SMC PANIC - ASSERTION FAILED" and "Sensor Array" with a hex code.',
         focus: 'This family commonly points to combinations of proximity, charge port, power button flexes, plus possible sandwich separation.',
+        images: [
+          {
+            src: './assets/guides/panic-logs/iphone12-panic-list.png',
+            alt: 'Panic log list example from iPhone 14 Pro Repair Wiki page',
+            caption: 'Panic-log list example from the linked iPhone 14 Pro / Pro Max page. Open the newest <strong>panic-full</strong> file first.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone14pro-gyro-0x20000.png',
+            alt: 'iPhone 14 Pro Max gyro 0x20000 example from Repair Wiki',
+            caption: 'Actual <strong>0x20000</strong> example from the iPhone 14 Pro / Pro Max page. This points to the gyro not being detected on the top board.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone14pro-battery-0x41.png',
+            alt: 'iPhone 14 Pro battery 0x41 example from Repair Wiki',
+            caption: 'Actual <strong>0x41</strong> example from the iPhone 14 Pro / Pro Max page. This points to missing battery data.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone14pro-prox-charge-0xc0000.png',
+            alt: 'iPhone 14 Pro prox and charge 0xc0000 example from Repair Wiki',
+            caption: 'Actual <strong>0xc0000</strong> example from the iPhone 14 Pro / Pro Max page. This points to proximity flex plus charging port flex together.'
+          },
+          {
+            src: './assets/guides/panic-logs/iphone14pro-prox-power-0x180000.png',
+            alt: 'iPhone 14 Pro prox and power 0x180000 example from Repair Wiki',
+            caption: 'Actual <strong>0x180000</strong> example from the iPhone 14 Pro / Pro Max page. This points to proximity flex plus power button flex together.'
+          }
+        ],
         rows: [
           {
             code: '0x80000 / 524288',
@@ -926,6 +984,13 @@
         title: 'iPhone SE 2020',
         logStyle: 'Look for "Missing Sensors" in the panic log.',
         focus: 'SE 2020 can match the older charging-port / battery pattern, but Mic1 can also be a board trace issue, not only a flex issue.',
+        images: [
+          {
+            src: './assets/guides/panic-logs/iphone12-panic-list.png',
+            alt: 'Panic log list example from iPhone SE 2020 Repair Wiki page',
+            caption: 'Panic-log list example from the linked iPhone SE 2020 page. Open the newest <strong>panic-full</strong> file first.'
+          }
+        ],
         rows: [
           {
             code: 'Mic1',
