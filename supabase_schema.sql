@@ -1120,14 +1120,15 @@ set
   updated_at = now();
 
 insert into public.staff_directory (display_name, email, active)
-values
-  ('Andy', 'shangzelin2001@gmail.com', true),
-  ('Bonnie', 'bonniechiu1212aabb@gmail.com', true),
-  ('Fiona', 'yingmccoy@gmail.com', true),
-  ('Henry Ang', 'henryang98@gmail.com', true),
-  ('JANAPHY', 'janaphy0530@hotmail.com', true),
-  ('Joanna Chen', '824195774@qq.com', true),
-  ('Steven T', 'steven_troya@hotmail.com', true)
+  values
+    ('Andy', 'shangzelin2001@gmail.com', true),
+    ('Bonnie', 'bonniechiu1212aabb@gmail.com', true),
+    ('Fiona', 'yingmccoy@gmail.com', true),
+    ('Henry Ang', 'henryang98@gmail.com', true),
+    ('JANAPHY', 'janaphy0530@hotmail.com', true),
+    ('Jinny', null, true),
+    ('Joanna Chen', '824195774@qq.com', true),
+    ('Steven T', 'steven_troya@hotmail.com', true)
 on conflict (display_name) do update
 set
   email = excluded.email,
