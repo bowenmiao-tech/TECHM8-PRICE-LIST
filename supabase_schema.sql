@@ -104,6 +104,24 @@ create table if not exists public.admin_sessions (
   created_at timestamptz not null default now()
 );
 
+insert into public.admin_users (login_email, password_hash, active)
+values (
+  lower('Bowen'),
+  extensions.crypt('Mbw123456', extensions.gen_salt('bf')),
+  true
+)
+on conflict (login_email) do update
+set
+  password_hash = excluded.password_hash,
+  active = true,
+  updated_at = now();
+
+update public.admin_users
+set active = false
+where login_email <> lower('Bowen');
+
+delete from public.admin_sessions;
+
 insert into public.admin_config (id, password_hash)
 values (true, extensions.crypt('123456', extensions.gen_salt('bf')))
 on conflict (id) do nothing;

@@ -508,9 +508,10 @@
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
       title: 'Daily Report Admin Login',
-      subtitle: 'Sign in with the admin email and password to review submitted daily reports.',
+      subtitle: 'Sign in with the admin account and password to review submitted daily reports.',
       requireLoginEmail: true,
-      loginPlaceholder: 'Admin email',
+      loginInputType: 'text',
+      loginPlaceholder: 'Admin account',
       sessionKey: 'techm8_admin_session_token',
       createRpc: 'create_admin_session',
       verifyRpc: 'verify_admin_session',

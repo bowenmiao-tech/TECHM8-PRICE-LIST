@@ -250,7 +250,7 @@
       <div class="hero">
         <h1>Admin Portal</h1>
         <p>
-          Use one admin email and password to open the backend. From here you can manage repair prices,
+          Use one admin account and password to open the backend. From here you can manage repair prices,
           review daily reports, and maintain LCD inventory for each store.
         </p>
         <div class="hero-tags">
@@ -325,9 +325,10 @@
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
       title: 'Admin Login',
-      subtitle: 'Sign in with the admin email and password to open the backend portal.',
+      subtitle: 'Sign in with the admin account and password to open the backend portal.',
       requireLoginEmail: true,
-      loginPlaceholder: 'Admin email',
+      loginInputType: 'text',
+      loginPlaceholder: 'Admin account',
       sessionKey: 'techm8_admin_session_token',
       createRpc: 'create_admin_session',
       verifyRpc: 'verify_admin_session',

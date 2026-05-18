@@ -153,6 +153,7 @@ window.Techm8StaffAuth = (function () {
   function buildOverlay(options, onSubmit) {
     const overlay = document.createElement('div');
     const hasLoginEmail = Boolean(options && options.requireLoginEmail);
+    const loginInputType = (options && options.loginInputType) || 'email';
     overlay.className = 'tm-auth-overlay';
     overlay.innerHTML = `
       <div class="tm-auth-card">
@@ -160,7 +161,7 @@ window.Techm8StaffAuth = (function () {
         <p class="tm-auth-text">${options.subtitle || 'Enter the staff password to continue.'}</p>
         ${options.extraHtml ? `<div class="tm-auth-extra">${options.extraHtml}</div>` : ''}
         <div class="tm-auth-stack">
-          ${hasLoginEmail ? `<input class="tm-auth-input tm-auth-email" type="email" placeholder="${options.loginPlaceholder || 'Email'}" autocomplete="username">` : ''}
+          ${hasLoginEmail ? `<input class="tm-auth-input tm-auth-email" type="${loginInputType}" placeholder="${options.loginPlaceholder || 'Account'}" autocomplete="username">` : ''}
           <input class="tm-auth-input" type="password" placeholder="Password" autocomplete="current-password">
           <button class="tm-auth-button" type="button">${options.buttonLabel || 'Unlock'}</button>
           <div class="tm-auth-error"></div>
@@ -177,7 +178,7 @@ window.Techm8StaffAuth = (function () {
       const password = input.value.trim();
       const loginEmail = emailInput ? emailInput.value.trim() : '';
       if (hasLoginEmail && !loginEmail) {
-        error.textContent = 'Email is required.';
+        error.textContent = 'Account is required.';
         return;
       }
       if (!password) {

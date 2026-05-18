@@ -779,9 +779,10 @@
     const authReady = window.Techm8StaffAuth.init({
       rootSelector: '#app',
       title: 'Admin Login',
-      subtitle: 'Sign in with the admin email and password to open the LCD inventory admin page.',
+      subtitle: 'Sign in with the admin account and password to open the LCD inventory admin page.',
       requireLoginEmail: true,
-      loginPlaceholder: 'Admin email',
+      loginInputType: 'text',
+      loginPlaceholder: 'Admin account',
       sessionKey: 'techm8_admin_session_token',
       createRpc: 'create_admin_session',
       verifyRpc: 'verify_admin_session',
