@@ -484,6 +484,8 @@
       background: linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%);
       padding: 12px;
       box-shadow: 0 8px 20px rgba(18, 34, 44, 0.03);
+      max-width: 100%;
+      overflow: hidden;
     }
 
     .count-model-title {
@@ -501,10 +503,15 @@
     }
 
     .count-matrix-wrap {
+      display: block;
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
       overflow-x: auto;
+      overflow-y: hidden;
       padding-bottom: 2px;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
     }
 
     .count-matrix {
@@ -512,6 +519,7 @@
       grid-template-columns: 110px repeat(var(--count-part-columns), 132px);
       gap: 8px;
       width: max-content;
+      min-width: max-content;
       max-width: none;
     }
 
@@ -558,6 +566,7 @@
       font-size: 13px;
       color: #31414a;
       font-weight: 700;
+      min-width: 0;
     }
 
     .el-input__inner,
@@ -601,6 +610,13 @@
     .el-input-number .el-input__inner {
       padding-right: 40px;
       text-align: left;
+    }
+
+    .count-matrix .el-input-number,
+    .count-matrix .el-input,
+    .count-matrix .el-input__inner {
+      width: 100%;
+      min-width: 0;
     }
 
     .el-button {
@@ -704,7 +720,7 @@
         border-radius: 12px;
       }
       .count-matrix {
-        grid-template-columns: 78px repeat(var(--count-part-columns), 96px);
+        grid-template-columns: 78px repeat(var(--count-part-columns), 104px);
         gap: 6px;
       }
       .count-matrix-label,
