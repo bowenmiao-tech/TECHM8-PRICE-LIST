@@ -504,13 +504,15 @@
       width: 100%;
       overflow-x: auto;
       padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .count-matrix {
       display: grid;
-      grid-template-columns: 110px repeat(var(--count-part-columns), minmax(120px, 1fr));
+      grid-template-columns: 110px repeat(var(--count-part-columns), 132px);
       gap: 8px;
-      min-width: max-content;
+      width: max-content;
+      max-width: none;
     }
 
     .count-matrix-label {
@@ -522,6 +524,10 @@
       font-weight: 800;
       letter-spacing: .08em;
       text-transform: uppercase;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: #fbfdfe;
     }
 
     .count-part-heading {
@@ -537,6 +543,8 @@
       font-size: 13px;
       font-weight: 800;
       text-align: center;
+      white-space: normal;
+      word-break: break-word;
     }
 
     .count-readonly {
@@ -696,7 +704,7 @@
         border-radius: 12px;
       }
       .count-matrix {
-        grid-template-columns: 86px repeat(var(--count-part-columns), minmax(108px, 1fr));
+        grid-template-columns: 78px repeat(var(--count-part-columns), 96px);
         gap: 6px;
       }
       .count-matrix-label,
@@ -704,16 +712,22 @@
         min-height: 38px;
         font-size: 10px;
       }
+      .count-matrix-label {
+        padding-right: 4px;
+      }
       .count-readonly {
         min-height: 38px;
-        padding: 8px 10px;
+        padding: 8px 8px;
         border-radius: 12px;
         line-height: 1.35;
+        justify-content: center;
       }
       .count-matrix .el-input-number .el-input__inner {
         height: 48px;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 800;
+        padding-left: 8px;
+        padding-right: 32px;
       }
       .footer-actions,
       .footer-actions .toolbar,
