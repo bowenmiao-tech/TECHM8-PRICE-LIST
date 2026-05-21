@@ -479,10 +479,6 @@
     }
 
     .count-model-row {
-      display: grid;
-      grid-template-columns: minmax(180px, .7fr) minmax(0, 2.4fr);
-      gap: 10px;
-      align-items: stretch;
       border: 1px solid var(--tm-border);
       border-radius: 20px;
       background: linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%);
@@ -490,21 +486,57 @@
       box-shadow: 0 8px 20px rgba(18, 34, 44, 0.03);
     }
 
-    .count-model-cell {
-      display: grid;
-      align-content: start;
+    .count-model-title {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-radius: 15px;
+      background: #f4f8fa;
+      border: 1px solid var(--tm-border);
+      font-size: 14px;
+      color: #1f313a;
+      font-weight: 800;
+      margin-bottom: 10px;
     }
 
-    .count-variant-list {
-      display: grid;
-      gap: 8px;
+    .count-matrix-wrap {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 2px;
     }
 
-    .count-variant-row {
+    .count-matrix {
       display: grid;
-      grid-template-columns: minmax(130px, 1fr) minmax(90px, .45fr) minmax(130px, .65fr);
+      grid-template-columns: 110px repeat(var(--count-part-columns), minmax(120px, 1fr));
       gap: 8px;
-      align-items: end;
+      min-width: max-content;
+    }
+
+    .count-matrix-label {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      color: var(--tm-text-soft);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .count-part-heading {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border-radius: 14px;
+      background: #edf4f7;
+      border: 1px solid var(--tm-border);
+      color: #29424a;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
     }
 
     .count-readonly {
@@ -518,10 +550,6 @@
       font-size: 13px;
       color: #31414a;
       font-weight: 700;
-    }
-
-    .count-variant-row .field-label {
-      margin-bottom: 6px;
     }
 
     .el-input__inner,
@@ -659,20 +687,22 @@
         border-radius: 12px;
       }
       .count-model-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
         padding: 10px;
         border-radius: 16px;
       }
-      .count-variant-row {
-        grid-template-columns: 1fr;
-        gap: 6px;
-        padding-top: 8px;
-        border-top: 1px solid #e7eef2;
+      .count-model-title {
+        min-height: 38px;
+        padding: 8px 10px;
+        border-radius: 12px;
       }
-      .count-variant-row:first-child {
-        padding-top: 0;
-        border-top: 0;
+      .count-matrix {
+        grid-template-columns: 86px repeat(var(--count-part-columns), minmax(108px, 1fr));
+        gap: 6px;
+      }
+      .count-matrix-label,
+      .count-part-heading {
+        min-height: 38px;
+        font-size: 10px;
       }
       .count-readonly {
         min-height: 38px;
@@ -680,7 +710,7 @@
         border-radius: 12px;
         line-height: 1.35;
       }
-      .count-variant-row .el-input-number .el-input__inner {
+      .count-matrix .el-input-number .el-input__inner {
         height: 48px;
         font-size: 18px;
         font-weight: 800;
@@ -1323,22 +1353,17 @@
               <div class="count-family-section" v-for="section in inventoryCountSections" :key="'count-family-' + section.key">
                 <div class="count-family-title">{{ section.label }}</div>
                 <div class="count-model-row" v-for="modelGroup in section.model_groups" :key="'count-model-' + section.key + '-' + modelGroup.key">
-                  <div class="count-model-cell">
-                    <label class="field-label">Model</label>
-                    <div class="count-readonly">{{ modelGroup.model_name }}</div>
-                  </div>
-                  <div class="count-variant-list">
-                    <div class="count-variant-row" v-for="line in modelGroup.lines" :key="'count-line-' + line.inventory_item_id">
-                      <div>
-                        <label class="field-label">Part / Type</label>
-                        <div class="count-readonly">{{ line.variant_name }}</div>
-                      </div>
-                      <div>
-                        <label class="field-label">System Qty</label>
-                        <div class="count-readonly">{{ line.system_qty }}</div>
-                      </div>
-                      <div>
-                        <label class="field-label">Counted Qty</label>
+                  <div class="count-model-title">{{ modelGroup.model_name }}</div>
+                  <div class="count-matrix-wrap">
+                    <div class="count-matrix" :style="{ '--count-part-columns': modelGroup.lines.length }">
+                      <div class="count-matrix-label">Part</div>
+                      <div class="count-part-heading" v-for="line in modelGroup.lines" :key="'count-head-' + line.inventory_item_id">{{ line.variant_name }}</div>
+
+                      <div class="count-matrix-label">System Qty</div>
+                      <div class="count-readonly" v-for="line in modelGroup.lines" :key="'count-system-' + line.inventory_item_id">{{ line.system_qty }}</div>
+
+                      <div class="count-matrix-label">Counted Qty</div>
+                      <div v-for="line in modelGroup.lines" :key="'count-input-' + line.inventory_item_id">
                         <el-input-number v-model="line.counted_qty" :min="0" :step="1" controls-position="right" style="width:100%;" :disabled="inventoryCountAlreadySubmitted"></el-input-number>
                       </div>
                     </div>
