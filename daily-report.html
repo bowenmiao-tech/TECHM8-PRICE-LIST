@@ -478,16 +478,33 @@
       text-transform: uppercase;
     }
 
-    .count-row {
+    .count-model-row {
       display: grid;
-      grid-template-columns: 1.2fr .95fr .7fr .7fr;
+      grid-template-columns: minmax(180px, .7fr) minmax(0, 2.4fr);
       gap: 10px;
-      align-items: end;
+      align-items: stretch;
       border: 1px solid var(--tm-border);
       border-radius: 20px;
       background: linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%);
       padding: 12px;
       box-shadow: 0 8px 20px rgba(18, 34, 44, 0.03);
+    }
+
+    .count-model-cell {
+      display: grid;
+      align-content: start;
+    }
+
+    .count-variant-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .count-variant-row {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) minmax(90px, .45fr) minmax(130px, .65fr);
+      gap: 8px;
+      align-items: end;
     }
 
     .count-readonly {
@@ -501,6 +518,10 @@
       font-size: 13px;
       color: #31414a;
       font-weight: 700;
+    }
+
+    .count-variant-row .field-label {
+      margin-bottom: 6px;
     }
 
     .el-input__inner,
@@ -617,7 +638,6 @@
       .grid-expense,
       .grid-missing,
       .grid-timesheet,
-      .count-row,
       .success-grid {
         grid-template-columns: 1fr;
       }
@@ -638,15 +658,21 @@
         z-index: 2;
         border-radius: 12px;
       }
-      .count-row {
-        grid-template-columns: 1fr 1fr;
+      .count-model-row {
+        grid-template-columns: 1fr;
         gap: 8px;
         padding: 10px;
         border-radius: 16px;
       }
-      .count-row > div:first-child,
-      .count-row > div:last-child {
-        grid-column: 1 / -1;
+      .count-variant-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding-top: 8px;
+        border-top: 1px solid #e7eef2;
+      }
+      .count-variant-row:first-child {
+        padding-top: 0;
+        border-top: 0;
       }
       .count-readonly {
         min-height: 38px;
@@ -654,7 +680,7 @@
         border-radius: 12px;
         line-height: 1.35;
       }
-      .count-row .el-input-number .el-input__inner {
+      .count-variant-row .el-input-number .el-input__inner {
         height: 48px;
         font-size: 18px;
         font-weight: 800;
@@ -1296,22 +1322,26 @@
             <div class="count-grid" v-if="inventoryCountLines.length">
               <div class="count-family-section" v-for="section in inventoryCountSections" :key="'count-family-' + section.key">
                 <div class="count-family-title">{{ section.label }}</div>
-                <div class="count-row" v-for="(line, index) in section.lines" :key="'count-' + section.key + '-' + index">
-                  <div>
+                <div class="count-model-row" v-for="modelGroup in section.model_groups" :key="'count-model-' + section.key + '-' + modelGroup.key">
+                  <div class="count-model-cell">
                     <label class="field-label">Model</label>
-                    <div class="count-readonly">{{ line.model_name }}</div>
+                    <div class="count-readonly">{{ modelGroup.model_name }}</div>
                   </div>
-                  <div>
-                    <label class="field-label">Part / Type</label>
-                    <div class="count-readonly">{{ line.variant_name }}</div>
-                  </div>
-                  <div>
-                    <label class="field-label">System Qty</label>
-                    <div class="count-readonly">{{ line.system_qty }}</div>
-                  </div>
-                  <div>
-                    <label class="field-label">Counted Qty</label>
-                    <el-input-number v-model="line.counted_qty" :min="0" :step="1" controls-position="right" style="width:100%;" :disabled="inventoryCountAlreadySubmitted"></el-input-number>
+                  <div class="count-variant-list">
+                    <div class="count-variant-row" v-for="line in modelGroup.lines" :key="'count-line-' + line.inventory_item_id">
+                      <div>
+                        <label class="field-label">Part / Type</label>
+                        <div class="count-readonly">{{ line.variant_name }}</div>
+                      </div>
+                      <div>
+                        <label class="field-label">System Qty</label>
+                        <div class="count-readonly">{{ line.system_qty }}</div>
+                      </div>
+                      <div>
+                        <label class="field-label">Counted Qty</label>
+                        <el-input-number v-model="line.counted_qty" :min="0" :step="1" controls-position="right" style="width:100%;" :disabled="inventoryCountAlreadySubmitted"></el-input-number>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1541,7 +1571,7 @@
             return this.selectedDraftForStaff ? 'Continue Report' : 'Start Report';
           },
           inventoryCountSections() {
-            return this.groupLcdLinesByFamily(this.inventoryCountLines);
+            return this.groupInventoryCountLines(this.inventoryCountLines);
           }
         },
         watch: {
@@ -1756,6 +1786,33 @@
                 lines: group.lines.slice().sort((a, b) => this.compareLcdRows(a, b))
               }))
               .sort((a, b) => a.rank - b.rank);
+          },
+          groupInventoryCountLines(lines) {
+            return this.groupLcdLinesByFamily(lines).map(section => {
+              const modelMap = new Map();
+              section.lines.forEach(line => {
+                const modelName = String(line.model_name || '');
+                const key = modelName.toLowerCase();
+                if (!modelMap.has(key)) {
+                  modelMap.set(key, {
+                    key,
+                    model_name: modelName,
+                    lines: []
+                  });
+                }
+                modelMap.get(key).lines.push(line);
+              });
+
+              return Object.assign({}, section, {
+                model_groups: Array.from(modelMap.values())
+                  .map(group => ({
+                    key: group.key,
+                    model_name: group.model_name,
+                    lines: group.lines.slice().sort((a, b) => this.compareLcdRows(a, b))
+                  }))
+                  .sort((a, b) => this.compareLcdModels(a.model_name, b.model_name))
+              });
+            });
           },
           moneyValue(value) {
             if (value === null || value === undefined || String(value).trim() === '') return 0;
