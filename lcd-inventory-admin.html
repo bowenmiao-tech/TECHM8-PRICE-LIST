@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TECHM8 LCD Inventory Admin</title>
+  <title>TECHM8 Screen & Battery Inventory Admin</title>
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
@@ -462,15 +462,16 @@
       <div class="hero">
         <div class="hero-top">
           <div>
-            <h1>LCD Inventory Admin</h1>
+            <h1>Screen & Battery Inventory Admin</h1>
             <p>
-              Manage the LCD tracker inventory directly in Supabase. Each row is unique by store, model, and variant,
-              so you can maintain exact stock variants such as black, white, touch, LCD, OLED, and ORI.
+              Manage the parts tracker inventory directly in Supabase. Screens can use colour or panel variants,
+              while each battery is stored as one Battery row per model.
             </p>
           </div>
           <div class="hero-tags">
             <div class="hero-tag">Single row save</div>
-            <div class="hero-tag">Full variant control</div>
+            <div class="hero-tag">Screen variants</div>
+            <div class="hero-tag">Battery by model</div>
             <div class="hero-tag">Store-specific stock</div>
           </div>
         </div>
@@ -508,13 +509,14 @@
           <div class="panel">
             <div class="panel-title">Data Tools</div>
             <div class="panel-subtitle">
-              Load LCD stock from Supabase, add missing variants, and edit quantity or active status row by row.
+              Load screen and battery stock from Supabase, add missing variants, and edit quantity or active status row by row.
             </div>
             <div class="button-row">
               <el-button icon="el-icon-refresh" @click="loadInventory" :loading="loading">Load Inventory</el-button>
-              <el-button type="primary" plain icon="el-icon-folder-checked" @click="saveAllRows" :loading="savingAllRows">Save All LCD Rows</el-button>
+              <el-button type="primary" plain icon="el-icon-folder-checked" @click="saveAllRows" :loading="savingAllRows">Save Modified Rows</el-button>
               <el-button plain icon="el-icon-document-checked" @click="loadCountSubmissions" :loading="countLoading">Load Count Reviews</el-button>
               <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
+              <el-button type="warning" plain icon="el-icon-plus" @click="addMissingBatteryRows">Add Missing Battery Rows</el-button>
               <el-button plain icon="el-icon-s-home" onclick="window.location.href='./admin.html'">Back To Admin Portal</el-button>
             </div>
           </div>
@@ -581,8 +583,8 @@
         <div class="table-panel">
           <div class="table-head">
             <div>
-              <div class="table-title">LCD Inventory Rows</div>
-              <div class="table-subtitle">This list feeds the LCD Stock Reduction selector on the daily report page.</div>
+              <div class="table-title">Screen & Battery Inventory Rows</div>
+              <div class="table-subtitle">This list feeds the parts stock reduction selector on the daily report page.</div>
             </div>
             <div class="table-subtitle">{{ filteredRows.length }} visible row(s)</div>
           </div>
@@ -636,9 +638,9 @@
                         </template>
                       </el-table-column>
 
-                      <el-table-column label="Variant" min-width="180">
+                      <el-table-column label="Part / Type" min-width="180">
                         <template slot-scope="scope">
-                          <el-input v-model="scope.row.variant_name" placeholder="Variant name"></el-input>
+                          <el-input v-model="scope.row.variant_name" placeholder="Battery, Black, OLED, ORI"></el-input>
                         </template>
                       </el-table-column>
 
@@ -682,7 +684,7 @@
                 </div>
               </el-collapse-item>
             </el-collapse>
-            <div class="panel-subtitle" v-else style="padding:16px 4px 4px;">No LCD inventory rows found for the current filters.</div>
+            <div class="panel-subtitle" v-else style="padding:16px 4px 4px;">No screen or battery inventory rows found for the current filters.</div>
           </div>
         </div>
 
@@ -690,7 +692,7 @@
           <div class="table-head">
             <div>
               <div class="table-title">Weekly Count Reviews</div>
-              <div class="table-subtitle">Approve or reject weekly LCD inventory counts submitted by staff. Approval updates the real LCD inventory quantities.</div>
+              <div class="table-subtitle">Approve or reject weekly screen and battery inventory counts submitted by staff. Approval updates the real inventory quantities.</div>
             </div>
             <div class="table-subtitle">{{ filteredCountSubmissions.length }} submission(s)</div>
           </div>
@@ -714,7 +716,7 @@
               <div class="panel">
                 <div class="panel-title">Approval Logic</div>
                 <div class="panel-subtitle" style="margin-bottom:0;">
-                  Staff submissions do not change live LCD stock immediately. When you approve a submission, each counted quantity becomes the new live store quantity.
+                  Staff submissions do not change live stock immediately. When you approve a submission, each counted quantity becomes the new live store quantity.
                 </div>
               </div>
             </div>
@@ -745,7 +747,7 @@
                     <thead>
                       <tr>
                         <th>Model</th>
-                        <th>Variant</th>
+                        <th>Part / Type</th>
                         <th>System Qty</th>
                         <th>Counted Qty</th>
                         <th>Delta</th>
@@ -779,7 +781,7 @@
     const authReady = window.Techm8StaffAuth.init({
       rootSelector: '#app',
       title: 'Admin Login',
-      subtitle: 'Sign in with the admin account and password to open the LCD inventory admin page.',
+      subtitle: 'Sign in with the admin account and password to open the screen and battery inventory admin page.',
       requireLoginEmail: true,
       loginInputType: 'text',
       loginPlaceholder: 'Admin account',
@@ -1056,7 +1058,8 @@
             'lcd(9.7)': 9,
             'oled': 10,
             'ori': 11,
-            'standard': 12
+            'standard': 12,
+            'battery': 20
           };
           return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
         },
@@ -1282,7 +1285,7 @@
               target_store_code: ''
             });
             if (!result || !result.ok) {
-              throw new Error((result && result.message) || 'Failed to load LCD inventory.');
+              throw new Error((result && result.message) || 'Failed to load screen and battery inventory.');
             }
             this.rows = Array.isArray(result.items)
               ? result.items.map(this.normalizeRow).sort((a, b) => {
@@ -1294,7 +1297,7 @@
             this.rebuildOriginalRowState();
           } catch (error) {
             console.error(error);
-            this.loadError = error.message || 'Failed to load LCD inventory.';
+            this.loadError = error.message || 'Failed to load screen and battery inventory.';
           } finally {
             this.loading = false;
           }
@@ -1345,6 +1348,43 @@
             active: row.active
           }));
         },
+        addMissingBatteryRows() {
+          const sourceRows = this.filteredRows.length ? this.filteredRows : this.rows;
+          const existingBatteryKeys = new Set(
+            this.rows
+              .filter(row => String(row.variant_name || '').trim().toLowerCase() === 'battery')
+              .map(row => `${row.store_code}||${String(row.model_name || '').trim().toLowerCase()}`)
+          );
+          const modelMap = new Map();
+
+          sourceRows.forEach(row => {
+            const storeCode = String(row.store_code || '').trim();
+            const modelName = String(row.model_name || '').trim();
+            const variantName = String(row.variant_name || '').trim().toLowerCase();
+            if (!storeCode || !modelName || variantName === 'battery') return;
+
+            const key = `${storeCode}||${modelName.toLowerCase()}`;
+            if (existingBatteryKeys.has(key) || modelMap.has(key)) return;
+            modelMap.set(key, {
+              store_code: storeCode,
+              store_name: row.store_name || storeCode,
+              model_name: modelName,
+              variant_name: 'Battery',
+              category_key: row.category_key || this.lcdFamilyInfo(row).key || 'other',
+              current_qty: 0,
+              active: true
+            });
+          });
+
+          const newRows = Array.from(modelMap.values()).map(row => this.normalizeRow(row));
+          if (!newRows.length) {
+            this.$message.info('No missing battery rows found for the current filters.');
+            return;
+          }
+
+          this.rows = newRows.concat(this.rows);
+          this.$message.success(`Added ${newRows.length} battery draft row(s). Review quantities, then save.`);
+        },
         buildRowPayload(row) {
           return {
             store_code: String(row.store_code || '').trim(),
@@ -1370,20 +1410,20 @@
               row_payload: payload
             });
             if (!result || !result.ok) {
-              throw new Error((result && result.message) || 'Failed to save LCD inventory row.');
+              throw new Error((result && result.message) || 'Failed to save inventory row.');
             }
             this.replaceRowAfterSave(row, result.item || result.row || payload);
-            this.$message.success('LCD inventory row saved.');
+            this.$message.success('Inventory row saved.');
           } catch (error) {
             console.error(error);
-            this.$message.error(error.message || 'Failed to save LCD inventory row.');
+            this.$message.error(error.message || 'Failed to save inventory row.');
           }
         },
         async saveAllRows() {
           const dirtyRows = this.filteredRows.filter(row => this.isRowDirty(row));
 
           if (!dirtyRows.length) {
-            this.$message.info('No modified LCD rows to save.');
+            this.$message.info('No modified inventory rows to save.');
             return;
           }
 
@@ -1415,10 +1455,10 @@
               if (storeDiff !== 0) return storeDiff;
               return this.compareLcdRows(a, b);
             });
-            this.$message.success(`Saved ${dirtyRows.length} modified LCD row(s).`);
+            this.$message.success(`Saved ${dirtyRows.length} modified inventory row(s).`);
           } catch (error) {
             console.error(error);
-            this.$message.error(error.message || 'Failed to bulk save LCD rows.');
+            this.$message.error(error.message || 'Failed to bulk save inventory rows.');
           } finally {
             this.savingAllRows = false;
           }
@@ -1439,7 +1479,7 @@
           try {
             await this.$confirm(
               `Delete ${modelName} / ${variantName} from ${row.store_name || storeCode}?`,
-              'Delete LCD inventory row',
+              'Delete inventory row',
               {
                 confirmButtonText: 'Delete',
                 cancelButtonText: 'Cancel',
@@ -1459,19 +1499,19 @@
               target_variant_name: variantName
             });
             if (!result || !result.ok) {
-              throw new Error((result && result.message) || 'Failed to delete LCD inventory row.');
+              throw new Error((result && result.message) || 'Failed to delete inventory row.');
             }
-            this.$message.success('LCD inventory row deleted.');
+            this.$message.success('Inventory row deleted.');
             await this.loadInventory();
           } catch (error) {
             console.error(error);
-            this.$message.error(error.message || 'Failed to delete LCD inventory row.');
+            this.$message.error(error.message || 'Failed to delete inventory row.');
           }
         },
         async approveCountSubmission(submission) {
           try {
             await this.$confirm(
-              `Approve the weekly LCD count for ${submission.store_name}? This will update the live LCD quantities for ${submission.lines.length} row(s).`,
+              `Approve the weekly screen and battery count for ${submission.store_name}? This will update live quantities for ${submission.lines.length} row(s).`,
               'Approve Weekly Count',
               {
                 confirmButtonText: 'Approve',
@@ -1540,7 +1580,7 @@
         async resetCountSubmission(submission) {
           try {
             await this.$confirm(
-              `Reset the weekly LCD count for ${submission.store_name} (${this.formatDate(submission.week_start)})? Staff will be able to submit a new count immediately.`,
+              `Reset the weekly screen and battery count for ${submission.store_name} (${this.formatDate(submission.week_start)})? Staff will be able to submit a new count immediately.`,
               'Reset Weekly Count',
               {
                 confirmButtonText: 'Reset',
@@ -1571,7 +1611,7 @@
         async resetStoreWeeklyCount(storeSection) {
           try {
             await this.$confirm(
-              `Reset this week's LCD count task for ${storeSection.store_name}? Staff at this store will be able to submit a new weekly count immediately.`,
+              `Reset this week's screen and battery count task for ${storeSection.store_name}? Staff at this store will be able to submit a new weekly count immediately.`,
               'Reset Store Weekly Count',
               {
                 confirmButtonText: 'Reset',

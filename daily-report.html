@@ -626,10 +626,51 @@
     @media (max-width: 640px) {
       #app { padding: 12px; }
       .hero, .content { padding: 14px; }
-      .panel { padding: 14px; }
+      .shell { border-radius: 18px; }
+      .panel { padding: 12px; border-radius: 18px; }
+      .section-banner { border-radius: 12px; font-size: 14px; }
       .report-topbar-actions { width: 100%; }
       .hero-action-row { justify-content: flex-start; }
       .hero-side { min-width: 0; flex-basis: 100%; }
+      .count-family-title {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        border-radius: 12px;
+      }
+      .count-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 16px;
+      }
+      .count-row > div:first-child,
+      .count-row > div:last-child {
+        grid-column: 1 / -1;
+      }
+      .count-readonly {
+        min-height: 38px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        line-height: 1.35;
+      }
+      .count-row .el-input-number .el-input__inner {
+        height: 48px;
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .footer-actions,
+      .footer-actions .toolbar,
+      .section-head,
+      .section-head .toolbar {
+        align-items: stretch;
+        width: 100%;
+      }
+      .footer-actions .el-button,
+      .section-head .el-button {
+        width: 100%;
+        margin-left: 0;
+      }
     }
   </style>
 </head>
@@ -642,12 +683,12 @@
             <h1 class="hero-title">Daily Report</h1>
             <p class="hero-text">
               Select the store and staff member, complete the daily report sections, save a draft at any time, and submit
-              the final report when the day is finished. LCD stock actions only reduce stock.
+              the final report when the day is finished. Screen and battery stock actions only reduce stock.
             </p>
             <div class="hero-badges">
               <div class="hero-badge">Draft save</div>
               <div class="hero-badge">Auto formulas</div>
-              <div class="hero-badge">LCD stock reduction</div>
+              <div class="hero-badge">Parts stock reduction</div>
             </div>
           </div>
 
@@ -717,7 +758,7 @@
           </div>
           <div class="toolbar">
             <el-button type="primary" @click="enterReport" :loading="setupLoading">{{ reportEntryButtonLabel }}</el-button>
-            <el-button type="success" plain @click="enterInventoryCount" :loading="setupLoading">LCD Inventory Count</el-button>
+            <el-button type="success" plain @click="enterInventoryCount" :loading="setupLoading">Screen & Battery Count</el-button>
           </div>
 
           <div class="draft-list" v-if="selectedStoreCode">
@@ -1115,10 +1156,10 @@
           </div>
 
           <div class="panel">
-            <div class="section-banner">LCD STOCK REDUCTION</div>
+            <div class="section-banner">PARTS STOCK REDUCTION</div>
             <div class="section-head">
-              <div class="hint">Choose the LCD item and action. Only `sold`, `send to other`, `faulty`, and `broken` reduce stock.</div>
-              <el-button type="warning" plain icon="el-icon-plus" @click="addLcdLine">Add LCD Row</el-button>
+              <div class="hint">Choose the screen or battery item and action. Battery is one row per model and does not use colour.</div>
+              <el-button type="warning" plain icon="el-icon-plus" @click="addLcdLine">Add Parts Row</el-button>
             </div>
             <div class="line-stack" v-if="lcdLines.length">
               <div class="line-card" v-for="(line, index) in lcdLines" :key="'lcd-' + index">
@@ -1135,8 +1176,8 @@
                     </el-select>
                   </div>
                   <div>
-                    <label class="field-label">Color / Type</label>
-                    <el-select v-model="line.variant_name" filterable placeholder="Choose color / type" style="width:100%;" :disabled="!line.model_name">
+                    <label class="field-label">Part / Type</label>
+                    <el-select v-model="line.variant_name" filterable placeholder="Choose part / type" style="width:100%;" :disabled="!line.model_name">
                       <el-option
                         v-for="variant in lcdVariantOptions(line.model_name)"
                         :key="line.model_name + '-' + variant"
@@ -1168,7 +1209,7 @@
                 </div>
               </div>
             </div>
-            <div class="empty-note" v-else>No LCD deduction rows yet.</div>
+            <div class="empty-note" v-else>No parts deduction rows yet.</div>
           </div>
 
           <div class="panel">
@@ -1215,8 +1256,8 @@
           <div class="panel">
             <div class="section-head">
               <div>
-                <h2 class="panel-title">Weekly LCD Inventory Count</h2>
-                <div class="hint">Count every active LCD row for this store. Only the counted quantity can be edited here. The result stays pending until manager approval.</div>
+                <h2 class="panel-title">Weekly Screen & Battery Inventory Count</h2>
+                <div class="hint">Count every active screen and battery row for this store. Battery is counted by model only. The result stays pending until manager approval.</div>
               </div>
               <div class="toolbar">
                 <el-button plain icon="el-icon-back" @click="backToSetup">Change Store / Staff</el-button>
@@ -1243,15 +1284,15 @@
             </div>
 
             <div class="draft-note" v-if="inventoryCountExistingSubmission && inventoryCountExistingSubmission.status === 'pending'" style="margin-top:14px;">
-              This store already has a pending LCD count for this week, submitted by {{ inventoryCountExistingSubmission.staff_name }} on {{ formatDateTime(inventoryCountExistingSubmission.submitted_at) }}.
+              This store already has a pending screen and battery count for this week, submitted by {{ inventoryCountExistingSubmission.staff_name }} on {{ formatDateTime(inventoryCountExistingSubmission.submitted_at) }}.
             </div>
             <div class="draft-note" v-else-if="inventoryCountExistingSubmission && inventoryCountExistingSubmission.status === 'approved'" style="margin-top:14px;">
-              This store already has an approved LCD count for this week, submitted by {{ inventoryCountExistingSubmission.staff_name }} on {{ formatDateTime(inventoryCountExistingSubmission.submitted_at) }}.
+              This store already has an approved screen and battery count for this week, submitted by {{ inventoryCountExistingSubmission.staff_name }} on {{ formatDateTime(inventoryCountExistingSubmission.submitted_at) }}.
             </div>
           </div>
 
           <div class="panel">
-            <div class="section-banner">LCD INVENTORY COUNT</div>
+            <div class="section-banner">SCREEN & BATTERY INVENTORY COUNT</div>
             <div class="count-grid" v-if="inventoryCountLines.length">
               <div class="count-family-section" v-for="section in inventoryCountSections" :key="'count-family-' + section.key">
                 <div class="count-family-title">{{ section.label }}</div>
@@ -1261,7 +1302,7 @@
                     <div class="count-readonly">{{ line.model_name }}</div>
                   </div>
                   <div>
-                    <label class="field-label">Variant</label>
+                    <label class="field-label">Part / Type</label>
                     <div class="count-readonly">{{ line.variant_name }}</div>
                   </div>
                   <div>
@@ -1275,7 +1316,7 @@
                 </div>
               </div>
             </div>
-            <div class="empty-note" v-else>No active LCD inventory rows found for this store.</div>
+            <div class="empty-note" v-else>No active screen or battery inventory rows found for this store.</div>
           </div>
 
           <div class="panel">
@@ -1662,7 +1703,8 @@
               'lcd(9.7)': 9,
               'oled': 10,
               'ori': 11,
-              'standard': 12
+              'standard': 12,
+              'battery': 20
             };
             return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
           },
@@ -1801,7 +1843,7 @@
               this.inventoryCountNotes = '';
             } catch (error) {
               console.error(error);
-              this.$message.error(error.message || 'Could not load weekly LCD count form.');
+              this.$message.error(error.message || 'Could not load weekly screen and battery count form.');
             }
           },
           resetInventoryCount() {
@@ -1901,7 +1943,7 @@
           },
           lcdAvailableLabel(line) {
             const item = this.findLcdItem(line);
-            if (!item) return 'Choose model and type';
+            if (!item) return 'Choose model and part';
             return String(item.current_qty) + ' in stock';
           },
           buildPayload() {
@@ -2013,7 +2055,7 @@
 
             for (const line of payload.lcd_lines) {
               if (!line.inventory_item_id || !line.model_name || !line.variant_name || !line.action_type) {
-                this.$message.error('Each LCD row must include model, type, and action.');
+                this.$message.error('Each parts row must include model, part / type, and action.');
                 return false;
               }
               const item = this.lcdItems.find(entry => entry.id === line.inventory_item_id);
@@ -2063,7 +2105,7 @@
           },
           async submitInventoryCount(forceConfirm) {
             if (!this.inventoryCountLines.length) {
-              this.$message.error('No LCD rows found to count.');
+              this.$message.error('No screen or battery rows found to count.');
               return;
             }
 
@@ -2081,7 +2123,7 @@
 
                 await this.$confirm(
                   `The following rows do not match the current inventory:<br><br>${html}<br><br>Submit anyway for manager review?`,
-                  'LCD Count Mismatch',
+                  'Screen & Battery Count Mismatch',
                   {
                     dangerouslyUseHTMLString: true,
                     confirmButtonText: 'Submit Anyway',
@@ -2094,12 +2136,12 @@
               }
 
               if (!result || !result.ok) {
-                throw new Error((result && result.message) || 'Weekly LCD count submission failed.');
+                throw new Error((result && result.message) || 'Weekly screen and battery count submission failed.');
               }
 
               this.$alert(
-                `Weekly LCD count submitted. ${result.discrepancy_count || 0} mismatch row(s) are waiting for manager approval.`,
-                'LCD Count Submitted',
+                `Weekly screen and battery count submitted. ${result.discrepancy_count || 0} mismatch row(s) are waiting for manager approval.`,
+                'Screen & Battery Count Submitted',
                 { confirmButtonText: 'OK' }
               );
 
@@ -2110,7 +2152,7 @@
                 return;
               }
               console.error(error);
-              this.$message.error(error.message || 'Could not submit weekly LCD count.');
+              this.$message.error(error.message || 'Could not submit weekly screen and battery count.');
             } finally {
               this.inventoryCountSubmitting = false;
             }
