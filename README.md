@@ -14,6 +14,7 @@ Front-end staff pages:
 - `quote.html` - repair quote lookup
 - `repair_workflow.html` - intake / workflow page
 - `daily-report.html` - daily report + weekly LCD count
+- `staff-documents.html` - staff document templates and report examples
 - `problem-solving.html` - internal guide library
 - `backup_price_lookup.html` - backup quote page
 
@@ -204,6 +205,8 @@ Seed / migration rule:
 ## Problem Solving Library Rules
 
 `problem-solving.html` is the internal guide library.
+
+Document templates and completed report examples belong in `staff-documents.html`, not `problem-solving.html`.
 
 Guide-card image rules:
 - Card images should use the intended local asset
