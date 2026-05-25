@@ -697,7 +697,7 @@
 
       <div class="status-row">
         <div id="categoryTabs" class="category-tabs"></div>
-        <div id="syncStatus" class="sync-status"><i class="bi bi-cloud-check"></i><span>Loading products</span></div>
+        <button id="syncStatus" class="sync-status" type="button" title="Click to set the internal products API key"><i class="bi bi-cloud-check"></i><span>Loading products</span></button>
       </div>
 
       <section id="productGrid" class="product-grid" aria-label="Products"></section>
@@ -840,9 +840,31 @@
       return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value || 0));
     }
 
+    function normalizeStoreKey(value) {
+      return String(value || '').toLowerCase().replace(/techm8/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
     function getProductStock(product) {
       if (typeof product.qty_on_hand === 'number') return product.qty_on_hand;
       if (product.store_stock && typeof product.store_stock[state.storeId] === 'number') return product.store_stock[state.storeId];
+      if (Array.isArray(product.store_inventory)) {
+        const currentStore = normalizeStoreKey(state.storeId);
+        const row = product.store_inventory.find(item => {
+          return [
+            item.store_id,
+            item.store_slug,
+            item.store_name,
+            item.branch,
+            item.name
+          ].some(value => normalizeStoreKey(value) === currentStore);
+        });
+        if (row) return Number(row.qty_on_hand ?? row.stock_qty ?? row.qty ?? row.quantity ?? 0);
+      }
+      if (product.store_inventory && typeof product.store_inventory === 'object') {
+        const currentStore = normalizeStoreKey(state.storeId);
+        const matchedKey = Object.keys(product.store_inventory).find(key => normalizeStoreKey(key) === currentStore);
+        if (matchedKey) return Number(product.store_inventory[matchedKey] || 0);
+      }
       return 0;
     }
 
@@ -868,14 +890,23 @@
         cost_price: Number(item.cost_price || item.cost || 0),
         sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
         barcode: item.barcode || '',
-        image_url: item.image_url || item.image || '',
-        qty_on_hand: Number(item.qty_on_hand ?? item.stock_qty ?? item.stock ?? 0)
+        image_url: item.image_url || item.thumbnail_url || item.image || '',
+        qty_on_hand: item.qty_on_hand == null && item.stock_qty == null && item.stock == null
+          ? undefined
+          : Number(item.qty_on_hand ?? item.stock_qty ?? item.stock ?? 0),
+        store_inventory: item.store_inventory || null
       }));
     }
 
     async function loadProducts() {
-      const endpoint = localStorage.getItem('techm8_pos_products_endpoint') || window.TECHM8_POS_PRODUCTS_ENDPOINT || '';
-      const apiKey = sessionStorage.getItem('techm8_internal_products_api_key') || '';
+      const defaultEndpoint = window.TECHM8_SUPABASE && window.TECHM8_SUPABASE.url
+        ? `${window.TECHM8_SUPABASE.url}/functions/v1/internal-products`
+        : '';
+      const endpoint = localStorage.getItem('techm8_pos_products_endpoint') || window.TECHM8_POS_PRODUCTS_ENDPOINT || defaultEndpoint;
+      const apiKey = sessionStorage.getItem('techm8_internal_products_api_key')
+        || localStorage.getItem('techm8_internal_products_api_key')
+        || window.INTERNAL_PRODUCTS_API_KEY
+        || '';
 
       if (!endpoint) {
         state.products = demoProducts;
@@ -890,7 +921,12 @@
         url.searchParams.set('store_id', state.storeId);
         const headers = apiKey ? { 'x-api-key': apiKey } : {};
         const response = await fetch(url.toString(), { headers });
-        if (!response.ok) throw new Error('Product API request failed');
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            setSyncStatus('Product API key required', 'bi-shield-lock');
+          }
+          throw new Error(`Product API request failed: ${response.status}`);
+        }
         const payload = await response.json();
         state.products = normalizeProducts(payload);
         setSyncStatus('Live products loaded', 'bi-cloud-check');
@@ -1092,6 +1128,30 @@
         if (!product) return;
         if (product.store_stock) {
           product.store_stock[state.storeId] = Math.max(0, getProductStock(product) - item.qty);
+        } else if (Array.isArray(product.store_inventory)) {
+          const currentStore = normalizeStoreKey(state.storeId);
+          const row = product.store_inventory.find(inventoryItem => {
+            return [
+              inventoryItem.store_id,
+              inventoryItem.store_slug,
+              inventoryItem.store_name,
+              inventoryItem.branch,
+              inventoryItem.name
+            ].some(value => normalizeStoreKey(value) === currentStore);
+          });
+          if (row) {
+            const currentQty = Number(row.qty_on_hand ?? row.stock_qty ?? row.qty ?? row.quantity ?? 0);
+            if ('qty_on_hand' in row) row.qty_on_hand = Math.max(0, currentQty - item.qty);
+            else if ('stock_qty' in row) row.stock_qty = Math.max(0, currentQty - item.qty);
+            else if ('qty' in row) row.qty = Math.max(0, currentQty - item.qty);
+            else row.quantity = Math.max(0, currentQty - item.qty);
+          }
+        } else if (product.store_inventory && typeof product.store_inventory === 'object') {
+          const currentStore = normalizeStoreKey(state.storeId);
+          const matchedKey = Object.keys(product.store_inventory).find(key => normalizeStoreKey(key) === currentStore);
+          if (matchedKey) {
+            product.store_inventory[matchedKey] = Math.max(0, Number(product.store_inventory[matchedKey] || 0) - item.qty);
+          }
         } else if (typeof product.qty_on_hand === 'number') {
           product.qty_on_hand = Math.max(0, product.qty_on_hand - item.qty);
         }
@@ -1184,6 +1244,21 @@
     els.storeSelect.addEventListener('change', event => {
       state.storeId = event.target.value;
       state.cart = [];
+      loadProducts();
+    });
+
+    els.syncStatus.addEventListener('click', () => {
+      const existing = localStorage.getItem('techm8_internal_products_api_key') || '';
+      const nextKey = prompt('Internal products API key', existing);
+      if (nextKey === null) return;
+      if (nextKey.trim()) {
+        localStorage.setItem('techm8_internal_products_api_key', nextKey.trim());
+        showToast('Product API key saved in this browser.');
+      } else {
+        localStorage.removeItem('techm8_internal_products_api_key');
+        sessionStorage.removeItem('techm8_internal_products_api_key');
+        showToast('Product API key removed.');
+      }
       loadProducts();
     });
 
