@@ -87,7 +87,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 12px;
     }
 
@@ -282,6 +282,10 @@
           <div class="stat-card">
             <div class="stat-label">Repair Amount</div>
             <div class="stat-value">${{ totalAmount.toFixed(2) }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">All Stores Amount</div>
+            <div class="stat-value">${{ allStoresAmount.toFixed(2) }}</div>
           </div>
         </div>
 
@@ -523,6 +527,7 @@
           return {
             stores: [],
             reports: [],
+            allStoreReports: [],
             selectedDate: new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Brisbane' }),
             selectedStoreCode: '',
             loading: false,
@@ -532,6 +537,9 @@
         computed: {
           totalAmount() {
             return this.reports.reduce((sum, report) => sum + Number(report.total_amount || 0), 0);
+          },
+          allStoresAmount() {
+            return this.allStoreReports.reduce((sum, report) => sum + Number(report.total_amount || 0), 0);
           },
           totalRepairRows() {
             return this.reports.reduce((sum, report) => sum + Number(report.repair_count || 0), 0);
@@ -557,16 +565,29 @@
               this.loadError = error.message || 'Could not load stores.';
             }
           },
+          async fetchDailyReports(targetStoreCode) {
+            const result = await window.Techm8StaffAuth.callRpc('get_daily_reports', {
+              session_token: window.Techm8StaffAuth.getToken(),
+              target_date: this.selectedDate || null,
+              target_store_code: targetStoreCode || null
+            });
+            return Array.isArray(result.reports) ? result.reports : [];
+          },
           async loadReports() {
             this.loading = true;
             this.loadError = '';
             try {
-              const result = await window.Techm8StaffAuth.callRpc('get_daily_reports', {
-                session_token: window.Techm8StaffAuth.getToken(),
-                target_date: this.selectedDate || null,
-                target_store_code: this.selectedStoreCode || null
-              });
-              this.reports = Array.isArray(result.reports) ? result.reports : [];
+              if (this.selectedStoreCode) {
+                const [filteredReports, allStoreReports] = await Promise.all([
+                  this.fetchDailyReports(this.selectedStoreCode),
+                  this.fetchDailyReports(null)
+                ]);
+                this.reports = filteredReports;
+                this.allStoreReports = allStoreReports;
+              } else {
+                this.reports = await this.fetchDailyReports(null);
+                this.allStoreReports = this.reports;
+              }
             } catch (error) {
               console.error(error);
               this.loadError = error.message || 'Could not load daily reports.';
