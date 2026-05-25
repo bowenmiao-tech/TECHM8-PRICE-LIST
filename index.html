@@ -56,6 +56,14 @@
       color: #fff;
     }
 
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
     .hero-badge {
       display: inline-flex;
       align-items: center;
@@ -67,6 +75,28 @@
       letter-spacing: .08em;
       text-transform: uppercase;
       font-weight: 700;
+    }
+
+    .pos-entry-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--tm-dark);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.16);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .pos-entry-button:hover {
+      transform: translateY(-2px);
+      color: var(--tm-dark);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.2);
     }
 
     .hero-title {
@@ -251,9 +281,15 @@
   <div class="page-wrap" data-auth-protected>
     <div class="shell">
       <div class="hero">
-        <div class="hero-badge">
-          <i class="bi bi-grid-1x2-fill"></i>
-          TECHM8 Staff Portal
+        <div class="hero-top">
+          <div class="hero-badge">
+            <i class="bi bi-grid-1x2-fill"></i>
+            TECHM8 Staff Portal
+          </div>
+          <a class="pos-entry-button" href="./pos.html">
+            <i class="bi bi-shop-window"></i>
+            Open POS
+          </a>
         </div>
         <h1 class="hero-title">Choose the <span class="accent">workflow</span> you need.</h1>
         <p class="hero-text">
