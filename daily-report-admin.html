@@ -280,12 +280,16 @@
             <div class="stat-value">{{ totalLcdRows }}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Repair Amount</div>
-            <div class="stat-value">${{ totalAmount.toFixed(2) }}</div>
+            <div class="stat-label">All Stores Repair Amount</div>
+            <div class="stat-value">${{ totalRepairAmount.toFixed(2) }}</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">All Stores Amount</div>
-            <div class="stat-value">${{ allStoresAmount.toFixed(2) }}</div>
+            <div class="stat-label">All Stores Accessories Sales</div>
+            <div class="stat-value">${{ totalAccessoriesSales.toFixed(2) }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">All Stores Total Sales</div>
+            <div class="stat-value">${{ totalSalesInput.toFixed(2) }}</div>
           </div>
         </div>
 
@@ -535,11 +539,14 @@
           };
         },
         computed: {
-          totalAmount() {
-            return this.reports.reduce((sum, report) => sum + Number(report.total_amount || 0), 0);
-          },
-          allStoresAmount() {
+          totalRepairAmount() {
             return this.allStoreReports.reduce((sum, report) => sum + Number(report.total_amount || 0), 0);
+          },
+          totalAccessoriesSales() {
+            return this.sumEndOfDay('accessories_sales');
+          },
+          totalSalesInput() {
+            return this.sumEndOfDay('total_sales_input');
           },
           totalRepairRows() {
             return this.reports.reduce((sum, report) => sum + Number(report.repair_count || 0), 0);
@@ -572,6 +579,12 @@
               target_store_code: targetStoreCode || null
             });
             return Array.isArray(result.reports) ? result.reports : [];
+          },
+          sumEndOfDay(fieldName) {
+            return this.allStoreReports.reduce((sum, report) => {
+              const endOfDay = report && report.end_of_day ? report.end_of_day : {};
+              return sum + Number(endOfDay[fieldName] || 0);
+            }, 0);
           },
           async loadReports() {
             this.loading = true;

@@ -931,12 +931,8 @@
     }
 
     function getProductCategory(item) {
-      if (item.category && typeof item.category === 'object') {
-        const nestedName = item.category.name || item.category.title || item.category.slug;
-        if (String(nestedName || '').trim()) return String(nestedName).trim();
-      }
-
-      const explicitCategory = [
+      const candidates = [
+        item.category,
         item.category_name,
         item.product_category,
         item.product_category_name,
@@ -945,10 +941,35 @@
         item.product_type,
         item.type,
         item.category_slug
-      ].find(value => String(value || '').trim());
+      ];
 
-      if (explicitCategory) return String(explicitCategory).trim();
+      for (const candidate of candidates) {
+        const label = getCategoryLabel(candidate);
+        if (label) return label;
+      }
+
       return 'Uncategorized';
+    }
+
+    function getCategoryLabel(value) {
+      if (value == null) return '';
+      if (typeof value === 'string' || typeof value === 'number') {
+        return String(value).trim();
+      }
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          const label = getCategoryLabel(item);
+          if (label) return label;
+        }
+        return '';
+      }
+      if (typeof value === 'object') {
+        return getCategoryLabel(value.name)
+          || getCategoryLabel(value.title)
+          || getCategoryLabel(value.label)
+          || getCategoryLabel(value.slug);
+      }
+      return '';
     }
 
     async function loadProducts() {
