@@ -818,6 +818,9 @@
       payment: 'Cash'
     };
 
+    const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/internal-products';
+    const INTERNAL_PRODUCTS_API_KEY = 'tm8_internal_products_2026_change_this_to_a_long_random_secret';
+
     const els = {
       productGrid: document.getElementById('productGrid'),
       categoryTabs: document.getElementById('categoryTabs'),
@@ -899,14 +902,13 @@
     }
 
     async function loadProducts() {
-      const defaultEndpoint = window.TECHM8_SUPABASE && window.TECHM8_SUPABASE.url
-        ? `${window.TECHM8_SUPABASE.url}/functions/v1/internal-products`
-        : '';
-      const endpoint = localStorage.getItem('techm8_pos_products_endpoint') || window.TECHM8_POS_PRODUCTS_ENDPOINT || defaultEndpoint;
+      const endpoint = window.TECHM8_POS_PRODUCTS_ENDPOINT
+        || localStorage.getItem('techm8_pos_products_endpoint')
+        || INTERNAL_PRODUCTS_ENDPOINT;
       const apiKey = sessionStorage.getItem('techm8_internal_products_api_key')
         || localStorage.getItem('techm8_internal_products_api_key')
         || window.INTERNAL_PRODUCTS_API_KEY
-        || '';
+        || INTERNAL_PRODUCTS_API_KEY;
 
       if (!endpoint) {
         state.products = demoProducts;
@@ -917,8 +919,8 @@
 
       try {
         const url = new URL(endpoint, window.location.href);
-        url.searchParams.set('limit', '200');
-        url.searchParams.set('store_id', state.storeId);
+        url.searchParams.set('page', '1');
+        url.searchParams.set('limit', '500');
         const headers = apiKey ? { 'x-api-key': apiKey } : {};
         const response = await fetch(url.toString(), { headers });
         if (!response.ok) {
