@@ -691,6 +691,7 @@
           <option value="north-lakes">TechM8 North Lakes</option>
           <option value="toowong">TechM8 Toowong</option>
           <option value="brassall">TechM8 Brassall</option>
+          <option value="warehouse-dispatch">Warehouse Dispatch</option>
         </select>
         <div class="staff-pill"><i class="bi bi-person-badge"></i><span>Staff POS</span></div>
       </div>
@@ -946,7 +947,7 @@
         const inCategory = state.category === 'All' || product.category === state.category;
         const searchable = [product.name, product.sku, product.barcode, product.category].join(' ').toLowerCase();
         return inCategory && (!query || searchable.includes(query));
-      });
+      }).sort((a, b) => getProductStock(b) - getProductStock(a));
     }
 
     function renderCategories() {
