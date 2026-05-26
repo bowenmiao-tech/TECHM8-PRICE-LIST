@@ -850,8 +850,6 @@
     };
 
     const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products';
-    const PRODUCT_SNAPSHOT_ENDPOINT = './assets/pos-products.json';
-
     const els = {
       productGrid: document.getElementById('productGrid'),
       categoryTabs: document.getElementById('categoryTabs'),
@@ -971,19 +969,8 @@
         setSyncStatus('Live products loaded', 'bi-cloud-check');
       } catch (error) {
         console.error(error);
-        try {
-          const snapshotResponse = await fetch(PRODUCT_SNAPSHOT_ENDPOINT, { cache: 'no-store' });
-          if (!snapshotResponse.ok) {
-            throw new Error(`Product snapshot request failed: ${snapshotResponse.status}`);
-          }
-          const snapshotPayload = await snapshotResponse.json();
-          state.products = normalizeProducts(snapshotPayload);
-          setSyncStatus('Product snapshot loaded', 'bi-database-check');
-        } catch (snapshotError) {
-          console.error(snapshotError);
-          state.products = demoProducts;
-          setSyncStatus('Products unavailable, using demo', 'bi-exclamation-circle');
-        }
+        state.products = [];
+        setSyncStatus('Live products unavailable', 'bi-exclamation-circle');
       }
 
       renderAll();
