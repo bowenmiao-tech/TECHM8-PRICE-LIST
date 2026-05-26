@@ -230,7 +230,7 @@
       position: relative;
       height: 176px;
       display: grid;
-      grid-template-columns: 104px minmax(0, 1fr) 42px;
+      grid-template-columns: 104px minmax(0, 1fr);
       gap: 16px;
       align-items: stretch;
       padding: 16px;
@@ -239,6 +239,19 @@
       background: #fff;
       box-shadow: 0 12px 28px rgba(13, 25, 32, 0.05);
       overflow: hidden;
+      cursor: pointer;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .product-card:hover {
+      border-color: rgba(7, 137, 111, 0.35);
+      box-shadow: 0 16px 34px rgba(13, 25, 32, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .product-card:focus-visible {
+      outline: 3px solid rgba(7, 137, 111, 0.22);
+      outline-offset: 2px;
     }
 
     .product-image {
@@ -273,26 +286,6 @@
       overflow: hidden;
     }
 
-    .product-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      color: var(--tm-muted);
-      font-size: 12px;
-      font-weight: 700;
-      min-height: 34px;
-      max-height: 36px;
-      overflow: hidden;
-    }
-
-    .product-meta span {
-      min-width: 0;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
     .product-price {
       display: flex;
       align-items: center;
@@ -322,24 +315,6 @@
 
     .stock-pill.out {
       color: var(--tm-red);
-    }
-
-    .add-button {
-      width: 40px;
-      height: 40px;
-      align-self: center;
-      border: 0;
-      border-radius: 999px;
-      color: #fff;
-      background: var(--tm-green);
-      display: grid;
-      place-items: center;
-      font-size: 20px;
-    }
-
-    .add-button:disabled {
-      background: #c8d4d8;
-      cursor: not-allowed;
     }
 
     .empty-state {
@@ -1067,22 +1042,15 @@
         const stock = getProductStock(product);
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
         return `
-          <article class="product-card">
+          <article class="product-card" data-add="${product.id}" role="button" tabindex="0" aria-label="Add ${escapeHtml(product.name)} to cart">
             <img class="product-image" src="${productImage(product)}" alt="">
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
-              <div class="product-meta">
-                <span>${escapeHtml(product.sku || 'No SKU')}</span>
-                <span>${escapeHtml(product.category || 'Products')}</span>
-              </div>
               <div class="product-price">
                 <span class="sale-price">${money(product.sale_price)}</span>
                 <span class="stock-pill ${stockClass}">${stock} in stock</span>
               </div>
             </div>
-            <button class="add-button" type="button" data-add="${product.id}" ${stock <= 0 ? 'disabled' : ''} title="Add to cart">
-              <i class="bi bi-plus-lg"></i>
-            </button>
           </article>
         `;
       }).join('');
@@ -1147,13 +1115,6 @@
       if (!product) return;
 
       const current = state.cart.find(item => item.id === productId);
-      const currentQty = current ? current.qty : 0;
-      const stock = getProductStock(product);
-      if (currentQty + 1 > stock) {
-        showToast('Not enough stock for this product.');
-        return;
-      }
-
       if (current) {
         current.qty += 1;
       } else {
@@ -1164,15 +1125,12 @@
 
     function changeQty(productId, dir) {
       const item = state.cart.find(cartItem => cartItem.id === productId);
-      const product = state.products.find(productItem => productItem.id === productId);
-      if (!item || !product) return;
+      if (!item) return;
       const nextQty = item.qty + Number(dir);
       if (nextQty <= 0) {
         state.cart = state.cart.filter(cartItem => cartItem.id !== productId);
-      } else if (nextQty <= getProductStock(product)) {
-        item.qty = nextQty;
       } else {
-        showToast('Not enough stock for this product.');
+        item.qty = nextQty;
       }
       renderCart();
     }
@@ -1303,6 +1261,14 @@
       const button = event.target.closest('[data-add]');
       if (!button) return;
       addToCart(button.dataset.add);
+    });
+
+    els.productGrid.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const card = event.target.closest('[data-add]');
+      if (!card) return;
+      event.preventDefault();
+      addToCart(card.dataset.add);
     });
 
     els.cartArea.addEventListener('click', event => {
