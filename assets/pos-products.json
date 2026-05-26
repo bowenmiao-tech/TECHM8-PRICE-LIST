@@ -1,0 +1,2205 @@
+﻿{
+    "ok":  true,
+    "source":  "internal-products snapshot",
+    "synced_at":  "2026-05-26T00:41:26.0590984Z",
+    "page":  1,
+    "page_size":  82,
+    "total":  82,
+    "has_more":  false,
+    "rows":  [
+                 {
+                     "id":  1,
+                     "sku":  "TM8-PS5-DS-STERLING-SILVER",
+                     "slug":  "dualsense-wireless-controller-sterling-silver-playstation-5",
+                     "name":  "DualSense Wireless Controller - Sterling Silver - PlayStation 5",
+                     "cost_price":  null,
+                     "sale_price":  115,
+                     "compare_at_price":  124,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/dualsense-wireless-controller-sterling-silver-playstation-5/dualsense-wireless-controller-sterling-silver-playstation-5-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/dualsense-wireless-controller-sterling-silver-playstation-5/dualsense-wireless-controller-sterling-silver-playstation-5-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-19T14:53:03.65064+00:00"
+                 },
+                 {
+                     "id":  3,
+                     "sku":  "TM8-PS5-DS-GRAY-CAMO",
+                     "slug":  "dualsense-wireless-controller-gray-camouflage",
+                     "name":  "DualSense Wireless Controller - Gray Camouflage",
+                     "cost_price":  null,
+                     "sale_price":  109,
+                     "compare_at_price":  119.95,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/dualsense-wireless-controller-gray-camouflage/dualsense-wireless-controller-gray-camouflage-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/dualsense-wireless-controller-gray-camouflage/dualsense-wireless-controller-gray-camouflage-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-19T14:52:57.291082+00:00"
+                 },
+                 {
+                     "id":  2,
+                     "sku":  "TM8-PS5-DS-COSMIC-RED",
+                     "slug":  "dualsense-wireless-controller-cosmic-red-playstation-5",
+                     "name":  "DualSense Wireless Controller - Cosmic Red - PlayStation 5",
+                     "cost_price":  null,
+                     "sale_price":  109,
+                     "compare_at_price":  119.95,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/dualsense-wireless-controller-cosmic-red-playstation-5/dualsense-wireless-controller-cosmic-red-playstation-5-01.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/dualsense-wireless-controller-cosmic-red-playstation-5/dualsense-wireless-controller-cosmic-red-playstation-5-01.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-19T14:52:51.269677+00:00"
+                 },
+                 {
+                     "id":  106,
+                     "sku":  "LC-MSI-A13-240-COPY",
+                     "slug":  "msi-mag-coreliquid-a13-240-liquid-cooler-copy",
+                     "name":  "MSI MAG CORELIQUID A13 360 Liquid Cooler",
+                     "cost_price":  98,
+                     "sale_price":  149,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/msi-mag-coreliquid-a13-240-liquid-cooler/1779202167326-dacfd5fe.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/msi-mag-coreliquid-a13-240-liquid-cooler/1779202167326-dacfd5fe.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-19T14:50:20.011487+00:00"
+                 },
+                 {
+                     "id":  105,
+                     "sku":  "LC-MSI-A13-240",
+                     "slug":  "msi-mag-coreliquid-a13-240-liquid-cooler",
+                     "name":  "MSI MAG CORELIQUID A13 240 Liquid Cooler",
+                     "cost_price":  88,
+                     "sale_price":  139,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/msi-mag-coreliquid-a13-240-liquid-cooler/1779202167326-dacfd5fe.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/msi-mag-coreliquid-a13-240-liquid-cooler/1779202167326-dacfd5fe.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-19T14:49:42.651914+00:00"
+                 },
+                 {
+                     "id":  104,
+                     "sku":  "VCZT-5070-AMP-WHT-COPY",
+                     "slug":  "12gb-zotac-rtx-5070-amp-white-gpu-copy",
+                     "name":  "16GB MSI RTX 5080 VENTUS 3X OC WHITE GPU",
+                     "cost_price":  2150,
+                     "sale_price":  2299,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/12gb-zotac-rtx-5070-amp-white-gpu-copy/1779201921002-c0e827e9.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/12gb-zotac-rtx-5070-amp-white-gpu-copy/1779201921002-c0e827e9.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-19T14:46:28.146664+00:00"
+                 },
+                 {
+                     "id":  103,
+                     "sku":  "VCZT-5070-AMP-WHT",
+                     "slug":  "12gb-zotac-rtx-5070-amp-white-gpu",
+                     "name":  "12GB ZOTAC RTX 5070 AMP WHITE GPU",
+                     "cost_price":  910,
+                     "sale_price":  999,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/12gb-zotac-rtx-5070-amp-white-gpu/1779197245808-3ab7d66d.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/12gb-zotac-rtx-5070-amp-white-gpu/1779197245808-3ab7d66d.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-19T13:29:02.901666+00:00"
+                 },
+                 {
+                     "id":  102,
+                     "sku":  "59065",
+                     "slug":  "1m-ultra-tough-micro-usb-cable",
+                     "name":  "1M ULTRA TOUGH LIGHTING CABLE",
+                     "cost_price":  1.5,
+                     "sale_price":  29,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  34,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  34,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:20:41.863656+00:00"
+                 },
+                 {
+                     "id":  101,
+                     "sku":  "8014563",
+                     "slug":  "3-in-1-cabin-crew-charging-cable",
+                     "name":  "3 in 1 Cabin Crew Charging Cable",
+                     "cost_price":  0,
+                     "sale_price":  25,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  2,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  2,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:20:39.643217+00:00"
+                 },
+                 {
+                     "id":  100,
+                     "sku":  "8822381",
+                     "slug":  "1m-ultra-tough-type-c-to-lightning-cable",
+                     "name":  "1M Ultra Tough Type c to Lightning Cable",
+                     "cost_price":  0,
+                     "sale_price":  35,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  5,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  5,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:20:38.364934+00:00"
+                 },
+                 {
+                     "id":  99,
+                     "sku":  "8830389",
+                     "slug":  "1m-ultra-tough-type-c-to-type-c-cable",
+                     "name":  "1M ULTRA TOUGH TYPE C TO TYPE C CABLE",
+                     "cost_price":  0,
+                     "sale_price":  35,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  9,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  9,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:20:37.063318+00:00"
+                 },
+                 {
+                     "id":  98,
+                     "sku":  "694102765160",
+                     "slug":  "wekome-wdc-50-240w-charging-cable",
+                     "name":  "WEKOME WDC-50 240W Charging Cable",
+                     "cost_price":  4,
+                     "sale_price":  39,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027651605",
+                     "total_stock":  29,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  29,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:18:54.456575+00:00"
+                 },
+                 {
+                     "id":  97,
+                     "sku":  "1025940",
+                     "slug":  "wekome-66w-wdc-59a-type-c-usb-charging-data-cable",
+                     "name":  "WEKOME 66W WDC-59a Type-C-USB Charging Data Cable",
+                     "cost_price":  2,
+                     "sale_price":  31.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027651346",
+                     "total_stock":  2,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  2,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:18:53.187953+00:00"
+                 },
+                 {
+                     "id":  96,
+                     "sku":  "1026141",
+                     "slug":  "wekome-wdc-60-type-c-c-charging-data-cable",
+                     "name":  "WEKOME WDC-60 Type-C-C Charging Data Cable",
+                     "cost_price":  2,
+                     "sale_price":  36.59,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027651360",
+                     "total_stock":  9,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  9,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:18:51.932278+00:00"
+                 },
+                 {
+                     "id":  95,
+                     "sku":  "103841038",
+                     "slug":  "wekome-wdc-61-lighting-to-typec-charging-data-cable",
+                     "name":  "WEKOME WDC-61 Lighting to TypeC Charging Data Cable",
+                     "cost_price":  2,
+                     "sale_price":  36.59,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027651384",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:18:50.657939+00:00"
+                 },
+                 {
+                     "id":  94,
+                     "sku":  "110671637",
+                     "slug":  "wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable",
+                     "name":  "WEKOME WDC-123i U-Lighting Kinkong Raycor Fast Charging Cable",
+                     "cost_price":  0.9,
+                     "sale_price":  35.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027656937",
+                     "total_stock":  25,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  25,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:18:49.389495+00:00"
+                 },
+                 {
+                     "id":  93,
+                     "sku":  "110681638",
+                     "slug":  "wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable",
+                     "name":  "WEKOME WDC-123a U-Type C Kinkong Raycor Fast Charging Cable",
+                     "cost_price":  0.9,
+                     "sale_price":  35.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027656044",
+                     "total_stock":  24,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  24,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-05-19T13:18:48.057688+00:00"
+                 },
+                 {
+                     "id":  82,
+                     "sku":  "10251174",
+                     "slug":  "wk-v04-wireless-earbuds",
+                     "name":  "WK V04 Wireless Earbuds",
+                     "cost_price":  10,
+                     "sale_price":  129,
+                     "compare_at_price":  null,
+                     "barcode":  "6971278727809",
+                     "total_stock":  24,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  24,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wk-v04-wireless-earbuds/1779116878140-43cddbcb.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wk-v04-wireless-earbuds/1779116878140-43cddbcb.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-18T15:08:29.635402+00:00"
+                 },
+                 {
+                     "id":  84,
+                     "sku":  "6971278727808",
+                     "slug":  "remax-pd-bt230-bt260-wireless-earbuds",
+                     "name":  "Remax PD BT230/BT260 Wireless Earbuds",
+                     "cost_price":  10,
+                     "sale_price":  89,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-pd-bt230-bt260-wireless-earbuds/1779116824800-985becc2.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-pd-bt230-bt260-wireless-earbuds/1779116824800-985becc2.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-18T15:07:30.115901+00:00"
+                 },
+                 {
+                     "id":  85,
+                     "sku":  "6971278727807",
+                     "slug":  "remax-pd-bt533n-pro-wireless-earbuds",
+                     "name":  "Remax PD-BT533N PRO Wireless Earbuds",
+                     "cost_price":  13,
+                     "sale_price":  199,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  9,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  9,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-pd-bt533n-pro-wireless-earbuds/1779116755629-07744262.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-pd-bt533n-pro-wireless-earbuds/1779116755629-07744262.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-18T15:06:15.919954+00:00"
+                 },
+                 {
+                     "id":  86,
+                     "sku":  "6954851256618",
+                     "slug":  "remax-tws-43-wireless-earbuds",
+                     "name":  "Remax TWS-43 Wireless Earbuds",
+                     "cost_price":  15,
+                     "sale_price":  79,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  6,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  6,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-tws-43-wireless-earbuds/1779116718488-08109b63.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-tws-43-wireless-earbuds/1779116718488-08109b63.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-18T15:05:33.205127+00:00"
+                 },
+                 {
+                     "id":  83,
+                     "sku":  "6972174155067",
+                     "slug":  "remax-g6-wireless-gamebubs",
+                     "name":  "Remax G6  Wireless GameBubs",
+                     "cost_price":  0,
+                     "sale_price":  129,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  4,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  4,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-g6-wireless-gamebubs/1779116676372-2f97f69d.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-g6-wireless-gamebubs/1779116676372-2f97f69d.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-18T15:04:57.963488+00:00"
+                 },
+                 {
+                     "id":  81,
+                     "sku":  "110721643",
+                     "slug":  "remax-cozybuds-w29-clip-on-bluetooth-wireless-earbuds-black",
+                     "name":  "REMAX - Cozybuds W29 Clip-On Bluetooth Wireless Earbuds - Black",
+                     "cost_price":  16,
+                     "sale_price":  99,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851235415",
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-cozybuds-w29-clip-on-bluetooth-wireless-earbuds-black/1779116625647-b41e67db.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-cozybuds-w29-clip-on-bluetooth-wireless-earbuds-black/1779116625647-b41e67db.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-18T15:04:01.561727+00:00"
+                 },
+                 {
+                     "id":  90,
+                     "sku":  "105671116",
+                     "slug":  "wireless-dongle-for-carplay-or-android-auto-m29",
+                     "name":  "Wireless Dongle for CarPlay or Android Auto M29",
+                     "cost_price":  14,
+                     "sale_price":  59,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  31,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  31,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wireless-dongle-for-carplay-or-android-auto-m29/1779116457944-8c9f3218.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wireless-dongle-for-carplay-or-android-auto-m29/1779116457944-8c9f3218.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-18T15:01:17.236968+00:00"
+                 },
+                 {
+                     "id":  91,
+                     "sku":  "8032579",
+                     "slug":  "c34-fm-transmitter",
+                     "name":  "C34 FM Transmitter",
+                     "cost_price":  5,
+                     "sale_price":  35,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  12,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  12,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/c34-fm-transmitter/1778946348166-90f6a8e1.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/c34-fm-transmitter/1778946348166-90f6a8e1.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T15:46:06.484792+00:00"
+                 },
+                 {
+                     "id":  92,
+                     "sku":  "7160003188",
+                     "slug":  "c28-fm-transmitter",
+                     "name":  "C28 FM Transmitter",
+                     "cost_price":  5,
+                     "sale_price":  39,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  17,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  17,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/c28-fm-transmitter/1778946281745-756b4189.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/c28-fm-transmitter/1778946281745-756b4189.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T15:45:10.774341+00:00"
+                 },
+                 {
+                     "id":  69,
+                     "sku":  "A stock-keeping unit (SKU) is a scannable barcode to help customers automatically track the movement of inventory.",
+                     "slug":  "this-is-the-name-of-your-product-your-product-name-can-include-letters-numbers-and-symbols",
+                     "name":  "55W 4 Port Wall Charger",
+                     "cost_price":  5,
+                     "sale_price":  39,
+                     "compare_at_price":  null,
+                     "barcode":  "This is your Universal Product code.",
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "This column indicates the specific physical location where the item is stored or placed within your inventory."
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/this-is-the-name-of-your-product-your-product-name-can-include-letters-numbers-and-symbols/1778596513818-7724d77f.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/this-is-the-name-of-your-product-your-product-name-can-include-letters-numbers-and-symbols/1778596513818-7724d77f.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T14:42:03.409301+00:00"
+                 },
+                 {
+                     "id":  89,
+                     "sku":  "7732445-2",
+                     "slug":  "remax-2-4a-universal-travel-adaptor-rp-u23",
+                     "name":  "Remax 2.4A Universal Travel Adaptor RP-U23",
+                     "cost_price":  9,
+                     "sale_price":  59,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-2-4a-universal-travel-adaptor-rp-u23/1778942280621-3d099262.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-2-4a-universal-travel-adaptor-rp-u23/1778942280621-3d099262.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T14:38:15.658913+00:00"
+                 },
+                 {
+                     "id":  88,
+                     "sku":  "101861017",
+                     "slug":  "remax-rp-w85-wch-zunya-series-20-5w-aluminum-alloy-3-in-1-magnetic-holder-and-wireless-charger",
+                     "name":  "Remax RP-W85-WCH Zunya Series 20.5W Aluminum Alloy 3-in-1 Magnetic Holder and Wireless Charger",
+                     "cost_price":  16,
+                     "sale_price":  99,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-rp-w85-wch-zunya-series-20-5w-aluminum-alloy-3-in-1-magnetic-holder-and-wireless-charger/1778942204304-e9905676.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-rp-w85-wch-zunya-series-20-5w-aluminum-alloy-3-in-1-magnetic-holder-and-wireless-charger/1778942204304-e9905676.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T14:36:59.719141+00:00"
+                 },
+                 {
+                     "id":  87,
+                     "sku":  "TM8-REMAX-RP-W87-22-5W-4-IN-1-MULTIFUNCTIONAL-NIGHT-LAMP-AND-FOLDING-HOLDER-WIRELESS-CHARGER",
+                     "slug":  "remax-rp-w87-22-5w-4-in-1-multifunctional-night-lamp-and-folding-holder-wireless-charger",
+                     "name":  "Remax RP-W87 22.5w 4 in 1 multifunctional night lamp \u0026 folding holder wireless charger",
+                     "cost_price":  16,
+                     "sale_price":  99,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-rp-w87-22-5w-4-in-1-multifunctional-night-lamp-and-folding-holder-wireless-charger/1778942130807-a2174e18.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-rp-w87-22-5w-4-in-1-multifunctional-night-lamp-and-folding-holder-wireless-charger/1778942130807-a2174e18.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T14:35:43.517384+00:00"
+                 },
+                 {
+                     "id":  74,
+                     "sku":  "110711642",
+                     "slug":  "cw01-20-5w-desktop-magnetic-3-in-1-wireless-charger",
+                     "name":  "CW01 20.5W Desktop Magnetic 3-in-1 Wireless Charger",
+                     "cost_price":  15,
+                     "sale_price":  119,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851256243",
+                     "total_stock":  3,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  3,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/cw01-20-5w-desktop-magnetic-3-in-1-wireless-charger/1778597085669-87d99504.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/cw01-20-5w-desktop-magnetic-3-in-1-wireless-charger/1778597085669-87d99504.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T14:33:47.073073+00:00"
+                 },
+                 {
+                     "id":  70,
+                     "sku":  "108231386",
+                     "slug":  "155w-gan-usb-c-wall-charger-quick-6-ports-type-c-pd-fast-charging",
+                     "name":  "155W GaN USB C wall Charger Quick 6 Ports Type C PD Fast Charging",
+                     "cost_price":  16,
+                     "sale_price":  99,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/155w-gan-usb-c-wall-charger-quick-6-ports-type-c-pd-fast-charging/1778596387702-68bde7fe.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/155w-gan-usb-c-wall-charger-quick-6-ports-type-c-pd-fast-charging/1778596387702-68bde7fe.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T14:03:45.188559+00:00"
+                 },
+                 {
+                     "id":  78,
+                     "sku":  "697105026670",
+                     "slug":  "ca69-ca112-apple-watch-magnetic-charger",
+                     "name":  "CA69/CA112 Apple Watch Magnetic Charger",
+                     "cost_price":  5,
+                     "sale_price":  39,
+                     "compare_at_price":  null,
+                     "barcode":  "6971050266705",
+                     "total_stock":  41,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  41,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/ca69-ca112-apple-watch-magnetic-charger/1778940038631-058a55f6.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/ca69-ca112-apple-watch-magnetic-charger/1778940038631-058a55f6.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T14:03:24.28105+00:00"
+                 },
+                 {
+                     "id":  79,
+                     "sku":  "9018630",
+                     "slug":  "ds15-2-in-1wireless-charger",
+                     "name":  "DS15 2 IN 1Wireless Charger",
+                     "cost_price":  9,
+                     "sale_price":  69,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  6,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  6,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/ds15-2-in-1wireless-charger/1778940145605-8a00e1ee.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/ds15-2-in-1wireless-charger/1778940145605-8a00e1ee.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T14:03:07.895951+00:00"
+                 },
+                 {
+                     "id":  77,
+                     "sku":  "10276711",
+                     "slug":  "wekome-wp-u99-magsafe-wirless-charger",
+                     "name":  "WEKOME WP-U99 Magsafe Wirless Charger",
+                     "cost_price":  5,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027640081",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wp-u99-magsafe-wirless-charger/1778939501474-605c1d8d.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wp-u99-magsafe-wirless-charger/1778939501474-605c1d8d.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T13:53:03.907224+00:00"
+                 },
+                 {
+                     "id":  71,
+                     "sku":  "425222609228",
+                     "slug":  "45w-dual-type-c-fast-wall-charger",
+                     "name":  "30W Type c \u0026 Usb Wall Charger",
+                     "cost_price":  5,
+                     "sale_price":  35,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  73,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  73,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/45w-dual-type-c-fast-wall-charger/1778596281566-9423c68b.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/45w-dual-type-c-fast-wall-charger/1778596281566-9423c68b.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T13:47:42.131708+00:00"
+                 },
+                 {
+                     "id":  73,
+                     "sku":  "492967793802",
+                     "slug":  "3-usb-wall-charger",
+                     "name":  "3 USB WALL CHARGER",
+                     "cost_price":  3,
+                     "sale_price":  29,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  14,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  14,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/3-usb-wall-charger/1778596612524-7af58249.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/3-usb-wall-charger/1778596612524-7af58249.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T13:46:39.545597+00:00"
+                 },
+                 {
+                     "id":  72,
+                     "sku":  "7732445",
+                     "slug":  "100w-wall-charger",
+                     "name":  "100W Wall Charger",
+                     "cost_price":  20,
+                     "sale_price":  99,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  5,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  5,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/100w-wall-charger/1778596208957-4240ebd0.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/100w-wall-charger/1778596208957-4240ebd0.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T13:46:14.206298+00:00"
+                 },
+                 {
+                     "id":  76,
+                     "sku":  "107041247",
+                     "slug":  "wekome-wireless-charger-wp-u172",
+                     "name":  "WEKOME Wireless Charger WP-U172",
+                     "cost_price":  13,
+                     "sale_price":  99,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027648049",
+                     "total_stock":  3,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  3,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wireless-charger-wp-u172/1778597027244-abff4c8b.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wireless-charger-wp-u172/1778597027244-abff4c8b.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T13:45:41.09264+00:00"
+                 },
+                 {
+                     "id":  75,
+                     "sku":  "109041519",
+                     "slug":  "remax-20-5w-metal-foldable-rotatable-magnetic-3-in-1-wireless-charger-cw05",
+                     "name":  "REMAX 20.5W metal foldable rotatable magnetic 3 in 1 wireless charger CW05",
+                     "cost_price":  22,
+                     "sale_price":  119,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851260271",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-20-5w-metal-foldable-rotatable-magnetic-3-in-1-wireless-charger-cw05/1778597138815-e5c71903.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-20-5w-metal-foldable-rotatable-magnetic-3-in-1-wireless-charger-cw05/1778597138815-e5c71903.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-16T13:45:03.020368+00:00"
+                 },
+                 {
+                     "id":  66,
+                     "sku":  "110511620",
+                     "slug":  "wekome-wp-c64-car-charger",
+                     "name":  "WEKOME WP-C64 Car Charger",
+                     "cost_price":  3,
+                     "sale_price":  39,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027655641",
+                     "total_stock":  3,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  3,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wp-c64-car-charger/1778508004680-ebfcdedc.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wp-c64-car-charger/1778508004680-ebfcdedc.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-11T14:00:37.434794+00:00"
+                 },
+                 {
+                     "id":  68,
+                     "sku":  "110531618",
+                     "slug":  "wekome-wp-c54-car-charger",
+                     "name":  "WEKOME WP-C54 Car Charger",
+                     "cost_price":  3,
+                     "sale_price":  39,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027651735",
+                     "total_stock":  3,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  3,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wp-c54-car-charger/1778507927402-067e27f5.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wp-c54-car-charger/1778507927402-067e27f5.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-11T13:59:48.87929+00:00"
+                 },
+                 {
+                     "id":  67,
+                     "sku":  "110541619",
+                     "slug":  "wekome-wp-c53-car-charger",
+                     "name":  "WEKOME WP-C53 Car Charger",
+                     "cost_price":  3,
+                     "sale_price":  39,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027651551",
+                     "total_stock":  3,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  3,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wp-c53-car-charger/1778507799887-34d4260f.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wp-c53-car-charger/1778507799887-34d4260f.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-11T13:57:35.117702+00:00"
+                 },
+                 {
+                     "id":  61,
+                     "sku":  "TM8-wk-beluga-d13-outdoor-waterproof-portable-bluetooth-speaker-black",
+                     "slug":  "wk-beluga-d13-outdoor-waterproof-portable-bluetooth-speaker-black",
+                     "name":  "WK Beluga D13 Outdoor Waterproof Portable Bluetooth Speaker(Black)",
+                     "cost_price":  14.5,
+                     "sale_price":  89.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027649855",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wk-beluga-d13-outdoor-waterproof-portable-bluetooth-speaker-black/1778326592007-42005c11.jpg",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wk-beluga-d13-outdoor-waterproof-portable-bluetooth-speaker-black/1778326592007-42005c11.jpg?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-09T11:49:16.423338+00:00"
+                 },
+                 {
+                     "id":  63,
+                     "sku":  "TM8-wk-d45-10w-dual-speaker-transparent-mecha-bluetooth-speaker-w",
+                     "slug":  "wk-d45-10w-dual-speaker-transparent-mecha-bluetooth-speaker-w",
+                     "name":  "WK D45 10W Dual Speaker Transparent Mecha Bluetooth Speaker-W",
+                     "cost_price":  14.5,
+                     "sale_price":  89.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027644133",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wk-d45-10w-dual-speaker-transparent-mecha-bluetooth-speaker-w/1778327114310-7665a94d.jpg",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wk-d45-10w-dual-speaker-transparent-mecha-bluetooth-speaker-w/1778327114310-7665a94d.jpg?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-09T11:48:59.90472+00:00"
+                 },
+                 {
+                     "id":  60,
+                     "sku":  "TM8-wk-d45-10w-dual-speaker-transparent-mecha-bluetooth-speaker-b",
+                     "slug":  "wk-d45-10w-dual-speaker-transparent-mecha-bluetooth-speaker-b",
+                     "name":  "WK D45 10W Dual Speaker Transparent Mecha Bluetooth Speaker-B",
+                     "cost_price":  14.5,
+                     "sale_price":  89.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027644126",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wk-d45-10w-dual-speaker-transparent-mecha-bluetooth-speaker-b/1778327140532-98153f2b.jpg",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wk-d45-10w-dual-speaker-transparent-mecha-bluetooth-speaker-b/1778327140532-98153f2b.jpg?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-09T11:48:54.840468+00:00"
+                 },
+                 {
+                     "id":  65,
+                     "sku":  "TM8-remax-rb-m8-wireless-speaker",
+                     "slug":  "remax-rb-m8-wireless-speaker",
+                     "name":  "Remax RB-M8 Wireless Speaker",
+                     "cost_price":  0,
+                     "sale_price":  99,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851211730",
+                     "total_stock":  8,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  8,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-rb-m8-wireless-speaker/1778327011042-7a806fb6.jpg",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-rb-m8-wireless-speaker/1778327011042-7a806fb6.jpg?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-09T11:43:46.274411+00:00"
+                 },
+                 {
+                     "id":  64,
+                     "sku":  "TM8-remax-rb-m62-speaker",
+                     "slug":  "remax-rb-m62-speaker",
+                     "name":  "Remax RB-M62 Speaker Blue",
+                     "cost_price":  0,
+                     "sale_price":  109,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851206453",
+                     "total_stock":  8,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  8,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/remax-rb-m62-speaker/1778326966790-1daa63a3.jpg",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/remax-rb-m62-speaker/1778326966790-1daa63a3.jpg?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-09T11:43:17.730993+00:00"
+                 },
+                 {
+                     "id":  62,
+                     "sku":  "TM8-wekome-wk-wd-03-mini-karaoke-speaker-b",
+                     "slug":  "wekome-wk-wd-03-mini-karaoke-speaker-b",
+                     "name":  "Wekome WK WD-03 Mini Karaoke Speaker B",
+                     "cost_price":  14.5,
+                     "sale_price":  89.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027648742",
+                     "total_stock":  2,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  2,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wk-wd-03-mini-karaoke-speaker-b/1778326855991-c1bace5a.jpg",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wk-wd-03-mini-karaoke-speaker-b/1778326855991-c1bace5a.jpg?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-09T11:41:26.557524+00:00"
+                 },
+                 {
+                     "id":  59,
+                     "sku":  "TM8-wekome-wk-wd-03-mini-karaoke-speaker-w",
+                     "slug":  "wekome-wk-wd-03-mini-karaoke-speaker-w",
+                     "name":  "Wekome WK WD-03 Mini Karaoke Speaker W",
+                     "cost_price":  14.5,
+                     "sale_price":  89.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027648759",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wk-wd-03-mini-karaoke-speaker-w/1778326805551-26e1e0ef.jpg",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wk-wd-03-mini-karaoke-speaker-w/1778326805551-26e1e0ef.jpg?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-09T11:40:39.012392+00:00"
+                 },
+                 {
+                     "id":  20,
+                     "sku":  "TM8-MAC-M2-45W",
+                     "slug":  "new-45w-magsafe-2-power-adapter-for-macbook-air-six-months-warranty",
+                     "name":  "45W MagSafe 2 Power Adapter for MacBook Air",
+                     "cost_price":  null,
+                     "sale_price":  50,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/new-45w-magsafe-2-power-adapter-for-macbook-air-six-months-warranty/new-45w-magsafe-2-power-adapter-for-macbook-air-six-months-warranty-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/new-45w-magsafe-2-power-adapter-for-macbook-air-six-months-warranty/new-45w-magsafe-2-power-adapter-for-macbook-air-six-months-warranty-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:32:09.93938+00:00"
+                 },
+                 {
+                     "id":  19,
+                     "sku":  "TM8-MAC-M2-60W",
+                     "slug":  "60w-magsafe-2-power-adapter-macbook-pro-with-13-inch-retina-display-six-mont",
+                     "name":  "60W MagSafe 2 Power Adapter for MacBook Air and MacBook Pro",
+                     "cost_price":  null,
+                     "sale_price":  50,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/60w-magsafe-2-power-adapter-macbook-pro-with-13-inch-retina-display-six-mont/60w-magsafe-2-power-adapter-macbook-pro-with-13-inch-retina-display-six-mont-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/60w-magsafe-2-power-adapter-macbook-pro-with-13-inch-retina-display-six-mont/60w-magsafe-2-power-adapter-macbook-pro-with-13-inch-retina-display-six-mont-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:20:52.169408+00:00"
+                 },
+                 {
+                     "id":  18,
+                     "sku":  "TM8-MAC-M2-85W",
+                     "slug":  "85w-magsafe-2-power-adapter-for-macbook-pro-with-retina-display-six-months-wa",
+                     "name":  "85W MagSafe 2 Power Adapter for MacBook Pro with Retina Display",
+                     "cost_price":  null,
+                     "sale_price":  50,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/85w-magsafe-2-power-adapter-for-macbook-pro-with-retina-display-six-months-wa/85w-magsafe-2-power-adapter-for-macbook-pro-with-retina-display-six-months-wa-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/85w-magsafe-2-power-adapter-for-macbook-pro-with-retina-display-six-months-wa/85w-magsafe-2-power-adapter-for-macbook-pro-with-retina-display-six-months-wa-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:20:31.438391+00:00"
+                 },
+                 {
+                     "id":  17,
+                     "sku":  "TM8-MAC-USBC-30W",
+                     "slug":  "new-30w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty",
+                     "name":  "30W USB-C MacBook Charger with Cable",
+                     "cost_price":  null,
+                     "sale_price":  50,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/new-30w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty/new-30w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/new-30w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty/new-30w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:20:13.542216+00:00"
+                 },
+                 {
+                     "id":  16,
+                     "sku":  "TM8-MAC-USBC-61W",
+                     "slug":  "new-61w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty",
+                     "name":  "61W USB-C MacBook Charger with Cable",
+                     "cost_price":  null,
+                     "sale_price":  55,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/new-61w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty/new-61w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/new-61w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty/new-61w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:18:36.760714+00:00"
+                 },
+                 {
+                     "id":  15,
+                     "sku":  "TM8-MAC-USBC-87W",
+                     "slug":  "new-87w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty",
+                     "name":  "87W USB-C MacBook Charger with Cable",
+                     "cost_price":  null,
+                     "sale_price":  65,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/new-87w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty/new-87w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/new-87w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty/new-87w-usb-c-macbook-charger-iphone-charger-with-cable-six-months-warranty-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:18:14.866171+00:00"
+                 },
+                 {
+                     "id":  14,
+                     "sku":  "TM8-MAC-M1-45W",
+                     "slug":  "copy-of-brand-new-45w-magsafe-1-power-adapter-for-macbook-air-six-months-warranty",
+                     "name":  "45W MagSafe 1 Power Adapter for MacBook Air",
+                     "cost_price":  null,
+                     "sale_price":  45,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/copy-of-brand-new-45w-magsafe-1-power-adapter-for-macbook-air-six-months-warranty/00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/copy-of-brand-new-45w-magsafe-1-power-adapter-for-macbook-air-six-months-warranty/00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:17:57.125109+00:00"
+                 },
+                 {
+                     "id":  13,
+                     "sku":  "TM8-MAC-M1-60W",
+                     "slug":  "brand-new-60w-magsafe-1-power-adapter-for-macbook-air-and-macbook-pro",
+                     "name":  "60W MagSafe 1 Power Adapter for MacBook Air and MacBook Pro",
+                     "cost_price":  null,
+                     "sale_price":  45,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/brand-new-60w-magsafe-1-power-adapter-for-macbook-air-and-macbook-pro/brand-new-60w-magsafe-1-power-adapter-for-macbook-air-and-macbook-pro-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/brand-new-60w-magsafe-1-power-adapter-for-macbook-air-and-macbook-pro/brand-new-60w-magsafe-1-power-adapter-for-macbook-air-and-macbook-pro-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:17:36.644561+00:00"
+                 },
+                 {
+                     "id":  4,
+                     "sku":  "TM8-PS5-DS-BLACK",
+                     "slug":  "copy-of-dualsense-wireless-controller-playstation-5-black",
+                     "name":  "DualSense Wireless Controller - PlayStation 5 - Black",
+                     "cost_price":  null,
+                     "sale_price":  109,
+                     "compare_at_price":  119.95,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/copy-of-dualsense-wireless-controller-playstation-5-black/copy-of-dualsense-wireless-controller-playstation-5-black-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/copy-of-dualsense-wireless-controller-playstation-5-black/copy-of-dualsense-wireless-controller-playstation-5-black-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:16:18.656986+00:00"
+                 },
+                 {
+                     "id":  5,
+                     "sku":  "TM8-PS5-DS-WHITE",
+                     "slug":  "dualsense-wireless-controller-playstation-5-white",
+                     "name":  "DualSense Wireless Controller - PlayStation 5 - White",
+                     "cost_price":  null,
+                     "sale_price":  109,
+                     "compare_at_price":  119.95,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/dualsense-wireless-controller-playstation-5-white/dualsense-wireless-controller-playstation-5-white-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/dualsense-wireless-controller-playstation-5-white/dualsense-wireless-controller-playstation-5-white-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:16:11.293929+00:00"
+                 },
+                 {
+                     "id":  12,
+                     "sku":  "TM8-MAC-M1-85W",
+                     "slug":  "brand-new-85w-magsafe-1-power-adapter-for-macbook-pro-six-months-warranty",
+                     "name":  "85W MagSafe 1 Power Adapter for MacBook Pro",
+                     "cost_price":  null,
+                     "sale_price":  45,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "park-ridge",
+                                                 "store_name":  "Park Ridge",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "fairfield",
+                                                 "store_name":  "Fairfield",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "north-lakes",
+                                                 "store_name":  "North Lakes",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "toowong",
+                                                 "store_name":  "Toowong",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "brassall",
+                                                 "store_name":  "Brassall",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             },
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  null
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/brand-new-85w-magsafe-1-power-adapter-for-macbook-pro-six-months-warranty/brand-new-85w-magsafe-1-power-adapter-for-macbook-pro-six-months-warranty-00.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/brand-new-85w-magsafe-1-power-adapter-for-macbook-pro-six-months-warranty/brand-new-85w-magsafe-1-power-adapter-for-macbook-pro-six-months-warranty-00.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-03T15:14:23.590742+00:00"
+                 },
+                 {
+                     "id":  23,
+                     "sku":  "110521611",
+                     "slug":  "wp-70-10000mah-3-in-1-magnetic-wireless-fast-charging-power-bank",
+                     "name":  "WP-70 10000mAh 3-in-1 Magnetic Wireless Fast Charging Power Bank",
+                     "cost_price":  15,
+                     "sale_price":  79.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027655016",
+                     "total_stock":  17,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  17,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/missing-catalog-images/wp-70-10000mah-3-in-1-magnetic-wireless-fast-charging-power-bank/04-wp-70-3.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/missing-catalog-images/wp-70-10000mah-3-in-1-magnetic-wireless-fast-charging-power-bank/04-wp-70-3.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-01T14:29:04.988706+00:00"
+                 },
+                 {
+                     "id":  25,
+                     "sku":  "110501609",
+                     "slug":  "remax-rpp-26-20000mah-fast-charging-power-bank-white",
+                     "name":  "REMAX RPP-26 20000mAh Fast Charging Power Bank- White",
+                     "cost_price":  10,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  "69548512215745",
+                     "total_stock":  8,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  8,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-26-20000mah-fast-charging-power-bank-white/04-image-4.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-26-20000mah-fast-charging-power-bank-white/04-image-4.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-01T14:28:38.870773+00:00"
+                 },
+                 {
+                     "id":  40,
+                     "sku":  "694102765087",
+                     "slug":  "wekome-wp-80-magsafe-5000mah-power-bank",
+                     "name":  "WEKOME WP-80 Magsafe 5000mAh Power Bank",
+                     "cost_price":  12,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  2,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  2,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/missing-catalog-images/wekome-wp-80-magsafe-5000mah-power-bank/02-10000-2.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/missing-catalog-images/wekome-wp-80-magsafe-5000mah-power-bank/02-10000-2.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-01T14:28:28.991427+00:00"
+                 },
+                 {
+                     "id":  41,
+                     "sku":  "694102765085",
+                     "slug":  "wekome-wp-81-magsafe-10000mah-power-bank",
+                     "name":  "WEKOME WP-81 Magsafe 10000mAh Power Bank",
+                     "cost_price":  15,
+                     "sale_price":  79.95,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/missing-catalog-images/wekome-wp-81-magsafe-10000mah-power-bank/03-10000-4.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/missing-catalog-images/wekome-wp-81-magsafe-10000mah-power-bank/03-10000-4.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-01T14:28:14.762841+00:00"
+                 },
+                 {
+                     "id":  26,
+                     "sku":  "110491608",
+                     "slug":  "remax-rpp-26-20000mah-fast-charging-power-bank-black",
+                     "name":  "REMAX RPP-26 20000mAh Fast Charging Power Bank- Black",
+                     "cost_price":  10,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  "69548512215738",
+                     "total_stock":  7,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  7,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-26-20000mah-fast-charging-power-bank-black/04-image-4.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-26-20000mah-fast-charging-power-bank-black/04-image-4.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-01T14:28:02.883263+00:00"
+                 },
+                 {
+                     "id":  27,
+                     "sku":  "110481607",
+                     "slug":  "remax-rpp-23-10000mah-fast-charging-power-bank-black",
+                     "name":  "REMAX RPP-23 10000mAh Fast Charging Power Bank- Black",
+                     "cost_price":  6,
+                     "sale_price":  59.95,
+                     "compare_at_price":  null,
+                     "barcode":  "69548512215677",
+                     "total_stock":  4,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  4,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-23-10000mah-fast-charging-power-bank-black/05-image-5.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-23-10000mah-fast-charging-power-bank-black/05-image-5.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-01T14:27:53.304098+00:00"
+                 },
+                 {
+                     "id":  28,
+                     "sku":  "110471606",
+                     "slug":  "remax-rpp-23-10000mah-fast-charging-power-bank-white",
+                     "name":  "REMAX RPP-23 10000mAh Fast Charging Power Bank- White",
+                     "cost_price":  6,
+                     "sale_price":  59.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851215684",
+                     "total_stock":  4,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  4,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-23-10000mah-fast-charging-power-bank-white/05-image-5.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-23-10000mah-fast-charging-power-bank-white/05-image-5.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-05-01T14:27:42.923175+00:00"
+                 },
+                 {
+                     "id":  42,
+                     "sku":  "694102765273",
+                     "slug":  "wekome-wp-101-10000mah-power-bank",
+                     "name":  "WEKOME WP-101 10000mAh Power Bank",
+                     "cost_price":  9,
+                     "sale_price":  49.95,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  8,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  8,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/missing-catalog-images/wekome-wp-101-10000mah-power-bank/01-1w.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/missing-catalog-images/wekome-wp-101-10000mah-power-bank/01-1w.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:07:50.833824+00:00"
+                 },
+                 {
+                     "id":  39,
+                     "sku":  "694102764837",
+                     "slug":  "wekome-wp-59-10000-mah-power-bank-22-5w-super-fast-charging",
+                     "name":  "WEKOME WP-59 10000 mAh Power Bank 22.5W super fast charging",
+                     "cost_price":  10,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/missing-catalog-images/wekome-wp-59-10000-mah-power-bank-22-5w-super-fast-charging/01-2.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/missing-catalog-images/wekome-wp-59-10000-mah-power-bank-22-5w-super-fast-charging/01-2.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:06:43.011453+00:00"
+                 },
+                 {
+                     "id":  37,
+                     "sku":  "694102764840",
+                     "slug":  "wekome-wp-59-20000-mah-power-bank-22-5w-super-fast-charging",
+                     "name":  "WEKOME WP-59 20000 mAh Power Bank 22.5W super fast charging",
+                     "cost_price":  15,
+                     "sale_price":  79.95,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/missing-catalog-images/wekome-wp-59-20000-mah-power-bank-22-5w-super-fast-charging/01-2-5-3.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/missing-catalog-images/wekome-wp-59-20000-mah-power-bank-22-5w-super-fast-charging/01-2-5-3.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:06:29.933381+00:00"
+                 },
+                 {
+                     "id":  35,
+                     "sku":  "103781033",
+                     "slug":  "remax-rpp-658-rellaen-series-20000mah-fast-charging-power-bank-2-4a-white",
+                     "name":  "REMAX RPP-658 Rellaen Series 20000mAh Fast Charging Power Bank(2.4A) - White",
+                     "cost_price":  15,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851235910",
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-658-rellaen-series-20000mah-fast-charging-power-bank-2-4a-white/01-rpp-658-2-4a-20000mah.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-658-rellaen-series-20000mah-fast-charging-power-bank-2-4a-white/01-rpp-658-2-4a-20000mah.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:06:20.150969+00:00"
+                 },
+                 {
+                     "id":  34,
+                     "sku":  "105131089",
+                     "slug":  "remax-rpp-657-rallaen-series-10000mah-fast-charging-power-bank-white",
+                     "name":  "REMAX RPP-657 Rallaen Series 10000mAh Fast Charging Power Bank White",
+                     "cost_price":  10,
+                     "sale_price":  59.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851235965",
+                     "total_stock":  4,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  4,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-657-rallaen-series-10000mah-fast-charging-power-bank-white/01-rpp-657-2-4a-10000mah.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-657-rallaen-series-10000mah-fast-charging-power-bank-white/01-rpp-657-2-4a-10000mah.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:05:49.428939+00:00"
+                 },
+                 {
+                     "id":  33,
+                     "sku":  "105141090",
+                     "slug":  "remax-rpp-657-rallaen-series-10000mah-fast-charging-power-bank-black",
+                     "name":  "REMAX RPP-657 Rallaen Series 10000mAh Fast Charging Power Bank Black",
+                     "cost_price":  10,
+                     "sale_price":  59.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851235958",
+                     "total_stock":  4,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  4,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-657-rallaen-series-10000mah-fast-charging-power-bank-black/01-rpp-657-2-4a-10000mah.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-657-rallaen-series-10000mah-fast-charging-power-bank-black/01-rpp-657-2-4a-10000mah.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:05:38.939048+00:00"
+                 },
+                 {
+                     "id":  32,
+                     "sku":  "105151091",
+                     "slug":  "remax-fcp-2-20000mah-power-bank-20w-pd-22-5w-qc-fast-charging-built-in-cables-white",
+                     "name":  "REMAX FCP-2 20000mAh Power Bank 20W PD 22.5W QC Fast Charging Built-in Cables White",
+                     "cost_price":  15,
+                     "sale_price":  79.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851247012",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-fcp-2-20000mah-power-bank-20w-pd-22-5w-qc-fast-charging-built-in-cables-white/01-01-white-background.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-fcp-2-20000mah-power-bank-20w-pd-22-5w-qc-fast-charging-built-in-cables-white/01-01-white-background.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:05:23.797057+00:00"
+                 },
+                 {
+                     "id":  31,
+                     "sku":  "105161092",
+                     "slug":  "remax-fcp-2-20000mah-power-bank-20w-pd-22-5w-qc-fast-charging-built-in-cables-black",
+                     "name":  "REMAX FCP-2 20000mAh Power Bank 20W PD 22.5W QC Fast Charging Built-in Cables Black",
+                     "cost_price":  15,
+                     "sale_price":  79.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851247005",
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-fcp-2-20000mah-power-bank-20w-pd-22-5w-qc-fast-charging-built-in-cables-black/01-01-white-background.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-fcp-2-20000mah-power-bank-20w-pd-22-5w-qc-fast-charging-built-in-cables-black/01-01-white-background.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:05:00.611438+00:00"
+                 },
+                 {
+                     "id":  30,
+                     "sku":  "105171093",
+                     "slug":  "remax-fcp-1-22-5w-power-bank-10000mah-fast-charging-10000-mah-powerbank-with-cable-black",
+                     "name":  "Remax FCP-1 22.5W Power Bank 10000mAh Fast Charging 10000 MAh PowerBank with Cable Black",
+                     "cost_price":  11,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851246985",
+                     "total_stock":  0,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  0,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-fcp-1-22-5w-power-bank-10000mah-fast-charging-10000-mah-powerbank-with-cable-black/01-01-white-background.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-fcp-1-22-5w-power-bank-10000mah-fast-charging-10000-mah-powerbank-with-cable-black/01-01-white-background.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:04:50.028205+00:00"
+                 },
+                 {
+                     "id":  29,
+                     "sku":  "105181094",
+                     "slug":  "remax-fcp-1-22-5w-power-bank-10000mah-fast-charging-10000-mah-powerbank-with-cable-white",
+                     "name":  "Remax FCP-1 22.5W Power Bank 10000mAh Fast Charging 10000 MAh PowerBank with Cable White",
+                     "cost_price":  11,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851246992",
+                     "total_stock":  1,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  1,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-fcp-1-22-5w-power-bank-10000mah-fast-charging-10000-mah-powerbank-with-cable-white/01-01-white-background.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-fcp-1-22-5w-power-bank-10000mah-fast-charging-10000-mah-powerbank-with-cable-white/01-01-white-background.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:04:33.247603+00:00"
+                 },
+                 {
+                     "id":  24,
+                     "sku":  "110511610",
+                     "slug":  "wp-112-5000mah-3-in-1-magnetic-wireless-fast-charging-power-bank",
+                     "name":  "WP-112 5000mAh 3-in-1 Magnetic Wireless Fast Charging Power Bank",
+                     "cost_price":  12,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6941027655030",
+                     "total_stock":  18,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  18,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/wp-112-5000mah-3-in-1-magnetic-wireless-fast-charging-power-bank/01.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/wp-112-5000mah-3-in-1-magnetic-wireless-fast-charging-power-bank/01.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:02:50.537504+00:00"
+                 },
+                 {
+                     "id":  22,
+                     "sku":  "110621632",
+                     "slug":  "remax-rpp-622-10000mah-power-bank",
+                     "name":  "Remax RPP-622 10000MAH power bank",
+                     "cost_price":  8,
+                     "sale_price":  69.95,
+                     "compare_at_price":  null,
+                     "barcode":  "6954851212553",
+                     "total_stock":  21,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  21,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-622-10000mah-power-bank/01-image-1.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-622-10000mah-power-bank/01-image-1.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:01:41.372466+00:00"
+                 },
+                 {
+                     "id":  21,
+                     "sku":  "110631633",
+                     "slug":  "remax-rpp-623-power-bank-20000-mah",
+                     "name":  "REMAX RPP-623 Power Bank 20000 mAh",
+                     "cost_price":  12,
+                     "sale_price":  79.95,
+                     "compare_at_price":  null,
+                     "barcode":  "695485122607",
+                     "total_stock":  21,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  21,
+                                                 "shelf_location":  ""
+                                             }
+                                         ],
+                     "image_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/products/power-banks/remax-rpp-623-power-bank-20000-mah/01-image-1.webp",
+                     "thumbnail_url":  "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/products/power-banks/remax-rpp-623-power-bank-20000-mah/01-image-1.webp?width=160\u0026height=160\u0026resize=contain\u0026quality=70",
+                     "updated_at":  "2026-04-25T13:01:39.46958+00:00"
+                 },
+                 {
+                     "id":  47,
+                     "sku":  "TM8-ACC-001",
+                     "slug":  "techm8-everyday-accessory",
+                     "name":  "TECHM8 Everyday Accessory",
+                     "cost_price":  0.1,
+                     "sale_price":  1,
+                     "compare_at_price":  null,
+                     "barcode":  null,
+                     "total_stock":  999,
+                     "store_inventory":  [
+                                             {
+                                                 "store_slug":  "warehouse-dispatch",
+                                                 "store_name":  "Warehouse Dispatch",
+                                                 "quantity":  999,
+                                                 "shelf_location":  "ONLINE"
+                                             }
+                                         ],
+                     "image_url":  null,
+                     "thumbnail_url":  null,
+                     "updated_at":  "2026-04-25T07:04:37.228952+00:00"
+                 }
+             ]
+}

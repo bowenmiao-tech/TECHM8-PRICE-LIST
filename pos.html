@@ -819,7 +819,8 @@
       payment: 'Cash'
     };
 
-    const INTERNAL_PRODUCTS_ENDPOINT = './api/internal-products.php';
+    const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products';
+    const PRODUCT_SNAPSHOT_ENDPOINT = './assets/pos-products.json';
 
     const els = {
       productGrid: document.getElementById('productGrid'),
@@ -917,17 +918,42 @@
         const url = new URL(endpoint, window.location.href);
         url.searchParams.set('page', '1');
         url.searchParams.set('limit', '500');
-        const response = await fetch(url.toString());
+        const headers = {};
+        const staffToken = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+          ? window.Techm8StaffAuth.getToken()
+          : '';
+
+        if (staffToken) {
+          headers['x-staff-session'] = staffToken;
+        }
+
+        if (window.TECHM8_SUPABASE && window.TECHM8_SUPABASE.anonKey) {
+          headers.apikey = window.TECHM8_SUPABASE.anonKey;
+          headers.Authorization = `Bearer ${window.TECHM8_SUPABASE.anonKey}`;
+        }
+
+        const response = await fetch(url.toString(), { headers });
         if (!response.ok) {
-          throw new Error(`Product API proxy request failed: ${response.status}`);
+          throw new Error(`Product API request failed: ${response.status}`);
         }
         const payload = await response.json();
         state.products = normalizeProducts(payload);
         setSyncStatus('Live products loaded', 'bi-cloud-check');
       } catch (error) {
         console.error(error);
-        state.products = demoProducts;
-        setSyncStatus('API unavailable, using demo products', 'bi-exclamation-circle');
+        try {
+          const snapshotResponse = await fetch(PRODUCT_SNAPSHOT_ENDPOINT, { cache: 'no-store' });
+          if (!snapshotResponse.ok) {
+            throw new Error(`Product snapshot request failed: ${snapshotResponse.status}`);
+          }
+          const snapshotPayload = await snapshotResponse.json();
+          state.products = normalizeProducts(snapshotPayload);
+          setSyncStatus('Product snapshot loaded', 'bi-database-check');
+        } catch (snapshotError) {
+          console.error(snapshotError);
+          state.products = demoProducts;
+          setSyncStatus('Products unavailable, using demo', 'bi-exclamation-circle');
+        }
       }
 
       renderAll();
