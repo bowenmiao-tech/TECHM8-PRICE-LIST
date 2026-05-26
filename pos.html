@@ -697,7 +697,7 @@
 
       <div class="status-row">
         <div id="categoryTabs" class="category-tabs"></div>
-        <button id="syncStatus" class="sync-status" type="button" title="Click to set the internal products API key"><i class="bi bi-cloud-check"></i><span>Loading products</span></button>
+        <button id="syncStatus" class="sync-status" type="button" title="Reload products"><i class="bi bi-cloud-check"></i><span>Loading products</span></button>
       </div>
 
       <section id="productGrid" class="product-grid" aria-label="Products"></section>
@@ -818,8 +818,7 @@
       payment: 'Cash'
     };
 
-    const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/internal-products';
-    const INTERNAL_PRODUCTS_API_KEY = 'tm8_internal_products_2026_change_this_to_a_long_random_secret';
+    const INTERNAL_PRODUCTS_ENDPOINT = './api/internal-products.php';
 
     const els = {
       productGrid: document.getElementById('productGrid'),
@@ -905,10 +904,6 @@
       const endpoint = window.TECHM8_POS_PRODUCTS_ENDPOINT
         || localStorage.getItem('techm8_pos_products_endpoint')
         || INTERNAL_PRODUCTS_ENDPOINT;
-      const apiKey = sessionStorage.getItem('techm8_internal_products_api_key')
-        || localStorage.getItem('techm8_internal_products_api_key')
-        || window.INTERNAL_PRODUCTS_API_KEY
-        || INTERNAL_PRODUCTS_API_KEY;
 
       if (!endpoint) {
         state.products = demoProducts;
@@ -921,13 +916,9 @@
         const url = new URL(endpoint, window.location.href);
         url.searchParams.set('page', '1');
         url.searchParams.set('limit', '500');
-        const headers = apiKey ? { 'x-api-key': apiKey } : {};
-        const response = await fetch(url.toString(), { headers });
+        const response = await fetch(url.toString());
         if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            setSyncStatus('Product API key required', 'bi-shield-lock');
-          }
-          throw new Error(`Product API request failed: ${response.status}`);
+          throw new Error(`Product API proxy request failed: ${response.status}`);
         }
         const payload = await response.json();
         state.products = normalizeProducts(payload);
@@ -1249,20 +1240,7 @@
       loadProducts();
     });
 
-    els.syncStatus.addEventListener('click', () => {
-      const existing = localStorage.getItem('techm8_internal_products_api_key') || '';
-      const nextKey = prompt('Internal products API key', existing);
-      if (nextKey === null) return;
-      if (nextKey.trim()) {
-        localStorage.setItem('techm8_internal_products_api_key', nextKey.trim());
-        showToast('Product API key saved in this browser.');
-      } else {
-        localStorage.removeItem('techm8_internal_products_api_key');
-        sessionStorage.removeItem('techm8_internal_products_api_key');
-        showToast('Product API key removed.');
-      }
-      loadProducts();
-    });
+    els.syncStatus.addEventListener('click', loadProducts);
 
     els.payBtn.addEventListener('click', checkout);
     els.holdBtn.addEventListener('click', holdOrder);
