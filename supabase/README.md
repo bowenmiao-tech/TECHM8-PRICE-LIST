@@ -23,6 +23,8 @@ The internal products API key stays on the Supabase server as an Edge Function s
 Required secrets:
 
 ```bash
+supabase secrets set STAFF_AUTH_SUPABASE_URL=https://abkjbhmifswfexpjkval.supabase.co
+supabase secrets set STAFF_AUTH_SUPABASE_ANON_KEY=<staff auth Supabase anon key>
 supabase secrets set INTERNAL_PRODUCTS_ENDPOINT=https://fwlronvmgqzkleofriis.supabase.co/functions/v1/internal-products
 supabase secrets set INTERNAL_PRODUCTS_API_KEY=<internal products API key>
 ```

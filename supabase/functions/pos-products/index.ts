@@ -17,8 +17,12 @@ function jsonResponse(body: JsonRecord, status = 200): Response {
 }
 
 async function verifyStaffSession(sessionToken: string): Promise<boolean> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+  const supabaseUrl = Deno.env.get("STAFF_AUTH_SUPABASE_URL")
+    || Deno.env.get("SUPABASE_URL")
+    || "";
+  const supabaseAnonKey = Deno.env.get("STAFF_AUTH_SUPABASE_ANON_KEY")
+    || Deno.env.get("SUPABASE_ANON_KEY")
+    || "";
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Supabase environment is not configured.");
