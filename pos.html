@@ -883,7 +883,7 @@
     }
 
     function normalizeProducts(payload) {
-      const list = Array.isArray(payload) ? payload : (payload.products || payload.data || []);
+      const list = Array.isArray(payload) ? payload : (payload.products || payload.rows || payload.data || []);
       return list.map(item => ({
         id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
         sku: item.sku || '',
