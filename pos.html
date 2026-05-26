@@ -951,6 +951,10 @@
           ? window.Techm8StaffAuth.getToken()
           : '';
 
+        if (!staffToken) {
+          throw new Error('Staff session missing. Please unlock POS again.');
+        }
+
         if (staffToken) {
           headers['x-staff-session'] = staffToken;
         }
@@ -962,7 +966,8 @@
 
         const response = await fetch(url.toString(), { headers });
         if (!response.ok) {
-          throw new Error(`Product API request failed: ${response.status}`);
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(errorPayload.message || `Product API request failed: ${response.status}`);
         }
         const payload = await response.json();
         state.products = normalizeProducts(payload);
@@ -970,7 +975,7 @@
       } catch (error) {
         console.error(error);
         state.products = [];
-        setSyncStatus('Live products unavailable', 'bi-exclamation-circle');
+        setSyncStatus(error.message || 'Live products unavailable', 'bi-exclamation-circle');
       }
 
       renderAll();
