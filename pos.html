@@ -918,7 +918,7 @@
         id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
         sku: item.sku || '',
         name: item.name || item.product_name || 'Unnamed product',
-        category: item.category || 'Products',
+        category: getProductCategory(item),
         cost_price: Number(item.cost_price || item.cost || 0),
         sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
         barcode: item.barcode || '',
@@ -928,6 +928,27 @@
           : Number(item.qty_on_hand ?? item.stock_qty ?? item.stock ?? 0),
         store_inventory: item.store_inventory || null
       }));
+    }
+
+    function getProductCategory(item) {
+      if (item.category && typeof item.category === 'object') {
+        const nestedName = item.category.name || item.category.title || item.category.slug;
+        if (String(nestedName || '').trim()) return String(nestedName).trim();
+      }
+
+      const explicitCategory = [
+        item.category_name,
+        item.product_category,
+        item.product_category_name,
+        item.collection,
+        item.collection_name,
+        item.product_type,
+        item.type,
+        item.category_slug
+      ].find(value => String(value || '').trim());
+
+      if (explicitCategory) return String(explicitCategory).trim();
+      return 'Uncategorized';
     }
 
     async function loadProducts() {

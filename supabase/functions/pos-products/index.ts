@@ -16,13 +16,17 @@ function jsonResponse(body: JsonRecord, status = 200): Response {
   });
 }
 
-async function verifyStaffSession(sessionToken: string): Promise<boolean> {
+async function verifyStaffSession(sessionToken: string, request: Request): Promise<boolean> {
   const supabaseUrl = Deno.env.get("STAFF_AUTH_SUPABASE_URL")
     || Deno.env.get("SUPABASE_URL")
     || "";
-  const supabaseAnonKey = Deno.env.get("STAFF_AUTH_SUPABASE_ANON_KEY")
+  const incomingApiKey = request.headers.get("apikey") || "";
+  const incomingAuthorization = request.headers.get("authorization") || "";
+  const supabaseAnonKey = incomingApiKey
+    || Deno.env.get("STAFF_AUTH_SUPABASE_ANON_KEY")
     || Deno.env.get("SUPABASE_ANON_KEY")
     || "";
+  const authorization = incomingAuthorization || `Bearer ${supabaseAnonKey}`;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Supabase environment is not configured.");
@@ -33,7 +37,7 @@ async function verifyStaffSession(sessionToken: string): Promise<boolean> {
     headers: {
       "Content-Type": "application/json",
       apikey: supabaseAnonKey,
-      Authorization: `Bearer ${supabaseAnonKey}`,
+      Authorization: authorization,
     },
     body: JSON.stringify({ session_token: sessionToken }),
   });
@@ -63,7 +67,7 @@ Deno.serve(async (request) => {
 
   let isStaff = false;
   try {
-    isStaff = await verifyStaffSession(sessionToken);
+    isStaff = await verifyStaffSession(sessionToken, request);
   } catch (error) {
     console.error(error);
     return jsonResponse({ ok: false, message: "Unable to verify staff session." }, 500);
