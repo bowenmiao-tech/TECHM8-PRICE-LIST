@@ -959,6 +959,84 @@
       overflow-wrap: anywhere;
     }
 
+    .repair-board {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(220px, 1fr));
+      gap: 12px;
+      min-width: 1560px;
+    }
+
+    .board-column {
+      min-height: 260px;
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: #f7fafb;
+      padding: 12px;
+    }
+
+    .board-column-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: #263941;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .board-count {
+      color: var(--tm-muted);
+      font-weight: 900;
+    }
+
+    .ticket-card {
+      display: grid;
+      gap: 7px;
+      padding: 12px;
+      border: 1px solid #d8e3e8;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 8px 18px rgba(16, 30, 38, 0.04);
+      margin-bottom: 10px;
+    }
+
+    .ticket-title {
+      font-size: 13px;
+      font-weight: 950;
+      line-height: 1.35;
+    }
+
+    .ticket-meta {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .ticket-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .ticket-tag {
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: #edf5f3;
+      color: var(--tm-green-dark);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .ticket-tag.warn {
+      background: #fff2df;
+      color: #9b5b00;
+    }
+
+    .ticket-tag.danger {
+      background: #fff0ee;
+      color: var(--tm-red);
+    }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -1056,8 +1134,10 @@
       }
 
       .repair-grid,
-      .repair-summary {
+      .repair-summary,
+      .repair-board {
         grid-template-columns: 1fr;
+        min-width: 0;
       }
 
       .product-grid {
@@ -1207,6 +1287,39 @@
     </form>
   </div>
 
+  <div id="ticketDetailsModal" class="modal-backdrop" aria-hidden="true">
+    <form id="ticketDetailsForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="ticketDetailsTitle">
+      <h2 id="ticketDetailsTitle">Create Repair Ticket</h2>
+      <div class="special-fields">
+        <label>
+          Need to order parts?
+          <select id="ticketNeedOrder" class="repair-select">
+            <option value="yes">Yes, need to order</option>
+            <option value="no">No, start repairing</option>
+          </select>
+        </label>
+        <label>
+          Did the customer leave the device in store?
+          <select id="ticketDeviceInStore" class="repair-select">
+            <option value="yes">Yes, device is in store</option>
+            <option value="no">No, device is not in store</option>
+          </select>
+        </label>
+        <label>
+          Mainboard repair?
+          <select id="ticketMotherboardRepair" class="repair-select">
+            <option value="no">No</option>
+            <option value="yes">Yes, mark as mainboard repair</option>
+          </select>
+        </label>
+      </div>
+      <div class="special-actions">
+        <button id="ticketDetailsCancel" class="soft-action" type="button">Cancel</button>
+        <button class="pay-action" type="submit">Create Ticket</button>
+      </div>
+    </form>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -1282,6 +1395,8 @@
     const state = {
       products: [],
       repairQuotes: [],
+      repairTickets: [],
+      pendingRepairDraft: null,
       cart: [],
       category: 'All',
       search: '',
@@ -1296,6 +1411,9 @@
         model: '',
         issue: '',
         quote: null,
+        status: '',
+        deviceInStore: false,
+        motherboardRepair: false,
         specialOrder: false,
         specialName: '',
         specialPrice: '',
@@ -1351,6 +1469,12 @@
       specialRepairPrice: document.getElementById('specialRepairPrice'),
       specialRepairCancel: document.getElementById('specialRepairCancel'),
       specialRepairError: document.getElementById('specialRepairError'),
+      ticketDetailsModal: document.getElementById('ticketDetailsModal'),
+      ticketDetailsForm: document.getElementById('ticketDetailsForm'),
+      ticketNeedOrder: document.getElementById('ticketNeedOrder'),
+      ticketDeviceInStore: document.getElementById('ticketDeviceInStore'),
+      ticketMotherboardRepair: document.getElementById('ticketMotherboardRepair'),
+      ticketDetailsCancel: document.getElementById('ticketDetailsCancel'),
       toast: document.getElementById('toast')
     };
 
@@ -1396,6 +1520,18 @@
       'Hinges / Housing Condition',
       'Liquid Damage Indicators'
     ];
+
+    const repairBoardColumns = [
+      { id: 'need_to_order', label: 'Need to order' },
+      { id: 'waiting_shipping', label: 'Waiting shipping' },
+      { id: 'repairing', label: 'Parts arrived / Repairing' },
+      { id: 'waiting_pickup', label: 'Waiting pickup' },
+      { id: 'finished', label: 'Finished' },
+      { id: 'waiting_customer_confirmation', label: 'Waiting customer confirmation' },
+      { id: 'over_3_months_uncollected', label: 'Over 3 months uncollected' }
+    ];
+
+    const REPAIR_TICKETS_KEY = 'techm8_pos_repair_tickets';
 
     function money(value) {
       return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value || 0));
@@ -1598,6 +1734,20 @@
       els.repairView.classList.toggle('active', view === 'repair');
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
+      if (view === 'repair' && !state.repair.started) renderRepairWorkspace();
+    }
+
+    function loadRepairTickets() {
+      try {
+        const rows = JSON.parse(localStorage.getItem(REPAIR_TICKETS_KEY) || '[]');
+        state.repairTickets = Array.isArray(rows) ? rows : [];
+      } catch (error) {
+        state.repairTickets = [];
+      }
+    }
+
+    function saveRepairTickets() {
+      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 200)));
     }
 
     function resetRepairState() {
@@ -1609,6 +1759,9 @@
         model: '',
         issue: '',
         quote: null,
+        status: '',
+        deviceInStore: false,
+        motherboardRepair: false,
         specialOrder: false,
         specialName: '',
         specialPrice: '',
@@ -1670,31 +1823,85 @@
         return;
       }
 
-      resetRepairState();
       const roundedPrice = Math.round(price * 100) / 100;
-      state.repair.started = true;
-      state.repair.intakeOpen = true;
-      state.repair.ticketId = 'RPR-' + Date.now();
-      state.repair.specialOrder = true;
-      state.repair.specialName = name;
-      state.repair.specialPrice = roundedPrice.toFixed(2);
-      state.repair.quote = {
+      closeSpecialRepairModal();
+      openTicketDetailsModal({
+        specialOrder: true,
+        specialName: name,
+        specialPrice: roundedPrice.toFixed(2),
+        quote: {
         brand: 'Special Order',
         model: name,
         issue: name,
         price: roundedPrice.toFixed(2),
         time: ''
+        }
+      });
+    }
+
+    function openTicketDetailsModal(draft) {
+      state.pendingRepairDraft = draft;
+      els.ticketNeedOrder.value = 'yes';
+      els.ticketDeviceInStore.value = 'yes';
+      els.ticketMotherboardRepair.value = 'no';
+      els.ticketDetailsModal.classList.add('show');
+      els.ticketDetailsModal.setAttribute('aria-hidden', 'false');
+      els.ticketNeedOrder.focus();
+    }
+
+    function closeTicketDetailsModal() {
+      els.ticketDetailsModal.classList.remove('show');
+      els.ticketDetailsModal.setAttribute('aria-hidden', 'true');
+      state.pendingRepairDraft = null;
+    }
+
+    function createRepairTicketFromDraft() {
+      const draft = state.pendingRepairDraft;
+      if (!draft || !draft.quote) return;
+      const status = els.ticketNeedOrder.value === 'yes' ? 'need_to_order' : 'repairing';
+      const deviceInStore = els.ticketDeviceInStore.value === 'yes';
+      const motherboardRepair = els.ticketMotherboardRepair.value === 'yes';
+      const ticketId = 'RPR-' + Date.now();
+      const quote = draft.quote;
+      const ticket = {
+        id: ticketId,
+        title: draft.specialOrder ? draft.specialName : `${quote.brand} ${quote.model}`,
+        issue: quote.issue,
+        price: quotePriceLabel(quote.price),
+        status,
+        deviceInStore,
+        motherboardRepair,
+        specialOrder: Boolean(draft.specialOrder),
+        createdAt: new Date().toISOString()
       };
-      state.repair.quotedPrice = quotePriceLabel(state.repair.quote.price);
-      closeSpecialRepairModal();
+
+      state.repairTickets.unshift(ticket);
+      saveRepairTickets();
+      resetRepairState();
+      state.repair.started = true;
+      state.repair.intakeOpen = true;
+      state.repair.ticketId = ticketId;
+      state.repair.status = status;
+      state.repair.deviceInStore = deviceInStore;
+      state.repair.motherboardRepair = motherboardRepair;
+      state.repair.specialOrder = Boolean(draft.specialOrder);
+      state.repair.specialName = draft.specialName || '';
+      state.repair.specialPrice = draft.specialPrice || '';
+      state.repair.quote = quote;
+      state.repair.quotedPrice = quotePriceLabel(quote.price);
+      closeTicketDetailsModal();
       setActiveView('repair');
       renderRepairWorkspace();
-      showToast('Special order check opened.');
+      showToast(status === 'need_to_order' ? 'Ticket created in Need to order.' : 'Ticket created in Repairing.');
     }
 
     function clearRepairTicket() {
       if (!state.repair.started) return;
       if (!confirm('Clear this repair ticket?')) return;
+      if (state.repair.ticketId) {
+        state.repairTickets = state.repairTickets.filter(ticket => ticket.id !== state.repair.ticketId);
+        saveRepairTickets();
+      }
       resetRepairState();
       renderRepairWorkspace();
       showToast('Repair ticket cleared.');
@@ -1735,11 +1942,10 @@
         showToast('Select brand, model, and issue first.');
         return;
       }
-      state.repair.ticketId = 'RPR-' + Date.now();
-      state.repair.intakeOpen = true;
-      state.repair.quotedPrice = quotePriceLabel(state.repair.quote.price);
-      renderRepairWorkspace();
-      showToast('Repair check opened.');
+      openTicketDetailsModal({
+        specialOrder: false,
+        quote: state.repair.quote
+      });
     }
 
     function optionHtml(values, selected, placeholder) {
@@ -1826,15 +2032,44 @@
       `;
     }
 
+    function repairBoardHtml() {
+      return `
+        <div class="repair-board">
+          ${repairBoardColumns.map(column => {
+            const tickets = state.repairTickets.filter(ticket => ticket.status === column.id);
+            return `
+              <div class="board-column">
+                <div class="board-column-title">
+                  <span>${escapeHtml(column.label)}</span>
+                  <span class="board-count">${tickets.length}</span>
+                </div>
+                ${tickets.map(ticket => `
+                  <div class="ticket-card">
+                    <div class="ticket-title">${escapeHtml(ticket.title || 'Repair ticket')}</div>
+                    <div class="ticket-meta">${escapeHtml(ticket.id)} · ${escapeHtml(ticket.issue || 'Repair')} · ${escapeHtml(ticket.price || '')}</div>
+                    <div class="ticket-tags">
+                      ${ticket.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
+                      ${ticket.deviceInStore ? '<span class="ticket-tag">Device in store</span>' : ''}
+                      ${ticket.motherboardRepair ? '<span class="ticket-tag danger">Mainboard</span>' : ''}
+                    </div>
+                  </div>
+                `).join('') || '<div class="ticket-meta">No tickets</div>'}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
     function renderRepairWorkspace() {
       if (!els.repairWorkspace) return;
       if (!state.repair.started) {
         els.repairWorkspace.innerHTML = `
-          <div class="repair-empty">
-            <div>
-              <div class="cart-empty-icon"><i class="bi bi-tools"></i></div>
-              <strong>No repair ticket started</strong>
-              <div>Click New Repair to choose Brand - Model - Issue and start the device check.</div>
+          <div class="repair-stack">
+            <div class="repair-panel">
+              <h2 class="repair-panel-title">Repair Board</h2>
+              <p class="repair-panel-text">Tickets are grouped by status. New Repair and Special Order create a ticket and open the inspection form.</p>
+              ${repairBoardHtml()}
             </div>
           </div>
         `;
@@ -2468,12 +2703,23 @@
       event.preventDefault();
       addSpecialRepairOrder();
     });
+    els.ticketDetailsCancel.addEventListener('click', closeTicketDetailsModal);
+    els.ticketDetailsModal.addEventListener('click', event => {
+      if (event.target === els.ticketDetailsModal) closeTicketDetailsModal();
+    });
+    els.ticketDetailsForm.addEventListener('submit', event => {
+      event.preventDefault();
+      createRepairTicketFromDraft();
+    });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && els.specialProductModal.classList.contains('show')) {
         closeSpecialProductModal();
       }
       if (event.key === 'Escape' && els.specialRepairModal.classList.contains('show')) {
         closeSpecialRepairModal();
+      }
+      if (event.key === 'Escape' && els.ticketDetailsModal.classList.contains('show')) {
+        closeTicketDetailsModal();
       }
     });
 
@@ -2482,6 +2728,8 @@
       title: 'POS Access',
       subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
     }).then(() => {
+      loadRepairTickets();
+      renderRepairWorkspace();
       loadProducts();
       loadRepairQuotes();
     });
