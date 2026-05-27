@@ -1274,10 +1274,11 @@
         model: '',
         issue: '',
         quote: null,
-        customerName: '',
-        customerContact: '',
-        deviceId: '',
         quotedPrice: '',
+        deviceIdType: 'imei',
+        deviceImei: '',
+        deviceSerial: '',
+        deviceIdUnavailable: '',
         password: '',
         testNotes: '',
         passwordType: 'text',
@@ -1321,7 +1322,7 @@
       toast: document.getElementById('toast')
     };
 
-    const repairTestItems = [
+    const mobileRepairTestItems = [
       'Outer Glass / Screen Condition',
       'Touch Response',
       'Display / OLED / LCD',
@@ -1342,6 +1343,26 @@
       'Frame / Housing Condition',
       'Back Glass / Rear Cover',
       'Water Damage Indicators'
+    ];
+
+    const computerRepairTestItems = [
+      'Screen / Display Condition',
+      'Keyboard',
+      'Trackpad / Mouse',
+      'Touchscreen',
+      'Camera',
+      'Microphone',
+      'Speakers',
+      'Wi-Fi / Bluetooth',
+      'USB / I/O Ports',
+      'Charging Port / Charger Detection',
+      'Battery Health / Charging',
+      'Power Button',
+      'Boot / Operating System',
+      'Storage Check',
+      'Fan / Thermal Condition',
+      'Hinges / Housing Condition',
+      'Liquid Damage Indicators'
     ];
 
     function money(value) {
@@ -1465,6 +1486,35 @@
       return 'Phone';
     }
 
+    function currentRepairTestItems() {
+      return state.repair.testProfile === 'computer' ? computerRepairTestItems : mobileRepairTestItems;
+    }
+
+    function repairDeviceIdFieldHtml() {
+      if (state.repair.deviceIdType === 'serial') {
+        return `
+          <label class="repair-field">
+            Serial Number
+            <input class="repair-input" id="repairDeviceSerial" type="text" placeholder="Type the serial number" value="${escapeHtml(state.repair.deviceSerial)}">
+          </label>
+        `;
+      }
+      if (state.repair.deviceIdType === 'unavailable') {
+        return `
+          <label class="repair-field">
+            Why it is unavailable
+            <textarea class="repair-textarea" id="repairDeviceIdUnavailable" placeholder="Example: unit cannot boot, label missing, or housing too damaged to read">${escapeHtml(state.repair.deviceIdUnavailable)}</textarea>
+          </label>
+        `;
+      }
+      return `
+        <label class="repair-field">
+          IMEI
+          <input class="repair-input" id="repairDeviceImei" type="text" placeholder="Scan or type the IMEI" value="${escapeHtml(state.repair.deviceImei)}">
+        </label>
+      `;
+    }
+
     async function loadRepairQuotes() {
       try {
         let rows = [];
@@ -1527,10 +1577,11 @@
         model: '',
         issue: '',
         quote: null,
-        customerName: '',
-        customerContact: '',
-        deviceId: '',
         quotedPrice: '',
+        deviceIdType: 'imei',
+        deviceImei: '',
+        deviceSerial: '',
+        deviceIdUnavailable: '',
         password: '',
         testNotes: '',
         passwordType: 'text',
@@ -1693,30 +1744,6 @@
       `).join('');
       return `
         <div class="repair-panel">
-          <h2 class="repair-panel-title">Device Check</h2>
-          <p class="repair-panel-text">Use this form while speaking with the customer. It stays here until Clear Ticket is selected.</p>
-          ${repairSummaryHtml()}
-          <div class="repair-fields">
-            <label class="repair-field">
-              Customer Name
-              <input class="repair-input" id="repairCustomerName" type="text" placeholder="Walk-in Customer" value="${escapeHtml(state.repair.customerName)}">
-            </label>
-            <label class="repair-field">
-              Phone / Email
-              <input class="repair-input" id="repairCustomerContact" type="text" placeholder="Phone number or email" value="${escapeHtml(state.repair.customerContact)}">
-            </label>
-            <label class="repair-field">
-              Device ID
-              <input class="repair-input" id="repairDeviceId" type="text" placeholder="IMEI or serial number" value="${escapeHtml(state.repair.deviceId)}">
-            </label>
-            <label class="repair-field">
-              Quoted Price
-              <input class="repair-input" id="repairQuotedPrice" type="text" value="${escapeHtml(state.repair.quotedPrice || quotePriceLabel(quote.price))}">
-            </label>
-          </div>
-        </div>
-
-        <div class="repair-panel">
           <h2 class="repair-panel-title">Security And Unlock Details</h2>
           <p class="repair-panel-text">Record how the device can be unlocked so technicians can test the unit safely and efficiently.</p>
           <div class="repair-field">
@@ -1748,6 +1775,7 @@
         <div class="repair-panel">
           <h2 class="repair-panel-title">Function Test</h2>
           <p class="repair-panel-text">Choose whether the unit can be tested right now. If testing is not possible, record the reason and skip the checklist.</p>
+          ${repairSummaryHtml()}
           <div class="repair-fields">
             <div class="repair-field">
               Can this device be tested?
@@ -1763,8 +1791,17 @@
                 <button class="repair-chip ${state.repair.testProfile === 'computer' ? 'active' : ''}" type="button" data-value="computer">Laptop / Desktop</button>
               </div>
             </div>
+            <div class="repair-field">
+              Device ID Type
+              <div class="repair-chip-row" data-repair-chip-group="deviceIdType">
+                <button class="repair-chip ${state.repair.deviceIdType === 'imei' ? 'active' : ''}" type="button" data-value="imei">IMEI</button>
+                <button class="repair-chip ${state.repair.deviceIdType === 'serial' ? 'active' : ''}" type="button" data-value="serial">Serial Number</button>
+                <button class="repair-chip ${state.repair.deviceIdType === 'unavailable' ? 'active' : ''}" type="button" data-value="unavailable">Unavailable</button>
+              </div>
+            </div>
+            ${repairDeviceIdFieldHtml()}
             <div class="repair-grid">
-              ${repairTestItems.map(name => {
+              ${currentRepairTestItems().map(name => {
                 const current = state.repair.tests[name] || '';
                 return `
                   <div class="test-card">
@@ -2181,10 +2218,10 @@
 
     els.repairWorkspace.addEventListener('input', event => {
       const map = {
-        repairCustomerName: 'customerName',
-        repairCustomerContact: 'customerContact',
-        repairDeviceId: 'deviceId',
         repairQuotedPrice: 'quotedPrice',
+        repairDeviceImei: 'deviceImei',
+        repairDeviceSerial: 'deviceSerial',
+        repairDeviceIdUnavailable: 'deviceIdUnavailable',
         repairPassword: 'password',
         repairTestNotes: 'testNotes'
       };
@@ -2212,8 +2249,12 @@
         const group = repairChip.closest('[data-repair-chip-group]');
         if (!group) return;
         state.repair[group.dataset.repairChipGroup] = repairChip.dataset.value;
-        group.querySelectorAll('.repair-chip').forEach(item => item.classList.remove('active'));
-        repairChip.classList.add('active');
+        if (group.dataset.repairChipGroup === 'deviceIdType' || group.dataset.repairChipGroup === 'testProfile') {
+          renderRepairWorkspace();
+        } else {
+          group.querySelectorAll('.repair-chip').forEach(item => item.classList.remove('active'));
+          repairChip.classList.add('active');
+        }
       }
       if (testOption) {
         const group = testOption.closest('[data-test-name]');
