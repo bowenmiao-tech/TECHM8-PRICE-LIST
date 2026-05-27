@@ -105,11 +105,23 @@
 
     .workspace {
       min-width: 0;
-      display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr);
-      gap: 16px;
       padding: 22px;
       overflow: hidden;
+    }
+
+    .workspace-view {
+      display: none;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .workspace-view.active {
+      display: grid;
+    }
+
+    .product-view {
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 16px;
     }
 
     .topbar {
@@ -659,6 +671,294 @@
       gap: 10px;
     }
 
+    .repair-view {
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .repair-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      padding: 16px 18px;
+      border: 1px solid var(--tm-line);
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(16, 30, 38, 0.04);
+    }
+
+    .repair-title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.15;
+      font-weight: 950;
+    }
+
+    .repair-subtitle {
+      margin-top: 5px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .repair-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .repair-action {
+      min-height: 44px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      padding: 0 14px;
+      background: #fff;
+      color: #31434c;
+      font-weight: 900;
+    }
+
+    .repair-action.primary {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .repair-action:disabled {
+      opacity: .48;
+      cursor: not-allowed;
+    }
+
+    .repair-scroll {
+      min-height: 0;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .repair-empty,
+    .repair-panel {
+      border: 1px solid var(--tm-line);
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(16, 30, 38, 0.04);
+    }
+
+    .repair-empty {
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--tm-muted);
+      text-align: center;
+    }
+
+    .repair-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .repair-panel {
+      padding: 18px;
+    }
+
+    .repair-panel-title {
+      margin: 0 0 6px;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 950;
+    }
+
+    .repair-panel-text {
+      margin: 0 0 16px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .repair-fields {
+      display: grid;
+      gap: 14px;
+    }
+
+    .repair-field {
+      display: grid;
+      gap: 7px;
+      color: #283b44;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .repair-input,
+    .repair-select,
+    .repair-textarea {
+      width: 100%;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      color: var(--tm-ink);
+      background: #fff;
+      outline: none;
+    }
+
+    .repair-input,
+    .repair-select {
+      height: 52px;
+      padding: 0 14px;
+    }
+
+    .repair-textarea {
+      min-height: 92px;
+      padding: 12px 14px;
+      resize: vertical;
+    }
+
+    .repair-input:focus,
+    .repair-select:focus,
+    .repair-textarea:focus {
+      border-color: rgba(7, 137, 111, 0.45);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
+    }
+
+    .repair-confirm-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .repair-quote {
+      color: #3e5058;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .repair-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .repair-chip {
+      min-height: 40px;
+      border: 1px solid var(--tm-line);
+      border-radius: 999px;
+      padding: 0 14px;
+      background: #f8fafb;
+      color: #24343b;
+      font-weight: 900;
+    }
+
+    .repair-chip.active {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .repair-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .test-card {
+      display: grid;
+      gap: 9px;
+      padding: 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      background: #fbfdfe;
+    }
+
+    .test-name {
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .test-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+
+    .test-option {
+      min-height: 34px;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .test-option.active {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .media-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .media-preview-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .media-preview {
+      width: 96px;
+      min-height: 76px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #f7fafb;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .media-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .repair-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .repair-summary-item {
+      padding: 11px 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #f7fafb;
+    }
+
+    .repair-summary-label {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .repair-summary-value {
+      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -738,6 +1038,28 @@
         grid-template-columns: 1fr;
       }
 
+      .repair-head,
+      .repair-confirm-row {
+        grid-template-columns: 1fr;
+      }
+
+      .repair-head {
+        display: grid;
+      }
+
+      .repair-actions {
+        justify-content: stretch;
+      }
+
+      .repair-actions .repair-action {
+        flex: 1;
+      }
+
+      .repair-grid,
+      .repair-summary {
+        grid-template-columns: 1fr;
+      }
+
       .product-grid {
         grid-template-columns: 1fr;
       }
@@ -757,8 +1079,8 @@
     <aside class="rail" aria-label="POS navigation">
       <div class="brand-mark">M8</div>
       <nav class="rail-nav">
-        <button class="rail-button active" type="button" title="Sales"><i class="bi bi-house-door-fill"></i></button>
-        <button class="rail-button" type="button" title="Products"><i class="bi bi-bag-check-fill"></i></button>
+        <button id="productNavBtn" class="rail-button active" type="button" title="Products"><i class="bi bi-house-door-fill"></i></button>
+        <button id="repairNavBtn" class="rail-button" type="button" title="Repair tickets"><i class="bi bi-clipboard2-plus"></i></button>
         <button class="rail-button" type="button" title="Orders"><i class="bi bi-receipt"></i></button>
         <button class="rail-button" type="button" title="Shift"><i class="bi bi-cash-stack"></i></button>
       </nav>
@@ -768,28 +1090,44 @@
     </aside>
 
     <main class="workspace">
-      <div class="topbar">
-        <div class="search-wrap">
-          <i class="bi bi-search"></i>
-          <input id="searchInput" class="search-input" type="search" placeholder="Search product name / SKU / barcode">
+      <section id="productView" class="workspace-view product-view active" aria-label="Products">
+        <div class="topbar">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input id="searchInput" class="search-input" type="search" placeholder="Search product name / SKU / barcode">
+          </div>
+          <select id="storeSelect" class="store-select" aria-label="Store">
+            <option value="park-ridge">TechM8 Park Ridge</option>
+            <option value="fairfield">TechM8 Fairfield</option>
+            <option value="north-lakes">TechM8 North Lakes</option>
+            <option value="toowong">TechM8 Toowong</option>
+            <option value="brassall">TechM8 Brassall</option>
+            <option value="warehouse-dispatch">Warehouse Dispatch</option>
+          </select>
+          <button id="specialProductBtn" class="staff-pill" type="button"><i class="bi bi-bag-plus"></i><span>Special Productes</span></button>
         </div>
-        <select id="storeSelect" class="store-select" aria-label="Store">
-          <option value="park-ridge">TechM8 Park Ridge</option>
-          <option value="fairfield">TechM8 Fairfield</option>
-          <option value="north-lakes">TechM8 North Lakes</option>
-          <option value="toowong">TechM8 Toowong</option>
-          <option value="brassall">TechM8 Brassall</option>
-          <option value="warehouse-dispatch">Warehouse Dispatch</option>
-        </select>
-        <button id="specialProductBtn" class="staff-pill" type="button"><i class="bi bi-bag-plus"></i><span>Special Productes</span></button>
-      </div>
 
-      <div class="status-row">
-        <div id="categoryTabs" class="category-tabs"></div>
-        <button id="syncStatus" class="sync-status" type="button" title="Reload products"><i class="bi bi-cloud-check"></i><span>Loading products</span></button>
-      </div>
+        <div class="status-row">
+          <div id="categoryTabs" class="category-tabs"></div>
+          <button id="syncStatus" class="sync-status" type="button" title="Reload products"><i class="bi bi-cloud-check"></i><span>Loading products</span></button>
+        </div>
 
-      <section id="productGrid" class="product-grid" aria-label="Products"></section>
+        <section id="productGrid" class="product-grid" aria-label="Products"></section>
+      </section>
+
+      <section id="repairView" class="workspace-view repair-view" aria-label="Repair ticket">
+        <div class="repair-head">
+          <div>
+            <h1 class="repair-title">Repair Follow-up / Add Ticket</h1>
+            <div class="repair-subtitle">Create a repair ticket, choose Brand - Model - Issue, then complete the device check.</div>
+          </div>
+          <div class="repair-actions">
+            <button id="newRepairBtn" class="repair-action primary" type="button"><i class="bi bi-plus-circle"></i> New Repair</button>
+            <button id="clearRepairBtn" class="repair-action" type="button"><i class="bi bi-x-circle"></i> Clear Ticket</button>
+          </div>
+        </div>
+        <div id="repairWorkspace" class="repair-scroll"></div>
+      </section>
     </main>
 
     <aside class="checkout-panel" aria-label="Checkout">
@@ -921,16 +1259,45 @@
 
     const state = {
       products: [],
+      repairQuotes: [],
       cart: [],
       category: 'All',
       search: '',
       storeId: 'park-ridge',
-      payment: 'Cash'
+      payment: 'Cash',
+      activeView: 'products',
+      repair: {
+        started: false,
+        intakeOpen: false,
+        ticketId: '',
+        brand: '',
+        model: '',
+        issue: '',
+        quote: null,
+        customerName: '',
+        customerContact: '',
+        deviceId: '',
+        quotedPrice: '',
+        password: '',
+        testNotes: '',
+        passwordType: 'text',
+        testable: 'yes',
+        testProfile: 'mobile',
+        tests: {},
+        media: []
+      }
     };
 
     const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products';
     const els = {
       productGrid: document.getElementById('productGrid'),
+      productView: document.getElementById('productView'),
+      repairView: document.getElementById('repairView'),
+      repairWorkspace: document.getElementById('repairWorkspace'),
+      productNavBtn: document.getElementById('productNavBtn'),
+      repairNavBtn: document.getElementById('repairNavBtn'),
+      newRepairBtn: document.getElementById('newRepairBtn'),
+      clearRepairBtn: document.getElementById('clearRepairBtn'),
       categoryTabs: document.getElementById('categoryTabs'),
       searchInput: document.getElementById('searchInput'),
       storeSelect: document.getElementById('storeSelect'),
@@ -953,6 +1320,29 @@
       specialProductError: document.getElementById('specialProductError'),
       toast: document.getElementById('toast')
     };
+
+    const repairTestItems = [
+      'Outer Glass / Screen Condition',
+      'Touch Response',
+      'Display / OLED / LCD',
+      'Face ID / Fingerprint Unlock',
+      'Front Camera',
+      'Rear Camera',
+      'Earpiece Speaker',
+      'Loudspeaker',
+      'Microphone',
+      'Charging Port / Wireless Charging',
+      'Battery Health / Charging',
+      'Power Button',
+      'Volume Buttons / Mute Switch',
+      'Wi-Fi / Bluetooth',
+      'SIM / eSIM Detection',
+      'Proximity Sensor / Auto Brightness',
+      'Vibration / Haptics',
+      'Frame / Housing Condition',
+      'Back Glass / Rear Cover',
+      'Water Damage Indicators'
+    ];
 
     function money(value) {
       return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value || 0));
@@ -1056,6 +1446,345 @@
           || getCategoryLabel(value.slug);
       }
       return '';
+    }
+
+    function uniqueSorted(values) {
+      return Array.from(new Set(values.filter(Boolean))).sort((a, b) => a.localeCompare(b));
+    }
+
+    function quotePriceLabel(price) {
+      const raw = String(price || '').trim();
+      if (!raw || raw.toUpperCase() === 'N/A') return 'N/A';
+      return raw.startsWith('$') ? raw : '$' + raw;
+    }
+
+    function repairDeviceType(quote) {
+      const brandModel = ((quote && quote.brand) || '') + ' ' + ((quote && quote.model) || '');
+      if (/ipad|tablet/i.test(brandModel)) return 'Tablet';
+      if (/mac|acer|dell|hp|lenovo|laptop|desktop|surface/i.test(brandModel)) return 'Computer';
+      return 'Phone';
+    }
+
+    async function loadRepairQuotes() {
+      try {
+        let rows = [];
+        const supabase = window.TECHM8_SUPABASE || null;
+        if (supabase) {
+          const pageSize = 1000;
+          let from = 0;
+          while (true) {
+            const response = await fetch(
+              supabase.url + '/rest/v1/repair_prices?select=brand,model,issue,price,turnaround_time&order=brand.asc&order=model.asc&order=issue.asc&limit=' + pageSize + '&offset=' + from,
+              {
+                headers: {
+                  apikey: supabase.anonKey,
+                  Authorization: 'Bearer ' + supabase.anonKey
+                }
+              }
+            );
+            if (!response.ok) break;
+            const pageRows = await response.json();
+            if (!Array.isArray(pageRows) || !pageRows.length) break;
+            rows.push(...pageRows.map(row => ({
+              brand: row.brand,
+              model: row.model,
+              issue: row.issue,
+              price: row.price,
+              time: row.turnaround_time || ''
+            })));
+            if (pageRows.length < pageSize) break;
+            from += pageSize;
+          }
+        }
+        if (!rows.length) {
+          const response = await fetch('./data.json', { cache: 'no-store' });
+          if (!response.ok) throw new Error('Repair prices unavailable');
+          const text = await response.text();
+          rows = JSON.parse(text.replace(/^\uFEFF/, ''));
+        }
+        state.repairQuotes = Array.isArray(rows) ? rows : [];
+      } catch (error) {
+        state.repairQuotes = [];
+        showToast(error.message || 'Repair prices unavailable.');
+      }
+      renderRepairWorkspace();
+    }
+
+    function setActiveView(view) {
+      state.activeView = view;
+      els.productView.classList.toggle('active', view === 'products');
+      els.repairView.classList.toggle('active', view === 'repair');
+      els.productNavBtn.classList.toggle('active', view === 'products');
+      els.repairNavBtn.classList.toggle('active', view === 'repair');
+    }
+
+    function resetRepairState() {
+      state.repair = {
+        started: false,
+        intakeOpen: false,
+        ticketId: '',
+        brand: '',
+        model: '',
+        issue: '',
+        quote: null,
+        customerName: '',
+        customerContact: '',
+        deviceId: '',
+        quotedPrice: '',
+        password: '',
+        testNotes: '',
+        passwordType: 'text',
+        testable: 'yes',
+        testProfile: 'mobile',
+        tests: {},
+        media: []
+      };
+    }
+
+    function startRepairTicket() {
+      if (state.repair.intakeOpen) {
+        showToast('Clear the current ticket before starting another repair.');
+        return;
+      }
+      state.repair.started = true;
+      renderRepairWorkspace();
+    }
+
+    function clearRepairTicket() {
+      if (!state.repair.started) return;
+      if (!confirm('Clear this repair ticket?')) return;
+      resetRepairState();
+      renderRepairWorkspace();
+      showToast('Repair ticket cleared.');
+    }
+
+    function repairOptions() {
+      const brands = uniqueSorted(state.repairQuotes.map(row => row.brand));
+      const models = uniqueSorted(state.repairQuotes
+        .filter(row => row.brand === state.repair.brand)
+        .map(row => row.model));
+      const issues = uniqueSorted(state.repairQuotes
+        .filter(row => row.brand === state.repair.brand && row.model === state.repair.model)
+        .map(row => row.issue));
+      return { brands, models, issues };
+    }
+
+    function setRepairSelection(field, value) {
+      state.repair[field] = value;
+      if (field === 'brand') {
+        state.repair.model = '';
+        state.repair.issue = '';
+      }
+      if (field === 'model') {
+        state.repair.issue = '';
+      }
+      state.repair.quote = state.repairQuotes.find(row => {
+        return row.brand === state.repair.brand
+          && row.model === state.repair.model
+          && row.issue === state.repair.issue;
+      }) || null;
+      state.repair.intakeOpen = false;
+      state.repair.ticketId = '';
+      renderRepairWorkspace();
+    }
+
+    function confirmRepairSelection() {
+      if (!state.repair.quote) {
+        showToast('Select brand, model, and issue first.');
+        return;
+      }
+      state.repair.ticketId = 'RPR-' + Date.now();
+      state.repair.intakeOpen = true;
+      state.repair.quotedPrice = quotePriceLabel(state.repair.quote.price);
+      renderRepairWorkspace();
+      showToast('Repair check opened.');
+    }
+
+    function optionHtml(values, selected, placeholder) {
+      return `<option value="">${placeholder}</option>` + values.map(value => {
+        return `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`;
+      }).join('');
+    }
+
+    function repairSummaryHtml() {
+      const quote = state.repair.quote || {};
+      return `
+        <div class="repair-summary">
+          <div class="repair-summary-item">
+            <div class="repair-summary-label">Ticket</div>
+            <div class="repair-summary-value">${escapeHtml(state.repair.ticketId || 'Draft')}</div>
+          </div>
+          <div class="repair-summary-item">
+            <div class="repair-summary-label">Device</div>
+            <div class="repair-summary-value">${escapeHtml((quote.brand || '') + ' ' + (quote.model || ''))}</div>
+          </div>
+          <div class="repair-summary-item">
+            <div class="repair-summary-label">Issue</div>
+            <div class="repair-summary-value">${escapeHtml(quote.issue || '')}</div>
+          </div>
+          <div class="repair-summary-item">
+            <div class="repair-summary-label">Quote</div>
+            <div class="repair-summary-value">${escapeHtml(quotePriceLabel(quote.price))}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRepairWorkspace() {
+      if (!els.repairWorkspace) return;
+      if (!state.repair.started) {
+        els.repairWorkspace.innerHTML = `
+          <div class="repair-empty">
+            <div>
+              <div class="cart-empty-icon"><i class="bi bi-tools"></i></div>
+              <strong>No repair ticket started</strong>
+              <div>Click New Repair to choose Brand - Model - Issue and start the device check.</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const { brands, models, issues } = repairOptions();
+      const quote = state.repair.quote;
+      els.repairWorkspace.innerHTML = `
+        <div class="repair-stack">
+          <div class="repair-panel">
+            <h2 class="repair-panel-title">New Repair</h2>
+            <p class="repair-panel-text">Select the quote path in order. The selected issue opens the inspection form inside this POS screen.</p>
+            <div class="repair-fields">
+              <label class="repair-field">
+                Select Brand
+                <select id="repairBrandSelect" class="repair-select" ${state.repair.intakeOpen ? 'disabled' : ''}>
+                  ${optionHtml(brands, state.repair.brand, 'Choose brand')}
+                </select>
+              </label>
+              <label class="repair-field">
+                Select Model
+                <select id="repairModelSelect" class="repair-select" ${!state.repair.brand || state.repair.intakeOpen ? 'disabled' : ''}>
+                  ${optionHtml(models, state.repair.model, 'Choose model')}
+                </select>
+              </label>
+              <label class="repair-field">
+                Select Issue
+                <select id="repairIssueSelect" class="repair-select" ${!state.repair.model || state.repair.intakeOpen ? 'disabled' : ''}>
+                  ${optionHtml(issues, state.repair.issue, 'Choose issue')}
+                </select>
+              </label>
+            </div>
+            <div class="repair-confirm-row">
+              <div class="repair-quote">
+                ${quote ? `Quote: ${escapeHtml(quotePriceLabel(quote.price))}${quote.time ? ` · ${escapeHtml(quote.time)}` : ''}` : 'Choose an issue to see the quote.'}
+              </div>
+              <button id="confirmRepairBtn" class="repair-action primary" type="button" ${quote && !state.repair.intakeOpen ? '' : 'disabled'}>Confirm</button>
+            </div>
+          </div>
+          ${state.repair.intakeOpen ? repairIntakeHtml() : ''}
+        </div>
+      `;
+    }
+
+    function repairIntakeHtml() {
+      const quote = state.repair.quote || {};
+      const mediaHtml = state.repair.media.map(item => `
+        <div class="media-preview">
+          ${item.type === 'image' ? `<img src="${item.src}" alt="">` : '<span>Video<br>placeholder</span>'}
+        </div>
+      `).join('');
+      return `
+        <div class="repair-panel">
+          <h2 class="repair-panel-title">Device Check</h2>
+          <p class="repair-panel-text">Use this form while speaking with the customer. It stays here until Clear Ticket is selected.</p>
+          ${repairSummaryHtml()}
+          <div class="repair-fields">
+            <label class="repair-field">
+              Customer Name
+              <input class="repair-input" id="repairCustomerName" type="text" placeholder="Walk-in Customer" value="${escapeHtml(state.repair.customerName)}">
+            </label>
+            <label class="repair-field">
+              Phone / Email
+              <input class="repair-input" id="repairCustomerContact" type="text" placeholder="Phone number or email" value="${escapeHtml(state.repair.customerContact)}">
+            </label>
+            <label class="repair-field">
+              Device ID
+              <input class="repair-input" id="repairDeviceId" type="text" placeholder="IMEI or serial number" value="${escapeHtml(state.repair.deviceId)}">
+            </label>
+            <label class="repair-field">
+              Quoted Price
+              <input class="repair-input" id="repairQuotedPrice" type="text" value="${escapeHtml(state.repair.quotedPrice || quotePriceLabel(quote.price))}">
+            </label>
+          </div>
+        </div>
+
+        <div class="repair-panel">
+          <h2 class="repair-panel-title">Security And Unlock Details</h2>
+          <p class="repair-panel-text">Record how the device can be unlocked so technicians can test the unit safely and efficiently.</p>
+          <div class="repair-field">
+            Password Type
+            <div class="repair-chip-row" data-repair-chip-group="passwordType">
+              <button class="repair-chip ${state.repair.passwordType === 'text' ? 'active' : ''}" type="button" data-value="text">Text or numeric password</button>
+              <button class="repair-chip ${state.repair.passwordType === 'pattern' ? 'active' : ''}" type="button" data-value="pattern">Pattern lock</button>
+              <button class="repair-chip ${state.repair.passwordType === 'none' ? 'active' : ''}" type="button" data-value="none">Not provided</button>
+            </div>
+          </div>
+          <label class="repair-field">
+            Password
+            <input class="repair-input" id="repairPassword" type="text" placeholder="Example: 123456 or Techm8@123" value="${escapeHtml(state.repair.password)}">
+          </label>
+        </div>
+
+        <div class="repair-panel">
+          <h2 class="repair-panel-title">Photos And Evidence</h2>
+          <p class="repair-panel-text">Capture photos of the device condition at drop-off. You can also add a video placeholder if media was recorded separately.</p>
+          <div class="media-actions">
+            <button id="repairCameraBtn" class="repair-action primary" type="button">Open camera</button>
+            <button id="repairVideoBtn" class="repair-action" type="button">Add video placeholder</button>
+            <input id="repairPhotoInput" type="file" accept="image/*" capture="environment" multiple hidden>
+          </div>
+          <div class="repair-panel-text" style="margin-top:10px;">Photo previews stay in this browser session until a backend upload flow is connected.</div>
+          <div class="media-preview-list">${mediaHtml}</div>
+        </div>
+
+        <div class="repair-panel">
+          <h2 class="repair-panel-title">Function Test</h2>
+          <p class="repair-panel-text">Choose whether the unit can be tested right now. If testing is not possible, record the reason and skip the checklist.</p>
+          <div class="repair-fields">
+            <div class="repair-field">
+              Can this device be tested?
+              <div class="repair-chip-row" data-repair-chip-group="testable">
+                <button class="repair-chip ${state.repair.testable === 'yes' ? 'active' : ''}" type="button" data-value="yes">Yes, test now</button>
+                <button class="repair-chip ${state.repair.testable === 'no' ? 'active' : ''}" type="button" data-value="no">No, cannot test</button>
+              </div>
+            </div>
+            <div class="repair-field">
+              Test Profile
+              <div class="repair-chip-row" data-repair-chip-group="testProfile">
+                <button class="repair-chip ${state.repair.testProfile === 'mobile' ? 'active' : ''}" type="button" data-value="mobile">Mobile Device</button>
+                <button class="repair-chip ${state.repair.testProfile === 'computer' ? 'active' : ''}" type="button" data-value="computer">Laptop / Desktop</button>
+              </div>
+            </div>
+            <div class="repair-grid">
+              ${repairTestItems.map(name => {
+                const current = state.repair.tests[name] || '';
+                return `
+                  <div class="test-card">
+                    <div class="test-name">${escapeHtml(name)}</div>
+                    <div class="test-options" data-test-name="${escapeHtml(name)}">
+                      <button class="test-option ${current === 'Pass' ? 'active' : ''}" type="button" data-value="Pass">Pass</button>
+                      <button class="test-option ${current === 'Fail' ? 'active' : ''}" type="button" data-value="Fail">Fail</button>
+                      <button class="test-option ${current === 'N/A' ? 'active' : ''}" type="button" data-value="N/A">N/A</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <label class="repair-field">
+              Function Test Notes
+              <textarea class="repair-textarea" id="repairTestNotes" placeholder="Example: display does not light up, so touch and Face ID could not be confirmed">${escapeHtml(state.repair.testNotes)}</textarea>
+            </label>
+          </div>
+        </div>
+      `;
     }
 
     async function loadProducts() {
@@ -1428,6 +2157,73 @@
       addToCart(card.dataset.add);
     });
 
+    els.productNavBtn.addEventListener('click', () => setActiveView('products'));
+    els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
+    els.newRepairBtn.addEventListener('click', startRepairTicket);
+    els.clearRepairBtn.addEventListener('click', clearRepairTicket);
+
+    els.repairWorkspace.addEventListener('change', event => {
+      if (event.target.id === 'repairBrandSelect') setRepairSelection('brand', event.target.value);
+      if (event.target.id === 'repairModelSelect') setRepairSelection('model', event.target.value);
+      if (event.target.id === 'repairIssueSelect') setRepairSelection('issue', event.target.value);
+      if (event.target.id === 'repairPhotoInput') {
+        Array.from(event.target.files || []).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            state.repair.media.push({ type: 'image', src: reader.result });
+            renderRepairWorkspace();
+          };
+          reader.readAsDataURL(file);
+        });
+        event.target.value = '';
+      }
+    });
+
+    els.repairWorkspace.addEventListener('input', event => {
+      const map = {
+        repairCustomerName: 'customerName',
+        repairCustomerContact: 'customerContact',
+        repairDeviceId: 'deviceId',
+        repairQuotedPrice: 'quotedPrice',
+        repairPassword: 'password',
+        repairTestNotes: 'testNotes'
+      };
+      const key = map[event.target.id];
+      if (key) state.repair[key] = event.target.value;
+    });
+
+    els.repairWorkspace.addEventListener('click', event => {
+      const confirmButton = event.target.closest('#confirmRepairBtn');
+      const cameraButton = event.target.closest('#repairCameraBtn');
+      const videoButton = event.target.closest('#repairVideoBtn');
+      const repairChip = event.target.closest('.repair-chip');
+      const testOption = event.target.closest('.test-option');
+
+      if (confirmButton) confirmRepairSelection();
+      if (cameraButton) {
+        const input = els.repairWorkspace.querySelector('#repairPhotoInput');
+        if (input) input.click();
+      }
+      if (videoButton) {
+        state.repair.media.push({ type: 'video' });
+        renderRepairWorkspace();
+      }
+      if (repairChip) {
+        const group = repairChip.closest('[data-repair-chip-group]');
+        if (!group) return;
+        state.repair[group.dataset.repairChipGroup] = repairChip.dataset.value;
+        group.querySelectorAll('.repair-chip').forEach(item => item.classList.remove('active'));
+        repairChip.classList.add('active');
+      }
+      if (testOption) {
+        const group = testOption.closest('[data-test-name]');
+        if (!group) return;
+        state.repair.tests[group.dataset.testName] = testOption.dataset.value;
+        group.querySelectorAll('.test-option').forEach(item => item.classList.remove('active'));
+        testOption.classList.add('active');
+      }
+    });
+
     els.cartArea.addEventListener('click', event => {
       const qtyButton = event.target.closest('[data-qty]');
       const removeButton = event.target.closest('[data-remove]');
@@ -1478,7 +2274,10 @@
       rootSelector: '[data-auth-protected]',
       title: 'POS Access',
       subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
-    }).then(loadProducts);
+    }).then(() => {
+      loadProducts();
+      loadRepairQuotes();
+    });
   </script>
 </body>
 </html>
