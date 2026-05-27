@@ -167,6 +167,14 @@
       justify-content: center;
       gap: 9px;
       color: #41525a;
+      cursor: pointer;
+    }
+
+    .staff-pill:hover,
+    .staff-pill:focus-visible {
+      border-color: rgba(7, 137, 111, 0.45);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
+      outline: none;
     }
 
     .status-row {
@@ -576,6 +584,81 @@
       cursor: not-allowed;
     }
 
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(9, 18, 24, 0.46);
+      backdrop-filter: blur(6px);
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .special-modal {
+      width: min(420px, 100%);
+      display: grid;
+      gap: 16px;
+      padding: 22px;
+      border-radius: 18px;
+      border: 1px solid var(--tm-line);
+      background: #fff;
+      box-shadow: 0 24px 60px rgba(10, 20, 30, 0.18);
+    }
+
+    .special-modal h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .special-fields {
+      display: grid;
+      gap: 12px;
+    }
+
+    .special-fields label {
+      display: grid;
+      gap: 7px;
+      color: #405058;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .special-fields input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      padding: 0 14px;
+      color: var(--tm-ink);
+      background: #fff;
+      outline: none;
+    }
+
+    .special-fields input:focus {
+      border-color: rgba(7, 137, 111, 0.45);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
+    }
+
+    .special-error {
+      min-height: 18px;
+      color: var(--tm-red);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .special-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -698,7 +781,7 @@
           <option value="brassall">TechM8 Brassall</option>
           <option value="warehouse-dispatch">Warehouse Dispatch</option>
         </select>
-        <div class="staff-pill"><i class="bi bi-person-badge"></i><span>Staff POS</span></div>
+        <button id="specialProductBtn" class="staff-pill" type="button"><i class="bi bi-bag-plus"></i><span>Special Productes</span></button>
       </div>
 
       <div class="status-row">
@@ -741,6 +824,27 @@
         </div>
       </div>
     </aside>
+  </div>
+
+  <div id="specialProductModal" class="modal-backdrop" aria-hidden="true">
+    <form id="specialProductForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="specialProductTitle">
+      <h2 id="specialProductTitle">Special Productes</h2>
+      <div class="special-fields">
+        <label>
+          Product name
+          <input id="specialProductName" type="text" autocomplete="off" placeholder="Custom product name">
+        </label>
+        <label>
+          Price
+          <input id="specialProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+        </label>
+      </div>
+      <div id="specialProductError" class="special-error"></div>
+      <div class="special-actions">
+        <button id="specialProductCancel" class="soft-action" type="button">Cancel</button>
+        <button class="pay-action" type="submit">Add to Cart</button>
+      </div>
+    </form>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -840,6 +944,13 @@
       payBtn: document.getElementById('payBtn'),
       holdBtn: document.getElementById('holdBtn'),
       discardBtn: document.getElementById('discardBtn'),
+      specialProductBtn: document.getElementById('specialProductBtn'),
+      specialProductModal: document.getElementById('specialProductModal'),
+      specialProductForm: document.getElementById('specialProductForm'),
+      specialProductName: document.getElementById('specialProductName'),
+      specialProductPrice: document.getElementById('specialProductPrice'),
+      specialProductCancel: document.getElementById('specialProductCancel'),
+      specialProductError: document.getElementById('specialProductError'),
       toast: document.getElementById('toast')
     };
 
@@ -1140,6 +1251,52 @@
       renderCart();
     }
 
+    function openSpecialProductModal() {
+      els.specialProductForm.reset();
+      els.specialProductError.textContent = '';
+      els.specialProductModal.classList.add('show');
+      els.specialProductModal.setAttribute('aria-hidden', 'false');
+      els.specialProductName.focus();
+    }
+
+    function closeSpecialProductModal() {
+      els.specialProductModal.classList.remove('show');
+      els.specialProductModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function addSpecialProduct() {
+      const name = els.specialProductName.value.trim();
+      const priceInput = els.specialProductPrice.value.trim();
+      const price = Number(priceInput);
+
+      if (!name) {
+        els.specialProductError.textContent = 'Product name is required.';
+        els.specialProductName.focus();
+        return;
+      }
+      if (!priceInput || !Number.isFinite(price) || price < 0) {
+        els.specialProductError.textContent = 'Enter a valid price.';
+        els.specialProductPrice.focus();
+        return;
+      }
+
+      state.cart.push({
+        id: 'special-' + Date.now() + '-' + crypto.randomUUID(),
+        sku: 'SPECIAL',
+        name,
+        category: 'Special Productes',
+        cost_price: 0,
+        sale_price: Math.round(price * 100) / 100,
+        barcode: '',
+        image_url: '',
+        qty: 1,
+        is_special: true
+      });
+      closeSpecialProductModal();
+      renderCart();
+      showToast('Special product added to cart.');
+    }
+
     function checkout() {
       if (!state.cart.length) return;
 
@@ -1302,6 +1459,20 @@
     els.payBtn.addEventListener('click', checkout);
     els.holdBtn.addEventListener('click', holdOrder);
     els.discardBtn.addEventListener('click', discardCart);
+    els.specialProductBtn.addEventListener('click', openSpecialProductModal);
+    els.specialProductCancel.addEventListener('click', closeSpecialProductModal);
+    els.specialProductModal.addEventListener('click', event => {
+      if (event.target === els.specialProductModal) closeSpecialProductModal();
+    });
+    els.specialProductForm.addEventListener('submit', event => {
+      event.preventDefault();
+      addSpecialProduct();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && els.specialProductModal.classList.contains('show')) {
+        closeSpecialProductModal();
+      }
+    });
 
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
