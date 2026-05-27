@@ -1123,6 +1123,7 @@
           </div>
           <div class="repair-actions">
             <button id="newRepairBtn" class="repair-action primary" type="button"><i class="bi bi-plus-circle"></i> New Repair</button>
+            <button id="specialRepairBtn" class="repair-action primary" type="button"><i class="bi bi-stars"></i> Special Order</button>
             <button id="clearRepairBtn" class="repair-action" type="button"><i class="bi bi-x-circle"></i> Clear Ticket</button>
           </div>
         </div>
@@ -1181,6 +1182,27 @@
       <div class="special-actions">
         <button id="specialProductCancel" class="soft-action" type="button">Cancel</button>
         <button class="pay-action" type="submit">Add to Cart</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="specialRepairModal" class="modal-backdrop" aria-hidden="true">
+    <form id="specialRepairForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="specialRepairTitle">
+      <h2 id="specialRepairTitle">Special Order</h2>
+      <div class="special-fields">
+        <label>
+          Repair name
+          <input id="specialRepairName" type="text" autocomplete="off" placeholder="Custom repair name">
+        </label>
+        <label>
+          Price
+          <input id="specialRepairPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+        </label>
+      </div>
+      <div id="specialRepairError" class="special-error"></div>
+      <div class="special-actions">
+        <button id="specialRepairCancel" class="soft-action" type="button">Cancel</button>
+        <button class="pay-action" type="submit">Start Check</button>
       </div>
     </form>
   </div>
@@ -1274,6 +1296,9 @@
         model: '',
         issue: '',
         quote: null,
+        specialOrder: false,
+        specialName: '',
+        specialPrice: '',
         quotedPrice: '',
         deviceIdType: 'imei',
         deviceImei: '',
@@ -1298,6 +1323,7 @@
       productNavBtn: document.getElementById('productNavBtn'),
       repairNavBtn: document.getElementById('repairNavBtn'),
       newRepairBtn: document.getElementById('newRepairBtn'),
+      specialRepairBtn: document.getElementById('specialRepairBtn'),
       clearRepairBtn: document.getElementById('clearRepairBtn'),
       categoryTabs: document.getElementById('categoryTabs'),
       searchInput: document.getElementById('searchInput'),
@@ -1319,6 +1345,12 @@
       specialProductPrice: document.getElementById('specialProductPrice'),
       specialProductCancel: document.getElementById('specialProductCancel'),
       specialProductError: document.getElementById('specialProductError'),
+      specialRepairModal: document.getElementById('specialRepairModal'),
+      specialRepairForm: document.getElementById('specialRepairForm'),
+      specialRepairName: document.getElementById('specialRepairName'),
+      specialRepairPrice: document.getElementById('specialRepairPrice'),
+      specialRepairCancel: document.getElementById('specialRepairCancel'),
+      specialRepairError: document.getElementById('specialRepairError'),
       toast: document.getElementById('toast')
     };
 
@@ -1577,6 +1609,9 @@
         model: '',
         issue: '',
         quote: null,
+        specialOrder: false,
+        specialName: '',
+        specialPrice: '',
         quotedPrice: '',
         deviceIdType: 'imei',
         deviceImei: '',
@@ -1598,7 +1633,63 @@
         return;
       }
       state.repair.started = true;
+      state.repair.specialOrder = false;
       renderRepairWorkspace();
+    }
+
+    function openSpecialRepairModal() {
+      if (state.repair.intakeOpen) {
+        showToast('Clear the current ticket before starting another repair.');
+        return;
+      }
+      els.specialRepairForm.reset();
+      els.specialRepairError.textContent = '';
+      els.specialRepairModal.classList.add('show');
+      els.specialRepairModal.setAttribute('aria-hidden', 'false');
+      els.specialRepairName.focus();
+    }
+
+    function closeSpecialRepairModal() {
+      els.specialRepairModal.classList.remove('show');
+      els.specialRepairModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function addSpecialRepairOrder() {
+      const name = els.specialRepairName.value.trim();
+      const priceInput = els.specialRepairPrice.value.trim();
+      const price = Number(priceInput);
+
+      if (!name) {
+        els.specialRepairError.textContent = 'Repair name is required.';
+        els.specialRepairName.focus();
+        return;
+      }
+      if (!priceInput || !Number.isFinite(price) || price < 0) {
+        els.specialRepairError.textContent = 'Enter a valid price.';
+        els.specialRepairPrice.focus();
+        return;
+      }
+
+      resetRepairState();
+      const roundedPrice = Math.round(price * 100) / 100;
+      state.repair.started = true;
+      state.repair.intakeOpen = true;
+      state.repair.ticketId = 'RPR-' + Date.now();
+      state.repair.specialOrder = true;
+      state.repair.specialName = name;
+      state.repair.specialPrice = roundedPrice.toFixed(2);
+      state.repair.quote = {
+        brand: 'Special Order',
+        model: name,
+        issue: name,
+        price: roundedPrice.toFixed(2),
+        time: ''
+      };
+      state.repair.quotedPrice = quotePriceLabel(state.repair.quote.price);
+      closeSpecialRepairModal();
+      setActiveView('repair');
+      renderRepairWorkspace();
+      showToast('Special order check opened.');
     }
 
     function clearRepairTicket() {
@@ -1681,6 +1772,60 @@
       `;
     }
 
+    function repairSelectionPanelHtml(brands, models, issues, quote) {
+      if (state.repair.specialOrder) {
+        return `
+          <div class="repair-panel">
+            <h2 class="repair-panel-title">Special Order</h2>
+            <p class="repair-panel-text">This repair was entered manually for this ticket.</p>
+            <div class="repair-summary">
+              <div class="repair-summary-item">
+                <div class="repair-summary-label">Name</div>
+                <div class="repair-summary-value">${escapeHtml(state.repair.specialName)}</div>
+              </div>
+              <div class="repair-summary-item">
+                <div class="repair-summary-label">Price</div>
+                <div class="repair-summary-value">${escapeHtml(quotePriceLabel(state.repair.specialPrice))}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="repair-panel">
+          <h2 class="repair-panel-title">New Repair</h2>
+          <p class="repair-panel-text">Select the quote path in order. The selected issue opens the inspection form inside this POS screen.</p>
+          <div class="repair-fields">
+            <label class="repair-field">
+              Select Brand
+              <select id="repairBrandSelect" class="repair-select" ${state.repair.intakeOpen ? 'disabled' : ''}>
+                ${optionHtml(brands, state.repair.brand, 'Choose brand')}
+              </select>
+            </label>
+            <label class="repair-field">
+              Select Model
+              <select id="repairModelSelect" class="repair-select" ${!state.repair.brand || state.repair.intakeOpen ? 'disabled' : ''}>
+                ${optionHtml(models, state.repair.model, 'Choose model')}
+              </select>
+            </label>
+            <label class="repair-field">
+              Select Issue
+              <select id="repairIssueSelect" class="repair-select" ${!state.repair.model || state.repair.intakeOpen ? 'disabled' : ''}>
+                ${optionHtml(issues, state.repair.issue, 'Choose issue')}
+              </select>
+            </label>
+          </div>
+          <div class="repair-confirm-row">
+            <div class="repair-quote">
+              ${quote ? `Quote: ${escapeHtml(quotePriceLabel(quote.price))}${quote.time ? ` 路 ${escapeHtml(quote.time)}` : ''}` : 'Choose an issue to see the quote.'}
+            </div>
+            <button id="confirmRepairBtn" class="repair-action primary" type="button" ${quote && !state.repair.intakeOpen ? '' : 'disabled'}>Confirm</button>
+          </div>
+        </div>
+      `;
+    }
+
     function renderRepairWorkspace() {
       if (!els.repairWorkspace) return;
       if (!state.repair.started) {
@@ -1691,6 +1836,16 @@
               <strong>No repair ticket started</strong>
               <div>Click New Repair to choose Brand - Model - Issue and start the device check.</div>
             </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.repair.specialOrder) {
+        els.repairWorkspace.innerHTML = `
+          <div class="repair-stack">
+            ${repairSelectionPanelHtml([], [], [], state.repair.quote)}
+            ${state.repair.intakeOpen ? repairIntakeHtml() : ''}
           </div>
         `;
         return;
@@ -1775,7 +1930,6 @@
         <div class="repair-panel">
           <h2 class="repair-panel-title">Function Test</h2>
           <p class="repair-panel-text">Choose whether the unit can be tested right now. If testing is not possible, record the reason and skip the checklist.</p>
-          ${repairSummaryHtml()}
           <div class="repair-fields">
             <div class="repair-field">
               Can this device be tested?
@@ -2197,6 +2351,7 @@
     els.productNavBtn.addEventListener('click', () => setActiveView('products'));
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
     els.newRepairBtn.addEventListener('click', startRepairTicket);
+    els.specialRepairBtn.addEventListener('click', openSpecialRepairModal);
     els.clearRepairBtn.addEventListener('click', clearRepairTicket);
 
     els.repairWorkspace.addEventListener('change', event => {
@@ -2305,9 +2460,20 @@
       event.preventDefault();
       addSpecialProduct();
     });
+    els.specialRepairCancel.addEventListener('click', closeSpecialRepairModal);
+    els.specialRepairModal.addEventListener('click', event => {
+      if (event.target === els.specialRepairModal) closeSpecialRepairModal();
+    });
+    els.specialRepairForm.addEventListener('submit', event => {
+      event.preventDefault();
+      addSpecialRepairOrder();
+    });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && els.specialProductModal.classList.contains('show')) {
         closeSpecialProductModal();
+      }
+      if (event.key === 'Escape' && els.specialRepairModal.classList.contains('show')) {
+        closeSpecialRepairModal();
       }
     });
 
