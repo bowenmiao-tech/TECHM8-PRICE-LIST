@@ -996,6 +996,11 @@
       padding: 12px;
     }
 
+    .board-column.drag-over {
+      border-color: var(--tm-green);
+      background: #eefaf6;
+    }
+
     .board-column-title {
       display: flex;
       justify-content: space-between;
@@ -1020,6 +1025,37 @@
       background: #fff;
       box-shadow: 0 8px 18px rgba(16, 30, 38, 0.04);
       margin-bottom: 10px;
+      cursor: grab;
+    }
+
+    .ticket-card.dragging {
+      opacity: .55;
+      cursor: grabbing;
+    }
+
+    .ticket-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 34px;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .ticket-cart-button {
+      width: 34px;
+      height: 34px;
+      border: 1px solid #cfe2dc;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: var(--tm-green-dark);
+      background: #eefaf6;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .ticket-cart-button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
     }
 
     .ticket-title {
@@ -1786,6 +1822,33 @@
       localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 200)));
     }
 
+    function applyRepairTicketAutomation() {
+      const cutoff = Date.now() - (90 * 24 * 60 * 60 * 1000);
+      let changed = false;
+      state.repairTickets.forEach(ticket => {
+        if (!ticket.statusUpdatedAt) {
+          ticket.statusUpdatedAt = ticket.createdAt || new Date().toISOString();
+          changed = true;
+        }
+        const statusTime = new Date(ticket.statusUpdatedAt || ticket.createdAt || Date.now()).getTime();
+        if (ticket.status === 'waiting_pickup' && Number.isFinite(statusTime) && statusTime < cutoff) {
+          ticket.status = 'over_3_months_uncollected';
+          ticket.statusUpdatedAt = new Date().toISOString();
+          changed = true;
+        }
+      });
+      if (changed) saveRepairTickets();
+    }
+
+    function updateRepairTicketStatus(ticketId, status) {
+      const ticket = state.repairTickets.find(item => item.id === ticketId);
+      if (!ticket || ticket.status === status) return;
+      ticket.status = status;
+      ticket.statusUpdatedAt = new Date().toISOString();
+      saveRepairTickets();
+      renderRepairWorkspace();
+    }
+
     function resetRepairState() {
       state.repair = {
         started: false,
@@ -1909,7 +1972,8 @@
         deviceInStore,
         motherboardRepair,
         specialOrder: Boolean(draft.specialOrder),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        statusUpdatedAt: new Date().toISOString()
       };
 
       state.repairTickets.unshift(ticket);
@@ -2070,19 +2134,25 @@
     }
 
     function repairBoardHtml() {
+      applyRepairTicketAutomation();
       return `
         <div class="repair-board">
           ${repairBoardColumns.map(column => {
             const tickets = state.repairTickets.filter(ticket => ticket.status === column.id);
             return `
-              <div class="board-column">
+              <div class="board-column" data-board-status="${column.id}">
                 <div class="board-column-title">
                   <span>${escapeHtml(column.label)}</span>
                   <span class="board-count">${tickets.length}</span>
                 </div>
                 ${tickets.map(ticket => `
-                  <div class="ticket-card">
-                    <div class="ticket-title">${escapeHtml(ticket.title || 'Repair ticket')}</div>
+                  <div class="ticket-card" draggable="true" data-ticket-id="${escapeHtml(ticket.id)}">
+                    <div class="ticket-top">
+                      <div class="ticket-title">${escapeHtml(ticket.title || 'Repair ticket')}</div>
+                      <button class="ticket-cart-button" type="button" data-ticket-cart="${escapeHtml(ticket.id)}" title="Add ticket to cart">
+                        <i class="bi bi-cart-plus"></i>
+                      </button>
+                    </div>
                     <div class="ticket-meta">${escapeHtml(ticket.id)} · ${escapeHtml(ticket.issue || 'Repair')} · ${escapeHtml(ticket.price || '')}</div>
                     <div class="ticket-tags">
                       ${ticket.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
@@ -2471,8 +2541,42 @@
       });
       state.repair.addedToCart = true;
       renderCart();
+      resetRepairState();
       renderRepairWorkspace();
       showToast('Repair added to cart.');
+    }
+
+    function addRepairTicketToCart(ticketId) {
+      const ticket = state.repairTickets.find(item => item.id === ticketId);
+      if (!ticket) return;
+
+      const id = 'repair-' + ticket.id;
+      if (state.cart.some(item => item.id === id)) {
+        showToast('This repair is already in the cart.');
+        return;
+      }
+
+      const price = priceNumber(ticket.price);
+      if (price <= 0) {
+        showToast('This ticket needs a valid price before adding to cart.');
+        return;
+      }
+
+      state.cart.push({
+        id,
+        sku: 'REPAIR',
+        name: ticket.title || 'Repair service',
+        category: 'Repair',
+        cost_price: 0,
+        sale_price: price,
+        barcode: '',
+        image_url: '',
+        qty: 1,
+        is_repair: true,
+        ticket_id: ticket.id
+      });
+      renderCart();
+      showToast('Ticket added to cart.');
     }
 
     function changeQty(productId, dir) {
@@ -2597,9 +2701,26 @@
         }
       });
 
+      const paidRepairIds = state.cart
+        .filter(item => item.is_repair && item.ticket_id)
+        .map(item => item.ticket_id);
+      if (paidRepairIds.length) {
+        state.repairTickets.forEach(ticket => {
+          if (paidRepairIds.includes(ticket.id)) {
+            ticket.status = 'finished';
+            ticket.statusUpdatedAt = new Date().toISOString();
+          }
+        });
+        saveRepairTickets();
+        if (paidRepairIds.includes(state.repair.ticketId)) {
+          resetRepairState();
+        }
+      }
+
       state.cart = [];
       els.customerInput.value = '';
       renderProducts();
+      renderRepairWorkspace();
       renderCart();
       showToast(`${order.id} paid by ${order.payment_method}. ${money(total)} recorded locally.`);
     }
@@ -2706,6 +2827,7 @@
     });
 
     els.repairWorkspace.addEventListener('click', event => {
+      const ticketCartButton = event.target.closest('[data-ticket-cart]');
       const confirmButton = event.target.closest('#confirmRepairBtn');
       const cameraButton = event.target.closest('#repairCameraBtn');
       const videoButton = event.target.closest('#repairVideoBtn');
@@ -2713,6 +2835,11 @@
       const repairChip = event.target.closest('.repair-chip');
       const testOption = event.target.closest('.test-option');
 
+      if (ticketCartButton) {
+        event.stopPropagation();
+        addRepairTicketToCart(ticketCartButton.dataset.ticketCart);
+        return;
+      }
       if (confirmButton) confirmRepairSelection();
       if (addRepairButton) addCurrentRepairToCart();
       if (cameraButton) {
@@ -2741,6 +2868,42 @@
         group.querySelectorAll('.test-option').forEach(item => item.classList.remove('active'));
         testOption.classList.add('active');
       }
+    });
+
+    els.repairWorkspace.addEventListener('dragstart', event => {
+      const card = event.target.closest('[data-ticket-id]');
+      if (!card) return;
+      card.classList.add('dragging');
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', card.dataset.ticketId);
+    });
+
+    els.repairWorkspace.addEventListener('dragend', event => {
+      const card = event.target.closest('[data-ticket-id]');
+      if (card) card.classList.remove('dragging');
+      els.repairWorkspace.querySelectorAll('.board-column.drag-over').forEach(column => column.classList.remove('drag-over'));
+    });
+
+    els.repairWorkspace.addEventListener('dragover', event => {
+      const column = event.target.closest('[data-board-status]');
+      if (!column) return;
+      event.preventDefault();
+      column.classList.add('drag-over');
+      event.dataTransfer.dropEffect = 'move';
+    });
+
+    els.repairWorkspace.addEventListener('dragleave', event => {
+      const column = event.target.closest('[data-board-status]');
+      if (column && !column.contains(event.relatedTarget)) column.classList.remove('drag-over');
+    });
+
+    els.repairWorkspace.addEventListener('drop', event => {
+      const column = event.target.closest('[data-board-status]');
+      if (!column) return;
+      event.preventDefault();
+      column.classList.remove('drag-over');
+      const ticketId = event.dataTransfer.getData('text/plain');
+      if (ticketId) updateRepairTicketStatus(ticketId, column.dataset.boardStatus);
     });
 
     els.cartArea.addEventListener('click', event => {
