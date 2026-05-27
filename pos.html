@@ -959,6 +959,28 @@
       overflow-wrap: anywhere;
     }
 
+    .repair-cart-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      border-color: rgba(7, 137, 111, 0.24);
+      background: #f6fbfa;
+    }
+
+    .repair-cart-title {
+      font-size: 16px;
+      font-weight: 950;
+      line-height: 1.3;
+    }
+
+    .repair-cart-meta {
+      margin-top: 5px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
     .repair-board {
       display: grid;
       grid-template-columns: repeat(7, minmax(220px, 1fr));
@@ -1135,6 +1157,7 @@
 
       .repair-grid,
       .repair-summary,
+      .repair-cart-panel,
       .repair-board {
         grid-template-columns: 1fr;
         min-width: 0;
@@ -1428,7 +1451,8 @@
         testable: 'yes',
         testProfile: 'mobile',
         tests: {},
-        media: []
+        media: [],
+        addedToCart: false
       }
     };
 
@@ -1647,6 +1671,18 @@
       return raw.startsWith('$') ? raw : '$' + raw;
     }
 
+    function priceNumber(value) {
+      const cleaned = String(value || '').replace(/[^0-9.-]/g, '');
+      const parsed = Number(cleaned);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function currentRepairCartName() {
+      const quote = state.repair.quote || {};
+      if (state.repair.specialOrder) return state.repair.specialName || quote.issue || 'Special repair';
+      return [quote.brand, quote.model, quote.issue].filter(Boolean).join(' - ') || 'Repair service';
+    }
+
     function repairDeviceType(quote) {
       const brandModel = ((quote && quote.brand) || '') + ' ' + ((quote && quote.model) || '');
       if (/ipad|tablet/i.test(brandModel)) return 'Tablet';
@@ -1776,7 +1812,8 @@
         testable: 'yes',
         testProfile: 'mobile',
         tests: {},
-        media: []
+        media: [],
+        addedToCart: false
       };
     }
 
@@ -2127,6 +2164,7 @@
 
     function repairIntakeHtml() {
       const quote = state.repair.quote || {};
+      const cartPrice = priceNumber(state.repair.quotedPrice || quote.price);
       const mediaHtml = state.repair.media.map(item => `
         <div class="media-preview">
           ${item.type === 'image' ? `<img src="${item.src}" alt="">` : '<span>Video<br>placeholder</span>'}
@@ -2209,6 +2247,16 @@
               <textarea class="repair-textarea" id="repairTestNotes" placeholder="Example: display does not light up, so touch and Face ID could not be confirmed">${escapeHtml(state.repair.testNotes)}</textarea>
             </label>
           </div>
+        </div>
+
+        <div class="repair-panel repair-cart-panel">
+          <div>
+            <div class="repair-cart-title">${escapeHtml(currentRepairCartName())}</div>
+            <div class="repair-cart-meta">Ticket ${escapeHtml(state.repair.ticketId)} · ${cartPrice > 0 ? money(cartPrice) : 'No valid price'}</div>
+          </div>
+          <button id="addRepairToCartBtn" class="repair-action primary" type="button" ${state.repair.addedToCart || cartPrice <= 0 ? 'disabled' : ''}>
+            ${state.repair.addedToCart ? 'Added to Cart' : 'Add to Cart'}
+          </button>
         </div>
       `;
     }
@@ -2387,6 +2435,44 @@
         state.cart.push({ ...product, qty: 1 });
       }
       renderCart();
+    }
+
+    function addCurrentRepairToCart() {
+      if (!state.repair.intakeOpen || !state.repair.ticketId) {
+        showToast('Create a repair ticket first.');
+        return;
+      }
+
+      const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
+      if (price <= 0) {
+        showToast('This repair needs a valid price before adding to cart.');
+        return;
+      }
+
+      const id = 'repair-' + state.repair.ticketId;
+      const current = state.cart.find(item => item.id === id);
+      if (current) {
+        showToast('This repair is already in the cart.');
+        return;
+      }
+
+      state.cart.push({
+        id,
+        sku: 'REPAIR',
+        name: currentRepairCartName(),
+        category: 'Repair',
+        cost_price: 0,
+        sale_price: price,
+        barcode: '',
+        image_url: '',
+        qty: 1,
+        is_repair: true,
+        ticket_id: state.repair.ticketId
+      });
+      state.repair.addedToCart = true;
+      renderCart();
+      renderRepairWorkspace();
+      showToast('Repair added to cart.');
     }
 
     function changeQty(productId, dir) {
@@ -2623,10 +2709,12 @@
       const confirmButton = event.target.closest('#confirmRepairBtn');
       const cameraButton = event.target.closest('#repairCameraBtn');
       const videoButton = event.target.closest('#repairVideoBtn');
+      const addRepairButton = event.target.closest('#addRepairToCartBtn');
       const repairChip = event.target.closest('.repair-chip');
       const testOption = event.target.closest('.test-option');
 
       if (confirmButton) confirmRepairSelection();
+      if (addRepairButton) addCurrentRepairToCart();
       if (cameraButton) {
         const input = els.repairWorkspace.querySelector('#repairPhotoInput');
         if (input) input.click();
