@@ -1589,10 +1589,10 @@
         <label>
           Group
           <select id="customerGroup">
-            <option value="普通客人" selected>普通客人</option>
-            <option value="企业客人">企业客人</option>
-            <option value="学校客人">学校客人</option>
-            <option value="黑名单">黑名单</option>
+            <option value="Regular Customer" selected>Regular Customer</option>
+            <option value="Business Customer">Business Customer</option>
+            <option value="School Customer">School Customer</option>
+            <option value="Blacklist">Blacklist</option>
           </select>
         </label>
         <label class="span-2">
@@ -1868,7 +1868,8 @@
       JANAPHY: ['PR', 'NL', 'BS', 'FF', 'TW'],
       Jinny: ['PR', 'NL', 'BS', 'FF', 'TW'],
       'Joanna Chen': ['PR', 'NL', 'BS', 'FF', 'TW'],
-      'Steven T': ['PR', 'NL', 'BS', 'FF', 'TW']
+      'Steven T': ['PR', 'NL', 'BS', 'FF', 'TW'],
+      Bowen: ['PR', 'NL', 'BS', 'FF', 'TW']
     };
 
     let staffAccessResolve = null;
@@ -2274,7 +2275,7 @@
 
     function openCustomerModal() {
       els.customerForm.reset();
-      els.customerGroup.value = '普通客人';
+      els.customerGroup.value = 'Regular Customer';
       els.customerError.textContent = '';
       els.customerModal.classList.add('show');
       els.customerModal.setAttribute('aria-hidden', 'false');
@@ -2286,12 +2287,29 @@
       els.customerModal.setAttribute('aria-hidden', 'true');
     }
 
+    function isAustralianMobileNumber(value) {
+      const compact = String(value || '').replace(/[\s()-]/g, '');
+      return /^04\d{8}$/.test(compact) || /^\+614\d{8}$/.test(compact) || /^614\d{8}$/.test(compact);
+    }
+
     function addCustomer() {
       const firstName = els.customerFirstName.value.trim();
       const lastName = els.customerLastName.value.trim();
+      const phone = els.customerPhone.value.trim();
+      const alertNumber = els.customerAlertNumber.value.trim();
       if (!firstName) {
         els.customerError.textContent = 'First name is required.';
         els.customerFirstName.focus();
+        return;
+      }
+      if (!phone && !alertNumber) {
+        els.customerError.textContent = 'Enter at least one phone number.';
+        els.customerPhone.focus();
+        return;
+      }
+      if (phone && !isAustralianMobileNumber(phone)) {
+        els.customerError.textContent = 'Phone Number must be an Australian mobile number, such as 04xx xxx xxx or +61 4xx xxx xxx.';
+        els.customerPhone.focus();
         return;
       }
 
@@ -2300,10 +2318,10 @@
         first_name: firstName,
         last_name: lastName,
         company: els.customerCompany.value.trim(),
-        phone: els.customerPhone.value.trim(),
-        alert_number: els.customerAlertNumber.value.trim(),
+        phone,
+        alert_number: alertNumber,
         email: els.customerEmail.value.trim(),
-        group: els.customerGroup.value || '普通客人',
+        group: els.customerGroup.value || 'Regular Customer',
         notes: els.customerNotes.value.trim(),
         created_at: new Date().toISOString()
       };
