@@ -62,6 +62,7 @@
     .brand-mark {
       width: 44px;
       height: 44px;
+      border: 0;
       display: grid;
       place-items: center;
       border-radius: 16px;
@@ -70,6 +71,11 @@
       font-weight: 900;
       line-height: 1;
       box-shadow: 0 10px 24px rgba(7, 137, 111, 0.24);
+    }
+
+    .brand-mark:focus-visible {
+      outline: 3px solid rgba(7, 137, 111, 0.24);
+      outline-offset: 2px;
     }
 
     .rail-nav {
@@ -671,6 +677,49 @@
       gap: 10px;
     }
 
+    .store-option-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .store-option {
+      min-height: 52px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 8px 12px 8px 8px;
+      background: #fff;
+      color: var(--tm-ink);
+      text-align: left;
+      font-weight: 900;
+    }
+
+    .store-option.active {
+      border-color: var(--tm-green);
+      background: #eefaf6;
+    }
+
+    .store-code {
+      width: 42px;
+      height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--tm-green);
+      font-weight: 950;
+    }
+
+    .store-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .repair-view {
       grid-template-rows: auto minmax(0, 1fr);
       gap: 16px;
@@ -1216,7 +1265,7 @@
 <body>
   <div class="pos-app" data-auth-protected>
     <aside class="rail" aria-label="POS navigation">
-      <div class="brand-mark">M8</div>
+      <button id="storeSwitchBtn" class="brand-mark" type="button" title="Switch store">PR</button>
       <nav class="rail-nav">
         <button id="productNavBtn" class="rail-button active" type="button" title="Products"><i class="bi bi-house-door-fill"></i></button>
         <button id="repairNavBtn" class="rail-button" type="button" title="Repair tickets"><i class="bi bi-clipboard2-plus"></i></button>
@@ -1379,6 +1428,32 @@
     </form>
   </div>
 
+  <div id="posStaffModal" class="modal-backdrop" aria-hidden="true">
+    <form id="posStaffForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="posStaffTitle">
+      <h2 id="posStaffTitle">Select Staff</h2>
+      <div class="special-fields">
+        <label>
+          Staff
+          <select id="posStaffSelect" class="repair-select"></select>
+        </label>
+      </div>
+      <div id="posStaffError" class="special-error"></div>
+      <div class="special-actions">
+        <button class="pay-action" type="submit">Continue</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="storeSwitchModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal" role="dialog" aria-modal="true" aria-labelledby="storeSwitchTitle">
+      <h2 id="storeSwitchTitle">Switch Store</h2>
+      <div id="storeSwitchList" class="store-option-list"></div>
+      <div class="special-actions">
+        <button id="storeSwitchCancel" class="soft-action" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -1460,6 +1535,9 @@
       category: 'All',
       search: '',
       storeId: 'park-ridge',
+      staffMembers: [],
+      selectedStaffName: '',
+      allowedStoreIds: [],
       payment: 'Cash',
       activeView: 'products',
       repair: {
@@ -1495,6 +1573,7 @@
     const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products';
     const els = {
       productGrid: document.getElementById('productGrid'),
+      storeSwitchBtn: document.getElementById('storeSwitchBtn'),
       productView: document.getElementById('productView'),
       repairView: document.getElementById('repairView'),
       repairWorkspace: document.getElementById('repairWorkspace'),
@@ -1535,6 +1614,13 @@
       ticketDeviceInStore: document.getElementById('ticketDeviceInStore'),
       ticketMotherboardRepair: document.getElementById('ticketMotherboardRepair'),
       ticketDetailsCancel: document.getElementById('ticketDetailsCancel'),
+      posStaffModal: document.getElementById('posStaffModal'),
+      posStaffForm: document.getElementById('posStaffForm'),
+      posStaffSelect: document.getElementById('posStaffSelect'),
+      posStaffError: document.getElementById('posStaffError'),
+      storeSwitchModal: document.getElementById('storeSwitchModal'),
+      storeSwitchList: document.getElementById('storeSwitchList'),
+      storeSwitchCancel: document.getElementById('storeSwitchCancel'),
       toast: document.getElementById('toast')
     };
 
@@ -1592,6 +1678,30 @@
     ];
 
     const REPAIR_TICKETS_KEY = 'techm8_pos_repair_tickets';
+    const POS_STAFF_KEY = 'techm8_pos_staff_name';
+    const POS_STORE_ASSIGNMENTS_KEY = 'techm8_pos_staff_store_assignments';
+    const POS_STORE_KEY = 'techm8_pos_store_id';
+
+    const posStores = [
+      { id: 'park-ridge', code: 'PR', dbCode: 'parkridge', name: 'TechM8 Park Ridge' },
+      { id: 'north-lakes', code: 'NL', dbCode: 'northlakes', name: 'TechM8 North Lakes' },
+      { id: 'brassall', code: 'BS', dbCode: 'brassall', name: 'TechM8 Brassall' },
+      { id: 'fairfield', code: 'FF', dbCode: 'fairfield', name: 'TechM8 Fairfield' },
+      { id: 'toowong', code: 'TW', dbCode: 'toowong', name: 'TechM8 Toowong' }
+    ];
+
+    const POS_STAFF_STORE_ASSIGNMENTS = {
+      Andy: ['PR', 'NL', 'BS', 'FF', 'TW'],
+      Bonnie: ['PR', 'NL', 'BS', 'FF', 'TW'],
+      Fiona: ['PR', 'NL', 'BS', 'FF', 'TW'],
+      'Henry Ang': ['PR', 'NL', 'BS', 'FF', 'TW'],
+      JANAPHY: ['PR', 'NL', 'BS', 'FF', 'TW'],
+      Jinny: ['PR', 'NL', 'BS', 'FF', 'TW'],
+      'Joanna Chen': ['PR', 'NL', 'BS', 'FF', 'TW'],
+      'Steven T': ['PR', 'NL', 'BS', 'FF', 'TW']
+    };
+
+    let staffAccessResolve = null;
 
     function money(value) {
       return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value || 0));
@@ -1599,6 +1709,163 @@
 
     function normalizeStoreKey(value) {
       return String(value || '').toLowerCase().replace(/techm8/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function normalizeStaffKey(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function loadStaffStoreAssignments() {
+      try {
+        const override = JSON.parse(localStorage.getItem(POS_STORE_ASSIGNMENTS_KEY) || 'null');
+        if (override && typeof override === 'object') return override;
+      } catch (error) {
+        console.error(error);
+      }
+      return POS_STAFF_STORE_ASSIGNMENTS;
+    }
+
+    function storeById(storeId) {
+      return posStores.find(store => store.id === storeId) || posStores[0];
+    }
+
+    function storeByCode(code) {
+      const normalized = String(code || '').toUpperCase();
+      return posStores.find(store => store.code === normalized || store.dbCode.toUpperCase() === normalized);
+    }
+
+    function allowedStoresForStaff(staffName) {
+      const assignments = loadStaffStoreAssignments();
+      const staffKey = normalizeStaffKey(staffName);
+      const matchedKey = Object.keys(assignments).find(key => normalizeStaffKey(key) === staffKey);
+      const codes = matchedKey ? assignments[matchedKey] : [];
+      return (Array.isArray(codes) ? codes : [])
+        .map(storeByCode)
+        .filter(Boolean);
+    }
+
+    function renderStoreSelectOptions() {
+      const stores = state.allowedStoreIds.length
+        ? posStores.filter(store => state.allowedStoreIds.includes(store.id))
+        : [];
+      els.storeSelect.innerHTML = stores.map(store => `
+        <option value="${store.id}">${escapeHtml(store.name)}</option>
+      `).join('');
+      els.storeSelect.disabled = stores.length <= 1;
+      if (stores.length) els.storeSelect.value = state.storeId;
+    }
+
+    function updateStoreBadge() {
+      const store = storeById(state.storeId);
+      els.storeSwitchBtn.textContent = store.code;
+      els.storeSwitchBtn.title = state.selectedStaffName
+        ? `${store.name} - ${state.selectedStaffName}`
+        : store.name;
+    }
+
+    function setCurrentStore(storeId, reloadProducts) {
+      if (!state.allowedStoreIds.includes(storeId)) {
+        showToast('This staff member is not assigned to that store.');
+        renderStoreSelectOptions();
+        updateStoreBadge();
+        return false;
+      }
+      state.storeId = storeId;
+      localStorage.setItem(POS_STORE_KEY, storeId);
+      renderStoreSelectOptions();
+      updateStoreBadge();
+      if (reloadProducts) {
+        state.cart = [];
+        loadProducts();
+        renderCart();
+      }
+      return true;
+    }
+
+    function renderStoreSwitchModal() {
+      const stores = posStores.filter(store => state.allowedStoreIds.includes(store.id));
+      els.storeSwitchList.innerHTML = stores.map(store => `
+        <button class="store-option ${store.id === state.storeId ? 'active' : ''}" type="button" data-store-switch="${store.id}">
+          <span class="store-code">${store.code}</span>
+          <span class="store-name">${escapeHtml(store.name)}</span>
+        </button>
+      `).join('');
+    }
+
+    function openStoreSwitchModal() {
+      if (!state.selectedStaffName) {
+        openStaffModal();
+        return;
+      }
+      renderStoreSwitchModal();
+      els.storeSwitchModal.classList.add('show');
+      els.storeSwitchModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeStoreSwitchModal() {
+      els.storeSwitchModal.classList.remove('show');
+      els.storeSwitchModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function loadPosStaffSetup() {
+      try {
+        const token = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken ? window.Techm8StaffAuth.getToken() : '';
+        const result = await window.Techm8StaffAuth.callRpc('get_daily_report_setup', {
+          session_token: token,
+          target_store_code: null
+        });
+        state.staffMembers = Array.isArray(result.staff) ? result.staff : [];
+      } catch (error) {
+        console.error(error);
+        state.staffMembers = Object.keys(POS_STAFF_STORE_ASSIGNMENTS).map(name => ({ display_name: name }));
+      }
+    }
+
+    function openStaffModal() {
+      els.posStaffError.textContent = '';
+      const names = state.staffMembers.map(staff => staff.display_name).filter(Boolean).sort();
+      els.posStaffSelect.innerHTML = '<option value="">Choose staff</option>' + names.map(name => `
+        <option value="${escapeHtml(name)}">${escapeHtml(name)}</option>
+      `).join('');
+      if (state.selectedStaffName) els.posStaffSelect.value = state.selectedStaffName;
+      els.posStaffModal.classList.add('show');
+      els.posStaffModal.setAttribute('aria-hidden', 'false');
+      els.posStaffSelect.focus();
+    }
+
+    function closeStaffModal() {
+      els.posStaffModal.classList.remove('show');
+      els.posStaffModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function applySelectedStaff(staffName) {
+      const stores = allowedStoresForStaff(staffName);
+      if (!stores.length) {
+        els.posStaffError.textContent = 'This staff member is not assigned to any POS store.';
+        return false;
+      }
+      state.selectedStaffName = staffName;
+      state.allowedStoreIds = stores.map(store => store.id);
+      sessionStorage.setItem(POS_STAFF_KEY, staffName);
+      const savedStore = localStorage.getItem(POS_STORE_KEY);
+      const nextStore = state.allowedStoreIds.includes(savedStore) ? savedStore : state.allowedStoreIds[0];
+      closeStaffModal();
+      setCurrentStore(nextStore, false);
+      if (staffAccessResolve) {
+        staffAccessResolve(true);
+        staffAccessResolve = null;
+      }
+      return true;
+    }
+
+    async function ensureStaffStoreAccess() {
+      await loadPosStaffSetup();
+      const savedStaff = sessionStorage.getItem(POS_STAFF_KEY) || '';
+      if (savedStaff && applySelectedStaff(savedStaff)) return;
+      return new Promise(resolve => {
+        staffAccessResolve = resolve;
+        openStaffModal();
+      });
     }
 
     function getProductStock(product) {
@@ -2792,6 +3059,7 @@
 
     els.productNavBtn.addEventListener('click', () => setActiveView('products'));
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
+    els.storeSwitchBtn.addEventListener('click', openStoreSwitchModal);
     els.newRepairBtn.addEventListener('click', startRepairTicket);
     els.specialRepairBtn.addEventListener('click', openSpecialRepairModal);
     els.clearRepairBtn.addEventListener('click', clearRepairTicket);
@@ -2927,9 +3195,7 @@
     });
 
     els.storeSelect.addEventListener('change', event => {
-      state.storeId = event.target.value;
-      state.cart = [];
-      loadProducts();
+      setCurrentStore(event.target.value, true);
     });
 
     els.syncStatus.addEventListener('click', loadProducts);
@@ -2962,6 +3228,19 @@
       event.preventDefault();
       createRepairTicketFromDraft();
     });
+    els.posStaffForm.addEventListener('submit', event => {
+      event.preventDefault();
+      applySelectedStaff(els.posStaffSelect.value);
+    });
+    els.storeSwitchCancel.addEventListener('click', closeStoreSwitchModal);
+    els.storeSwitchModal.addEventListener('click', event => {
+      if (event.target === els.storeSwitchModal) closeStoreSwitchModal();
+      const button = event.target.closest('[data-store-switch]');
+      if (button) {
+        closeStoreSwitchModal();
+        setCurrentStore(button.dataset.storeSwitch, true);
+      }
+    });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && els.specialProductModal.classList.contains('show')) {
         closeSpecialProductModal();
@@ -2972,15 +3251,19 @@
       if (event.key === 'Escape' && els.ticketDetailsModal.classList.contains('show')) {
         closeTicketDetailsModal();
       }
+      if (event.key === 'Escape' && els.storeSwitchModal.classList.contains('show')) {
+        closeStoreSwitchModal();
+      }
     });
 
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
       title: 'POS Access',
       subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
-    }).then(() => {
+    }).then(async () => {
       loadRepairTickets();
       renderRepairWorkspace();
+      await ensureStaffStoreAccess();
       loadProducts();
       loadRepairQuotes();
     });
