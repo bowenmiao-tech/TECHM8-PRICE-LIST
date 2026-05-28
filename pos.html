@@ -132,7 +132,7 @@
 
     .topbar {
       display: grid;
-      grid-template-columns: minmax(260px, 1fr) auto auto;
+      grid-template-columns: minmax(260px, 1fr) auto;
       gap: 12px;
       align-items: center;
     }
@@ -1381,14 +1381,6 @@
             <i class="bi bi-search"></i>
             <input id="searchInput" class="search-input" type="search" placeholder="Search product name / SKU / barcode">
           </div>
-          <select id="storeSelect" class="store-select" aria-label="Store">
-            <option value="park-ridge">TechM8 Park Ridge</option>
-            <option value="fairfield">TechM8 Fairfield</option>
-            <option value="north-lakes">TechM8 North Lakes</option>
-            <option value="toowong">TechM8 Toowong</option>
-            <option value="brassall">TechM8 Brassall</option>
-            <option value="warehouse-dispatch">Warehouse Dispatch</option>
-          </select>
           <button id="specialProductBtn" class="staff-pill" type="button"><i class="bi bi-bag-plus"></i><span>Special Productes</span></button>
         </div>
 
@@ -1916,6 +1908,7 @@
     }
 
     function renderStoreSelectOptions() {
+      if (!els.storeSelect) return;
       const stores = state.allowedStoreIds.length
         ? posStores.filter(store => state.allowedStoreIds.includes(store.id))
         : [];
@@ -3439,9 +3432,11 @@
       renderProducts();
     });
 
-    els.storeSelect.addEventListener('change', event => {
-      setCurrentStore(event.target.value, true);
-    });
+    if (els.storeSelect) {
+      els.storeSelect.addEventListener('change', event => {
+        setCurrentStore(event.target.value, true);
+      });
+    }
 
     els.syncStatus.addEventListener('click', loadProducts);
 
