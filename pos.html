@@ -1991,7 +1991,13 @@
       Jinny: ['PR', 'NL', 'BS', 'FF', 'TW'],
       'Joanna Chen': ['PR', 'NL', 'BS', 'FF', 'TW'],
       'Steven T': ['PR', 'NL', 'BS', 'FF', 'TW'],
-      Bowen: ['PR', 'NL', 'BS', 'FF', 'TW']
+      Bowen: ['PR', 'NL', 'BS', 'FF', 'TW'],
+      'Bowen Miao': ['PR', 'NL', 'BS', 'FF', 'TW']
+    };
+
+    const POS_DEFAULT_STAFF_PINS = {
+      Bowen: '0000',
+      'Bowen Miao': '0000'
     };
 
     let staffAccessResolve = null;
@@ -2029,7 +2035,10 @@
     }
 
     function loadStaffPins() {
-      return readLocalJson(POS_STAFF_PINS_KEY, {});
+      return {
+        ...POS_DEFAULT_STAFF_PINS,
+        ...readLocalJson(POS_STAFF_PINS_KEY, {})
+      };
     }
 
     function loadStaffSchedule() {
