@@ -769,6 +769,86 @@
       gap: 10px;
     }
 
+    .opening-modal {
+      width: min(760px, 100%);
+    }
+
+    .opening-copy {
+      margin: -6px 0 0;
+      color: #61717a;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .cash-calculator-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px 48px;
+    }
+
+    .cash-section-title {
+      padding-bottom: 8px;
+      border-bottom: 1px solid #8794a0;
+      color: #697684;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .cash-row {
+      display: grid;
+      grid-template-columns: 92px 12px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      color: #344254;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .cash-row span:nth-child(2) {
+      color: #91a0aa;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .cash-row input {
+      height: 40px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 12px;
+      color: var(--tm-ink);
+      background: #f5f7f9;
+      font-size: 16px;
+      font-weight: 850;
+      outline: none;
+    }
+
+    .cash-row input:focus {
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
+    }
+
+    .opening-total {
+      min-height: 70px;
+      border: 1px solid #eef2f5;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      color: #65717d;
+      background: #f8fafb;
+      font-weight: 850;
+    }
+
+    .opening-total strong {
+      color: var(--tm-green);
+      font-size: 30px;
+      font-weight: 950;
+    }
+
     .store-option-list {
       display: grid;
       gap: 10px;
@@ -1336,6 +1416,7 @@
       .repair-summary,
       .repair-cart-panel,
       .customer-field-grid,
+      .cash-calculator-grid,
       .repair-board {
         grid-template-columns: 1fr;
         min-width: 0;
@@ -1525,6 +1606,10 @@
           Staff
           <select id="posStaffSelect" class="repair-select"></select>
         </label>
+        <label>
+          4-digit PIN
+          <input id="posStaffPin" type="password" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}" placeholder="0000">
+        </label>
       </div>
       <div id="posStaffError" class="special-error"></div>
       <div class="special-actions">
@@ -1541,6 +1626,40 @@
         <button id="storeSwitchCancel" class="soft-action" type="button">Cancel</button>
       </div>
     </div>
+  </div>
+
+  <div id="openingCashModal" class="modal-backdrop" aria-hidden="true">
+    <form id="openingCashForm" class="special-modal opening-modal" role="dialog" aria-modal="true" aria-labelledby="openingCashTitle">
+      <h2 id="openingCashTitle">Cash Calculator (Australia)</h2>
+      <p id="openingCashSubtitle" class="opening-copy">Count the opening cash before using POS.</p>
+      <div class="cash-calculator-grid">
+        <section>
+          <div class="cash-section-title">Notes</div>
+          <label class="cash-row"><span>$100</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="100"></label>
+          <label class="cash-row"><span>$50</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="50"></label>
+          <label class="cash-row"><span>$20</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="20"></label>
+          <label class="cash-row"><span>$10</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="10"></label>
+          <label class="cash-row"><span>$5</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="5"></label>
+        </section>
+        <section>
+          <div class="cash-section-title">Coins</div>
+          <label class="cash-row"><span>$2</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="2"></label>
+          <label class="cash-row"><span>$1</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="1"></label>
+          <label class="cash-row"><span>50c</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="0.5"></label>
+          <label class="cash-row"><span>20c</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="0.2"></label>
+          <label class="cash-row"><span>10c</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="0.1"></label>
+          <label class="cash-row"><span>5c</span><span>x</span><input type="number" min="0" step="1" value="0" data-cash-value="0.05"></label>
+        </section>
+      </div>
+      <div class="opening-total">
+        <span>Total Calculated</span>
+        <strong id="openingCashTotal">$0.00</strong>
+      </div>
+      <div class="special-actions">
+        <button id="openingCashReset" class="soft-action" type="button">Reset</button>
+        <button class="pay-action" type="submit">Confirm & Open</button>
+      </div>
+    </form>
   </div>
 
   <div id="customerModal" class="modal-backdrop" aria-hidden="true">
@@ -1685,6 +1804,8 @@
       staffMembers: [],
       selectedStaffName: '',
       allowedStoreIds: [],
+      scheduledStoreId: '',
+      openingConfirmed: false,
       payment: 'Cash',
       activeView: 'products',
       repair: {
@@ -1778,10 +1899,16 @@
       posStaffModal: document.getElementById('posStaffModal'),
       posStaffForm: document.getElementById('posStaffForm'),
       posStaffSelect: document.getElementById('posStaffSelect'),
+      posStaffPin: document.getElementById('posStaffPin'),
       posStaffError: document.getElementById('posStaffError'),
       storeSwitchModal: document.getElementById('storeSwitchModal'),
       storeSwitchList: document.getElementById('storeSwitchList'),
       storeSwitchCancel: document.getElementById('storeSwitchCancel'),
+      openingCashModal: document.getElementById('openingCashModal'),
+      openingCashForm: document.getElementById('openingCashForm'),
+      openingCashSubtitle: document.getElementById('openingCashSubtitle'),
+      openingCashTotal: document.getElementById('openingCashTotal'),
+      openingCashReset: document.getElementById('openingCashReset'),
       toast: document.getElementById('toast')
     };
 
@@ -1843,6 +1970,9 @@
     const POS_STAFF_KEY = 'techm8_pos_staff_name';
     const POS_STORE_ASSIGNMENTS_KEY = 'techm8_pos_staff_store_assignments';
     const POS_STORE_KEY = 'techm8_pos_store_id';
+    const POS_STAFF_PINS_KEY = 'techm8_pos_staff_pins';
+    const POS_STAFF_SCHEDULE_KEY = 'techm8_pos_staff_schedule';
+    const POS_OPENINGS_KEY = 'techm8_pos_openings';
 
     const posStores = [
       { id: 'park-ridge', code: 'PR', dbCode: 'parkridge', name: 'TechM8 Park Ridge' },
@@ -1865,6 +1995,7 @@
     };
 
     let staffAccessResolve = null;
+    let openingResolve = null;
 
     function money(value) {
       return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value || 0));
@@ -1876,6 +2007,42 @@
 
     function normalizeStaffKey(value) {
       return String(value || '').trim().toLowerCase();
+    }
+
+    function readLocalJson(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || 'null');
+        return value && typeof value === 'object' ? value : fallback;
+      } catch (error) {
+        console.error(error);
+        return fallback;
+      }
+    }
+
+    function brisbaneDateIso(date = new Date()) {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Australia/Brisbane',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date);
+    }
+
+    function loadStaffPins() {
+      return readLocalJson(POS_STAFF_PINS_KEY, {});
+    }
+
+    function loadStaffSchedule() {
+      return readLocalJson(POS_STAFF_SCHEDULE_KEY, {});
+    }
+
+    function findScheduledShift(staffName) {
+      const today = brisbaneDateIso();
+      const daySchedule = loadStaffSchedule()[today] || {};
+      const staffKey = normalizeStaffKey(staffName);
+      const matchedName = Object.keys(daySchedule).find(name => normalizeStaffKey(name) === staffKey);
+      const shift = matchedName ? daySchedule[matchedName] : null;
+      return shift && shift.storeId ? shift : null;
     }
 
     function loadStaffStoreAssignments() {
@@ -1987,11 +2154,19 @@
 
     function openStaffModal() {
       els.posStaffError.textContent = '';
-      const names = state.staffMembers.map(staff => staff.display_name).filter(Boolean).sort();
+      const schedule = loadStaffSchedule();
+      const scheduledNames = Object.values(schedule).flatMap(day => Object.keys(day || {}));
+      const names = Array.from(new Set([
+        ...state.staffMembers.map(staff => staff.display_name).filter(Boolean),
+        ...Object.keys(POS_STAFF_STORE_ASSIGNMENTS),
+        ...scheduledNames
+      ])).sort();
       els.posStaffSelect.innerHTML = '<option value="">Choose staff</option>' + names.map(name => `
         <option value="${escapeHtml(name)}">${escapeHtml(name)}</option>
       `).join('');
-      if (state.selectedStaffName) els.posStaffSelect.value = state.selectedStaffName;
+      els.posStaffPin.value = '';
+      const savedStaff = sessionStorage.getItem(POS_STAFF_KEY) || state.selectedStaffName;
+      if (savedStaff) els.posStaffSelect.value = savedStaff;
       els.posStaffModal.classList.add('show');
       els.posStaffModal.setAttribute('aria-hidden', 'false');
       els.posStaffSelect.focus();
@@ -2003,18 +2178,44 @@
     }
 
     function applySelectedStaff(staffName) {
-      const stores = allowedStoresForStaff(staffName);
-      if (!stores.length) {
-        els.posStaffError.textContent = 'This staff member is not assigned to any POS store.';
+      const selectedName = String(staffName || '').trim();
+      const pin = String(els.posStaffPin.value || '').trim();
+      if (!selectedName) {
+        els.posStaffError.textContent = 'Choose a staff member.';
         return false;
       }
-      state.selectedStaffName = staffName;
-      state.allowedStoreIds = stores.map(store => store.id);
-      sessionStorage.setItem(POS_STAFF_KEY, staffName);
-      const savedStore = localStorage.getItem(POS_STORE_KEY);
-      const nextStore = state.allowedStoreIds.includes(savedStore) ? savedStore : state.allowedStoreIds[0];
+      if (!/^\d{4}$/.test(pin)) {
+        els.posStaffError.textContent = 'Enter the 4-digit staff PIN.';
+        return false;
+      }
+      const pins = loadStaffPins();
+      const pinStaffKey = Object.keys(pins).find(name => normalizeStaffKey(name) === normalizeStaffKey(selectedName));
+      if (!pinStaffKey || String(pins[pinStaffKey]) !== pin) {
+        els.posStaffError.textContent = 'Incorrect PIN or PIN is not configured in Schedule Admin.';
+        return false;
+      }
+      const shift = findScheduledShift(selectedName);
+      if (!shift) {
+        els.posStaffError.textContent = 'No shift is scheduled for this staff member today.';
+        return false;
+      }
+      const scheduledStore = posStores.find(store => store.id === shift.storeId);
+      if (!scheduledStore) {
+        els.posStaffError.textContent = 'The scheduled store is not available in POS.';
+        return false;
+      }
+      const assignedStores = allowedStoresForStaff(selectedName);
+      if (!assignedStores.some(store => store.id === scheduledStore.id)) {
+        els.posStaffError.textContent = 'This staff member is not assigned to the scheduled store.';
+        return false;
+      }
+      state.selectedStaffName = selectedName;
+      state.scheduledStoreId = scheduledStore.id;
+      state.allowedStoreIds = [scheduledStore.id];
+      state.openingConfirmed = false;
+      sessionStorage.setItem(POS_STAFF_KEY, selectedName);
       closeStaffModal();
-      setCurrentStore(nextStore, false);
+      setCurrentStore(scheduledStore.id, false);
       if (staffAccessResolve) {
         staffAccessResolve(true);
         staffAccessResolve = null;
@@ -2024,11 +2225,79 @@
 
     async function ensureStaffStoreAccess() {
       await loadPosStaffSetup();
-      const savedStaff = sessionStorage.getItem(POS_STAFF_KEY) || '';
-      if (savedStaff && applySelectedStaff(savedStaff)) return;
       return new Promise(resolve => {
         staffAccessResolve = resolve;
         openStaffModal();
+      });
+    }
+
+    function openingKey() {
+      return `${brisbaneDateIso()}|${normalizeStaffKey(state.selectedStaffName)}|${state.storeId}`;
+    }
+
+    function loadOpeningRecords() {
+      return readLocalJson(POS_OPENINGS_KEY, {});
+    }
+
+    function calculateOpeningCash() {
+      return Array.from(els.openingCashForm.querySelectorAll('[data-cash-value]')).reduce((total, input) => {
+        const qty = Math.max(0, Number(input.value || 0));
+        const value = Number(input.dataset.cashValue || 0);
+        return total + qty * value;
+      }, 0);
+    }
+
+    function updateOpeningCashTotal() {
+      els.openingCashTotal.textContent = money(calculateOpeningCash());
+    }
+
+    function resetOpeningCashInputs() {
+      els.openingCashForm.querySelectorAll('[data-cash-value]').forEach(input => {
+        input.value = '0';
+      });
+      updateOpeningCashTotal();
+    }
+
+    function saveOpeningCash() {
+      const records = loadOpeningRecords();
+      const counts = {};
+      els.openingCashForm.querySelectorAll('[data-cash-value]').forEach(input => {
+        counts[input.dataset.cashValue] = Math.max(0, Number(input.value || 0));
+      });
+      records[openingKey()] = {
+        date: brisbaneDateIso(),
+        staffName: state.selectedStaffName,
+        storeId: state.storeId,
+        storeCode: storeById(state.storeId).code,
+        total: Number(calculateOpeningCash().toFixed(2)),
+        counts,
+        openedAt: new Date().toISOString()
+      };
+      localStorage.setItem(POS_OPENINGS_KEY, JSON.stringify(records));
+      state.openingConfirmed = true;
+      els.openingCashModal.classList.remove('show');
+      els.openingCashModal.setAttribute('aria-hidden', 'true');
+      showToast(`Opening cash saved for ${storeById(state.storeId).code}.`);
+      if (openingResolve) {
+        openingResolve(true);
+        openingResolve = null;
+      }
+    }
+
+    function ensureOpeningCash() {
+      const records = loadOpeningRecords();
+      if (records[openingKey()]) {
+        state.openingConfirmed = true;
+        return Promise.resolve(true);
+      }
+      els.openingCashSubtitle.textContent = `${state.selectedStaffName} - ${storeById(state.storeId).name}. Enter the opening cash before using POS.`;
+      resetOpeningCashInputs();
+      els.openingCashModal.classList.add('show');
+      els.openingCashModal.setAttribute('aria-hidden', 'false');
+      const firstInput = els.openingCashForm.querySelector('[data-cash-value]');
+      if (firstInput) firstInput.focus();
+      return new Promise(resolve => {
+        openingResolve = resolve;
       });
     }
 
@@ -3472,6 +3741,21 @@
       event.preventDefault();
       applySelectedStaff(els.posStaffSelect.value);
     });
+    els.posStaffPin.addEventListener('input', event => {
+      event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
+    });
+    els.openingCashForm.addEventListener('input', event => {
+      if (event.target.matches('[data-cash-value]')) {
+        const normalized = Math.max(0, Math.floor(Number(event.target.value || 0)));
+        event.target.value = Number.isFinite(normalized) ? String(normalized) : '0';
+        updateOpeningCashTotal();
+      }
+    });
+    els.openingCashForm.addEventListener('submit', event => {
+      event.preventDefault();
+      saveOpeningCash();
+    });
+    els.openingCashReset.addEventListener('click', resetOpeningCashInputs);
     els.storeSwitchCancel.addEventListener('click', closeStoreSwitchModal);
     els.storeSwitchModal.addEventListener('click', event => {
       if (event.target === els.storeSwitchModal) closeStoreSwitchModal();
@@ -3513,10 +3797,11 @@
       title: 'POS Access',
       subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
     }).then(async () => {
+      await ensureStaffStoreAccess();
+      await ensureOpeningCash();
       loadRepairTickets();
       loadCustomers();
       renderRepairWorkspace();
-      await ensureStaffStoreAccess();
       loadProducts();
       loadRepairQuotes();
     });

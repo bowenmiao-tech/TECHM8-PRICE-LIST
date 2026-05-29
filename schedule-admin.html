@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TECHM8 POS Schedule Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;650;750;850;950&display=swap" rel="stylesheet">
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js"></script>
+  <style>
+    :root {
+      --tm-green: #07986f;
+      --tm-green-dark: #03634d;
+      --tm-ink: #10202d;
+      --tm-muted: #61717d;
+      --tm-line: #dce6ea;
+      --tm-bg: #eef4f6;
+      --tm-card: #ffffff;
+      --tm-red: #d94b3e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--tm-ink);
+      background: var(--tm-bg);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .page-shell {
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .admin-panel {
+      max-width: 1520px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .topbar,
+    .panel {
+      border: 1px solid var(--tm-line);
+      border-radius: 18px;
+      background: var(--tm-card);
+      box-shadow: 0 18px 44px rgba(12, 28, 38, 0.08);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 950;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--tm-muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      padding: 0 14px;
+      color: #41515c;
+      background: #fff;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .btn.danger {
+      color: var(--tm-red);
+      background: #fff3f1;
+    }
+
+    .date-input {
+      width: 160px;
+      min-height: 42px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      padding: 0 12px;
+      color: var(--tm-ink);
+      background: #fff;
+      font-weight: 850;
+    }
+
+    .panel {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .pin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .pin-card {
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      background: #fbfdfe;
+    }
+
+    .pin-name {
+      font-size: 13px;
+      font-weight: 900;
+      color: #40515d;
+    }
+
+    .pin-card input {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      padding: 0 12px;
+      color: var(--tm-ink);
+      background: #fff;
+      font-weight: 900;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #edf2f4;
+      border-right: 1px solid #edf2f4;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: 12px;
+      background: #f7fafb;
+      text-align: left;
+      color: #526270;
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    th:first-child,
+    td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      width: 190px;
+      min-width: 190px;
+      background: #fff;
+    }
+
+    th:first-child {
+      z-index: 3;
+      background: #f7fafb;
+    }
+
+    td {
+      padding: 10px;
+      background: #fff;
+    }
+
+    .staff-name {
+      color: var(--tm-ink);
+      font-weight: 950;
+    }
+
+    .shift-cell {
+      display: grid;
+      gap: 8px;
+    }
+
+    .shift-cell select,
+    .shift-cell input {
+      width: 100%;
+      height: 38px;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      padding: 0 10px;
+      color: var(--tm-ink);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .time-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .store-pr select { border-color: #2d2d2d; background: #f2f2f2; }
+    .store-nl select { border-color: #8b7bb2; background: #f4f1fb; }
+    .store-bs select { border-color: #d5819b; background: #fff2f7; }
+    .store-ff select { border-color: #7fa8cb; background: #eff7ff; }
+    .store-tw select { border-color: #86aa73; background: #f2faef; }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      min-width: 240px;
+      max-width: 420px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      color: #fff;
+      background: #142331;
+      box-shadow: 0 18px 44px rgba(10, 20, 28, 0.24);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity .18s ease, transform .18s ease;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 760px) {
+      .page-shell {
+        padding: 12px;
+      }
+
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div data-auth-protected>
+    <main class="page-shell">
+      <div class="admin-panel">
+        <header class="topbar">
+          <div>
+            <h1>POS Schedule Admin</h1>
+            <div class="subtitle">Set staff PINs and roster each staff member to one store per day.</div>
+          </div>
+          <div class="actions">
+            <button id="prevWeekBtn" class="btn" type="button">Previous Week</button>
+            <input id="weekStartInput" class="date-input" type="date">
+            <button id="nextWeekBtn" class="btn" type="button">Next Week</button>
+            <button id="clearWeekBtn" class="btn danger" type="button">Clear Week</button>
+            <a class="btn" href="./admin.html">Back</a>
+          </div>
+        </header>
+
+        <section class="panel">
+          <div>
+            <h2>Staff PINs</h2>
+            <div class="subtitle">Each POS login requires a configured 4-digit PIN.</div>
+          </div>
+          <div id="pinGrid" class="pin-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div>
+            <h2>Weekly Roster</h2>
+            <div class="subtitle">The POS opens at the store assigned to the staff member for the current Brisbane date.</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr id="scheduleHead"></tr>
+              </thead>
+              <tbody id="scheduleBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const POS_STAFF_PINS_KEY = 'techm8_pos_staff_pins';
+    const POS_STAFF_SCHEDULE_KEY = 'techm8_pos_staff_schedule';
+    const staffNames = ['Andy', 'Bonnie', 'Fiona', 'Henry Ang', 'JANAPHY', 'Jinny', 'Joanna Chen', 'Steven T', 'Bowen'];
+    const stores = [
+      { id: '', code: 'OFF', name: 'Off' },
+      { id: 'park-ridge', code: 'PR', name: 'Park Ridge' },
+      { id: 'north-lakes', code: 'NL', name: 'North Lakes' },
+      { id: 'brassall', code: 'BS', name: 'Brassall' },
+      { id: 'fairfield', code: 'FF', name: 'Fairfield' },
+      { id: 'toowong', code: 'TW', name: 'Toowong' }
+    ];
+    const els = {
+      weekStartInput: document.getElementById('weekStartInput'),
+      prevWeekBtn: document.getElementById('prevWeekBtn'),
+      nextWeekBtn: document.getElementById('nextWeekBtn'),
+      clearWeekBtn: document.getElementById('clearWeekBtn'),
+      pinGrid: document.getElementById('pinGrid'),
+      scheduleHead: document.getElementById('scheduleHead'),
+      scheduleBody: document.getElementById('scheduleBody'),
+      toast: document.getElementById('toast')
+    };
+
+    function readLocalJson(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || 'null');
+        return value && typeof value === 'object' ? value : fallback;
+      } catch (error) {
+        console.error(error);
+        return fallback;
+      }
+    }
+
+    function saveLocalJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function toIso(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function parseIso(value) {
+      const [year, month, day] = String(value).split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function mondayOf(date) {
+      const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const day = copy.getDay() || 7;
+      copy.setDate(copy.getDate() - day + 1);
+      return copy;
+    }
+
+    function addDays(date, days) {
+      const copy = new Date(date);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    function getWeekDates() {
+      const start = parseIso(els.weekStartInput.value);
+      return Array.from({ length: 7 }, (_, index) => addDays(start, index));
+    }
+
+    function formatDay(date) {
+      return new Intl.DateTimeFormat('en-AU', { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => els.toast.classList.remove('show'), 2200);
+    }
+
+    function renderPins() {
+      const pins = readLocalJson(POS_STAFF_PINS_KEY, {});
+      els.pinGrid.innerHTML = staffNames.map(name => `
+        <label class="pin-card">
+          <span class="pin-name">${escapeHtml(name)}</span>
+          <input type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" value="${escapeHtml(pins[name] || '')}" data-pin-staff="${escapeHtml(name)}" placeholder="4-digit PIN">
+        </label>
+      `).join('');
+    }
+
+    function renderSchedule() {
+      const schedule = readLocalJson(POS_STAFF_SCHEDULE_KEY, {});
+      const dates = getWeekDates();
+      els.scheduleHead.innerHTML = '<th>Staff</th>' + dates.map(date => `<th>${escapeHtml(formatDay(date))}<br>${toIso(date)}</th>`).join('');
+      els.scheduleBody.innerHTML = staffNames.map(name => {
+        const cells = dates.map(date => {
+          const iso = toIso(date);
+          const shift = schedule[iso] && schedule[iso][name] ? schedule[iso][name] : {};
+          const store = stores.find(item => item.id === shift.storeId) || stores[0];
+          const storeClass = store.code ? `store-${store.code.toLowerCase()}` : '';
+          return `
+            <td>
+              <div class="shift-cell ${storeClass}" data-shift-staff="${escapeHtml(name)}" data-shift-date="${iso}">
+                <select data-shift-field="storeId">
+                  ${stores.map(option => `<option value="${option.id}" ${option.id === (shift.storeId || '') ? 'selected' : ''}>${escapeHtml(option.code)} - ${escapeHtml(option.name)}</option>`).join('')}
+                </select>
+                <div class="time-row">
+                  <input type="time" value="${escapeHtml(shift.start || '09:00')}" data-shift-field="start">
+                  <input type="time" value="${escapeHtml(shift.end || '18:00')}" data-shift-field="end">
+                </div>
+              </div>
+            </td>
+          `;
+        }).join('');
+        return `<tr><td><div class="staff-name">${escapeHtml(name)}</div></td>${cells}</tr>`;
+      }).join('');
+    }
+
+    function updatePin(input) {
+      input.value = input.value.replace(/\D/g, '').slice(0, 4);
+      const pins = readLocalJson(POS_STAFF_PINS_KEY, {});
+      pins[input.dataset.pinStaff] = input.value;
+      saveLocalJson(POS_STAFF_PINS_KEY, pins);
+    }
+
+    function updateShift(field) {
+      const cell = field.closest('[data-shift-staff]');
+      const staff = cell.dataset.shiftStaff;
+      const date = cell.dataset.shiftDate;
+      const schedule = readLocalJson(POS_STAFF_SCHEDULE_KEY, {});
+      schedule[date] = schedule[date] || {};
+      const storeId = cell.querySelector('[data-shift-field="storeId"]').value;
+      if (!storeId) {
+        delete schedule[date][staff];
+        if (!Object.keys(schedule[date]).length) delete schedule[date];
+      } else {
+        schedule[date][staff] = {
+          storeId,
+          start: cell.querySelector('[data-shift-field="start"]').value || '09:00',
+          end: cell.querySelector('[data-shift-field="end"]').value || '18:00'
+        };
+      }
+      saveLocalJson(POS_STAFF_SCHEDULE_KEY, schedule);
+      if (field.dataset.shiftField === 'storeId') renderSchedule();
+    }
+
+    function shiftWeek(days) {
+      els.weekStartInput.value = toIso(addDays(parseIso(els.weekStartInput.value), days));
+      renderSchedule();
+    }
+
+    function clearCurrentWeek() {
+      const schedule = readLocalJson(POS_STAFF_SCHEDULE_KEY, {});
+      getWeekDates().forEach(date => {
+        delete schedule[toIso(date)];
+      });
+      saveLocalJson(POS_STAFF_SCHEDULE_KEY, schedule);
+      renderSchedule();
+      showToast('Current week cleared.');
+    }
+
+    function initScheduleAdmin() {
+      els.weekStartInput.value = toIso(mondayOf(new Date()));
+      renderPins();
+      renderSchedule();
+      els.pinGrid.addEventListener('input', event => {
+        if (event.target.matches('[data-pin-staff]')) updatePin(event.target);
+      });
+      els.pinGrid.addEventListener('change', () => showToast('PIN saved.'));
+      els.scheduleBody.addEventListener('change', event => {
+        if (event.target.matches('[data-shift-field]')) {
+          updateShift(event.target);
+          showToast('Schedule saved.');
+        }
+      });
+      els.weekStartInput.addEventListener('change', renderSchedule);
+      els.prevWeekBtn.addEventListener('click', () => shiftWeek(-7));
+      els.nextWeekBtn.addEventListener('click', () => shiftWeek(7));
+      els.clearWeekBtn.addEventListener('click', clearCurrentWeek);
+    }
+
+    window.Techm8StaffAuth.init({
+      rootSelector: '[data-auth-protected]',
+      title: 'Schedule Admin Login',
+      subtitle: 'Enter the admin password to manage POS rosters.',
+      requireLoginEmail: true,
+      loginInputType: 'text',
+      loginPlaceholder: 'Admin account',
+      sessionKey: 'techm8_admin_session_token',
+      createRpc: 'create_admin_session',
+      verifyRpc: 'verify_admin_session',
+      revokeRpc: 'revoke_admin_session'
+    }).then(initScheduleAdmin);
+  </script>
+</body>
+</html>
