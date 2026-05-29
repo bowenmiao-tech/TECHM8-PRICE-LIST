@@ -2194,28 +2194,32 @@
         els.posStaffError.textContent = 'Incorrect PIN or PIN is not configured in Schedule Admin.';
         return false;
       }
-      const shift = findScheduledShift(selectedName);
-      if (!shift) {
-        els.posStaffError.textContent = 'No shift is scheduled for this staff member today.';
+      const assignedStores = allowedStoresForStaff(selectedName);
+      if (!assignedStores.length) {
+        els.posStaffError.textContent = 'This staff member is not assigned to any POS store.';
         return false;
       }
-      const scheduledStore = posStores.find(store => store.id === shift.storeId);
-      if (!scheduledStore) {
+      const shift = findScheduledShift(selectedName);
+      const scheduledStore = shift ? posStores.find(store => store.id === shift.storeId) : null;
+      if (shift && !scheduledStore) {
         els.posStaffError.textContent = 'The scheduled store is not available in POS.';
         return false;
       }
-      const assignedStores = allowedStoresForStaff(selectedName);
-      if (!assignedStores.some(store => store.id === scheduledStore.id)) {
+      if (scheduledStore && !assignedStores.some(store => store.id === scheduledStore.id)) {
         els.posStaffError.textContent = 'This staff member is not assigned to the scheduled store.';
         return false;
       }
+      const assignedStoreIds = assignedStores.map(store => store.id);
+      const savedStore = localStorage.getItem(POS_STORE_KEY);
+      const fallbackStoreId = assignedStoreIds.includes(savedStore) ? savedStore : assignedStoreIds[0];
+      const nextStoreId = scheduledStore ? scheduledStore.id : fallbackStoreId;
       state.selectedStaffName = selectedName;
-      state.scheduledStoreId = scheduledStore.id;
-      state.allowedStoreIds = [scheduledStore.id];
+      state.scheduledStoreId = scheduledStore ? scheduledStore.id : '';
+      state.allowedStoreIds = scheduledStore ? [scheduledStore.id] : assignedStoreIds;
       state.openingConfirmed = false;
       sessionStorage.setItem(POS_STAFF_KEY, selectedName);
       closeStaffModal();
-      setCurrentStore(scheduledStore.id, false);
+      setCurrentStore(nextStoreId, false);
       if (staffAccessResolve) {
         staffAccessResolve(true);
         staffAccessResolve = null;
