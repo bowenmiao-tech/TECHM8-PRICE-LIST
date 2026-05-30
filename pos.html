@@ -2035,10 +2035,16 @@
     }
 
     function loadStaffPins() {
-      return {
-        ...POS_DEFAULT_STAFF_PINS,
-        ...readLocalJson(POS_STAFF_PINS_KEY, {})
-      };
+      const configuredPins = readLocalJson(POS_STAFF_PINS_KEY, {});
+      const pins = { ...POS_DEFAULT_STAFF_PINS };
+      Object.entries(configuredPins).forEach(([name, value]) => {
+        const pin = String(value || '').trim();
+        if (/^\d{4}$/.test(pin)) pins[name] = pin;
+      });
+      const bowenPin = pins['Bowen Miao'] || pins.Bowen || '0000';
+      pins.Bowen = bowenPin;
+      pins['Bowen Miao'] = bowenPin;
+      return pins;
     }
 
     function loadStaffSchedule() {
