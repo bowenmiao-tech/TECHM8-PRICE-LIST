@@ -1094,6 +1094,23 @@
       background: var(--tm-green);
     }
 
+    .repair-hidden {
+      display: none !important;
+    }
+
+    .repair-error {
+      display: none;
+      color: #c63d2f;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .repair-input.error-field,
+    .repair-textarea.error-field {
+      border-color: #c63d2f;
+      background: #fff7f6;
+    }
+
     .repair-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1129,10 +1146,22 @@
       font-weight: 900;
     }
 
-    .test-option.active {
-      border-color: var(--tm-green);
-      color: #fff;
-      background: var(--tm-green);
+    .test-option.active.pass {
+      background: #e9f8ef;
+      border-color: #bfe8cb;
+      color: #166534;
+    }
+
+    .test-option.active.fail {
+      background: #fff1f0;
+      border-color: #f2c3be;
+      color: #9f2f22;
+    }
+
+    .test-option.active.na {
+      background: #f2f5f7;
+      border-color: #d7e0e5;
+      color: #40515a;
     }
 
     .media-actions {
@@ -1845,6 +1874,9 @@
         deviceSerial: '',
         deviceIdUnavailable: '',
         password: '',
+        patternValue: '',
+        passwordNoneReason: '',
+        cannotTestReason: '',
         testNotes: '',
         passwordType: 'text',
         testable: 'yes',
@@ -2466,20 +2498,29 @@
       return state.repair.testProfile === 'computer' ? computerRepairTestItems : mobileRepairTestItems;
     }
 
+    function normalizedRepairDeviceIdType() {
+      if (state.repair.deviceIdType === 'serial') return 'sn';
+      if (state.repair.deviceIdType === 'unavailable') return 'none';
+      return state.repair.deviceIdType || 'imei';
+    }
+
     function repairDeviceIdFieldHtml() {
-      if (state.repair.deviceIdType === 'serial') {
+      const deviceIdType = normalizedRepairDeviceIdType();
+      if (deviceIdType === 'sn') {
         return `
           <label class="repair-field">
             Serial Number
             <input class="repair-input" id="repairDeviceSerial" type="text" placeholder="Type the serial number" value="${escapeHtml(state.repair.deviceSerial)}">
+            <div id="repairDeviceSerialError" class="repair-error">Please enter the serial number or choose another ID option.</div>
           </label>
         `;
       }
-      if (state.repair.deviceIdType === 'unavailable') {
+      if (deviceIdType === 'none') {
         return `
           <label class="repair-field">
             Why it is unavailable
             <textarea class="repair-textarea" id="repairDeviceIdUnavailable" placeholder="Example: unit cannot boot, label missing, or housing too damaged to read">${escapeHtml(state.repair.deviceIdUnavailable)}</textarea>
+            <div id="repairDeviceIdUnavailableError" class="repair-error">Please explain why the device ID is unavailable.</div>
           </label>
         `;
       }
@@ -2487,6 +2528,7 @@
         <label class="repair-field">
           IMEI
           <input class="repair-input" id="repairDeviceImei" type="text" placeholder="Scan or type the IMEI" value="${escapeHtml(state.repair.deviceImei)}">
+          <div id="repairDeviceImeiError" class="repair-error">Please enter the IMEI or choose another ID option.</div>
         </label>
       `;
     }
@@ -2679,6 +2721,9 @@
         deviceSerial: '',
         deviceIdUnavailable: '',
         password: '',
+        patternValue: '',
+        passwordNoneReason: '',
+        cannotTestReason: '',
         testNotes: '',
         passwordType: 'text',
         testable: 'yes',
@@ -3108,6 +3153,11 @@
     function repairIntakeHtml() {
       const quote = state.repair.quote || {};
       const cartPrice = priceNumber(state.repair.quotedPrice || quote.price);
+      const deviceIdType = normalizedRepairDeviceIdType();
+      const deviceType = repairDeviceType(quote);
+      const deviceModel = state.repair.specialOrder
+        ? (state.repair.specialName || quote.model || '')
+        : [quote.brand, quote.model].filter(Boolean).join(' ');
       const mediaHtml = state.repair.media.map(item => `
         <div class="media-preview">
           ${item.type === 'image' ? `<img src="${item.src}" alt="">` : '<span>Video<br>placeholder</span>'}
@@ -3125,10 +3175,54 @@
               <button class="repair-chip ${state.repair.passwordType === 'none' ? 'active' : ''}" type="button" data-value="none">Not provided</button>
             </div>
           </div>
-          <label class="repair-field">
+          <label class="repair-field ${state.repair.passwordType !== 'text' ? 'repair-hidden' : ''}" id="repairPasswordTextBox">
             Password
             <input class="repair-input" id="repairPassword" type="text" placeholder="Example: 123456 or Techm8@123" value="${escapeHtml(state.repair.password)}">
           </label>
+          <label class="repair-field ${state.repair.passwordType !== 'pattern' ? 'repair-hidden' : ''}" id="repairPasswordPatternBox">
+            Pattern Lock
+            <input class="repair-input" id="repairPatternValue" type="text" placeholder="Saved pattern will appear here" value="${escapeHtml(state.repair.patternValue)}">
+          </label>
+          <label class="repair-field ${state.repair.passwordType !== 'none' ? 'repair-hidden' : ''}" id="repairPasswordNoneBox">
+            Reason
+            <textarea class="repair-textarea" id="repairPasswordNoneReason" placeholder="Example: customer does not know the passcode, device cannot power on, or no unlock required">${escapeHtml(state.repair.passwordNoneReason)}</textarea>
+          </label>
+        </div>
+
+        <div class="repair-panel">
+          <h2 class="repair-panel-title">Device And Job Details</h2>
+          <p class="repair-panel-text">Imported quote values are prefilled. Price remains editable so staff can adjust for approved deals or negotiated service totals.</p>
+          <div class="repair-fields">
+            <label class="repair-field">
+              Device Type
+              <input class="repair-input" type="text" value="${escapeHtml(deviceType)}" disabled>
+            </label>
+            <label class="repair-field">
+              Device Model
+              <input class="repair-input" type="text" value="${escapeHtml(deviceModel)}" disabled>
+            </label>
+            <label class="repair-field">
+              Quoted Price
+              <input class="repair-input" id="repairQuotedPrice" type="text" placeholder="$219" value="${escapeHtml(state.repair.quotedPrice || quotePriceLabel(quote.price || state.repair.specialPrice))}">
+            </label>
+            <label class="repair-field">
+              Repair Issue
+              <input class="repair-input" type="text" value="${escapeHtml(quote.issue || state.repair.specialName || '')}" disabled>
+            </label>
+            <label class="repair-field">
+              Estimated Turnaround
+              <input class="repair-input" type="text" value="${escapeHtml(quote.time || 'N/A')}" disabled>
+            </label>
+            <div class="repair-field">
+              Device ID Type
+              <div class="repair-chip-row" data-repair-chip-group="deviceIdType">
+                <button class="repair-chip ${deviceIdType === 'imei' ? 'active' : ''}" type="button" data-value="imei">IMEI</button>
+                <button class="repair-chip ${deviceIdType === 'sn' ? 'active' : ''}" type="button" data-value="sn">Serial Number</button>
+                <button class="repair-chip ${deviceIdType === 'none' ? 'active' : ''}" type="button" data-value="none">Unavailable</button>
+              </div>
+            </div>
+            ${repairDeviceIdFieldHtml()}
+          </div>
         </div>
 
         <div class="repair-panel">
@@ -3154,41 +3248,40 @@
                 <button class="repair-chip ${state.repair.testable === 'no' ? 'active' : ''}" type="button" data-value="no">No, cannot test</button>
               </div>
             </div>
-            <div class="repair-field">
-              Test Profile
-              <div class="repair-chip-row" data-repair-chip-group="testProfile">
-                <button class="repair-chip ${state.repair.testProfile === 'mobile' ? 'active' : ''}" type="button" data-value="mobile">Mobile Device</button>
-                <button class="repair-chip ${state.repair.testProfile === 'computer' ? 'active' : ''}" type="button" data-value="computer">Laptop / Desktop</button>
-              </div>
-            </div>
-            <div class="repair-field">
-              Device ID Type
-              <div class="repair-chip-row" data-repair-chip-group="deviceIdType">
-                <button class="repair-chip ${state.repair.deviceIdType === 'imei' ? 'active' : ''}" type="button" data-value="imei">IMEI</button>
-                <button class="repair-chip ${state.repair.deviceIdType === 'serial' ? 'active' : ''}" type="button" data-value="serial">Serial Number</button>
-                <button class="repair-chip ${state.repair.deviceIdType === 'unavailable' ? 'active' : ''}" type="button" data-value="unavailable">Unavailable</button>
-              </div>
-            </div>
-            ${repairDeviceIdFieldHtml()}
-            <div class="repair-grid">
-              ${currentRepairTestItems().map(name => {
-                const current = state.repair.tests[name] || '';
-                return `
-                  <div class="test-card">
-                    <div class="test-name">${escapeHtml(name)}</div>
-                    <div class="test-options" data-test-name="${escapeHtml(name)}">
-                      <button class="test-option ${current === 'Pass' ? 'active' : ''}" type="button" data-value="Pass">Pass</button>
-                      <button class="test-option ${current === 'Fail' ? 'active' : ''}" type="button" data-value="Fail">Fail</button>
-                      <button class="test-option ${current === 'N/A' ? 'active' : ''}" type="button" data-value="N/A">N/A</button>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-            <label class="repair-field">
-              Function Test Notes
-              <textarea class="repair-textarea" id="repairTestNotes" placeholder="Example: display does not light up, so touch and Face ID could not be confirmed">${escapeHtml(state.repair.testNotes)}</textarea>
+            <label class="repair-field ${state.repair.testable !== 'no' ? 'repair-hidden' : ''}" id="repairCannotTestBox">
+              Why testing is not possible
+              <textarea class="repair-textarea" id="repairCannotTestReason" placeholder="Example: no display, device will not power on, or customer did not provide the passcode">${escapeHtml(state.repair.cannotTestReason)}</textarea>
+              <div id="repairCannotTestReasonError" class="repair-error">Please enter a reason when testing cannot be completed.</div>
             </label>
+            <div class="${state.repair.testable === 'no' ? 'repair-hidden' : ''}" id="repairTestItemsBox">
+              <div class="repair-field">
+                Test Profile
+                <div class="repair-chip-row" data-repair-chip-group="testProfile">
+                  <button class="repair-chip ${state.repair.testProfile === 'mobile' ? 'active' : ''}" type="button" data-value="mobile">Mobile Device</button>
+                  <button class="repair-chip ${state.repair.testProfile === 'computer' ? 'active' : ''}" type="button" data-value="computer">Laptop / Desktop</button>
+                </div>
+              </div>
+              <p class="repair-panel-text">Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.</p>
+              <div class="repair-grid">
+                ${currentRepairTestItems().map(name => {
+                  const current = state.repair.tests[name] || '';
+                  return `
+                    <div class="test-card">
+                      <div class="test-name">${escapeHtml(name)}</div>
+                      <div class="test-options" data-test-name="${escapeHtml(name)}">
+                        <button class="test-option ${current === 'Pass' ? 'active' : ''} ${current === 'Pass' ? 'pass' : ''}" type="button" data-value="Pass">Pass</button>
+                        <button class="test-option ${current === 'Fail' ? 'active' : ''} ${current === 'Fail' ? 'fail' : ''}" type="button" data-value="Fail">Fail</button>
+                        <button class="test-option ${current === 'N/A' ? 'active' : ''} ${current === 'N/A' ? 'na' : ''}" type="button" data-value="N/A">N/A</button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              <label class="repair-field" style="margin-top:12px;">
+                Function Test Notes
+                <textarea class="repair-textarea" id="repairTestNotes" placeholder="Example: display does not light up, so touch and Face ID could not be confirmed">${escapeHtml(state.repair.testNotes)}</textarea>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -3367,6 +3460,63 @@
       renderCart();
     }
 
+    function clearRepairValidation() {
+      if (!els.repairWorkspace) return;
+      [
+        'repairCannotTestReason',
+        'repairDeviceImei',
+        'repairDeviceSerial',
+        'repairDeviceIdUnavailable'
+      ].forEach(id => {
+        const field = els.repairWorkspace.querySelector('#' + id);
+        if (field) field.classList.remove('error-field');
+      });
+      [
+        'repairCannotTestReasonError',
+        'repairDeviceImeiError',
+        'repairDeviceSerialError',
+        'repairDeviceIdUnavailableError'
+      ].forEach(id => {
+        const error = els.repairWorkspace.querySelector('#' + id);
+        if (error) error.style.display = 'none';
+      });
+    }
+
+    function showRepairValidationError(fieldId, errorId) {
+      const field = els.repairWorkspace.querySelector('#' + fieldId);
+      const error = els.repairWorkspace.querySelector('#' + errorId);
+      if (field) field.classList.add('error-field');
+      if (error) error.style.display = 'block';
+    }
+
+    function validateRepairIntake() {
+      clearRepairValidation();
+      let valid = true;
+      const deviceIdType = normalizedRepairDeviceIdType();
+
+      if (state.repair.testable === 'no' && !String(state.repair.cannotTestReason || '').trim()) {
+        valid = false;
+        showRepairValidationError('repairCannotTestReason', 'repairCannotTestReasonError');
+      }
+
+      if (deviceIdType === 'imei' && !String(state.repair.deviceImei || '').trim()) {
+        valid = false;
+        showRepairValidationError('repairDeviceImei', 'repairDeviceImeiError');
+      }
+
+      if (deviceIdType === 'sn' && !String(state.repair.deviceSerial || '').trim()) {
+        valid = false;
+        showRepairValidationError('repairDeviceSerial', 'repairDeviceSerialError');
+      }
+
+      if (deviceIdType === 'none' && !String(state.repair.deviceIdUnavailable || '').trim()) {
+        valid = false;
+        showRepairValidationError('repairDeviceIdUnavailable', 'repairDeviceIdUnavailableError');
+      }
+
+      return valid;
+    }
+
     function addToCart(productId) {
       const product = state.products.find(item => item.id === productId);
       if (!product) return;
@@ -3383,6 +3533,11 @@
     function addCurrentRepairToCart() {
       if (!state.repair.intakeOpen || !state.repair.ticketId) {
         showToast('Create a repair ticket first.');
+        return;
+      }
+
+      if (!validateRepairIntake()) {
+        showToast('Please complete the required intake details before adding to cart.');
         return;
       }
 
@@ -3695,6 +3850,9 @@
         repairDeviceSerial: 'deviceSerial',
         repairDeviceIdUnavailable: 'deviceIdUnavailable',
         repairPassword: 'password',
+        repairPatternValue: 'patternValue',
+        repairPasswordNoneReason: 'passwordNoneReason',
+        repairCannotTestReason: 'cannotTestReason',
         repairTestNotes: 'testNotes'
       };
       const key = map[event.target.id];
@@ -3729,7 +3887,13 @@
         const group = repairChip.closest('[data-repair-chip-group]');
         if (!group) return;
         state.repair[group.dataset.repairChipGroup] = repairChip.dataset.value;
-        if (group.dataset.repairChipGroup === 'deviceIdType' || group.dataset.repairChipGroup === 'testProfile') {
+        if (group.dataset.repairChipGroup === 'deviceIdType') {
+          state.repair.deviceIdType = repairChip.dataset.value;
+          clearRepairValidation();
+          renderRepairWorkspace();
+        } else if (group.dataset.repairChipGroup === 'testProfile') {
+          renderRepairWorkspace();
+        } else if (group.dataset.repairChipGroup === 'passwordType' || group.dataset.repairChipGroup === 'testable') {
           renderRepairWorkspace();
         } else {
           group.querySelectorAll('.repair-chip').forEach(item => item.classList.remove('active'));
@@ -3740,8 +3904,8 @@
         const group = testOption.closest('[data-test-name]');
         if (!group) return;
         state.repair.tests[group.dataset.testName] = testOption.dataset.value;
-        group.querySelectorAll('.test-option').forEach(item => item.classList.remove('active'));
-        testOption.classList.add('active');
+        group.querySelectorAll('.test-option').forEach(item => item.classList.remove('active', 'pass', 'fail', 'na'));
+        testOption.classList.add('active', testOption.dataset.value === 'Pass' ? 'pass' : testOption.dataset.value === 'Fail' ? 'fail' : 'na');
       }
     });
 
