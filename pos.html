@@ -998,6 +998,23 @@
       line-height: 1.6;
     }
 
+    .repair-details-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .repair-details-header .repair-panel-text {
+      margin-bottom: 0;
+    }
+
+    .repair-details-header .ticket-tags {
+      justify-content: flex-end;
+      padding-top: 2px;
+    }
+
     .repair-fields {
       display: grid;
       gap: 14px;
@@ -2781,6 +2798,9 @@
       state.repair.specialName = draft.specialName || '';
       state.repair.specialPrice = draft.specialPrice || '';
       state.repair.quote = quote;
+      state.repair.brand = quote.brand || '';
+      state.repair.model = quote.model || '';
+      state.repair.issue = quote.issue || '';
       state.repair.quotedPrice = quotePriceLabel(quote.price);
       closeTicketDetailsModal();
       setActiveView('repair');
@@ -2849,6 +2869,10 @@
 
     function repairSummaryHtml() {
       const quote = state.repair.quote || {};
+      const repairName = state.repair.specialOrder
+        ? (state.repair.specialName || quote.model || quote.issue || 'Special repair')
+        : [quote.brand, quote.model].filter(Boolean).join(' ');
+      const quoteLabel = state.repair.quotedPrice || quotePriceLabel(quote.price || state.repair.specialPrice);
       return `
         <div class="repair-summary">
           <div class="repair-summary-item">
@@ -2856,8 +2880,8 @@
             <div class="repair-summary-value">${escapeHtml(state.repair.ticketId || 'Draft')}</div>
           </div>
           <div class="repair-summary-item">
-            <div class="repair-summary-label">Device</div>
-            <div class="repair-summary-value">${escapeHtml((quote.brand || '') + ' ' + (quote.model || ''))}</div>
+            <div class="repair-summary-label">${state.repair.specialOrder ? 'Repair' : 'Device'}</div>
+            <div class="repair-summary-value">${escapeHtml(repairName || 'Repair service')}</div>
           </div>
           <div class="repair-summary-item">
             <div class="repair-summary-label">Issue</div>
@@ -2865,8 +2889,33 @@
           </div>
           <div class="repair-summary-item">
             <div class="repair-summary-label">Quote</div>
-            <div class="repair-summary-value">${escapeHtml(quotePriceLabel(quote.price))}</div>
+            <div class="repair-summary-value">${escapeHtml(quoteLabel)}</div>
           </div>
+        </div>
+      `;
+    }
+
+    function repairStatusLabel(status) {
+      const column = repairBoardColumns.find(item => item.id === status);
+      return column ? column.label : 'Draft';
+    }
+
+    function repairDetailsPanelHtml() {
+      return `
+        <div class="repair-panel repair-details-panel">
+          <div class="repair-details-header">
+            <div>
+              <h2 class="repair-panel-title">Repair Details</h2>
+              <p class="repair-panel-text">Selected repair for this ticket.</p>
+            </div>
+            <div class="ticket-tags">
+              <span class="ticket-tag">${escapeHtml(repairStatusLabel(state.repair.status))}</span>
+              ${state.repair.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
+              ${state.repair.deviceInStore ? '<span class="ticket-tag">Device in store</span>' : '<span class="ticket-tag warn">Device not in store</span>'}
+              ${state.repair.motherboardRepair ? '<span class="ticket-tag danger">Mainboard</span>' : ''}
+            </div>
+          </div>
+          ${repairSummaryHtml()}
         </div>
       `;
     }
@@ -2970,6 +3019,16 @@
               <p class="repair-panel-text">Tickets are grouped by status. New Repair and Special Order create a ticket and open the inspection form.</p>
               ${repairBoardHtml()}
             </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.repair.intakeOpen) {
+        els.repairWorkspace.innerHTML = `
+          <div class="repair-stack">
+            ${repairDetailsPanelHtml()}
+            ${repairIntakeHtml()}
           </div>
         `;
         return;
