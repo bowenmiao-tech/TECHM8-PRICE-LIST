@@ -2566,6 +2566,21 @@
       return 'Phone';
     }
 
+    function isValidImei(value) {
+      const digits = String(value || '').replace(/\s+/g, '');
+      if (!/^\d{15}$/.test(digits)) return false;
+      let sum = 0;
+      for (let index = 0; index < digits.length; index += 1) {
+        let digit = Number(digits[index]);
+        if (index % 2 === 1) {
+          digit *= 2;
+          if (digit > 9) digit -= 9;
+        }
+        sum += digit;
+      }
+      return sum % 10 === 0;
+    }
+
     function currentRepairTestItems() {
       return state.repair.testProfile === 'computer' ? computerRepairTestItems : mobileRepairTestItems;
     }
@@ -2600,7 +2615,7 @@
         <label class="repair-field">
           IMEI
           <input class="repair-input" id="repairDeviceImei" type="text" placeholder="Scan or type the IMEI" value="${escapeHtml(state.repair.deviceImei)}">
-          <div id="repairDeviceImeiError" class="repair-error">Please enter the IMEI or choose another ID option.</div>
+          <div id="repairDeviceImeiError" class="repair-error">Please enter a valid 15-digit IMEI or choose another ID option.</div>
         </label>
       `;
     }
@@ -2990,6 +3005,7 @@
         ? (state.repair.specialName || quote.model || quote.issue || 'Special repair')
         : [quote.brand, quote.model].filter(Boolean).join(' ');
       const quoteLabel = state.repair.quotedPrice || quotePriceLabel(quote.price || state.repair.specialPrice);
+      const deviceIdType = normalizedRepairDeviceIdType();
       return `
         <div class="repair-summary">
           <div class="repair-summary-item">
@@ -3006,8 +3022,19 @@
           </div>
           <div class="repair-summary-item">
             <div class="repair-summary-label">Quote</div>
-            <div class="repair-summary-value">${escapeHtml(quoteLabel)}</div>
+            <input class="repair-input" id="repairQuotedPrice" type="text" placeholder="$219" value="${escapeHtml(quoteLabel)}">
           </div>
+        </div>
+        <div class="repair-fields">
+          <div class="repair-field">
+            Device ID Type
+            <div class="repair-chip-row" data-repair-chip-group="deviceIdType">
+              <button class="repair-chip ${deviceIdType === 'imei' ? 'active' : ''}" type="button" data-value="imei">IMEI</button>
+              <button class="repair-chip ${deviceIdType === 'sn' ? 'active' : ''}" type="button" data-value="sn">Serial Number</button>
+              <button class="repair-chip ${deviceIdType === 'none' ? 'active' : ''}" type="button" data-value="none">Unavailable</button>
+            </div>
+          </div>
+          ${repairDeviceIdFieldHtml()}
         </div>
       `;
     }
@@ -3225,11 +3252,6 @@
     function repairIntakeHtml() {
       const quote = state.repair.quote || {};
       const cartPrice = priceNumber(state.repair.quotedPrice || quote.price);
-      const deviceIdType = normalizedRepairDeviceIdType();
-      const deviceType = repairDeviceType(quote);
-      const deviceModel = state.repair.specialOrder
-        ? (state.repair.specialName || quote.model || '')
-        : [quote.brand, quote.model].filter(Boolean).join(' ');
       const mediaHtml = state.repair.media.map(item => `
         <div class="media-preview">
           ${item.type === 'image' ? `<img src="${item.src}" alt="">` : '<span>Video<br>placeholder</span>'}
@@ -3265,42 +3287,6 @@
             <textarea class="repair-textarea" id="repairPasswordNoneReason" placeholder="Example: customer does not know the passcode, device cannot power on, or no unlock required">${escapeHtml(state.repair.passwordNoneReason)}</textarea>
             <div id="repairPasswordNoneReasonError" class="repair-error">Please enter a reason when the password is not provided.</div>
           </label>
-        </div>
-
-        <div class="repair-panel">
-          <h2 class="repair-panel-title">Device And Job Details</h2>
-          <p class="repair-panel-text">Imported quote values are prefilled. Price remains editable so staff can adjust for approved deals or negotiated service totals.</p>
-          <div class="repair-fields">
-            <label class="repair-field">
-              Device Type
-              <input class="repair-input" type="text" value="${escapeHtml(deviceType)}" disabled>
-            </label>
-            <label class="repair-field">
-              Device Model
-              <input class="repair-input" type="text" value="${escapeHtml(deviceModel)}" disabled>
-            </label>
-            <label class="repair-field">
-              Quoted Price
-              <input class="repair-input" id="repairQuotedPrice" type="text" placeholder="$219" value="${escapeHtml(state.repair.quotedPrice || quotePriceLabel(quote.price || state.repair.specialPrice))}">
-            </label>
-            <label class="repair-field">
-              Repair Issue
-              <input class="repair-input" type="text" value="${escapeHtml(quote.issue || state.repair.specialName || '')}" disabled>
-            </label>
-            <label class="repair-field">
-              Estimated Turnaround
-              <input class="repair-input" type="text" value="${escapeHtml(quote.time || 'N/A')}" disabled>
-            </label>
-            <div class="repair-field">
-              Device ID Type
-              <div class="repair-chip-row" data-repair-chip-group="deviceIdType">
-                <button class="repair-chip ${deviceIdType === 'imei' ? 'active' : ''}" type="button" data-value="imei">IMEI</button>
-                <button class="repair-chip ${deviceIdType === 'sn' ? 'active' : ''}" type="button" data-value="sn">Serial Number</button>
-                <button class="repair-chip ${deviceIdType === 'none' ? 'active' : ''}" type="button" data-value="none">Unavailable</button>
-              </div>
-            </div>
-            ${repairDeviceIdFieldHtml()}
-          </div>
         </div>
 
         <div class="repair-panel">
@@ -3598,7 +3584,7 @@
         showRepairValidationError('repairCannotTestReason', 'repairCannotTestReasonError');
       }
 
-      if (deviceIdType === 'imei' && !String(state.repair.deviceImei || '').trim()) {
+      if (deviceIdType === 'imei' && !isValidImei(state.repair.deviceImei)) {
         valid = false;
         showRepairValidationError('repairDeviceImei', 'repairDeviceImeiError');
       }
