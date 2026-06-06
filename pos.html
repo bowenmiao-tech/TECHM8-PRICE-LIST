@@ -1111,6 +1111,53 @@
       background: #fff7f6;
     }
 
+    .pattern-modal {
+      width: min(820px, calc(100vw - 28px));
+      padding: 24px;
+    }
+
+    .pattern-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .pattern-modal-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 950;
+    }
+
+    .pattern-pad-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+    }
+
+    #repairPatternCanvas {
+      width: min(396px, 100%);
+      max-width: 100%;
+      aspect-ratio: 1;
+      border: 1px solid var(--tm-line);
+      border-radius: 18px;
+      background: #fff;
+      touch-action: none;
+    }
+
+    .pattern-preview {
+      color: #5f6f77;
+      font-size: 14px;
+    }
+
+    .pattern-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
     .repair-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1644,6 +1691,23 @@
     </form>
   </div>
 
+  <div id="repairPatternModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal pattern-modal" role="dialog" aria-modal="true" aria-labelledby="repairPatternTitle">
+      <div class="pattern-modal-head">
+        <h2 id="repairPatternTitle" class="pattern-modal-title">Draw Pattern Lock</h2>
+        <button id="repairPatternClose" class="repair-action" type="button">Close</button>
+      </div>
+      <div class="pattern-pad-wrap">
+        <canvas id="repairPatternCanvas" width="360" height="360"></canvas>
+        <div class="pattern-preview">Current pattern: <span id="repairPatternPreview">Not recorded</span></div>
+        <div class="pattern-actions">
+          <button id="repairPatternClear" class="repair-action" type="button">Clear</button>
+          <button id="repairPatternSave" class="repair-action primary" type="button">Save Pattern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="posStaffModal" class="modal-backdrop" aria-hidden="true">
     <form id="posStaffForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="posStaffTitle">
       <h2 id="posStaffTitle">Select Staff</h2>
@@ -1945,6 +2009,12 @@
       ticketDeviceInStore: document.getElementById('ticketDeviceInStore'),
       ticketMotherboardRepair: document.getElementById('ticketMotherboardRepair'),
       ticketDetailsCancel: document.getElementById('ticketDetailsCancel'),
+      repairPatternModal: document.getElementById('repairPatternModal'),
+      repairPatternCanvas: document.getElementById('repairPatternCanvas'),
+      repairPatternPreview: document.getElementById('repairPatternPreview'),
+      repairPatternClose: document.getElementById('repairPatternClose'),
+      repairPatternClear: document.getElementById('repairPatternClear'),
+      repairPatternSave: document.getElementById('repairPatternSave'),
       posStaffModal: document.getElementById('posStaffModal'),
       posStaffForm: document.getElementById('posStaffForm'),
       posStaffSelect: document.getElementById('posStaffSelect'),
@@ -2051,6 +2121,8 @@
 
     let staffAccessResolve = null;
     let openingResolve = null;
+    let repairPatternPath = [];
+    let repairPatternDrawing = false;
 
     function money(value) {
       return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value || 0));
@@ -3178,14 +3250,20 @@
           <label class="repair-field ${state.repair.passwordType !== 'text' ? 'repair-hidden' : ''}" id="repairPasswordTextBox">
             Password
             <input class="repair-input" id="repairPassword" type="text" placeholder="Example: 123456 or Techm8@123" value="${escapeHtml(state.repair.password)}">
+            <div id="repairPasswordError" class="repair-error">Please enter the password or choose another password option.</div>
           </label>
-          <label class="repair-field ${state.repair.passwordType !== 'pattern' ? 'repair-hidden' : ''}" id="repairPasswordPatternBox">
+          <div class="repair-field ${state.repair.passwordType !== 'pattern' ? 'repair-hidden' : ''}" id="repairPasswordPatternBox">
             Pattern Lock
-            <input class="repair-input" id="repairPatternValue" type="text" placeholder="Saved pattern will appear here" value="${escapeHtml(state.repair.patternValue)}">
-          </label>
+            <div class="media-actions">
+              <button id="repairOpenPatternBtn" class="repair-action" type="button">Open pattern pad</button>
+            </div>
+            <input class="repair-input" id="repairPatternValue" type="text" readonly placeholder="Saved pattern will appear here" value="${escapeHtml(state.repair.patternValue)}">
+            <div id="repairPatternValueError" class="repair-error">Please draw and save the pattern lock.</div>
+          </div>
           <label class="repair-field ${state.repair.passwordType !== 'none' ? 'repair-hidden' : ''}" id="repairPasswordNoneBox">
             Reason
             <textarea class="repair-textarea" id="repairPasswordNoneReason" placeholder="Example: customer does not know the passcode, device cannot power on, or no unlock required">${escapeHtml(state.repair.passwordNoneReason)}</textarea>
+            <div id="repairPasswordNoneReasonError" class="repair-error">Please enter a reason when the password is not provided.</div>
           </label>
         </div>
 
@@ -3463,6 +3541,9 @@
     function clearRepairValidation() {
       if (!els.repairWorkspace) return;
       [
+        'repairPassword',
+        'repairPatternValue',
+        'repairPasswordNoneReason',
         'repairCannotTestReason',
         'repairDeviceImei',
         'repairDeviceSerial',
@@ -3472,6 +3553,9 @@
         if (field) field.classList.remove('error-field');
       });
       [
+        'repairPasswordError',
+        'repairPatternValueError',
+        'repairPasswordNoneReasonError',
         'repairCannotTestReasonError',
         'repairDeviceImeiError',
         'repairDeviceSerialError',
@@ -3493,6 +3577,21 @@
       clearRepairValidation();
       let valid = true;
       const deviceIdType = normalizedRepairDeviceIdType();
+
+      if (state.repair.passwordType === 'text' && !String(state.repair.password || '').trim()) {
+        valid = false;
+        showRepairValidationError('repairPassword', 'repairPasswordError');
+      }
+
+      if (state.repair.passwordType === 'pattern' && !String(state.repair.patternValue || '').trim()) {
+        valid = false;
+        showRepairValidationError('repairPatternValue', 'repairPatternValueError');
+      }
+
+      if (state.repair.passwordType === 'none' && !String(state.repair.passwordNoneReason || '').trim()) {
+        valid = false;
+        showRepairValidationError('repairPasswordNoneReason', 'repairPasswordNoneReasonError');
+      }
 
       if (state.repair.testable === 'no' && !String(state.repair.cannotTestReason || '').trim()) {
         valid = false;
@@ -3787,6 +3886,101 @@
       showToast.timer = setTimeout(() => els.toast.classList.remove('show'), 2600);
     }
 
+    function repairPatternPoints() {
+      const canvas = els.repairPatternCanvas;
+      const size = canvas ? canvas.width : 360;
+      return [90, 180, 270].flatMap(y => [90, 180, 270].map(x => ({ x, y })));
+    }
+
+    function updateRepairPatternPreview() {
+      if (!els.repairPatternPreview) return;
+      els.repairPatternPreview.textContent = repairPatternPath.length
+        ? repairPatternPath.map(index => index + 1).join('-')
+        : 'Not recorded';
+    }
+
+    function drawRepairPatternBoard() {
+      const canvas = els.repairPatternCanvas;
+      if (!canvas) return;
+      const context = canvas.getContext('2d');
+      const points = repairPatternPoints();
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (repairPatternPath.length > 1) {
+        context.strokeStyle = '#07896f';
+        context.lineWidth = 8;
+        context.lineCap = 'round';
+        context.beginPath();
+        repairPatternPath.forEach((pointIndex, index) => {
+          const point = points[pointIndex];
+          if (index === 0) context.moveTo(point.x, point.y);
+          else context.lineTo(point.x, point.y);
+        });
+        context.stroke();
+      }
+
+      points.forEach((point, index) => {
+        context.fillStyle = repairPatternPath.includes(index) ? '#07896f' : '#607d8b';
+        context.beginPath();
+        context.arc(point.x, point.y, 10, 0, Math.PI * 2);
+        context.fill();
+      });
+
+      updateRepairPatternPreview();
+    }
+
+    function repairPatternPointIndex(clientX, clientY) {
+      const canvas = els.repairPatternCanvas;
+      if (!canvas) return null;
+      const rect = canvas.getBoundingClientRect();
+      const x = (clientX - rect.left) * (canvas.width / rect.width);
+      const y = (clientY - rect.top) * (canvas.height / rect.height);
+      const points = repairPatternPoints();
+      for (let index = 0; index < points.length; index += 1) {
+        const point = points[index];
+        if (Math.hypot(x - point.x, y - point.y) < 22) return index;
+      }
+      return null;
+    }
+
+    function addRepairPatternPoint(event) {
+      const pointer = event.touches ? event.touches[0] : event;
+      const index = repairPatternPointIndex(pointer.clientX, pointer.clientY);
+      if (index !== null && !repairPatternPath.includes(index)) {
+        repairPatternPath.push(index);
+        drawRepairPatternBoard();
+      }
+    }
+
+    function openRepairPatternModal() {
+      repairPatternPath = String(state.repair.patternValue || '')
+        .split('-')
+        .map(value => Number(value) - 1)
+        .filter(value => Number.isInteger(value) && value >= 0 && value <= 8);
+      els.repairPatternModal.classList.add('show');
+      els.repairPatternModal.setAttribute('aria-hidden', 'false');
+      drawRepairPatternBoard();
+    }
+
+    function closeRepairPatternModal() {
+      els.repairPatternModal.classList.remove('show');
+      els.repairPatternModal.setAttribute('aria-hidden', 'true');
+      repairPatternDrawing = false;
+    }
+
+    function clearRepairPattern() {
+      repairPatternPath = [];
+      drawRepairPatternBoard();
+    }
+
+    function saveRepairPattern() {
+      state.repair.patternValue = repairPatternPath.length
+        ? repairPatternPath.map(index => index + 1).join('-')
+        : '';
+      closeRepairPatternModal();
+      renderRepairWorkspace();
+    }
+
     function escapeHtml(value) {
       return String(value || '').replace(/[&<>"']/g, char => ({
         '&': '&amp;',
@@ -3864,6 +4058,7 @@
       const confirmButton = event.target.closest('#confirmRepairBtn');
       const cameraButton = event.target.closest('#repairCameraBtn');
       const videoButton = event.target.closest('#repairVideoBtn');
+      const patternButton = event.target.closest('#repairOpenPatternBtn');
       const addRepairButton = event.target.closest('#addRepairToCartBtn');
       const repairChip = event.target.closest('.repair-chip');
       const testOption = event.target.closest('.test-option');
@@ -3883,6 +4078,7 @@
         state.repair.media.push({ type: 'video' });
         renderRepairWorkspace();
       }
+      if (patternButton) openRepairPatternModal();
       if (repairChip) {
         const group = repairChip.closest('[data-repair-chip-group]');
         if (!group) return;
@@ -3895,6 +4091,9 @@
           renderRepairWorkspace();
         } else if (group.dataset.repairChipGroup === 'passwordType' || group.dataset.repairChipGroup === 'testable') {
           renderRepairWorkspace();
+          if (group.dataset.repairChipGroup === 'passwordType' && repairChip.dataset.value === 'pattern') {
+            openRepairPatternModal();
+          }
         } else {
           group.querySelectorAll('.repair-chip').forEach(item => item.classList.remove('active'));
           repairChip.classList.add('active');
@@ -4001,6 +4200,36 @@
       event.preventDefault();
       createRepairTicketFromDraft();
     });
+    els.repairPatternClose.addEventListener('click', closeRepairPatternModal);
+    els.repairPatternClear.addEventListener('click', clearRepairPattern);
+    els.repairPatternSave.addEventListener('click', saveRepairPattern);
+    els.repairPatternModal.addEventListener('click', event => {
+      if (event.target === els.repairPatternModal) closeRepairPatternModal();
+    });
+    els.repairPatternCanvas.addEventListener('mousedown', event => {
+      repairPatternDrawing = true;
+      repairPatternPath = [];
+      addRepairPatternPoint(event);
+    });
+    els.repairPatternCanvas.addEventListener('mousemove', event => {
+      if (repairPatternDrawing) addRepairPatternPoint(event);
+    });
+    document.addEventListener('mouseup', () => {
+      repairPatternDrawing = false;
+    });
+    els.repairPatternCanvas.addEventListener('touchstart', event => {
+      event.preventDefault();
+      repairPatternDrawing = true;
+      repairPatternPath = [];
+      addRepairPatternPoint(event);
+    }, { passive: false });
+    els.repairPatternCanvas.addEventListener('touchmove', event => {
+      event.preventDefault();
+      if (repairPatternDrawing) addRepairPatternPoint(event);
+    }, { passive: false });
+    document.addEventListener('touchend', () => {
+      repairPatternDrawing = false;
+    });
     els.posStaffForm.addEventListener('submit', event => {
       event.preventDefault();
       applySelectedStaff(els.posStaffSelect.value);
@@ -4047,6 +4276,9 @@
       }
       if (event.key === 'Escape' && els.ticketDetailsModal.classList.contains('show')) {
         closeTicketDetailsModal();
+      }
+      if (event.key === 'Escape' && els.repairPatternModal.classList.contains('show')) {
+        closeRepairPatternModal();
       }
       if (event.key === 'Escape' && els.storeSwitchModal.classList.contains('show')) {
         closeStoreSwitchModal();
