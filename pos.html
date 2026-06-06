@@ -2920,6 +2920,24 @@
       `;
     }
 
+    function reconcileRepairWorkspace() {
+      if (!els.repairWorkspace) return;
+      const intakeVisible = Boolean(
+        els.repairWorkspace.querySelector('#repairPassword, #repairPhotoInput, #addRepairToCartBtn')
+      );
+      if (!intakeVisible) return;
+
+      const selectionPanel = els.repairWorkspace.querySelector('#repairBrandSelect')?.closest('.repair-panel');
+      if (!selectionPanel) return;
+
+      const detailsPanel = els.repairWorkspace.querySelector('.repair-details-panel');
+      if (detailsPanel) {
+        selectionPanel.remove();
+      } else {
+        selectionPanel.outerHTML = repairDetailsPanelHtml();
+      }
+    }
+
     function repairSelectionPanelHtml(brands, models, issues, quote) {
       if (state.repair.specialOrder) {
         return `
@@ -3021,6 +3039,7 @@
             </div>
           </div>
         `;
+        reconcileRepairWorkspace();
         return;
       }
 
@@ -3031,6 +3050,7 @@
             ${repairIntakeHtml()}
           </div>
         `;
+        reconcileRepairWorkspace();
         return;
       }
 
@@ -3041,6 +3061,7 @@
             ${state.repair.intakeOpen ? repairIntakeHtml() : ''}
           </div>
         `;
+        reconcileRepairWorkspace();
         return;
       }
 
@@ -3081,6 +3102,7 @@
           ${state.repair.intakeOpen ? repairIntakeHtml() : ''}
         </div>
       `;
+      reconcileRepairWorkspace();
     }
 
     function repairIntakeHtml() {
