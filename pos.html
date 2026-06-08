@@ -107,6 +107,34 @@
       margin-top: auto;
       display: grid;
       gap: 10px;
+      width: 100%;
+      justify-items: center;
+    }
+
+    .rail-user-button {
+      width: 54px;
+      min-height: 54px;
+      height: auto;
+      padding: 6px 4px;
+      grid-template-rows: auto auto;
+      gap: 2px;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .rail-user-button i {
+      font-size: 17px;
+    }
+
+    .rail-user-name {
+      max-width: 46px;
+      color: inherit;
+      font-size: 9px;
+      font-weight: 900;
+      line-height: 1.05;
+      text-align: center;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
     }
 
     .workspace {
@@ -556,7 +584,7 @@
 
     .payment-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 9px;
     }
 
@@ -566,6 +594,7 @@
       border-radius: 14px;
       background: #fff;
       color: #44545c;
+      font-size: 13px;
       font-weight: 850;
     }
 
@@ -630,6 +659,7 @@
       padding: 18px;
       background: rgba(9, 18, 24, 0.46);
       backdrop-filter: blur(6px);
+      overflow-y: auto;
     }
 
     .modal-backdrop.show {
@@ -773,6 +803,12 @@
       width: min(760px, 100%);
     }
 
+    .end-shift-modal {
+      width: min(880px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+    }
+
     .opening-copy {
       margin: -6px 0 0;
       color: #61717a;
@@ -847,6 +883,114 @@
       color: var(--tm-green);
       font-size: 30px;
       font-weight: 950;
+    }
+
+    .shift-cash-breakdown {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .shift-cash-box {
+      min-height: 62px;
+      display: grid;
+      gap: 5px;
+      padding: 12px 14px;
+      border: 1px solid #e2ebee;
+      border-radius: 12px;
+      background: #f8fafb;
+      color: #65717d;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .shift-cash-box strong {
+      color: var(--tm-ink);
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .shift-payment-table {
+      display: grid;
+      gap: 10px;
+    }
+
+    .shift-payment-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 1fr) minmax(100px, .85fr) minmax(120px, .95fr) minmax(128px, 1fr);
+      gap: 10px;
+      align-items: center;
+      min-height: 56px;
+      padding: 10px 12px;
+      border: 1px solid #e2ebee;
+      border-radius: 12px;
+      background: #f8fafb;
+    }
+
+    .shift-payment-row.header {
+      min-height: auto;
+      border: 0;
+      padding: 0 12px;
+      background: transparent;
+      color: #71818a;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .shift-method {
+      color: var(--tm-ink);
+      font-weight: 950;
+    }
+
+    .shift-system,
+    .shift-actual {
+      color: #2f4048;
+      font-weight: 900;
+    }
+
+    .shift-actual-input {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      padding: 0 10px;
+      color: var(--tm-ink);
+      background: #fff;
+      font-weight: 850;
+      outline: none;
+    }
+
+    .shift-actual-input:focus {
+      border-color: rgba(7, 137, 111, 0.45);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
+    }
+
+    .shift-status {
+      justify-self: start;
+      padding: 7px 9px;
+      border-radius: 999px;
+      background: #eef4f5;
+      color: #60717a;
+      font-size: 12px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .shift-payment-row.match .shift-status {
+      background: #e2f7ef;
+      color: var(--tm-green-dark);
+    }
+
+    .shift-payment-row.mismatch .shift-status {
+      background: #fff0ee;
+      color: var(--tm-red);
+    }
+
+    .shift-payment-row.pending .shift-status {
+      background: #fff7e7;
+      color: #8a5d0a;
     }
 
     .store-option-list {
@@ -1479,6 +1623,11 @@
         height: 40px;
       }
 
+      .rail-user-button {
+        width: 48px;
+        min-height: 44px;
+      }
+
       .workspace {
         padding: 14px;
       }
@@ -1510,9 +1659,15 @@
       .repair-cart-panel,
       .customer-field-grid,
       .cash-calculator-grid,
+      .shift-cash-breakdown,
+      .shift-payment-row,
       .repair-board {
         grid-template-columns: 1fr;
         min-width: 0;
+      }
+
+      .shift-payment-row.header {
+        display: none;
       }
 
       .customer-field-grid .span-2 {
@@ -1544,6 +1699,11 @@
         <button class="rail-button" type="button" title="Shift"><i class="bi bi-cash-stack"></i></button>
       </nav>
       <div class="rail-bottom">
+        <button id="endShiftBtn" class="rail-button" type="button" title="End shift"><i class="bi bi-box-arrow-right"></i></button>
+        <button id="switchUserBtn" class="rail-button rail-user-button" type="button" title="Switch user">
+          <i class="bi bi-person-circle"></i>
+          <span id="currentStaffName" class="rail-user-name">User</span>
+        </button>
         <a class="rail-button" href="./index.html" title="Back to portal"><i class="bi bi-grid-1x2-fill"></i></a>
       </div>
     </aside>
@@ -1603,8 +1763,10 @@
 
         <div class="payment-row" role="group" aria-label="Payment method">
           <button class="payment-option active" type="button" data-payment="Cash">Cash</button>
-          <button class="payment-option" type="button" data-payment="EFTPOS">EFTPOS</button>
-          <button class="payment-option" type="button" data-payment="Bank">Bank</button>
+          <button class="payment-option" type="button" data-payment="Card">Card</button>
+          <button class="payment-option" type="button" data-payment="Afterpay">Afterpay</button>
+          <button class="payment-option" type="button" data-payment="CNYpay">CNYpay</button>
+          <button class="payment-option" type="button" data-payment="Bank Transfer">Bank Transfer</button>
         </div>
 
         <div class="footer-actions">
@@ -1723,6 +1885,7 @@
       </div>
       <div id="posStaffError" class="special-error"></div>
       <div class="special-actions">
+        <button id="posStaffCancel" class="soft-action" type="button" hidden>Cancel</button>
         <button class="pay-action" type="submit">Continue</button>
       </div>
     </form>
@@ -1768,6 +1931,89 @@
       <div class="special-actions">
         <button id="openingCashReset" class="soft-action" type="button">Reset</button>
         <button class="pay-action" type="submit">Confirm & Open</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="endShiftModal" class="modal-backdrop" aria-hidden="true">
+    <form id="endShiftForm" class="special-modal end-shift-modal" role="dialog" aria-modal="true" aria-labelledby="endShiftTitle">
+      <h2 id="endShiftTitle">End Shift</h2>
+      <p id="endShiftSubtitle" class="opening-copy">Count the closing cash, then compare every payment method.</p>
+      <div class="cash-calculator-grid">
+        <section>
+          <div class="cash-section-title">Notes</div>
+          <label class="cash-row"><span>$100</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="100"></label>
+          <label class="cash-row"><span>$50</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="50"></label>
+          <label class="cash-row"><span>$20</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="20"></label>
+          <label class="cash-row"><span>$10</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="10"></label>
+          <label class="cash-row"><span>$5</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="5"></label>
+        </section>
+        <section>
+          <div class="cash-section-title">Coins</div>
+          <label class="cash-row"><span>$2</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="2"></label>
+          <label class="cash-row"><span>$1</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="1"></label>
+          <label class="cash-row"><span>50c</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="0.5"></label>
+          <label class="cash-row"><span>20c</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="0.2"></label>
+          <label class="cash-row"><span>10c</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="0.1"></label>
+          <label class="cash-row"><span>5c</span><span>x</span><input type="number" min="0" step="1" value="0" data-end-cash-value="0.05"></label>
+        </section>
+      </div>
+      <div class="opening-total">
+        <span>Closing Cash Counted</span>
+        <strong id="endShiftCashTotal">$0.00</strong>
+      </div>
+      <div class="shift-cash-breakdown">
+        <div class="shift-cash-box">
+          <span>Opening Float</span>
+          <strong id="endShiftOpeningFloat">$0.00</strong>
+        </div>
+        <div class="shift-cash-box">
+          <span>Today's Cash</span>
+          <strong id="endShiftTodayCash">$0.00</strong>
+        </div>
+      </div>
+      <div class="shift-payment-table" aria-label="End shift payment comparison">
+        <div class="shift-payment-row header">
+          <span>Payment</span>
+          <span>System</span>
+          <span>Actual</span>
+          <span>Status</span>
+        </div>
+        <div class="shift-payment-row" data-end-method="cash">
+          <span class="shift-method">Cash</span>
+          <strong class="shift-system" data-end-system="cash">$0.00</strong>
+          <span id="endShiftActualCash" class="shift-actual">$0.00</span>
+          <span class="shift-status" data-end-status="cash">Enter count</span>
+        </div>
+        <div class="shift-payment-row" data-end-method="card">
+          <span class="shift-method">Card</span>
+          <strong class="shift-system" data-end-system="card">$0.00</strong>
+          <input class="shift-actual-input" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" data-end-actual="card">
+          <span class="shift-status" data-end-status="card">Enter amount</span>
+        </div>
+        <div class="shift-payment-row" data-end-method="afterpay">
+          <span class="shift-method">Afterpay</span>
+          <strong class="shift-system" data-end-system="afterpay">$0.00</strong>
+          <input class="shift-actual-input" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" data-end-actual="afterpay">
+          <span class="shift-status" data-end-status="afterpay">Enter amount</span>
+        </div>
+        <div class="shift-payment-row" data-end-method="cnyPay">
+          <span class="shift-method">CNYpay</span>
+          <strong class="shift-system" data-end-system="cnyPay">$0.00</strong>
+          <input class="shift-actual-input" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" data-end-actual="cnyPay">
+          <span class="shift-status" data-end-status="cnyPay">Enter amount</span>
+        </div>
+        <div class="shift-payment-row" data-end-method="bankTransfer">
+          <span class="shift-method">Bank Transfer</span>
+          <strong class="shift-system" data-end-system="bankTransfer">$0.00</strong>
+          <input class="shift-actual-input" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" data-end-actual="bankTransfer">
+          <span class="shift-status" data-end-status="bankTransfer">Enter amount</span>
+        </div>
+      </div>
+      <div id="endShiftError" class="special-error"></div>
+      <div class="special-actions">
+        <button id="endShiftCancel" class="soft-action" type="button">Cancel</button>
+        <button class="pay-action" type="submit">End Shift</button>
       </div>
     </form>
   </div>
@@ -1913,6 +2159,7 @@
       storeId: 'park-ridge',
       staffMembers: [],
       selectedStaffName: '',
+      activeShiftId: '',
       allowedStoreIds: [],
       scheduledStoreId: '',
       openingConfirmed: false,
@@ -1955,6 +2202,9 @@
     const els = {
       productGrid: document.getElementById('productGrid'),
       storeSwitchBtn: document.getElementById('storeSwitchBtn'),
+      endShiftBtn: document.getElementById('endShiftBtn'),
+      switchUserBtn: document.getElementById('switchUserBtn'),
+      currentStaffName: document.getElementById('currentStaffName'),
       productView: document.getElementById('productView'),
       repairView: document.getElementById('repairView'),
       repairWorkspace: document.getElementById('repairWorkspace'),
@@ -2019,6 +2269,7 @@
       posStaffForm: document.getElementById('posStaffForm'),
       posStaffSelect: document.getElementById('posStaffSelect'),
       posStaffPin: document.getElementById('posStaffPin'),
+      posStaffCancel: document.getElementById('posStaffCancel'),
       posStaffError: document.getElementById('posStaffError'),
       storeSwitchModal: document.getElementById('storeSwitchModal'),
       storeSwitchList: document.getElementById('storeSwitchList'),
@@ -2028,6 +2279,15 @@
       openingCashSubtitle: document.getElementById('openingCashSubtitle'),
       openingCashTotal: document.getElementById('openingCashTotal'),
       openingCashReset: document.getElementById('openingCashReset'),
+      endShiftModal: document.getElementById('endShiftModal'),
+      endShiftForm: document.getElementById('endShiftForm'),
+      endShiftSubtitle: document.getElementById('endShiftSubtitle'),
+      endShiftCashTotal: document.getElementById('endShiftCashTotal'),
+      endShiftOpeningFloat: document.getElementById('endShiftOpeningFloat'),
+      endShiftTodayCash: document.getElementById('endShiftTodayCash'),
+      endShiftActualCash: document.getElementById('endShiftActualCash'),
+      endShiftError: document.getElementById('endShiftError'),
+      endShiftCancel: document.getElementById('endShiftCancel'),
       toast: document.getElementById('toast')
     };
 
@@ -2096,6 +2356,16 @@
     const POS_STAFF_PINS_KEY = 'techm8_pos_staff_pins';
     const POS_STAFF_SCHEDULE_KEY = 'techm8_pos_staff_schedule';
     const POS_OPENINGS_KEY = 'techm8_pos_openings';
+    const POS_ACTIVE_SHIFT_KEY = 'techm8_pos_active_shift';
+    const POS_ORDERS_KEY = 'techm8_pos_demo_orders';
+    const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
+    const POS_PAYMENT_METHODS = [
+      { key: 'cash', label: 'Cash' },
+      { key: 'card', label: 'Card' },
+      { key: 'afterpay', label: 'Afterpay' },
+      { key: 'cnyPay', label: 'CNYpay' },
+      { key: 'bankTransfer', label: 'Bank Transfer' }
+    ];
 
     const posStores = [
       { id: 'park-ridge', code: 'PR', dbCode: 'parkridge', name: 'TechM8 Park Ridge' },
@@ -2150,6 +2420,25 @@
       }
     }
 
+    function readLocalArray(key) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || '[]');
+        return Array.isArray(value) ? value : [];
+      } catch (error) {
+        console.error(error);
+        return [];
+      }
+    }
+
+    function numberValue(value) {
+      const parsed = Number(String(value ?? '').replace(/[^0-9.-]/g, ''));
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function roundedMoneyValue(value) {
+      return Math.round(numberValue(value) * 100) / 100;
+    }
+
     function brisbaneDateIso(date = new Date()) {
       return new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Australia/Brisbane',
@@ -2157,6 +2446,67 @@
         month: '2-digit',
         day: '2-digit'
       }).format(date);
+    }
+
+    function staffShortLabel(name) {
+      const parts = String(name || 'User').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return 'User';
+      if (parts.length === 1) return parts[0].slice(0, 7);
+      return `${parts[0]}\n${parts[1]}`.slice(0, 13);
+    }
+
+    function readActiveShift() {
+      const shift = readLocalJson(POS_ACTIVE_SHIFT_KEY, null);
+      return shift && shift.staffName && shift.storeId ? shift : null;
+    }
+
+    function writeActiveShift(shift) {
+      localStorage.setItem(POS_ACTIVE_SHIFT_KEY, JSON.stringify(shift));
+      state.activeShiftId = shift && shift.id ? shift.id : '';
+    }
+
+    function clearActiveShift() {
+      localStorage.removeItem(POS_ACTIVE_SHIFT_KEY);
+      localStorage.removeItem(POS_STAFF_KEY);
+      sessionStorage.removeItem(POS_STAFF_KEY);
+      state.activeShiftId = '';
+      state.selectedStaffName = '';
+      state.allowedStoreIds = [];
+      state.scheduledStoreId = '';
+      state.openingConfirmed = false;
+      updateStaffButton();
+      updateStoreBadge();
+    }
+
+    function ensureActiveShiftRecord() {
+      if (!state.selectedStaffName || !state.storeId) return null;
+      const current = readActiveShift();
+      if (
+        current
+        && normalizeStaffKey(current.staffName) === normalizeStaffKey(state.selectedStaffName)
+        && current.storeId === state.storeId
+      ) {
+        writeActiveShift({
+          ...current,
+          staffName: state.selectedStaffName,
+          storeId: state.storeId,
+          storeCode: storeById(state.storeId).code,
+          lastSeenAt: new Date().toISOString()
+        });
+        return readActiveShift();
+      }
+
+      const shift = {
+        id: 'SHIFT-' + Date.now() + '-' + Math.random().toString(16).slice(2, 8),
+        date: brisbaneDateIso(),
+        staffName: state.selectedStaffName,
+        storeId: state.storeId,
+        storeCode: storeById(state.storeId).code,
+        startedAt: new Date().toISOString(),
+        lastSeenAt: new Date().toISOString()
+      };
+      writeActiveShift(shift);
+      return shift;
     }
 
     function loadStaffPins() {
@@ -2232,6 +2582,16 @@
       els.storeSwitchBtn.title = state.selectedStaffName
         ? `${store.name} - ${state.selectedStaffName}`
         : store.name;
+      updateStaffButton();
+    }
+
+    function updateStaffButton() {
+      if (!els.switchUserBtn || !els.currentStaffName) return;
+      const staffName = state.selectedStaffName || 'User';
+      els.currentStaffName.textContent = staffShortLabel(staffName);
+      els.switchUserBtn.title = state.selectedStaffName
+        ? `Switch user - current: ${state.selectedStaffName}`
+        : 'Switch user';
     }
 
     function setCurrentStore(storeId, reloadProducts) {
@@ -2245,6 +2605,7 @@
       localStorage.setItem(POS_STORE_KEY, storeId);
       renderStoreSelectOptions();
       updateStoreBadge();
+      if (state.selectedStaffName) ensureActiveShiftRecord();
       if (reloadProducts) {
         state.cart = [];
         loadProducts();
@@ -2265,7 +2626,7 @@
 
     function openStoreSwitchModal() {
       if (!state.selectedStaffName) {
-        openStaffModal();
+        openStaffModal({ canCancel: false });
         return;
       }
       renderStoreSwitchModal();
@@ -2292,7 +2653,7 @@
       }
     }
 
-    function openStaffModal() {
+    function openStaffModal(options = {}) {
       els.posStaffError.textContent = '';
       const schedule = loadStaffSchedule();
       const scheduledNames = Object.values(schedule).flatMap(day => Object.keys(day || {}));
@@ -2305,8 +2666,10 @@
         <option value="${escapeHtml(name)}">${escapeHtml(name)}</option>
       `).join('');
       els.posStaffPin.value = '';
-      const savedStaff = sessionStorage.getItem(POS_STAFF_KEY) || state.selectedStaffName;
+      const activeShift = readActiveShift();
+      const savedStaff = state.selectedStaffName || (activeShift && activeShift.staffName) || localStorage.getItem(POS_STAFF_KEY) || sessionStorage.getItem(POS_STAFF_KEY);
       if (savedStaff) els.posStaffSelect.value = savedStaff;
+      els.posStaffCancel.hidden = options.canCancel === false || !state.selectedStaffName;
       els.posStaffModal.classList.add('show');
       els.posStaffModal.setAttribute('aria-hidden', 'false');
       els.posStaffSelect.focus();
@@ -2315,6 +2678,61 @@
     function closeStaffModal() {
       els.posStaffModal.classList.remove('show');
       els.posStaffModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function staffContextFor(staffName, preferredStoreId) {
+      const selectedName = String(staffName || '').trim();
+      if (!selectedName) {
+        return { ok: false, message: 'Choose a staff member.' };
+      }
+      const assignedStores = allowedStoresForStaff(selectedName);
+      if (!assignedStores.length) {
+        return { ok: false, message: 'This staff member is not assigned to any POS store.' };
+      }
+      const shift = findScheduledShift(selectedName);
+      const scheduledStore = shift ? posStores.find(store => store.id === shift.storeId) : null;
+      if (shift && !scheduledStore) {
+        return { ok: false, message: 'The scheduled store is not available in POS.' };
+      }
+      if (scheduledStore && !assignedStores.some(store => store.id === scheduledStore.id)) {
+        return { ok: false, message: 'This staff member is not assigned to the scheduled store.' };
+      }
+      const assignedStoreIds = assignedStores.map(store => store.id);
+      const savedStore = preferredStoreId || localStorage.getItem(POS_STORE_KEY);
+      const fallbackStoreId = assignedStoreIds.includes(savedStore) ? savedStore : assignedStoreIds[0];
+      const nextStoreId = scheduledStore ? scheduledStore.id : fallbackStoreId;
+
+      return {
+        ok: true,
+        selectedName,
+        assignedStoreIds,
+        scheduledStoreId: scheduledStore ? scheduledStore.id : '',
+        allowedStoreIds: scheduledStore ? [scheduledStore.id] : assignedStoreIds,
+        nextStoreId
+      };
+    }
+
+    function setStaffContext(context, options = {}) {
+      state.selectedStaffName = context.selectedName;
+      state.scheduledStoreId = context.scheduledStoreId;
+      state.allowedStoreIds = context.allowedStoreIds;
+      state.openingConfirmed = Boolean(options.keepOpeningConfirmed);
+      sessionStorage.setItem(POS_STAFF_KEY, context.selectedName);
+      localStorage.setItem(POS_STAFF_KEY, context.selectedName);
+      setCurrentStore(context.nextStoreId, false);
+      ensureActiveShiftRecord();
+    }
+
+    function resumeActiveShift() {
+      const activeShift = readActiveShift();
+      if (!activeShift) return false;
+      const context = staffContextFor(activeShift.staffName, activeShift.storeId);
+      if (!context.ok) {
+        localStorage.removeItem(POS_ACTIVE_SHIFT_KEY);
+        return false;
+      }
+      setStaffContext(context, { keepOpeningConfirmed: true });
+      return true;
     }
 
     function applySelectedStaff(staffName) {
@@ -2334,48 +2752,34 @@
         els.posStaffError.textContent = 'Incorrect PIN or PIN is not configured in Schedule Admin.';
         return false;
       }
-      const assignedStores = allowedStoresForStaff(selectedName);
-      if (!assignedStores.length) {
-        els.posStaffError.textContent = 'This staff member is not assigned to any POS store.';
+      const context = staffContextFor(selectedName);
+      if (!context.ok) {
+        els.posStaffError.textContent = context.message;
         return false;
       }
-      const shift = findScheduledShift(selectedName);
-      const scheduledStore = shift ? posStores.find(store => store.id === shift.storeId) : null;
-      if (shift && !scheduledStore) {
-        els.posStaffError.textContent = 'The scheduled store is not available in POS.';
-        return false;
-      }
-      if (scheduledStore && !assignedStores.some(store => store.id === scheduledStore.id)) {
-        els.posStaffError.textContent = 'This staff member is not assigned to the scheduled store.';
-        return false;
-      }
-      const assignedStoreIds = assignedStores.map(store => store.id);
-      const savedStore = localStorage.getItem(POS_STORE_KEY);
-      const fallbackStoreId = assignedStoreIds.includes(savedStore) ? savedStore : assignedStoreIds[0];
-      const nextStoreId = scheduledStore ? scheduledStore.id : fallbackStoreId;
-      state.selectedStaffName = selectedName;
-      state.scheduledStoreId = scheduledStore ? scheduledStore.id : '';
-      state.allowedStoreIds = scheduledStore ? [scheduledStore.id] : assignedStoreIds;
-      state.openingConfirmed = false;
-      sessionStorage.setItem(POS_STAFF_KEY, selectedName);
+      setStaffContext(context);
       closeStaffModal();
-      setCurrentStore(nextStoreId, false);
       if (staffAccessResolve) {
         staffAccessResolve(true);
         staffAccessResolve = null;
+      } else {
+        ensureOpeningCash();
       }
       return true;
     }
 
     async function ensureStaffStoreAccess() {
       await loadPosStaffSetup();
+      if (resumeActiveShift()) return true;
       return new Promise(resolve => {
         staffAccessResolve = resolve;
-        openStaffModal();
+        openStaffModal({ canCancel: false });
       });
     }
 
     function openingKey() {
+      const activeShift = readActiveShift();
+      if (activeShift && activeShift.id) return activeShift.id;
       return `${brisbaneDateIso()}|${normalizeStaffKey(state.selectedStaffName)}|${state.storeId}`;
     }
 
@@ -2411,6 +2815,7 @@
       records[openingKey()] = {
         date: brisbaneDateIso(),
         staffName: state.selectedStaffName,
+        shiftId: state.activeShiftId,
         storeId: state.storeId,
         storeCode: storeById(state.storeId).code,
         total: Number(calculateOpeningCash().toFixed(2)),
@@ -2443,6 +2848,211 @@
       return new Promise(resolve => {
         openingResolve = resolve;
       });
+    }
+
+    function calculateEndShiftCash() {
+      return Array.from(els.endShiftForm.querySelectorAll('[data-end-cash-value]')).reduce((total, input) => {
+        const qty = Math.max(0, Number(input.value || 0));
+        const value = Number(input.dataset.endCashValue || 0);
+        return total + qty * value;
+      }, 0);
+    }
+
+    function currentOpeningCashTotal() {
+      const record = loadOpeningRecords()[openingKey()];
+      return record ? roundedMoneyValue(record.total) : 0;
+    }
+
+    function calculateEndShiftTodayCash() {
+      return roundedMoneyValue(calculateEndShiftCash() - currentOpeningCashTotal());
+    }
+
+    function resetEndShiftInputs() {
+      els.endShiftForm.querySelectorAll('[data-end-cash-value]').forEach(input => {
+        input.value = '0';
+      });
+      els.endShiftForm.querySelectorAll('[data-end-actual]').forEach(input => {
+        input.value = '';
+      });
+      els.endShiftError.textContent = '';
+    }
+
+    function paymentKeyForMethod(method) {
+      const normalized = String(method || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+      if (normalized === 'cash') return 'cash';
+      if (['card', 'eftpos', 'creditcard', 'debitcard'].includes(normalized)) return 'card';
+      if (normalized === 'afterpay') return 'afterpay';
+      if (['cnypay', 'cnypayment', 'cny'].includes(normalized)) return 'cnyPay';
+      if (['bank', 'banktransfer', 'transfer'].includes(normalized)) return 'bankTransfer';
+      return 'card';
+    }
+
+    function orderBusinessDate(order) {
+      if (order.business_date) return order.business_date;
+      const timestamp = Date.parse(order.created_at || '');
+      return Number.isFinite(timestamp) ? brisbaneDateIso(new Date(timestamp)) : '';
+    }
+
+    function orderStoreMatches(order) {
+      const currentStore = storeById(state.storeId);
+      const candidates = [
+        order.store_id,
+        order.storeId,
+        order.store_code,
+        order.storeCode
+      ].filter(Boolean);
+      return candidates.some(value => {
+        return normalizeStoreKey(value) === normalizeStoreKey(state.storeId)
+          || String(value).toUpperCase() === currentStore.code
+          || String(value).toLowerCase() === currentStore.dbCode;
+      });
+    }
+
+    function orderBelongsToCurrentShift(order, activeShift) {
+      if (!orderStoreMatches(order)) return false;
+      if (orderBusinessDate(order) !== brisbaneDateIso()) return false;
+
+      if (activeShift && order.shift_id) return order.shift_id === activeShift.id;
+      if (order.staff_name && normalizeStaffKey(order.staff_name) !== normalizeStaffKey(state.selectedStaffName)) return false;
+
+      if (activeShift && activeShift.startedAt && order.created_at) {
+        const orderTime = Date.parse(order.created_at);
+        const shiftTime = Date.parse(activeShift.startedAt);
+        if (Number.isFinite(orderTime) && Number.isFinite(shiftTime) && orderTime < shiftTime) return false;
+      }
+
+      return true;
+    }
+
+    function currentShiftPaymentTotals() {
+      const activeShift = readActiveShift();
+      const totals = POS_PAYMENT_METHODS.reduce((acc, method) => {
+        acc[method.key] = 0;
+        return acc;
+      }, {});
+
+      readLocalArray(POS_ORDERS_KEY)
+        .filter(order => orderBelongsToCurrentShift(order, activeShift))
+        .forEach(order => {
+          const key = paymentKeyForMethod(order.payment_method);
+          totals[key] = roundedMoneyValue(totals[key] + numberValue(order.total));
+        });
+
+      return totals;
+    }
+
+    function endShiftActualValue(key) {
+      if (key === 'cash') return calculateEndShiftTodayCash();
+      const input = els.endShiftForm.querySelector(`[data-end-actual="${key}"]`);
+      if (!input || String(input.value || '').trim() === '') return null;
+      return roundedMoneyValue(input.value);
+    }
+
+    function updateEndShiftComparison() {
+      const system = currentShiftPaymentTotals();
+      const actual = {};
+      const closingCash = roundedMoneyValue(calculateEndShiftCash());
+      const openingCash = currentOpeningCashTotal();
+      const todayCash = calculateEndShiftTodayCash();
+
+      els.endShiftCashTotal.textContent = money(closingCash);
+      els.endShiftOpeningFloat.textContent = money(openingCash);
+      els.endShiftTodayCash.textContent = money(todayCash);
+      els.endShiftActualCash.textContent = money(todayCash);
+
+      POS_PAYMENT_METHODS.forEach(method => {
+        const expected = roundedMoneyValue(system[method.key] || 0);
+        const actualValue = endShiftActualValue(method.key);
+        actual[method.key] = actualValue;
+
+        const systemEl = els.endShiftForm.querySelector(`[data-end-system="${method.key}"]`);
+        const statusEl = els.endShiftForm.querySelector(`[data-end-status="${method.key}"]`);
+        const row = els.endShiftForm.querySelector(`[data-end-method="${method.key}"]`);
+        if (systemEl) systemEl.textContent = money(expected);
+        if (!statusEl || !row) return;
+
+        row.classList.remove('match', 'mismatch', 'pending');
+        if (actualValue === null) {
+          row.classList.add('pending');
+          statusEl.textContent = 'Enter amount';
+          return;
+        }
+
+        const diff = roundedMoneyValue(actualValue - expected);
+        if (Math.abs(diff) < 0.01) {
+          row.classList.add('match');
+          statusEl.textContent = 'Match';
+        } else {
+          row.classList.add('mismatch');
+          statusEl.textContent = `Mismatch ${diff > 0 ? '+' : '-'}${money(Math.abs(diff))}`;
+        }
+      });
+
+      return { system, actual };
+    }
+
+    function openEndShiftModal() {
+      if (!state.selectedStaffName) {
+        openStaffModal({ canCancel: false });
+        return;
+      }
+      resetEndShiftInputs();
+      els.endShiftSubtitle.textContent = `${state.selectedStaffName} - ${storeById(state.storeId).name}. Count closing cash and compare today's payments.`;
+      els.endShiftModal.classList.add('show');
+      els.endShiftModal.setAttribute('aria-hidden', 'false');
+      updateEndShiftComparison();
+      const firstInput = els.endShiftForm.querySelector('[data-end-cash-value]');
+      if (firstInput) firstInput.focus();
+    }
+
+    function closeEndShiftModal() {
+      els.endShiftModal.classList.remove('show');
+      els.endShiftModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function saveEndShift() {
+      const comparison = updateEndShiftComparison();
+      const missing = POS_PAYMENT_METHODS
+        .filter(method => method.key !== 'cash' && comparison.actual[method.key] === null)
+        .map(method => method.label);
+      if (missing.length) {
+        els.endShiftError.textContent = 'Enter actual amounts for ' + missing.join(', ') + '.';
+        return;
+      }
+
+      const activeShift = readActiveShift() || ensureActiveShiftRecord();
+      const cashCounts = {};
+      els.endShiftForm.querySelectorAll('[data-end-cash-value]').forEach(input => {
+        cashCounts[input.dataset.endCashValue] = Math.max(0, Number(input.value || 0));
+      });
+      const differences = POS_PAYMENT_METHODS.reduce((acc, method) => {
+        acc[method.key] = roundedMoneyValue(comparison.actual[method.key] - comparison.system[method.key]);
+        return acc;
+      }, {});
+      const records = readLocalArray(POS_END_SHIFTS_KEY);
+      records.unshift({
+        id: 'END-' + Date.now(),
+        shiftId: activeShift && activeShift.id,
+        date: brisbaneDateIso(),
+        staffName: state.selectedStaffName,
+        storeId: state.storeId,
+        storeCode: storeById(state.storeId).code,
+        startedAt: activeShift && activeShift.startedAt,
+        endedAt: new Date().toISOString(),
+        system: comparison.system,
+        actual: comparison.actual,
+        differences,
+        closingCashTotal: roundedMoneyValue(calculateEndShiftCash()),
+        openingCashTotal: currentOpeningCashTotal(),
+        todayCashTotal: calculateEndShiftTodayCash(),
+        cashCounts
+      });
+      localStorage.setItem(POS_END_SHIFTS_KEY, JSON.stringify(records.slice(0, 300)));
+      closeEndShiftModal();
+      const endedStaff = state.selectedStaffName;
+      clearActiveShift();
+      showToast(`End shift saved for ${endedStaff}.`);
+      loadPosStaffSetup().finally(() => openStaffModal({ canCancel: false }));
     }
 
     function getProductStock(product) {
@@ -3787,11 +4397,21 @@
 
     function checkout() {
       if (!state.cart.length) return;
+      if (!state.selectedStaffName) {
+        openStaffModal({ canCancel: false });
+        return;
+      }
 
       const total = state.cart.reduce((sum, item) => sum + item.sale_price * item.qty, 0);
+      const activeShift = ensureActiveShiftRecord();
       const order = {
         id: 'POS-' + Date.now(),
         store_id: state.storeId,
+        store_code: storeById(state.storeId).code,
+        business_date: brisbaneDateIso(),
+        staff_name: state.selectedStaffName,
+        shift_id: activeShift && activeShift.id,
+        shift_started_at: activeShift && activeShift.startedAt,
         customer_name: els.customerInput.value.trim() || 'Walk-in Customer',
         payment_method: state.payment,
         total,
@@ -3806,9 +4426,9 @@
         created_at: new Date().toISOString()
       };
 
-      const orders = JSON.parse(localStorage.getItem('techm8_pos_demo_orders') || '[]');
+      const orders = readLocalArray(POS_ORDERS_KEY);
       orders.unshift(order);
-      localStorage.setItem('techm8_pos_demo_orders', JSON.stringify(orders.slice(0, 50)));
+      localStorage.setItem(POS_ORDERS_KEY, JSON.stringify(orders.slice(0, 500)));
 
       state.cart.forEach(item => {
         const product = state.products.find(productItem => productItem.id === item.id);
@@ -4031,6 +4651,8 @@
     els.productNavBtn.addEventListener('click', () => setActiveView('products'));
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
     els.storeSwitchBtn.addEventListener('click', openStoreSwitchModal);
+    els.endShiftBtn.addEventListener('click', openEndShiftModal);
+    els.switchUserBtn.addEventListener('click', () => openStaffModal({ canCancel: true }));
     els.customerAddBtn.addEventListener('click', openCustomerModal);
     els.newRepairBtn.addEventListener('click', startRepairTicket);
     els.specialRepairBtn.addEventListener('click', openSpecialRepairModal);
@@ -4250,6 +4872,7 @@
       event.preventDefault();
       applySelectedStaff(els.posStaffSelect.value);
     });
+    els.posStaffCancel.addEventListener('click', closeStaffModal);
     els.posStaffPin.addEventListener('input', event => {
       event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
     });
@@ -4265,13 +4888,31 @@
       saveOpeningCash();
     });
     els.openingCashReset.addEventListener('click', resetOpeningCashInputs);
+    els.endShiftForm.addEventListener('input', event => {
+      if (event.target.matches('[data-end-cash-value]')) {
+        const normalized = Math.max(0, Math.floor(Number(event.target.value || 0)));
+        event.target.value = Number.isFinite(normalized) ? String(normalized) : '0';
+      }
+      if (event.target.matches('[data-end-cash-value], [data-end-actual]')) {
+        els.endShiftError.textContent = '';
+        updateEndShiftComparison();
+      }
+    });
+    els.endShiftForm.addEventListener('submit', event => {
+      event.preventDefault();
+      saveEndShift();
+    });
+    els.endShiftCancel.addEventListener('click', closeEndShiftModal);
+    els.endShiftModal.addEventListener('click', event => {
+      if (event.target === els.endShiftModal) closeEndShiftModal();
+    });
     els.storeSwitchCancel.addEventListener('click', closeStoreSwitchModal);
     els.storeSwitchModal.addEventListener('click', event => {
       if (event.target === els.storeSwitchModal) closeStoreSwitchModal();
       const button = event.target.closest('[data-store-switch]');
       if (button) {
         closeStoreSwitchModal();
-        setCurrentStore(button.dataset.storeSwitch, true);
+        if (setCurrentStore(button.dataset.storeSwitch, true)) ensureOpeningCash();
       }
     });
     els.customerCloseBtn.addEventListener('click', closeCustomerModal);
@@ -4298,6 +4939,9 @@
       }
       if (event.key === 'Escape' && els.storeSwitchModal.classList.contains('show')) {
         closeStoreSwitchModal();
+      }
+      if (event.key === 'Escape' && els.endShiftModal.classList.contains('show')) {
+        closeEndShiftModal();
       }
       if (event.key === 'Escape' && els.customerModal.classList.contains('show')) {
         closeCustomerModal();
