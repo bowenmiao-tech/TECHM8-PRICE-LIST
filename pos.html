@@ -158,6 +158,441 @@
       gap: 16px;
     }
 
+    .target-view {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .target-page {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      gap: 16px;
+      padding-right: 4px;
+    }
+
+    .target-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.7fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .target-hero {
+      min-height: 174px;
+      padding: 22px;
+      border-radius: 20px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      color: #fff;
+      background:
+        linear-gradient(135deg, rgba(23, 37, 44, 0.96), rgba(32, 54, 64, 0.92) 48%, rgba(7, 137, 111, 0.92)),
+        radial-gradient(circle at 18% 18%, rgba(243, 178, 60, 0.28), transparent 32%);
+      box-shadow: 0 18px 40px rgba(18, 34, 42, 0.14);
+    }
+
+    .target-kicker {
+      margin: 0 0 8px;
+      color: rgba(255,255,255,0.72);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .target-title {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1.04;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .target-meta {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: rgba(255,255,255,0.82);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .target-meta span,
+    .target-score-badge {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+    }
+
+    .target-meta span {
+      padding: 7px 10px;
+      border-radius: 999px;
+    }
+
+    .target-score-badge {
+      min-width: 176px;
+      padding: 18px;
+      border-radius: 18px;
+      text-align: center;
+    }
+
+    .target-score-label {
+      color: rgba(255,255,255,0.72);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .target-score-value {
+      margin-top: 6px;
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .target-score-money {
+      margin-top: 8px;
+      color: #ffe1b7;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .target-settings,
+    .target-panel,
+    .target-stat {
+      border: 1px solid #dfe8eb;
+      background: #fff;
+      box-shadow: 0 14px 30px rgba(17, 36, 46, 0.06);
+    }
+
+    .target-settings {
+      padding: 18px;
+      border-radius: 18px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .target-settings-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .target-settings-title i {
+      color: var(--tm-orange);
+      font-size: 18px;
+    }
+
+    .target-settings label {
+      display: grid;
+      gap: 7px;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .target-input-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .target-input-row input {
+      min-width: 0;
+      height: 44px;
+      border: 1px solid #cfdee3;
+      border-radius: 13px;
+      padding: 0 12px;
+      color: var(--tm-ink);
+      background: #f8fbfb;
+      font-size: 18px;
+      font-weight: 900;
+      outline: 0;
+    }
+
+    .target-save-btn,
+    .target-task-action {
+      border: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .target-save-btn {
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 13px;
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .target-settings-note {
+      color: var(--tm-muted);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 750;
+    }
+
+    .target-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .target-stat {
+      min-height: 116px;
+      padding: 16px;
+      border-radius: 16px;
+      display: grid;
+      gap: 10px;
+      align-content: space-between;
+    }
+
+    .target-stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .target-stat-top i {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      color: var(--tm-green-dark);
+      background: #e9f7f3;
+      font-size: 16px;
+    }
+
+    .target-stat-value {
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .target-stat-sub {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .target-panel {
+      padding: 18px;
+      border-radius: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .target-panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .target-panel-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 950;
+    }
+
+    .target-panel-sub {
+      margin-top: 4px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .target-panel-score {
+      color: var(--tm-green-dark);
+      font-size: 14px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .target-track-wrap {
+      position: relative;
+      height: 96px;
+      margin: 4px 28px 0;
+    }
+
+    .target-track-base {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 43px;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #dfe8eb;
+    }
+
+    .target-track-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--tm-orange), var(--tm-yellow), var(--tm-green));
+      transition: width .25s ease;
+    }
+
+    .target-milestone {
+      position: absolute;
+      top: 8px;
+      transform: translateX(-50%);
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      min-width: 58px;
+      color: #789099;
+      font-size: 11px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .target-milestone-dot {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 3px solid #d8e3e7;
+      border-radius: 13px;
+      color: #7c929b;
+      background: #fff;
+      box-shadow: 0 8px 18px rgba(16, 38, 48, 0.12);
+      font-size: 15px;
+    }
+
+    .target-milestone.claimed {
+      color: var(--tm-green-dark);
+    }
+
+    .target-milestone.claimed .target-milestone-dot {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .target-task-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .target-task {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid #e0e9ec;
+      border-radius: 16px;
+      background: #fbfdfd;
+    }
+
+    .target-task.done {
+      border-color: rgba(7, 137, 111, 0.26);
+      background: #f2fbf8;
+    }
+
+    .target-task-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      color: #8a4a06;
+      background: #fff2df;
+      font-size: 21px;
+    }
+
+    .target-task.done .target-task-icon {
+      color: var(--tm-green-dark);
+      background: #dff5ee;
+    }
+
+    .target-task-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .target-task h3 {
+      margin: 0;
+      min-width: 0;
+      font-size: 15px;
+      line-height: 1.25;
+      font-weight: 950;
+    }
+
+    .target-points {
+      flex: 0 0 auto;
+      color: var(--tm-orange);
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .target-task-progress {
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #dfe8eb;
+    }
+
+    .target-task-progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: var(--tm-green);
+      transition: width .25s ease;
+    }
+
+    .target-task-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 7px;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .target-task-meta strong {
+      color: var(--tm-ink);
+      font-weight: 950;
+    }
+
+    .target-task.done .target-task-meta strong {
+      color: var(--tm-green-dark);
+    }
+
+    .target-task-action {
+      min-width: 92px;
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 13px;
+      color: var(--tm-green-dark);
+      background: #e7f8f2;
+    }
+
     .topbar {
       display: grid;
       grid-template-columns: minmax(260px, 1fr) auto;
@@ -1586,6 +2021,14 @@
         grid-template-columns: 58px minmax(0, 1fr);
       }
 
+      .target-head {
+        grid-template-columns: 1fr;
+      }
+
+      .target-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .checkout-panel {
         grid-column: 1 / -1;
         min-height: 520px;
@@ -1633,8 +2076,43 @@
       }
 
       .topbar,
-      .status-row {
+      .status-row,
+      .target-hero,
+      .target-input-row,
+      .target-stat-grid {
         grid-template-columns: 1fr;
+      }
+
+      .target-title {
+        font-size: 30px;
+      }
+
+      .target-score-badge {
+        width: 100%;
+      }
+
+      .target-panel-head,
+      .target-task-title-row,
+      .target-task-meta {
+        display: grid;
+      }
+
+      .target-panel-score {
+        white-space: normal;
+      }
+
+      .target-track-wrap {
+        margin-left: 18px;
+        margin-right: 18px;
+      }
+
+      .target-task {
+        grid-template-columns: 44px minmax(0, 1fr);
+      }
+
+      .target-task-action {
+        grid-column: 1 / -1;
+        width: 100%;
       }
 
       .repair-head,
@@ -1693,7 +2171,8 @@
     <aside class="rail" aria-label="POS navigation">
       <button id="storeSwitchBtn" class="brand-mark" type="button" title="Switch store">PR</button>
       <nav class="rail-nav">
-        <button id="productNavBtn" class="rail-button active" type="button" title="Products"><i class="bi bi-house-door-fill"></i></button>
+        <button id="targetNavBtn" class="rail-button active" type="button" title="Today target"><i class="bi bi-speedometer2"></i></button>
+        <button id="productNavBtn" class="rail-button" type="button" title="Products"><i class="bi bi-house-door-fill"></i></button>
         <button id="repairNavBtn" class="rail-button" type="button" title="Repair tickets"><i class="bi bi-clipboard2-plus"></i></button>
         <button class="rail-button" type="button" title="Orders"><i class="bi bi-receipt"></i></button>
         <button class="rail-button" type="button" title="Shift"><i class="bi bi-cash-stack"></i></button>
@@ -1709,7 +2188,11 @@
     </aside>
 
     <main class="workspace">
-      <section id="productView" class="workspace-view product-view active" aria-label="Products">
+      <section id="targetView" class="workspace-view target-view active" aria-label="Today target">
+        <div id="targetDashboard" class="target-page"></div>
+      </section>
+
+      <section id="productView" class="workspace-view product-view" aria-label="Products">
         <div class="topbar">
           <div class="search-wrap">
             <i class="bi bi-search"></i>
@@ -2164,7 +2647,7 @@
       scheduledStoreId: '',
       openingConfirmed: false,
       payment: 'Cash',
-      activeView: 'products',
+      activeView: 'target',
       repair: {
         started: false,
         intakeOpen: false,
@@ -2205,9 +2688,12 @@
       endShiftBtn: document.getElementById('endShiftBtn'),
       switchUserBtn: document.getElementById('switchUserBtn'),
       currentStaffName: document.getElementById('currentStaffName'),
+      targetView: document.getElementById('targetView'),
+      targetDashboard: document.getElementById('targetDashboard'),
       productView: document.getElementById('productView'),
       repairView: document.getElementById('repairView'),
       repairWorkspace: document.getElementById('repairWorkspace'),
+      targetNavBtn: document.getElementById('targetNavBtn'),
       productNavBtn: document.getElementById('productNavBtn'),
       repairNavBtn: document.getElementById('repairNavBtn'),
       newRepairBtn: document.getElementById('newRepairBtn'),
@@ -2359,6 +2845,34 @@
     const POS_ACTIVE_SHIFT_KEY = 'techm8_pos_active_shift';
     const POS_ORDERS_KEY = 'techm8_pos_demo_orders';
     const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
+    const POS_DAILY_TARGETS_KEY = 'techm8_pos_daily_targets';
+    const TODAY_TARGET_DEFAULT_AMOUNT = 1000;
+    const TODAY_BONUS_DOLLARS_PER_POINT = 1;
+    const TODAY_TARGET_RULES = [
+      {
+        id: 'sales',
+        label: 'Complete today revenue target',
+        icon: 'bi-bullseye',
+        points: 30,
+        nav: 'products'
+      },
+      {
+        id: 'glass',
+        label: 'Sell 10 tempered glass',
+        icon: 'bi-phone-flip',
+        points: 20,
+        target: 10,
+        nav: 'products'
+      },
+      {
+        id: 'repairs',
+        label: 'Complete 10 repair jobs',
+        icon: 'bi-tools',
+        points: 20,
+        target: 10,
+        nav: 'repair'
+      }
+    ];
     const POS_PAYMENT_METHODS = [
       { key: 'cash', label: 'Cash' },
       { key: 'card', label: 'Card' },
@@ -2476,6 +2990,7 @@
       state.openingConfirmed = false;
       updateStaffButton();
       updateStoreBadge();
+      renderTargetDashboard();
     }
 
     function ensureActiveShiftRecord() {
@@ -2605,6 +3120,7 @@
       localStorage.setItem(POS_STORE_KEY, storeId);
       renderStoreSelectOptions();
       updateStoreBadge();
+      renderTargetDashboard();
       if (state.selectedStaffName) ensureActiveShiftRecord();
       if (reloadProducts) {
         state.cart = [];
@@ -2939,6 +3455,336 @@
         });
 
       return totals;
+    }
+
+    function targetStorageKey() {
+      return [
+        brisbaneDateIso(),
+        normalizeStaffKey(state.selectedStaffName || 'staff'),
+        normalizeStoreKey(state.storeId || 'store')
+      ].join('|');
+    }
+
+    function loadDailyTargets() {
+      return readLocalJson(POS_DAILY_TARGETS_KEY, {});
+    }
+
+    function currentDailyTargetAmount() {
+      const targets = loadDailyTargets();
+      const saved = numberValue(targets[targetStorageKey()]);
+      return saved > 0 ? saved : TODAY_TARGET_DEFAULT_AMOUNT;
+    }
+
+    function saveDailyTarget() {
+      const input = els.targetDashboard && els.targetDashboard.querySelector('#targetAmountInput');
+      const amount = roundedMoneyValue(input ? input.value : 0);
+      if (amount <= 0) {
+        showToast('Enter a target amount above $0.');
+        if (input) input.focus();
+        return;
+      }
+
+      const targets = loadDailyTargets();
+      targets[targetStorageKey()] = amount;
+      localStorage.setItem(POS_DAILY_TARGETS_KEY, JSON.stringify(targets));
+      renderTargetDashboard();
+      showToast(`Today target saved as ${money(amount)}.`);
+    }
+
+    function orderBelongsToTodayTarget(order) {
+      if (!orderStoreMatches(order)) return false;
+      if (orderBusinessDate(order) !== brisbaneDateIso()) return false;
+      if (!state.selectedStaffName) return true;
+      if (!order.staff_name) return true;
+      return normalizeStaffKey(order.staff_name) === normalizeStaffKey(state.selectedStaffName);
+    }
+
+    function orderItems(order) {
+      return Array.isArray(order.items) ? order.items : [];
+    }
+
+    function itemQuantity(item) {
+      const value = Number(item.qty ?? item.quantity ?? item.count ?? 1);
+      return Number.isFinite(value) && value > 0 ? value : 1;
+    }
+
+    function itemLineTotal(item) {
+      const explicit = numberValue(item.line_total ?? item.total);
+      if (explicit > 0) return explicit;
+      return roundedMoneyValue(numberValue(item.unit_price ?? item.price ?? item.sale_price) * itemQuantity(item));
+    }
+
+    function orderTotalValue(order) {
+      const total = numberValue(order.total ?? order.amount);
+      if (total > 0) return total;
+      return orderItems(order).reduce((sum, item) => roundedMoneyValue(sum + itemLineTotal(item)), 0);
+    }
+
+    function isRepairOrderItem(item) {
+      const sku = String(item.sku || '').trim().toUpperCase();
+      const category = String(item.category || '').trim().toLowerCase();
+      const name = String(item.name || '').trim().toLowerCase();
+      return Boolean(item.is_repair)
+        || sku === 'REPAIR'
+        || category === 'repair'
+        || name.includes('repair service');
+    }
+
+    function isTemperedGlassItem(item) {
+      if (isRepairOrderItem(item)) return false;
+      const text = [
+        item.sku,
+        item.name,
+        item.category,
+        item.product_type
+      ].filter(Boolean).join(' ').toLowerCase();
+      return /\btg[-\s]/.test(text)
+        || text.includes('tempered')
+        || text.includes('screen protector')
+        || text.includes('protector')
+        || text.includes('glass protector')
+        || text.includes('ganghua')
+        || text.includes('gang hua');
+    }
+
+    function countItems(orders, predicate) {
+      return orders.reduce((sum, order) => {
+        return sum + orderItems(order).reduce((lineSum, item) => {
+          return predicate(item) ? lineSum + itemQuantity(item) : lineSum;
+        }, 0);
+      }, 0);
+    }
+
+    function targetTaskProgress(current, target) {
+      if (target <= 0) return 0;
+      return Math.max(0, Math.min(100, (current / target) * 100));
+    }
+
+    function buildTodayTargetTasks(metrics) {
+      return TODAY_TARGET_RULES.map(rule => {
+        if (rule.id === 'sales') {
+          const complete = metrics.todaySales >= metrics.dailyTarget;
+          return {
+            ...rule,
+            current: metrics.todaySales,
+            target: metrics.dailyTarget,
+            complete,
+            progressPercent: targetTaskProgress(metrics.todaySales, metrics.dailyTarget),
+            progressText: `${money(metrics.todaySales)} / ${money(metrics.dailyTarget)}`,
+            statusText: complete ? 'Claimed' : `Need ${money(metrics.dailyTarget - metrics.todaySales)}`
+          };
+        }
+
+        if (rule.id === 'glass') {
+          const complete = metrics.glassCount >= rule.target;
+          return {
+            ...rule,
+            current: metrics.glassCount,
+            complete,
+            progressPercent: targetTaskProgress(metrics.glassCount, rule.target),
+            progressText: `${metrics.glassCount} / ${rule.target}`,
+            statusText: complete ? 'Claimed' : `${Math.max(0, rule.target - metrics.glassCount)} more`
+          };
+        }
+
+        const complete = metrics.repairCount >= rule.target;
+        return {
+          ...rule,
+          current: metrics.repairCount,
+          complete,
+          progressPercent: targetTaskProgress(metrics.repairCount, rule.target),
+          progressText: `${metrics.repairCount} / ${rule.target}`,
+          statusText: complete ? 'Claimed' : `${Math.max(0, rule.target - metrics.repairCount)} more`
+        };
+      });
+    }
+
+    function todayTargetMetrics() {
+      const orders = readLocalArray(POS_ORDERS_KEY).filter(orderBelongsToTodayTarget);
+      const dailyTarget = currentDailyTargetAmount();
+      const todaySales = roundedMoneyValue(orders.reduce((sum, order) => sum + orderTotalValue(order), 0));
+      const repairCount = countItems(orders, isRepairOrderItem);
+      const glassCount = countItems(orders, isTemperedGlassItem);
+      const productCount = countItems(orders, item => !isRepairOrderItem(item));
+      const tasks = buildTodayTargetTasks({
+        dailyTarget,
+        todaySales,
+        repairCount,
+        glassCount
+      });
+      const maxPoints = tasks.reduce((sum, task) => sum + task.points, 0);
+      const earnedPoints = tasks.reduce((sum, task) => sum + (task.complete ? task.points : 0), 0);
+
+      return {
+        orders,
+        orderCount: orders.length,
+        productCount,
+        todaySales,
+        dailyTarget,
+        repairCount,
+        glassCount,
+        tasks,
+        maxPoints,
+        earnedPoints,
+        bonusAmount: roundedMoneyValue(earnedPoints * TODAY_BONUS_DOLLARS_PER_POINT)
+      };
+    }
+
+    function scoreMilestones(maxPoints) {
+      const milestones = [];
+      for (let value = 20; value < maxPoints; value += 20) {
+        milestones.push(value);
+      }
+      if (maxPoints > 0 && !milestones.includes(maxPoints)) milestones.push(maxPoints);
+      return milestones;
+    }
+
+    function todayDisplayDate() {
+      return new Intl.DateTimeFormat('en-AU', {
+        timeZone: 'Australia/Brisbane',
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }).format(new Date());
+    }
+
+    function renderTargetDashboard() {
+      if (!els.targetDashboard) return;
+
+      const metrics = todayTargetMetrics();
+      const scoreBase = metrics.maxPoints || 1;
+      const scorePercent = Math.max(0, Math.min(100, (metrics.earnedPoints / scoreBase) * 100));
+      const revenuePercent = targetTaskProgress(metrics.todaySales, metrics.dailyTarget);
+      const milestones = scoreMilestones(metrics.maxPoints);
+      const store = storeById(state.storeId);
+      const glassRule = TODAY_TARGET_RULES.find(rule => rule.id === 'glass');
+      const repairRule = TODAY_TARGET_RULES.find(rule => rule.id === 'repairs');
+
+      const milestoneHtml = milestones.map(value => {
+        const left = Math.max(0, Math.min(100, (value / scoreBase) * 100));
+        const claimed = metrics.earnedPoints >= value;
+        return `
+          <div class="target-milestone ${claimed ? 'claimed' : ''}" style="left:${left}%">
+            <div class="target-milestone-dot"><i class="bi ${claimed ? 'bi-check2' : 'bi-gift'}"></i></div>
+            <span>${value} pts</span>
+          </div>
+        `;
+      }).join('');
+
+      const taskHtml = metrics.tasks.map(task => {
+        const destination = task.nav === 'repair' ? 'Repair' : 'Products';
+        return `
+          <article class="target-task ${task.complete ? 'done' : ''}">
+            <div class="target-task-icon"><i class="bi ${task.icon}"></i></div>
+            <div class="target-task-main">
+              <div class="target-task-title-row">
+                <h3>${escapeHtml(task.label)}</h3>
+                <span class="target-points">+${task.points} pts</span>
+              </div>
+              <div class="target-task-progress"><span style="width:${task.progressPercent}%"></span></div>
+              <div class="target-task-meta">
+                <span>${escapeHtml(task.progressText)}</span>
+                <strong>${escapeHtml(task.statusText)}</strong>
+              </div>
+            </div>
+            <button class="target-task-action" type="button" data-target-nav="${escapeHtml(task.nav)}">
+              <i class="bi bi-arrow-right-circle"></i>${destination}
+            </button>
+          </article>
+        `;
+      }).join('');
+
+      els.targetDashboard.innerHTML = `
+        <div class="target-head">
+          <section class="target-hero">
+            <div>
+              <p class="target-kicker">Today progress / target</p>
+              <h1 class="target-title">${money(metrics.todaySales)} today</h1>
+              <div class="target-meta">
+                <span><i class="bi bi-calendar3"></i> ${escapeHtml(todayDisplayDate())}</span>
+                <span><i class="bi bi-person-badge"></i> ${escapeHtml(state.selectedStaffName || 'No staff')}</span>
+                <span><i class="bi bi-shop"></i> ${escapeHtml(store.name)}</span>
+              </div>
+            </div>
+            <div class="target-score-badge">
+              <div class="target-score-label">Earned points</div>
+              <div class="target-score-value">${metrics.earnedPoints}/${metrics.maxPoints}</div>
+              <div class="target-score-money">${money(metrics.bonusAmount)} bonus</div>
+            </div>
+          </section>
+
+          <form id="targetSettingsForm" class="target-settings">
+            <div class="target-settings-title"><i class="bi bi-bullseye"></i> Today revenue target</div>
+            <label>
+              Target amount
+              <div class="target-input-row">
+                <input id="targetAmountInput" type="number" min="1" step="1" inputmode="decimal" value="${metrics.dailyTarget.toFixed(2)}">
+                <button class="target-save-btn" type="submit"><i class="bi bi-check2"></i>Save</button>
+              </div>
+            </label>
+            <div class="target-settings-note">Saved locally for this staff, store, and date. Current bonus rate is ${money(TODAY_BONUS_DOLLARS_PER_POINT)} per point.</div>
+          </form>
+        </div>
+
+        <section class="target-stat-grid" aria-label="Today performance">
+          <div class="target-stat">
+            <div class="target-stat-top"><span>Revenue</span><i class="bi bi-graph-up-arrow"></i></div>
+            <div>
+              <div class="target-stat-value">${money(metrics.todaySales)}</div>
+              <div class="target-stat-sub">${Math.round(revenuePercent)}% of ${money(metrics.dailyTarget)}</div>
+            </div>
+          </div>
+          <div class="target-stat">
+            <div class="target-stat-top"><span>Orders</span><i class="bi bi-receipt-cutoff"></i></div>
+            <div>
+              <div class="target-stat-value">${metrics.orderCount}</div>
+              <div class="target-stat-sub">${metrics.productCount} product units today</div>
+            </div>
+          </div>
+          <div class="target-stat">
+            <div class="target-stat-top"><span>Tempered glass</span><i class="bi bi-phone-flip"></i></div>
+            <div>
+              <div class="target-stat-value">${metrics.glassCount}/${glassRule.target}</div>
+              <div class="target-stat-sub">+${glassRule.points} pts when complete</div>
+            </div>
+          </div>
+          <div class="target-stat">
+            <div class="target-stat-top"><span>Repair jobs</span><i class="bi bi-tools"></i></div>
+            <div>
+              <div class="target-stat-value">${metrics.repairCount}/${repairRule.target}</div>
+              <div class="target-stat-sub">+${repairRule.points} pts when complete</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="target-panel">
+          <div class="target-panel-head">
+            <div>
+              <h2 class="target-panel-title">Bonus score track</h2>
+              <div class="target-panel-sub">Points are awarded only after each target is completed.</div>
+            </div>
+            <div class="target-panel-score">${money(metrics.bonusAmount)} at close</div>
+          </div>
+          <div class="target-track-wrap" aria-label="Bonus score progress">
+            <div class="target-track-base"><div class="target-track-fill" style="width:${scorePercent}%"></div></div>
+            ${milestoneHtml}
+          </div>
+        </section>
+
+        <section class="target-panel">
+          <div class="target-panel-head">
+            <div>
+              <h2 class="target-panel-title">Today bonus tasks</h2>
+              <div class="target-panel-sub">Finish these before end shift to increase today's bonus.</div>
+            </div>
+            <div class="target-panel-score">${metrics.earnedPoints} pts earned</div>
+          </div>
+          <div class="target-task-list">
+            ${taskHtml}
+          </div>
+        </section>
+      `;
     }
 
     function endShiftActualValue(key) {
@@ -3298,10 +4144,13 @@
 
     function setActiveView(view) {
       state.activeView = view;
+      els.targetView.classList.toggle('active', view === 'target');
       els.productView.classList.toggle('active', view === 'products');
       els.repairView.classList.toggle('active', view === 'repair');
+      els.targetNavBtn.classList.toggle('active', view === 'target');
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
+      if (view === 'target') renderTargetDashboard();
       if (view === 'repair' && !state.repair.started) renderRepairWorkspace();
     }
 
@@ -4152,6 +5001,7 @@
       renderCategories();
       renderProducts();
       renderCart();
+      renderTargetDashboard();
     }
 
     function clearRepairValidation() {
@@ -4419,6 +5269,9 @@
           product_id: item.id,
           sku: item.sku,
           name: item.name,
+          category: item.category || '',
+          is_repair: Boolean(item.is_repair),
+          is_special: Boolean(item.is_special),
           qty: item.qty,
           unit_price: item.sale_price,
           line_total: item.sale_price * item.qty
@@ -4484,6 +5337,7 @@
       els.customerInput.value = '';
       renderProducts();
       renderRepairWorkspace();
+      renderTargetDashboard();
       renderCart();
       showToast(`${order.id} paid by ${order.payment_method}. ${money(total)} recorded locally.`);
     }
@@ -4648,6 +5502,7 @@
       addToCart(card.dataset.add);
     });
 
+    els.targetNavBtn.addEventListener('click', () => setActiveView('target'));
     els.productNavBtn.addEventListener('click', () => setActiveView('products'));
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
     els.storeSwitchBtn.addEventListener('click', openStoreSwitchModal);
@@ -4810,6 +5665,17 @@
 
     els.syncStatus.addEventListener('click', loadProducts);
 
+    els.targetDashboard.addEventListener('submit', event => {
+      if (event.target.id !== 'targetSettingsForm') return;
+      event.preventDefault();
+      saveDailyTarget();
+    });
+    els.targetDashboard.addEventListener('click', event => {
+      const button = event.target.closest('[data-target-nav]');
+      if (!button) return;
+      setActiveView(button.dataset.targetNav);
+    });
+
     els.payBtn.addEventListener('click', checkout);
     els.holdBtn.addEventListener('click', holdOrder);
     els.discardBtn.addEventListener('click', discardCart);
@@ -4958,6 +5824,7 @@
       loadRepairTickets();
       loadCustomers();
       renderRepairWorkspace();
+      renderTargetDashboard();
       loadProducts();
       loadRepairQuotes();
     });
