@@ -2032,26 +2032,30 @@
     };
 
     const mobileRepairTestItems = [
-      'Outer Glass / Screen Condition',
-      'Touch Response',
-      'Display / OLED / LCD',
-      'Face ID / Fingerprint Unlock',
-      'Front Camera',
-      'Rear Camera',
-      'Earpiece Speaker',
-      'Loudspeaker',
-      'Microphone',
-      'Charging Port / Wireless Charging',
-      'Battery Health / Charging',
-      'Power Button',
-      'Volume Buttons / Mute Switch',
-      'Wi-Fi / Bluetooth',
-      'SIM / eSIM Detection',
-      'Proximity Sensor / Auto Brightness',
-      'Vibration / Haptics',
-      'Frame / Housing Condition',
-      'Back Glass / Rear Cover',
-      'Water Damage Indicators'
+      'Touch glass intact',
+      'Touch response working',
+      'Back glass intact',
+      'Display / LCD working',
+      'Housing and frame intact',
+      'Power button working',
+      'Volume buttons working',
+      'Fingerprint scanner working',
+      'Home button working',
+      'Face ID working',
+      'Earpiece speaker working',
+      'Proximity sensor working',
+      'Charging port working',
+      'Loudspeaker working',
+      'Microphone working',
+      'Rear camera and lens working',
+      'Front camera working',
+      'Torch / flash working',
+      'SIM card reader working',
+      'Bluetooth / Wi-Fi working',
+      'Vibrate switch / haptics working',
+      'Case and accessories present',
+      'Battery working',
+      'Water damage indicators'
     ];
 
     const computerRepairTestItems = [
@@ -3326,6 +3330,7 @@
                 </div>
               </div>
               <p class="repair-panel-text">Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.</p>
+              <div id="repairFunctionTestCompleteError" class="repair-error">Please mark every function test item as Pass, Fail, or N/A.</div>
               <div class="repair-grid">
                 ${currentRepairTestItems().map(name => {
                   const current = state.repair.tests[name] || '';
@@ -3533,7 +3538,8 @@
         'repairCannotTestReason',
         'repairDeviceImei',
         'repairDeviceSerial',
-        'repairDeviceIdUnavailable'
+        'repairDeviceIdUnavailable',
+        'repairFunctionTestComplete'
       ].forEach(id => {
         const field = els.repairWorkspace.querySelector('#' + id);
         if (field) field.classList.remove('error-field');
@@ -3545,7 +3551,8 @@
         'repairCannotTestReasonError',
         'repairDeviceImeiError',
         'repairDeviceSerialError',
-        'repairDeviceIdUnavailableError'
+        'repairDeviceIdUnavailableError',
+        'repairFunctionTestCompleteError'
       ].forEach(id => {
         const error = els.repairWorkspace.querySelector('#' + id);
         if (error) error.style.display = 'none';
@@ -3582,6 +3589,14 @@
       if (state.repair.testable === 'no' && !String(state.repair.cannotTestReason || '').trim()) {
         valid = false;
         showRepairValidationError('repairCannotTestReason', 'repairCannotTestReasonError');
+      }
+
+      if (state.repair.testable === 'yes') {
+        const missingTestItem = currentRepairTestItems().some(item => !state.repair.tests[item]);
+        if (missingTestItem) {
+          valid = false;
+          showRepairValidationError('repairFunctionTestComplete', 'repairFunctionTestCompleteError');
+        }
       }
 
       if (deviceIdType === 'imei' && !isValidImei(state.repair.deviceImei)) {

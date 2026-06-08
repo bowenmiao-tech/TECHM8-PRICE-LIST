@@ -589,6 +589,7 @@
                   <div class="helper mb-3">
                     Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.
                   </div>
+                  <div id="functionTestError" class="error-text">Please mark every function test item as Pass, Fail, or N/A.</div>
                   <div id="checkGrid" class="test-grid"></div>
                   <div class="mt-3">
                     <div class="field-label">Function Test Notes</div>
@@ -706,26 +707,30 @@
 
     const testProfiles = {
       mobile: [
-        'Outer Glass / Screen Condition',
-        'Touch Response',
-        'Display / OLED / LCD',
-        'Face ID / Fingerprint Unlock',
-        'Front Camera',
-        'Rear Camera',
-        'Earpiece Speaker',
-        'Loudspeaker',
-        'Microphone',
-        'Charging Port / Wireless Charging',
-        'Battery Health / Charging',
-        'Power Button',
-        'Volume Buttons / Mute Switch',
-        'Wi-Fi / Bluetooth',
-        'SIM / eSIM Detection',
-        'Proximity Sensor / Auto Brightness',
-        'Vibration / Haptics',
-        'Frame / Housing Condition',
-        'Back Glass / Rear Cover',
-        'Water Damage Indicators'
+        'Touch glass intact',
+        'Touch response working',
+        'Back glass intact',
+        'Display / LCD working',
+        'Housing and frame intact',
+        'Power button working',
+        'Volume buttons working',
+        'Fingerprint scanner working',
+        'Home button working',
+        'Face ID working',
+        'Earpiece speaker working',
+        'Proximity sensor working',
+        'Charging port working',
+        'Loudspeaker working',
+        'Microphone working',
+        'Rear camera and lens working',
+        'Front camera working',
+        'Torch / flash working',
+        'SIM card reader working',
+        'Bluetooth / Wi-Fi working',
+        'Vibrate switch / haptics working',
+        'Case and accessories present',
+        'Battery working',
+        'Water damage indicators'
       ],
       computer: [
         'LCD / External Display Output',
@@ -952,7 +957,7 @@
       ['customerName', 'customerPhone', 'customerEmail', 'cannotTestReason', 'deviceIdImeiInput', 'deviceIdSnInput', 'deviceIdNoneReason'].forEach(id => {
         document.getElementById(id).classList.remove('error-field');
       });
-      ['nameError', 'contactError', 'cannotTestReasonError', 'deviceIdImeiError', 'deviceIdSnError', 'deviceIdNoneError'].forEach(id => {
+      ['nameError', 'contactError', 'cannotTestReasonError', 'deviceIdImeiError', 'deviceIdSnError', 'deviceIdNoneError', 'functionTestError'].forEach(id => {
         document.getElementById(id).style.display = 'none';
       });
     }
@@ -978,6 +983,11 @@
         valid = false;
         document.getElementById('cannotTestReason').classList.add('error-field');
         document.getElementById('cannotTestReasonError').style.display = 'block';
+      }
+
+      if (currentTestable === 'yes' && getSelectedTestResults().length !== (testProfiles[currentTestProfile] || []).length) {
+        valid = false;
+        document.getElementById('functionTestError').style.display = 'block';
       }
 
       if (currentDeviceIdType === 'imei' && !document.getElementById('deviceIdImeiInput').value.trim()) {
