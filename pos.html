@@ -1988,6 +1988,138 @@
       color: var(--tm-red);
     }
 
+    .ticket-detail-modal {
+      width: min(1080px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      overflow: hidden;
+      padding: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .ticket-detail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--tm-line);
+    }
+
+    .ticket-detail-body {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, .9fr);
+      overflow: hidden;
+    }
+
+    .ticket-detail-main,
+    .ticket-detail-side {
+      min-height: 0;
+      overflow: auto;
+      padding: 18px;
+    }
+
+    .ticket-detail-side {
+      border-left: 1px solid var(--tm-line);
+      background: #fbfdfe;
+    }
+
+    .ticket-detail-title {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.25;
+      font-weight: 950;
+    }
+
+    .ticket-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+
+    .ticket-detail-box {
+      padding: 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #f8fafb;
+    }
+
+    .ticket-detail-label {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .ticket-detail-value {
+      margin-top: 5px;
+      font-size: 14px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .ticket-detail-sections {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .ticket-detail-content {
+      min-height: 180px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .ticket-comment-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .ticket-activity-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .ticket-activity-item {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+
+    .ticket-activity-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--tm-green);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .ticket-activity-card {
+      display: grid;
+      gap: 4px;
+      color: #31434c;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .ticket-activity-meta {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -2353,6 +2485,19 @@
     </div>
   </div>
 
+  <div id="ticketDetailModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal ticket-detail-modal" role="dialog" aria-modal="true" aria-labelledby="ticketDetailTitle">
+      <div class="ticket-detail-head">
+        <select id="ticketDetailStatus" class="repair-select" style="width:min(360px,100%);"></select>
+        <button id="ticketDetailClose" class="repair-action" type="button"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="ticket-detail-body">
+        <div id="ticketDetailMain" class="ticket-detail-main"></div>
+        <aside id="ticketDetailSide" class="ticket-detail-side"></aside>
+      </div>
+    </div>
+  </div>
+
   <div id="posStaffModal" class="modal-backdrop" aria-hidden="true">
     <form id="posStaffForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="posStaffTitle">
       <h2 id="posStaffTitle">Select Staff</h2>
@@ -2637,10 +2782,12 @@
       pendingRepairDraft: null,
       customers: [],
       cart: [],
-      category: 'All',
-      search: '',
-      storeId: 'park-ridge',
-      staffMembers: [],
+        category: 'All',
+        search: '',
+        storeId: 'park-ridge',
+        selectedTicketId: '',
+        selectedTicketSection: 'password',
+        staffMembers: [],
       selectedStaffName: '',
       activeShiftId: '',
       allowedStoreIds: [],
@@ -2751,6 +2898,11 @@
       repairPatternClose: document.getElementById('repairPatternClose'),
       repairPatternClear: document.getElementById('repairPatternClear'),
       repairPatternSave: document.getElementById('repairPatternSave'),
+      ticketDetailModal: document.getElementById('ticketDetailModal'),
+      ticketDetailMain: document.getElementById('ticketDetailMain'),
+      ticketDetailSide: document.getElementById('ticketDetailSide'),
+      ticketDetailStatus: document.getElementById('ticketDetailStatus'),
+      ticketDetailClose: document.getElementById('ticketDetailClose'),
       posStaffModal: document.getElementById('posStaffModal'),
       posStaffForm: document.getElementById('posStaffForm'),
       posStaffSelect: document.getElementById('posStaffSelect'),
@@ -2959,6 +3111,19 @@
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
+      }).format(date);
+    }
+
+    function formatDateTime(value) {
+      const date = value ? new Date(value) : new Date();
+      if (Number.isNaN(date.getTime())) return '';
+      return new Intl.DateTimeFormat('en-AU', {
+        timeZone: 'Australia/Brisbane',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
       }).format(date);
     }
 
@@ -4157,7 +4322,7 @@
     function loadRepairTickets() {
       try {
         const rows = JSON.parse(localStorage.getItem(REPAIR_TICKETS_KEY) || '[]');
-        state.repairTickets = Array.isArray(rows) ? rows : [];
+        state.repairTickets = Array.isArray(rows) ? rows.map(normalizeRepairTicket) : [];
       } catch (error) {
         state.repairTickets = [];
       }
@@ -4165,6 +4330,83 @@
 
     function saveRepairTickets() {
       localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 200)));
+    }
+
+    function currentStaffName() {
+      return state.selectedStaffName || 'Unknown staff';
+    }
+
+    function staffInitials(name) {
+      return String(name || 'TM').trim().split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'TM';
+    }
+
+    function repairStatusText(status) {
+      const column = repairBoardColumns.find(item => item.id === status);
+      return column ? column.label : (status || 'Unknown status');
+    }
+
+    function addTicketActivity(ticket, type, text, at) {
+      if (!ticket) return;
+      ticket.activity = Array.isArray(ticket.activity) ? ticket.activity : [];
+      ticket.activity.unshift({
+        id: 'ACT-' + Date.now() + '-' + Math.random().toString(16).slice(2),
+        type,
+        text,
+        staffName: currentStaffName(),
+        at: at || new Date().toISOString()
+      });
+    }
+
+    function normalizeRepairTicket(ticket) {
+      if (!ticket) return ticket;
+      ticket.activity = Array.isArray(ticket.activity) ? ticket.activity : [];
+      ticket.comments = Array.isArray(ticket.comments) ? ticket.comments : [];
+      ticket.intake = ticket.intake && typeof ticket.intake === 'object' ? ticket.intake : {};
+      if (!ticket.customerName) ticket.customerName = 'Walk-in Customer';
+      if (!ticket.createdBy) ticket.createdBy = 'Unknown staff';
+      if (!ticket.activity.length && ticket.createdAt) {
+        ticket.activity.push({
+          id: 'ACT-' + ticket.createdAt,
+          type: 'created',
+          text: `created this repair ticket in ${repairStatusText(ticket.status)}`,
+          staffName: ticket.createdBy,
+          at: ticket.createdAt
+        });
+      }
+      return ticket;
+    }
+
+    function currentRepairSnapshot() {
+      const quote = state.repair.quote || {};
+      return {
+        passwordType: state.repair.passwordType,
+        password: state.repair.password,
+        patternValue: state.repair.patternValue,
+        passwordNoneReason: state.repair.passwordNoneReason,
+        deviceIdType: normalizedRepairDeviceIdType(),
+        deviceImei: state.repair.deviceImei,
+        deviceSerial: state.repair.deviceSerial,
+        deviceIdUnavailable: state.repair.deviceIdUnavailable,
+        testable: state.repair.testable,
+        cannotTestReason: state.repair.cannotTestReason,
+        testProfile: state.repair.testProfile,
+        tests: { ...state.repair.tests },
+        testNotes: state.repair.testNotes,
+        media: state.repair.media.map(item => ({ ...item })),
+        quote: { ...quote },
+        quotedPrice: state.repair.quotedPrice || quotePriceLabel(quote.price)
+      };
+    }
+
+    function syncCurrentRepairTicketSnapshot() {
+      if (!state.repair.ticketId) return;
+      const ticket = state.repairTickets.find(item => item.id === state.repair.ticketId);
+      if (!ticket) return;
+      normalizeRepairTicket(ticket);
+      ticket.customerName = els.customerInput.value.trim() || ticket.customerName || 'Walk-in Customer';
+      ticket.price = state.repair.quotedPrice || ticket.price;
+      ticket.intake = currentRepairSnapshot();
+      saveRepairTickets();
     }
 
     function loadCustomers() {
@@ -4261,9 +4503,13 @@
     function updateRepairTicketStatus(ticketId, status) {
       const ticket = state.repairTickets.find(item => item.id === ticketId);
       if (!ticket || ticket.status === status) return;
+      const previousStatus = ticket.status;
       ticket.status = status;
       ticket.statusUpdatedAt = new Date().toISOString();
+      normalizeRepairTicket(ticket);
+      addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText(status)}`, ticket.statusUpdatedAt);
       saveRepairTickets();
+      if (state.selectedTicketId === ticketId && els.ticketDetailModal.classList.contains('show')) renderTicketDetailModal();
       renderRepairWorkspace();
     }
 
@@ -4384,6 +4630,8 @@
       const motherboardRepair = els.ticketMotherboardRepair.value === 'yes';
       const ticketId = 'RPR-' + Date.now();
       const quote = draft.quote;
+      const createdAt = new Date().toISOString();
+      const initialStatusLabel = repairStatusText(status);
       const ticket = {
         id: ticketId,
         title: draft.specialOrder ? draft.specialName : `${quote.brand} ${quote.model}`,
@@ -4393,8 +4641,26 @@
         deviceInStore,
         motherboardRepair,
         specialOrder: Boolean(draft.specialOrder),
-        createdAt: new Date().toISOString(),
-        statusUpdatedAt: new Date().toISOString()
+        customerName: els.customerInput.value.trim() || 'Walk-in Customer',
+        customerContact: '',
+        createdBy: currentStaffName(),
+        createdAt,
+        statusUpdatedAt: createdAt,
+        activity: [{
+          id: 'ACT-' + createdAt,
+          type: 'created',
+          text: `created this repair ticket in ${initialStatusLabel}`,
+          staffName: currentStaffName(),
+          at: createdAt
+        }],
+        comments: [],
+        intake: {
+          quote: { ...quote },
+          quotedPrice: quotePriceLabel(quote.price),
+          testProfile: 'mobile',
+          tests: {},
+          media: []
+        }
       };
 
       state.repairTickets.unshift(ticket);
@@ -4414,6 +4680,7 @@
       state.repair.model = quote.model || '';
       state.repair.issue = quote.issue || '';
       state.repair.quotedPrice = quotePriceLabel(quote.price);
+      syncCurrentRepairTicketSnapshot();
       closeTicketDetailsModal();
       setActiveView('repair');
       renderRepairWorkspace();
@@ -4649,6 +4916,111 @@
           }).join('')}
         </div>
       `;
+    }
+
+    function ticketDetailSectionHtml(ticket) {
+      const intake = ticket.intake || {};
+      const section = state.selectedTicketSection || 'password';
+      if (section === 'password') {
+        const type = intake.passwordType || 'text';
+        const value = type === 'pattern'
+          ? (intake.patternValue || 'Not recorded')
+          : type === 'none'
+            ? (intake.passwordNoneReason || 'No reason recorded')
+            : (intake.password || 'Not recorded');
+        return `<h3>Password</h3><p><strong>Type:</strong> ${escapeHtml(type)}</p><p>${escapeHtml(value)}</p>`;
+      }
+      if (section === 'imei') {
+        const type = intake.deviceIdType || 'imei';
+        const value = type === 'sn'
+          ? (intake.deviceSerial || 'Not recorded')
+          : type === 'none'
+            ? (intake.deviceIdUnavailable || 'No reason recorded')
+            : (intake.deviceImei || 'Not recorded');
+        return `<h3>Device ID</h3><p><strong>Type:</strong> ${escapeHtml(type)}</p><p>${escapeHtml(value)}</p>`;
+      }
+      if (section === 'function') {
+        if (intake.testable === 'no') {
+          return `<h3>Function Test</h3><p><strong>Cannot test:</strong> ${escapeHtml(intake.cannotTestReason || 'No reason recorded')}</p>`;
+        }
+        const tests = intake.tests || {};
+        const rows = Object.keys(tests).map(name => `
+          <div class="ticket-detail-box">
+            <div class="ticket-detail-label">${escapeHtml(name)}</div>
+            <div class="ticket-detail-value">${escapeHtml(tests[name])}</div>
+          </div>
+        `).join('');
+        return `<h3>Function Test</h3><div class="repair-summary">${rows || '<div class="ticket-meta">No function test recorded.</div>'}</div><p>${escapeHtml(intake.testNotes || '')}</p>`;
+      }
+      const media = Array.isArray(intake.media) ? intake.media : [];
+      return `
+        <h3>Photos And Evidence</h3>
+        <div class="media-preview-list">
+          ${media.map(item => `<div class="media-preview">${item.type === 'image' ? `<img src="${item.src}" alt="">` : '<span>Video<br>placeholder</span>'}</div>`).join('') || '<div class="ticket-meta">No photos or videos recorded.</div>'}
+        </div>
+      `;
+    }
+
+    function ticketActivityHtml(ticket) {
+      const activity = Array.isArray(ticket.activity) ? ticket.activity : [];
+      return activity.map(item => `
+        <div class="ticket-activity-item">
+          <div class="ticket-activity-avatar">${escapeHtml(staffInitials(item.staffName))}</div>
+          <div class="ticket-activity-card">
+            <div><strong>${escapeHtml(item.staffName || 'Unknown staff')}</strong> ${escapeHtml(item.text || '')}</div>
+            <div class="ticket-activity-meta">${escapeHtml(formatDateTime(item.at))}</div>
+          </div>
+        </div>
+      `).join('') || '<div class="ticket-meta">No activity recorded.</div>';
+    }
+
+    function renderTicketDetailModal() {
+      const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (!ticket) return;
+      const intake = ticket.intake || {};
+      els.ticketDetailStatus.innerHTML = repairBoardColumns.map(column => `<option value="${column.id}" ${ticket.status === column.id ? 'selected' : ''}>${escapeHtml(column.label)}</option>`).join('');
+      els.ticketDetailMain.innerHTML = `
+        <h2 id="ticketDetailTitle" class="ticket-detail-title">${escapeHtml(ticket.id)} ${escapeHtml(ticket.customerName || 'Walk-in Customer')} ${escapeHtml(ticket.title || '')} ${escapeHtml(ticket.issue || '')}</h2>
+        <div class="ticket-detail-grid">
+          <div class="ticket-detail-box"><div class="ticket-detail-label">Customer</div><div class="ticket-detail-value">${escapeHtml(ticket.customerName || 'Walk-in Customer')}</div></div>
+          <div class="ticket-detail-box"><div class="ticket-detail-label">Device</div><div class="ticket-detail-value">${escapeHtml(ticket.title || '')}</div></div>
+          <div class="ticket-detail-box"><div class="ticket-detail-label">Issue</div><div class="ticket-detail-value">${escapeHtml(ticket.issue || '')}</div></div>
+          <div class="ticket-detail-box"><div class="ticket-detail-label">Price</div><div class="ticket-detail-value">${escapeHtml(ticket.price || intake.quotedPrice || '')}</div></div>
+        </div>
+        <div class="ticket-detail-sections">
+          ${[
+            ['password', 'Password'],
+            ['imei', 'IMEI'],
+            ['function', 'Function'],
+            ['photos', 'Photos And Evidence']
+          ].map(([id, label]) => `<button class="repair-chip ${state.selectedTicketSection === id ? 'active' : ''}" type="button" data-ticket-section="${id}">${label}</button>`).join('')}
+        </div>
+        <div class="ticket-detail-content">${ticketDetailSectionHtml(ticket)}</div>
+      `;
+      els.ticketDetailSide.innerHTML = `
+        <h3 style="margin:0 0 12px;">Comments and activity</h3>
+        <div class="ticket-comment-row">
+          <input id="ticketCommentInput" class="repair-input" placeholder="Add a comment...">
+          <button id="ticketCommentAdd" class="repair-action primary" type="button">Add</button>
+        </div>
+        <div class="ticket-activity-list">${ticketActivityHtml(ticket)}</div>
+      `;
+    }
+
+    function openTicketDetailModal(ticketId) {
+      const ticket = state.repairTickets.find(item => item.id === ticketId);
+      if (!ticket) return;
+      state.selectedTicketId = ticketId;
+      state.selectedTicketSection = 'password';
+      renderTicketDetailModal();
+      els.ticketDetailModal.classList.add('show');
+      els.ticketDetailModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeTicketDetailModal() {
+      els.ticketDetailModal.classList.remove('show');
+      els.ticketDetailModal.setAttribute('aria-hidden', 'true');
+      state.selectedTicketId = '';
     }
 
     function renderRepairWorkspace() {
@@ -5115,6 +5487,7 @@
         showToast('Please complete the required intake details before adding to cart.');
         return;
       }
+      syncCurrentRepairTicketSnapshot();
 
       const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
       if (price <= 0) {
@@ -5142,6 +5515,13 @@
         is_repair: true,
         ticket_id: state.repair.ticketId
       });
+      const ticket = state.repairTickets.find(item => item.id === state.repair.ticketId);
+      if (ticket) {
+        normalizeRepairTicket(ticket);
+        ticket.price = money(price);
+        addTicketActivity(ticket, 'cart', 'added this repair ticket to the cart');
+        saveRepairTickets();
+      }
       state.repair.addedToCart = true;
       renderCart();
       resetRepairState();
@@ -5178,6 +5558,9 @@
         is_repair: true,
         ticket_id: ticket.id
       });
+      normalizeRepairTicket(ticket);
+      addTicketActivity(ticket, 'cart', 'added this repair ticket to the cart');
+      saveRepairTickets();
       renderCart();
       showToast('Ticket added to cart.');
     }
@@ -5323,8 +5706,14 @@
       if (paidRepairIds.length) {
         state.repairTickets.forEach(ticket => {
           if (paidRepairIds.includes(ticket.id)) {
+            const previousStatus = ticket.status;
             ticket.status = 'finished';
             ticket.statusUpdatedAt = new Date().toISOString();
+            normalizeRepairTicket(ticket);
+            addTicketActivity(ticket, 'paid', `checked out this repair by ${order.payment_method} for ${money(total)}`, ticket.statusUpdatedAt);
+            if (previousStatus !== 'finished') {
+              addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText('finished')}`, ticket.statusUpdatedAt);
+            }
           }
         });
         saveRepairTickets();
@@ -5468,6 +5857,7 @@
         ? repairPatternPath.map(index => index + 1).join('-')
         : '';
       closeRepairPatternModal();
+      syncCurrentRepairTicketSnapshot();
       renderRepairWorkspace();
     }
 
@@ -5522,6 +5912,7 @@
           const reader = new FileReader();
           reader.onload = () => {
             state.repair.media.push({ type: 'image', src: reader.result });
+            syncCurrentRepairTicketSnapshot();
             renderRepairWorkspace();
           };
           reader.readAsDataURL(file);
@@ -5543,7 +5934,10 @@
         repairTestNotes: 'testNotes'
       };
       const key = map[event.target.id];
-      if (key) state.repair[key] = event.target.value;
+      if (key) {
+        state.repair[key] = event.target.value;
+        syncCurrentRepairTicketSnapshot();
+      }
     });
 
     els.repairWorkspace.addEventListener('click', event => {
@@ -5555,10 +5949,15 @@
       const addRepairButton = event.target.closest('#addRepairToCartBtn');
       const repairChip = event.target.closest('.repair-chip');
       const testOption = event.target.closest('.test-option');
+      const ticketCard = event.target.closest('[data-ticket-id]');
 
       if (ticketCartButton) {
         event.stopPropagation();
         addRepairTicketToCart(ticketCartButton.dataset.ticketCart);
+        return;
+      }
+      if (ticketCard && !event.target.closest('button')) {
+        openTicketDetailModal(ticketCard.dataset.ticketId);
         return;
       }
       if (confirmButton) confirmRepairSelection();
@@ -5569,6 +5968,7 @@
       }
       if (videoButton) {
         state.repair.media.push({ type: 'video' });
+        syncCurrentRepairTicketSnapshot();
         renderRepairWorkspace();
       }
       if (patternButton) openRepairPatternModal();
@@ -5579,10 +5979,13 @@
         if (group.dataset.repairChipGroup === 'deviceIdType') {
           state.repair.deviceIdType = repairChip.dataset.value;
           clearRepairValidation();
+          syncCurrentRepairTicketSnapshot();
           renderRepairWorkspace();
         } else if (group.dataset.repairChipGroup === 'testProfile') {
+          syncCurrentRepairTicketSnapshot();
           renderRepairWorkspace();
         } else if (group.dataset.repairChipGroup === 'passwordType' || group.dataset.repairChipGroup === 'testable') {
+          syncCurrentRepairTicketSnapshot();
           renderRepairWorkspace();
           if (group.dataset.repairChipGroup === 'passwordType' && repairChip.dataset.value === 'pattern') {
             openRepairPatternModal();
@@ -5596,6 +5999,7 @@
         const group = testOption.closest('[data-test-name]');
         if (!group) return;
         state.repair.tests[group.dataset.testName] = testOption.dataset.value;
+        syncCurrentRepairTicketSnapshot();
         group.querySelectorAll('.test-option').forEach(item => item.classList.remove('active', 'pass', 'fail', 'na'));
         testOption.classList.add('active', repairTestStatusClass(testOption.dataset.value));
       }
@@ -5704,6 +6108,31 @@
       event.preventDefault();
       createRepairTicketFromDraft();
     });
+    els.ticketDetailClose.addEventListener('click', closeTicketDetailModal);
+    els.ticketDetailModal.addEventListener('click', event => {
+      if (event.target === els.ticketDetailModal) closeTicketDetailModal();
+    });
+    els.ticketDetailStatus.addEventListener('change', event => {
+      if (state.selectedTicketId) updateRepairTicketStatus(state.selectedTicketId, event.target.value);
+    });
+    els.ticketDetailMain.addEventListener('click', event => {
+      const button = event.target.closest('[data-ticket-section]');
+      if (!button) return;
+      state.selectedTicketSection = button.dataset.ticketSection;
+      renderTicketDetailModal();
+    });
+    els.ticketDetailSide.addEventListener('click', event => {
+      const addButton = event.target.closest('#ticketCommentAdd');
+      if (!addButton) return;
+      const input = els.ticketDetailSide.querySelector('#ticketCommentInput');
+      const text = input ? input.value.trim() : '';
+      if (!text) return;
+      const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (!ticket) return;
+      addTicketActivity(ticket, 'comment', `commented: ${text}`);
+      saveRepairTickets();
+      renderTicketDetailModal();
+    });
     els.repairPatternClose.addEventListener('click', closeRepairPatternModal);
     els.repairPatternClear.addEventListener('click', clearRepairPattern);
     els.repairPatternSave.addEventListener('click', saveRepairPattern);
@@ -5799,6 +6228,9 @@
       }
       if (event.key === 'Escape' && els.ticketDetailsModal.classList.contains('show')) {
         closeTicketDetailsModal();
+      }
+      if (event.key === 'Escape' && els.ticketDetailModal.classList.contains('show')) {
+        closeTicketDetailModal();
       }
       if (event.key === 'Escape' && els.repairPatternModal.classList.contains('show')) {
         closeRepairPatternModal();
