@@ -2589,6 +2589,23 @@
       return state.repair.testProfile === 'computer' ? computerRepairTestItems : mobileRepairTestItems;
     }
 
+    function repairTestOptions(itemName) {
+      if (itemName === 'Case and accessories present') return ['Yes', 'No'];
+      return ['Pass', 'Fail', 'N/A'];
+    }
+
+    function repairTestStatusClass(value) {
+      if (value === 'Pass' || value === 'Yes') return 'pass';
+      if (value === 'Fail' || value === 'No') return 'fail';
+      return 'na';
+    }
+
+    function repairTestOptionsHtml(itemName, current) {
+      return repairTestOptions(itemName).map(value => `
+        <button class="test-option ${current === value ? 'active' : ''} ${current === value ? repairTestStatusClass(value) : ''}" type="button" data-value="${escapeHtml(value)}">${escapeHtml(value)}</button>
+      `).join('');
+    }
+
     function normalizedRepairDeviceIdType() {
       if (state.repair.deviceIdType === 'serial') return 'sn';
       if (state.repair.deviceIdType === 'unavailable') return 'none';
@@ -3330,7 +3347,7 @@
                 </div>
               </div>
               <p class="repair-panel-text">Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.</p>
-              <div id="repairFunctionTestCompleteError" class="repair-error">Please mark every function test item as Pass, Fail, or N/A.</div>
+              <div id="repairFunctionTestCompleteError" class="repair-error">Please complete every function test item before continuing.</div>
               <div class="repair-grid">
                 ${currentRepairTestItems().map(name => {
                   const current = state.repair.tests[name] || '';
@@ -3338,9 +3355,7 @@
                     <div class="test-card">
                       <div class="test-name">${escapeHtml(name)}</div>
                       <div class="test-options" data-test-name="${escapeHtml(name)}">
-                        <button class="test-option ${current === 'Pass' ? 'active' : ''} ${current === 'Pass' ? 'pass' : ''}" type="button" data-value="Pass">Pass</button>
-                        <button class="test-option ${current === 'Fail' ? 'active' : ''} ${current === 'Fail' ? 'fail' : ''}" type="button" data-value="Fail">Fail</button>
-                        <button class="test-option ${current === 'N/A' ? 'active' : ''} ${current === 'N/A' ? 'na' : ''}" type="button" data-value="N/A">N/A</button>
+                        ${repairTestOptionsHtml(name, current)}
                       </div>
                     </div>
                   `;
@@ -3592,7 +3607,7 @@
       }
 
       if (state.repair.testable === 'yes') {
-        const missingTestItem = currentRepairTestItems().some(item => !state.repair.tests[item]);
+        const missingTestItem = currentRepairTestItems().some(item => !repairTestOptions(item).includes(state.repair.tests[item]));
         if (missingTestItem) {
           valid = false;
           showRepairValidationError('repairFunctionTestComplete', 'repairFunctionTestCompleteError');
@@ -4105,7 +4120,7 @@
         if (!group) return;
         state.repair.tests[group.dataset.testName] = testOption.dataset.value;
         group.querySelectorAll('.test-option').forEach(item => item.classList.remove('active', 'pass', 'fail', 'na'));
-        testOption.classList.add('active', testOption.dataset.value === 'Pass' ? 'pass' : testOption.dataset.value === 'Fail' ? 'fail' : 'na');
+        testOption.classList.add('active', repairTestStatusClass(testOption.dataset.value));
       }
     });
 

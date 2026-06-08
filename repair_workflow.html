@@ -589,7 +589,7 @@
                   <div class="helper mb-3">
                     Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.
                   </div>
-                  <div id="functionTestError" class="error-text">Please mark every function test item as Pass, Fail, or N/A.</div>
+                  <div id="functionTestError" class="error-text">Please complete every function test item before continuing.</div>
                   <div id="checkGrid" class="test-grid"></div>
                   <div class="mt-3">
                     <div class="field-label">Function Test Notes</div>
@@ -892,19 +892,27 @@
       (testProfiles[currentTestProfile] || []).forEach(item => {
         const wrap = document.createElement('div');
         wrap.className = 'test-item';
+        const options = item === 'Case and accessories present'
+          ? [
+              { label: 'Yes', status: 'yes', tone: 'pass' },
+              { label: 'No', status: 'no', tone: 'fail' }
+            ]
+          : [
+              { label: 'Pass', status: 'pass', tone: 'pass' },
+              { label: 'Fail', status: 'fail', tone: 'fail' },
+              { label: 'N/A', status: 'na', tone: 'na' }
+            ];
         wrap.innerHTML = `
           <div class="test-item-title">${escapeHtml(item)}</div>
           <div class="test-actions">
-            <button type="button" class="test-btn" data-status="pass">Pass</button>
-            <button type="button" class="test-btn" data-status="fail">Fail</button>
-            <button type="button" class="test-btn" data-status="na">N/A</button>
+            ${options.map(option => `<button type="button" class="test-btn" data-status="${option.status}" data-tone="${option.tone}">${option.label}</button>`).join('')}
           </div>
         `;
 
         wrap.querySelectorAll('.test-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             wrap.querySelectorAll('.test-btn').forEach(other => other.classList.remove('active', 'pass', 'fail', 'na'));
-            btn.classList.add('active', btn.dataset.status);
+            btn.classList.add('active', btn.dataset.tone || btn.dataset.status);
             updateLiveSummary();
           });
         });
@@ -1084,7 +1092,7 @@
           if (!item) return;
           const button = item.querySelector(`.test-btn[data-status="${result.status}"]`);
           if (!button) return;
-          button.classList.add('active', result.status);
+          button.classList.add('active', button.dataset.tone || result.status);
         });
       }
 
