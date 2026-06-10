@@ -349,35 +349,35 @@
           </div>
 
           <div class="table-wrap">
-            <el-table :data="filteredRows" border stripe height="700">
+            <el-table :data="filteredRows" border stripe height="700" row-key="id">
               <el-table-column label="Brand" min-width="170">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.brand" placeholder="Brand"></el-input>
+                  <el-input v-model="scope.row.brand" placeholder="Brand"></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="Model" min-width="250">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.model" placeholder="Model"></el-input>
+                  <el-input v-model="scope.row.model" placeholder="Model"></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="Issue" min-width="260">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.issue" placeholder="Issue"></el-input>
+                  <el-input v-model="scope.row.issue" placeholder="Issue"></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="Retail Price" min-width="130">
                 <template slot-scope="scope">
-                  <el-input v-model.trim="scope.row.price" placeholder="$79"></el-input>
+                  <el-input v-model="scope.row.price" placeholder="$79"></el-input>
                 </template>
               </el-table-column>
 
               <el-table-column label="CNY Cost" min-width="120">
                 <template slot-scope="scope">
                   <el-input
-                    v-model.trim="scope.row.cny_cost_price"
+                    v-model="scope.row.cny_cost_price"
                     placeholder="120.00"
                     @input="markCostEdit(scope.row, 'CNY')">
                   </el-input>
@@ -387,7 +387,7 @@
               <el-table-column label="AUD Ex GST" min-width="130">
                 <template slot-scope="scope">
                   <el-input
-                    v-model.trim="scope.row.aud_cost_price_ex_gst"
+                    v-model="scope.row.aud_cost_price_ex_gst"
                     placeholder="25.00"
                     @input="markCostEdit(scope.row, 'AUD')">
                   </el-input>
@@ -397,7 +397,7 @@
               <el-table-column label="AUD Inc GST" min-width="130">
                 <template slot-scope="scope">
                   <el-input
-                    v-model.trim="scope.row.aud_cost_price_inc_gst"
+                    v-model="scope.row.aud_cost_price_inc_gst"
                     placeholder="27.50"
                     disabled>
                   </el-input>
@@ -573,16 +573,25 @@
           const numeric = Number(text.replace(/[^0-9.\-]/g, ''));
           return Number.isFinite(numeric) ? numeric.toFixed(2) : '';
         },
-        normalizeRow(item) {
+        normalizeRow(item, options = {}) {
           const cnyCost = this.normalizeMoneyString(item.cny_cost_price);
           const audExGst = this.normalizeMoneyString(item.aud_cost_price_ex_gst);
           const audIncGst = this.normalizeMoneyString(item.aud_cost_price_inc_gst);
+          const brand = String(item.brand || '').trim();
+          const model = String(item.model || '').trim();
+          const issue = String(item.issue || '').trim();
+          const shouldTrackOriginal = options.trackOriginal !== false;
+          const hasOriginalKey = shouldTrackOriginal && (
+            Object.prototype.hasOwnProperty.call(item, '_originalBrand')
+            || Object.prototype.hasOwnProperty.call(item, '_originalModel')
+            || Object.prototype.hasOwnProperty.call(item, '_originalIssue')
+          );
 
           return {
             id: item.id || this.makeId(),
-            brand: String(item.brand || '').trim(),
-            model: String(item.model || '').trim(),
-            issue: String(item.issue || '').trim(),
+            brand,
+            model,
+            issue,
             price: item.price === null || item.price === undefined ? '' : String(item.price).trim(),
             cny_cost_price: cnyCost,
             aud_cost_price_ex_gst: audExGst,
@@ -591,6 +600,9 @@
             fx_rate_cny_to_aud: item.fx_rate_cny_to_aud === null || item.fx_rate_cny_to_aud === undefined ? '' : String(item.fx_rate_cny_to_aud).trim(),
             fx_source: String(item.fx_source || '').trim(),
             fx_updated_at: item.fx_updated_at || '',
+            _originalBrand: hasOriginalKey ? String(item._originalBrand || '').trim() : (shouldTrackOriginal ? brand : ''),
+            _originalModel: hasOriginalKey ? String(item._originalModel || '').trim() : (shouldTrackOriginal ? model : ''),
+            _originalIssue: hasOriginalKey ? String(item._originalIssue || '').trim() : (shouldTrackOriginal ? issue : ''),
             _originalCnyCostPrice: cnyCost,
             _originalAudCostPriceExGst: audExGst,
             _lastEditedCostField: ''
@@ -691,11 +703,35 @@
           }
           return cleaned;
         },
+        getCurrentKey(row) {
+          const brand = String(row.brand || '').trim();
+          const model = String(row.model || '').trim();
+          const issue = String(row.issue || '').trim();
+          if (!brand || !model || !issue) return null;
+          return { brand, model, issue };
+        },
+        getOriginalKey(row) {
+          const brand = String(row._originalBrand || '').trim();
+          const model = String(row._originalModel || '').trim();
+          const issue = String(row._originalIssue || '').trim();
+          if (!brand || !model || !issue) return null;
+          return { brand, model, issue };
+        },
+        didKeyChange(originalKey, cleaned) {
+          return originalKey.brand !== cleaned.brand
+            || originalKey.model !== cleaned.model
+            || originalKey.issue !== cleaned.issue;
+        },
+        rowMatchesKey(row, key) {
+          return String(row.brand || '').trim() === key.brand
+            && String(row.model || '').trim() === key.model
+            && String(row.issue || '').trim() === key.issue;
+        },
         addRow() {
           this.rows.unshift(this.normalizeRow({}));
         },
         duplicateRow(row) {
-          this.rows.unshift(this.normalizeRow(row));
+          this.rows.unshift(this.normalizeRow(row, { trackOriginal: false }));
           this.$message.success('Row duplicated.');
         },
         async loadFromSupabase() {
@@ -818,6 +854,7 @@
         async saveRow(row) {
           const cleaned = this.validateRow(row);
           if (!cleaned) return;
+          const originalKey = this.getOriginalKey(row);
 
           try {
             const costPayload = await this.prepareCostPayload(row);
@@ -839,10 +876,23 @@
             });
             if (!result || !result.ok) throw new Error('Save failed.');
 
+            if (originalKey && this.didKeyChange(originalKey, cleaned)) {
+              await window.Techm8StaffAuth.callRpc('delete_repair_price', {
+                session_token: this.authToken(),
+                target_brand: originalKey.brand,
+                target_model: originalKey.model,
+                target_issue: originalKey.issue
+              });
+              this.rows = this.rows.filter(item => item.id === row.id || !this.rowMatchesKey(item, originalKey));
+            }
+
             row.brand = cleaned.brand;
             row.model = cleaned.model;
             row.issue = cleaned.issue;
             row.price = cleaned.price;
+            row._originalBrand = cleaned.brand;
+            row._originalModel = cleaned.model;
+            row._originalIssue = cleaned.issue;
             row._originalCnyCostPrice = row.cny_cost_price;
             row._originalAudCostPriceExGst = row.aud_cost_price_ex_gst;
             row._lastEditedCostField = '';
@@ -854,29 +904,35 @@
           }
         },
         async deleteRow(row) {
-          const cleaned = this.validateRow(row);
-          const removeOnlyLocal = !cleaned;
+          const cleaned = this.normalizeRow(row);
+          const originalKey = this.getOriginalKey(row);
+          const labelKey = this.getCurrentKey(cleaned) || originalKey;
 
-          if (removeOnlyLocal) {
+          if (!originalKey) {
             this.rows = this.rows.filter(item => item.id !== row.id);
             return;
           }
 
           this.$confirm(
-            `Delete "${cleaned.brand} / ${cleaned.model} / ${cleaned.issue}" from the database?`,
+            `Delete "${labelKey.brand} / ${labelKey.model} / ${labelKey.issue}" from the database?`,
             'Confirm',
             { type: 'warning' }
           ).then(async () => {
             try {
               const result = await window.Techm8StaffAuth.callRpc('delete_repair_price', {
                 session_token: this.authToken(),
-                target_brand: cleaned.brand,
-                target_model: cleaned.model,
-                target_issue: cleaned.issue
+                target_brand: originalKey.brand,
+                target_model: originalKey.model,
+                target_issue: originalKey.issue
               });
               if (!result || !result.ok) throw new Error('Delete failed.');
               this.rows = this.rows.filter(item => item.id !== row.id);
-              this.$message.success('Row deleted from database.');
+              const deletedCount = Number(result.deleted || 0);
+              if (deletedCount > 0) {
+                this.$message.success('Row deleted from database.');
+              } else {
+                this.$message.warning('No matching database row was found. Removed from this page.');
+              }
             } catch (error) {
               console.error(error);
               this.$message.error(error.message || 'Could not delete row.');
