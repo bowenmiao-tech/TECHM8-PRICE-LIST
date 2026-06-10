@@ -1350,6 +1350,9 @@
         },
         addMissingBatteryRows() {
           const sourceRows = this.filteredRows.length ? this.filteredRows : this.rows;
+          const screenOnlyCompatibilityModels = new Set([
+            'iphone 8 / se2 / se3'
+          ]);
           const existingBatteryKeys = new Set(
             this.rows
               .filter(row => String(row.variant_name || '').trim().toLowerCase() === 'battery')
@@ -1360,10 +1363,12 @@
           sourceRows.forEach(row => {
             const storeCode = String(row.store_code || '').trim();
             const modelName = String(row.model_name || '').trim();
+            const normalizedModelName = modelName.toLowerCase();
             const variantName = String(row.variant_name || '').trim().toLowerCase();
             if (!storeCode || !modelName || variantName === 'battery') return;
+            if (screenOnlyCompatibilityModels.has(normalizedModelName)) return;
 
-            const key = `${storeCode}||${modelName.toLowerCase()}`;
+            const key = `${storeCode}||${normalizedModelName}`;
             if (existingBatteryKeys.has(key) || modelMap.has(key)) return;
             modelMap.set(key, {
               store_code: storeCode,
