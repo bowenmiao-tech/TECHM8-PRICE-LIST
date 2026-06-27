@@ -1234,6 +1234,231 @@
       gap: 10px;
     }
 
+    .staff-gate-modal {
+      width: min(940px, 100%);
+      max-height: calc(100vh - 36px);
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+    }
+
+    .staff-gate-head {
+      display: grid;
+      gap: 4px;
+    }
+
+    .staff-gate-title {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 950;
+    }
+
+    .staff-gate-subtitle {
+      color: #687983;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .staff-gate-grid {
+      min-height: 360px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 22px;
+      overflow: hidden;
+    }
+
+    .staff-choice-panel {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .staff-choice-panel.staff-panel {
+      border-left: 1px dashed var(--tm-line);
+      padding-left: 22px;
+    }
+
+    .staff-panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--tm-ink);
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .staff-panel-count {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .staff-gate-search {
+      height: 48px;
+      border-radius: 14px;
+      box-shadow: none;
+    }
+
+    .staff-gate-list {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(122px, 1fr));
+      align-content: start;
+      gap: 12px;
+      padding: 2px 2px 8px;
+    }
+
+    .staff-choice-card {
+      min-width: 0;
+      min-height: 128px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      display: grid;
+      grid-template-rows: 66px minmax(34px, auto);
+      gap: 8px;
+      place-items: center;
+      padding: 12px 8px;
+      color: var(--tm-ink);
+      background: #fff;
+      text-align: center;
+      box-shadow: 0 10px 22px rgba(16, 30, 38, 0.04);
+    }
+
+    .staff-choice-card:hover,
+    .staff-choice-card:focus-visible {
+      border-color: rgba(7, 137, 111, 0.45);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
+      outline: none;
+    }
+
+    .staff-choice-card.selected {
+      border-color: var(--tm-green);
+      background: #eefaf6;
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.1);
+    }
+
+    .choice-icon {
+      width: 62px;
+      height: 62px;
+      border-radius: 18px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      color: var(--tm-green-dark);
+      background: #e7f6f2;
+      font-size: 28px;
+      overflow: hidden;
+    }
+
+    .choice-icon.store-icon {
+      color: #fff;
+      background: linear-gradient(135deg, var(--tm-green), #10a383);
+      box-shadow: inset 0 -10px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .choice-icon.staff-icon.male {
+      color: #1f6fbf;
+      background: #e7f1ff;
+    }
+
+    .choice-icon.staff-icon.female {
+      color: #b23b72;
+      background: #ffe9f2;
+    }
+
+    .choice-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .gender-badge {
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #fff;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 12px;
+      background: #7a8b94;
+    }
+
+    .gender-badge.male {
+      background: #1f6fbf;
+    }
+
+    .gender-badge.female {
+      background: #b23b72;
+    }
+
+    .choice-name {
+      min-width: 0;
+      width: 100%;
+      color: #263942;
+      font-size: 12px;
+      line-height: 1.18;
+      font-weight: 950;
+      overflow-wrap: anywhere;
+    }
+
+    .staff-gate-empty {
+      grid-column: 1 / -1;
+      min-height: 120px;
+      border: 1px dashed var(--tm-line);
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--tm-muted);
+      background: #f8fafb;
+      font-size: 13px;
+      font-weight: 850;
+      text-align: center;
+      padding: 16px;
+    }
+
+    .staff-gate-footer {
+      display: grid;
+      grid-template-columns: minmax(170px, 240px) minmax(260px, 1fr);
+      gap: 14px;
+      align-items: end;
+    }
+
+    .staff-pin-field {
+      display: grid;
+      gap: 7px;
+      color: #405058;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .staff-pin-field input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      padding: 0 14px;
+      color: var(--tm-ink);
+      background: #fff;
+      outline: none;
+    }
+
+    .staff-pin-field input:focus {
+      border-color: rgba(7, 137, 111, 0.45);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
+    }
+
+    .staff-gate-buttons {
+      grid-template-columns: 120px minmax(0, 1fr);
+    }
+
     .opening-modal {
       width: min(760px, 100%);
     }
@@ -2276,6 +2501,8 @@
       .repair-summary,
       .repair-cart-panel,
       .customer-field-grid,
+      .staff-gate-grid,
+      .staff-gate-footer,
       .cash-calculator-grid,
       .shift-cash-breakdown,
       .shift-payment-row,
@@ -2290,6 +2517,27 @@
 
       .customer-field-grid .span-2 {
         grid-column: auto;
+      }
+
+      .staff-choice-panel.staff-panel {
+        border-left: 0;
+        border-top: 1px dashed var(--tm-line);
+        padding-left: 0;
+        padding-top: 18px;
+      }
+
+      .staff-gate-modal {
+        max-height: calc(100vh - 28px);
+      }
+
+      .staff-gate-grid {
+        min-height: 0;
+        overflow: auto;
+        padding-right: 2px;
+      }
+
+      .staff-gate-list {
+        max-height: none;
       }
 
       .product-grid {
@@ -2507,23 +2755,48 @@
   </div>
 
   <div id="posStaffModal" class="modal-backdrop" aria-hidden="true">
-    <form id="posStaffForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="posStaffTitle">
-      <h2 id="posStaffTitle">Select Staff</h2>
-      <div class="special-fields">
-        <label>
-          Staff
-          <select id="posStaffSelect" class="repair-select"></select>
-        </label>
-        <label>
+    <form id="posStaffForm" class="special-modal staff-gate-modal" role="dialog" aria-modal="true" aria-labelledby="posStaffTitle">
+      <div class="staff-gate-head">
+        <h2 id="posStaffTitle" class="staff-gate-title">Open POS</h2>
+        <div class="staff-gate-subtitle">Choose your shop and staff name before starting.</div>
+      </div>
+      <input id="posStoreChoice" type="hidden">
+      <input id="posStaffSelect" type="hidden">
+      <div class="staff-gate-grid">
+        <section class="staff-choice-panel" aria-labelledby="posStorePanelTitle">
+          <div class="staff-panel-title">
+            <span id="posStorePanelTitle"><i class="bi bi-shop-window"></i> Shop</span>
+            <span id="posStoreCount" class="staff-panel-count"></span>
+          </div>
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input id="posStoreSearch" class="search-input staff-gate-search" type="search" placeholder="Search shop">
+          </div>
+          <div id="posStoreChoices" class="staff-gate-list"></div>
+        </section>
+        <section class="staff-choice-panel staff-panel" aria-labelledby="posStaffPanelTitle">
+          <div class="staff-panel-title">
+            <span id="posStaffPanelTitle"><i class="bi bi-person-badge"></i> Staff</span>
+            <span id="posStaffCount" class="staff-panel-count"></span>
+          </div>
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input id="posStaffSearch" class="search-input staff-gate-search" type="search" placeholder="Search staff name">
+          </div>
+          <div id="posStaffChoices" class="staff-gate-list"></div>
+        </section>
+      </div>
+      <div class="staff-gate-footer">
+        <label class="staff-pin-field">
           4-digit PIN
           <input id="posStaffPin" type="password" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}" placeholder="0000">
         </label>
+        <div class="special-actions staff-gate-buttons">
+          <button id="posStaffCancel" class="soft-action" type="button" hidden>Cancel</button>
+          <button class="pay-action" type="submit">Continue</button>
+        </div>
       </div>
       <div id="posStaffError" class="special-error"></div>
-      <div class="special-actions">
-        <button id="posStaffCancel" class="soft-action" type="button" hidden>Cancel</button>
-        <button class="pay-action" type="submit">Continue</button>
-      </div>
     </form>
   </div>
 
@@ -2797,6 +3070,10 @@
         selectedTicketSection: 'password',
         staffMembers: [],
       selectedStaffName: '',
+      staffGateStoreSearch: '',
+      staffGateStaffSearch: '',
+      staffGateStoreId: '',
+      staffGateStaffName: '',
       activeShiftId: '',
       allowedStoreIds: [],
       scheduledStoreId: '',
@@ -2913,7 +3190,14 @@
       ticketDetailClose: document.getElementById('ticketDetailClose'),
       posStaffModal: document.getElementById('posStaffModal'),
       posStaffForm: document.getElementById('posStaffForm'),
+      posStoreChoice: document.getElementById('posStoreChoice'),
+      posStoreSearch: document.getElementById('posStoreSearch'),
+      posStoreChoices: document.getElementById('posStoreChoices'),
+      posStoreCount: document.getElementById('posStoreCount'),
       posStaffSelect: document.getElementById('posStaffSelect'),
+      posStaffSearch: document.getElementById('posStaffSearch'),
+      posStaffChoices: document.getElementById('posStaffChoices'),
+      posStaffCount: document.getElementById('posStaffCount'),
       posStaffPin: document.getElementById('posStaffPin'),
       posStaffCancel: document.getElementById('posStaffCancel'),
       posStaffError: document.getElementById('posStaffError'),
@@ -3062,6 +3346,19 @@
       'Bowen Miao': ['PR', 'NL', 'BS', 'FF', 'TW']
     };
 
+    const POS_STAFF_DEFAULT_GENDERS = {
+      Andy: 'male',
+      Bonnie: 'female',
+      Fiona: 'female',
+      'Henry Ang': 'male',
+      JANAPHY: 'female',
+      Jinny: 'female',
+      'Joanna Chen': 'female',
+      'Steven T': 'male',
+      Bowen: 'male',
+      'Bowen Miao': 'male'
+    };
+
     const POS_DEFAULT_STAFF_PINS = {
       Bowen: '0000',
       'Bowen Miao': '0000'
@@ -3082,6 +3379,151 @@
 
     function normalizeStaffKey(value) {
       return String(value || '').trim().toLowerCase();
+    }
+
+    function normalizeSearchText(value) {
+      return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+
+    function fuzzySearchMatch(query, values) {
+      const terms = normalizeSearchText(query).split(/\s+/).filter(Boolean);
+      if (!terms.length) return true;
+      const haystack = normalizeSearchText(values.filter(Boolean).join(' '));
+      return terms.every(term => haystack.includes(term));
+    }
+
+    function staffDisplayName(staff) {
+      if (typeof staff === 'string') return staff;
+      return staff && (staff.display_name || staff.staff_name || staff.name || staff.full_name || '') || '';
+    }
+
+    function staffAvatarUrl(staff) {
+      if (!staff || typeof staff !== 'object') return '';
+      return staff.avatar_url || staff.photo_url || staff.profile_photo_url || staff.image_url || staff.avatar || '';
+    }
+
+    function staffGenderFor(staff) {
+      const explicit = staff && typeof staff === 'object'
+        ? String(staff.gender || staff.sex || staff.profile_gender || '').trim().toLowerCase()
+        : '';
+      if (['female', 'f', 'woman', 'women', 'girl'].includes(explicit)) return 'female';
+      if (['male', 'm', 'man', 'men', 'boy'].includes(explicit)) return 'male';
+
+      const name = staffDisplayName(staff);
+      const matchedName = Object.keys(POS_STAFF_DEFAULT_GENDERS)
+        .find(key => normalizeStaffKey(key) === normalizeStaffKey(name));
+      return matchedName ? POS_STAFF_DEFAULT_GENDERS[matchedName] : 'unknown';
+    }
+
+    function staffChoiceRecords() {
+      const records = new Map();
+      const schedule = loadStaffSchedule();
+      const scheduledNames = Object.values(schedule).flatMap(day => Object.keys(day || {}));
+
+      function addStaff(staff) {
+        const displayName = staffDisplayName(staff).trim();
+        if (!displayName) return;
+        const key = normalizeStaffKey(displayName);
+        const existing = records.get(key) || {};
+        const data = staff && typeof staff === 'object' ? staff : {};
+        records.set(key, { ...existing, ...data, displayName });
+      }
+
+      state.staffMembers.forEach(addStaff);
+      Object.keys(POS_STAFF_STORE_ASSIGNMENTS).forEach(addStaff);
+      scheduledNames.forEach(addStaff);
+
+      return Array.from(records.values())
+        .sort((left, right) => left.displayName.localeCompare(right.displayName));
+    }
+
+    function staffAvatarHtml(staff) {
+      const displayName = staff.displayName || staffDisplayName(staff);
+      const avatarUrl = staffAvatarUrl(staff);
+      const gender = staffGenderFor(staff);
+      const genderClass = gender === 'female' || gender === 'male' ? gender : 'unknown';
+      if (avatarUrl) {
+        return `
+          <span class="choice-icon staff-icon ${genderClass}">
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}">
+          </span>
+        `;
+      }
+
+      const genderIcon = gender === 'female'
+        ? 'bi-gender-female'
+        : gender === 'male'
+          ? 'bi-gender-male'
+          : '';
+      return `
+        <span class="choice-icon staff-icon ${genderClass}">
+          <i class="bi bi-person-circle"></i>
+          ${genderIcon ? `<span class="gender-badge ${genderClass}"><i class="bi ${genderIcon}"></i></span>` : ''}
+        </span>
+      `;
+    }
+
+    function renderStaffGateStoreChoices() {
+      if (!els.posStoreChoices) return;
+      const stores = posStores.filter(store => fuzzySearchMatch(state.staffGateStoreSearch, [
+        store.name,
+        store.code,
+        store.dbCode,
+        store.id
+      ]));
+      if (els.posStoreCount) els.posStoreCount.textContent = `${stores.length} shop${stores.length === 1 ? '' : 's'}`;
+      els.posStoreChoices.innerHTML = stores.length
+        ? stores.map(store => {
+          const selected = store.id === state.staffGateStoreId;
+          return `
+            <button class="staff-choice-card ${selected ? 'selected' : ''}" type="button" data-pos-store-choice="${escapeHtml(store.id)}" aria-pressed="${selected}">
+              <span class="choice-icon store-icon"><i class="bi bi-shop-window"></i></span>
+              <span class="choice-name">${escapeHtml(store.name)}</span>
+            </button>
+          `;
+        }).join('')
+        : '<div class="staff-gate-empty">No shops match this search.</div>';
+      if (els.posStoreChoice) els.posStoreChoice.value = state.staffGateStoreId;
+    }
+
+    function renderStaffGateStaffChoices() {
+      if (!els.posStaffChoices) return;
+      const staff = staffChoiceRecords().filter(record => fuzzySearchMatch(state.staffGateStaffSearch, [
+        record.displayName,
+        record.email,
+        staffGenderFor(record)
+      ]));
+      if (els.posStaffCount) els.posStaffCount.textContent = `${staff.length} staff`;
+      els.posStaffChoices.innerHTML = staff.length
+        ? staff.map(record => {
+          const selected = normalizeStaffKey(record.displayName) === normalizeStaffKey(state.staffGateStaffName);
+          return `
+            <button class="staff-choice-card ${selected ? 'selected' : ''}" type="button" data-pos-staff-choice="${escapeHtml(record.displayName)}" aria-pressed="${selected}">
+              ${staffAvatarHtml(record)}
+              <span class="choice-name">${escapeHtml(record.displayName)}</span>
+            </button>
+          `;
+        }).join('')
+        : '<div class="staff-gate-empty">No staff match this search.</div>';
+      if (els.posStaffSelect) els.posStaffSelect.value = state.staffGateStaffName;
+    }
+
+    function renderStaffGateChoices() {
+      renderStaffGateStoreChoices();
+      renderStaffGateStaffChoices();
+    }
+
+    function setStaffGateStore(storeId) {
+      if (!posStores.some(store => store.id === storeId)) return;
+      state.staffGateStoreId = storeId;
+      if (els.posStaffError) els.posStaffError.textContent = '';
+      renderStaffGateStoreChoices();
+    }
+
+    function setStaffGateStaff(staffName) {
+      state.staffGateStaffName = String(staffName || '').trim();
+      if (els.posStaffError) els.posStaffError.textContent = '';
+      renderStaffGateStaffChoices();
     }
 
     function readLocalJson(key, fallback) {
@@ -3344,24 +3786,24 @@
 
     function openStaffModal(options = {}) {
       els.posStaffError.textContent = '';
-      const schedule = loadStaffSchedule();
-      const scheduledNames = Object.values(schedule).flatMap(day => Object.keys(day || {}));
-      const names = Array.from(new Set([
-        ...state.staffMembers.map(staff => staff.display_name).filter(Boolean),
-        ...Object.keys(POS_STAFF_STORE_ASSIGNMENTS),
-        ...scheduledNames
-      ])).sort();
-      els.posStaffSelect.innerHTML = '<option value="">Choose staff</option>' + names.map(name => `
-        <option value="${escapeHtml(name)}">${escapeHtml(name)}</option>
-      `).join('');
+      state.staffGateStoreSearch = '';
+      state.staffGateStaffSearch = '';
+      if (els.posStoreSearch) els.posStoreSearch.value = '';
+      if (els.posStaffSearch) els.posStaffSearch.value = '';
       els.posStaffPin.value = '';
       const activeShift = readActiveShift();
+      const savedStore = (activeShift && activeShift.storeId) || localStorage.getItem(POS_STORE_KEY) || state.storeId || posStores[0].id;
       const savedStaff = state.selectedStaffName || (activeShift && activeShift.staffName) || localStorage.getItem(POS_STAFF_KEY) || sessionStorage.getItem(POS_STAFF_KEY);
-      if (savedStaff) els.posStaffSelect.value = savedStaff;
+      state.staffGateStoreId = posStores.some(store => store.id === savedStore) ? savedStore : posStores[0].id;
+      state.staffGateStaffName = savedStaff || '';
+      if (els.posStoreChoice) els.posStoreChoice.value = state.staffGateStoreId;
+      if (els.posStaffSelect) els.posStaffSelect.value = state.staffGateStaffName;
       els.posStaffCancel.hidden = options.canCancel === false || !state.selectedStaffName;
+      renderStaffGateChoices();
       els.posStaffModal.classList.add('show');
       els.posStaffModal.setAttribute('aria-hidden', 'false');
-      els.posStaffSelect.focus();
+      const focusTarget = state.staffGateStaffName ? els.posStaffPin : els.posStoreSearch;
+      if (focusTarget) setTimeout(() => focusTarget.focus(), 0);
     }
 
     function closeStaffModal() {
@@ -3424,9 +3866,14 @@
       return true;
     }
 
-    function applySelectedStaff(staffName) {
+    function applySelectedStaff(staffName, storeId) {
       const selectedName = String(staffName || '').trim();
+      const selectedStoreId = String(storeId || '').trim();
       const pin = String(els.posStaffPin.value || '').trim();
+      if (!selectedStoreId || !posStores.some(store => store.id === selectedStoreId)) {
+        els.posStaffError.textContent = 'Choose a shop.';
+        return false;
+      }
       if (!selectedName) {
         els.posStaffError.textContent = 'Choose a staff member.';
         return false;
@@ -3441,11 +3888,18 @@
         els.posStaffError.textContent = 'Incorrect PIN or PIN is not configured in Schedule Admin.';
         return false;
       }
-      const context = staffContextFor(selectedName);
+      const context = staffContextFor(selectedName, selectedStoreId);
       if (!context.ok) {
         els.posStaffError.textContent = context.message;
         return false;
       }
+      if (!context.allowedStoreIds.includes(selectedStoreId)) {
+        els.posStaffError.textContent = context.scheduledStoreId
+          ? `This staff member is scheduled at ${storeById(context.scheduledStoreId).name} today.`
+          : 'This staff member is not assigned to the selected shop.';
+        return false;
+      }
+      context.nextStoreId = selectedStoreId;
       setStaffContext(context);
       closeStaffModal();
       if (staffAccessResolve) {
@@ -6173,9 +6627,29 @@
     });
     els.posStaffForm.addEventListener('submit', event => {
       event.preventDefault();
-      applySelectedStaff(els.posStaffSelect.value);
+      applySelectedStaff(els.posStaffSelect.value, els.posStoreChoice.value);
     });
     els.posStaffCancel.addEventListener('click', closeStaffModal);
+    els.posStoreSearch.addEventListener('input', event => {
+      state.staffGateStoreSearch = event.target.value;
+      renderStaffGateStoreChoices();
+    });
+    els.posStaffSearch.addEventListener('input', event => {
+      state.staffGateStaffSearch = event.target.value;
+      renderStaffGateStaffChoices();
+    });
+    els.posStaffModal.addEventListener('click', event => {
+      const storeButton = event.target.closest('[data-pos-store-choice]');
+      if (storeButton) {
+        setStaffGateStore(storeButton.dataset.posStoreChoice);
+        return;
+      }
+      const staffButton = event.target.closest('[data-pos-staff-choice]');
+      if (staffButton) {
+        setStaffGateStaff(staffButton.dataset.posStaffChoice);
+        if (els.posStaffPin) els.posStaffPin.focus();
+      }
+    });
     els.posStaffPin.addEventListener('input', event => {
       event.target.value = event.target.value.replace(/\D/g, '').slice(0, 4);
     });
