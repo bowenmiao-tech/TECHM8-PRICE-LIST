@@ -3339,6 +3339,11 @@
       Bowen: 'male'
     };
 
+    const POS_STAFF_ROLES = {
+      'Joanna Chen': 'manager',
+      Bowen: 'admin'
+    };
+
     const POS_DEFAULT_STAFF_PINS = {
       Andy: '0000',
       Bonnie: '0000',
@@ -3388,6 +3393,20 @@
 
     function staffIdentityKey(staff) {
       return normalizeStaffKey(staffDisplayName(staff));
+    }
+
+    function staffRoleFor(staff) {
+      const matchedName = Object.keys(POS_STAFF_ROLES)
+        .find(name => staffIdentityKey(name) === staffIdentityKey(staff));
+      return matchedName ? POS_STAFF_ROLES[matchedName] : 'staff';
+    }
+
+    function staffCanSwitchStore(staff) {
+      return ['manager', 'admin'].includes(staffRoleFor(staff));
+    }
+
+    function currentStaffCanSwitchStore() {
+      return staffCanSwitchStore(state.selectedStaffName);
     }
 
     function staffAvatarUrl(staff) {
@@ -3483,7 +3502,7 @@
       if (els.posStaffCount) els.posStaffCount.textContent = `${staff.length} staff`;
       els.posStaffChoices.innerHTML = staff.length
         ? staff.map(record => {
-          const selected = normalizeStaffKey(record.displayName) === normalizeStaffKey(state.staffGateStaffName);
+          const selected = staffIdentityKey(record.displayName) === staffIdentityKey(state.staffGateStaffName);
           return `
             <button class="staff-choice-card ${selected ? 'selected' : ''}" type="button" data-pos-staff-choice="${escapeHtml(record.displayName)}" aria-pressed="${selected}">
               ${staffAvatarHtml(record)}
@@ -3508,7 +3527,12 @@
     }
 
     function setStaffGateStaff(staffName) {
-      state.staffGateStaffName = String(staffName || '').trim();
+      state.staffGateStaffName = staffDisplayName(staffName).trim();
+      const activeShift = readActiveShift();
+      if (activeShift && !staffCanSwitchStore(state.staffGateStaffName)) {
+        state.staffGateStoreId = activeShift.storeId;
+        renderStaffGateStoreChoices();
+      }
       if (els.posStaffError) els.posStaffError.textContent = '';
       renderStaffGateStaffChoices();
     }
@@ -3598,16 +3622,30 @@
     function ensureActiveShiftRecord() {
       if (!state.selectedStaffName || !state.storeId) return null;
       const current = readActiveShift();
-      if (
-        current
-        && normalizeStaffKey(current.staffName) === normalizeStaffKey(state.selectedStaffName)
-        && current.storeId === state.storeId
-      ) {
+      if (current && current.storeId === state.storeId) {
         writeActiveShift({
           ...current,
-          staffName: state.selectedStaffName,
+          staffName: current.staffName || state.selectedStaffName,
+          openedBy: current.openedBy || current.staffName || state.selectedStaffName,
+          currentStaffName: state.selectedStaffName,
+          lastStaffName: state.selectedStaffName,
           storeId: state.storeId,
           storeCode: storeById(state.storeId).code,
+          lastSeenAt: new Date().toISOString()
+        });
+        return readActiveShift();
+      }
+
+      if (current && current.storeId !== state.storeId && !currentStaffCanSwitchStore()) {
+        state.storeId = current.storeId;
+        localStorage.setItem(POS_STORE_KEY, current.storeId);
+        renderStoreSelectOptions();
+        updateStoreBadge();
+        writeActiveShift({
+          ...current,
+          openedBy: current.openedBy || current.staffName || state.selectedStaffName,
+          currentStaffName: state.selectedStaffName,
+          lastStaffName: state.selectedStaffName,
           lastSeenAt: new Date().toISOString()
         });
         return readActiveShift();
@@ -3617,6 +3655,9 @@
         id: 'SHIFT-' + Date.now() + '-' + Math.random().toString(16).slice(2, 8),
         date: brisbaneDateIso(),
         staffName: state.selectedStaffName,
+        openedBy: state.selectedStaffName,
+        currentStaffName: state.selectedStaffName,
+        lastStaffName: state.selectedStaffName,
         storeId: state.storeId,
         storeCode: storeById(state.storeId).code,
         startedAt: new Date().toISOString(),
@@ -3706,7 +3747,19 @@
         : 'Switch user';
     }
 
-    function setCurrentStore(storeId, reloadProducts) {
+    function setCurrentStore(storeId, reloadProducts, options = {}) {
+      const activeShift = readActiveShift();
+      if (
+        activeShift
+        && activeShift.storeId !== storeId
+        && !options.bypassRoleCheck
+        && !currentStaffCanSwitchStore()
+      ) {
+        showToast('Only manager or admin can switch store after a shift has started.');
+        renderStoreSelectOptions();
+        updateStoreBadge();
+        return false;
+      }
       if (!state.allowedStoreIds.includes(storeId)) {
         showToast('This staff member is not assigned to that store.');
         renderStoreSelectOptions();
@@ -3718,7 +3771,7 @@
       renderStoreSelectOptions();
       updateStoreBadge();
       renderTargetDashboard();
-      if (state.selectedStaffName) ensureActiveShiftRecord();
+      if (state.selectedStaffName && !options.skipShift) ensureActiveShiftRecord();
       if (reloadProducts) {
         state.cart = [];
         loadProducts();
@@ -3740,6 +3793,11 @@
     function openStoreSwitchModal() {
       if (!state.selectedStaffName) {
         openStaffModal({ canCancel: false });
+        return;
+      }
+      const activeShift = readActiveShift();
+      if (activeShift && !currentStaffCanSwitchStore()) {
+        showToast('Only manager or admin can switch store after a shift has started.');
         return;
       }
       renderStoreSwitchModal();
@@ -3775,7 +3833,10 @@
       els.posStaffPin.value = '';
       const activeShift = readActiveShift();
       const savedStore = (activeShift && activeShift.storeId) || localStorage.getItem(POS_STORE_KEY) || state.storeId || posStores[0].id;
-      const savedStaff = state.selectedStaffName || (activeShift && activeShift.staffName) || localStorage.getItem(POS_STAFF_KEY) || sessionStorage.getItem(POS_STAFF_KEY);
+      const savedStaff = state.selectedStaffName
+        || localStorage.getItem(POS_STAFF_KEY)
+        || sessionStorage.getItem(POS_STAFF_KEY)
+        || (activeShift && (activeShift.currentStaffName || activeShift.lastStaffName || activeShift.staffName));
       state.staffGateStoreId = posStores.some(store => store.id === savedStore) ? savedStore : posStores[0].id;
       state.staffGateStaffName = savedStaff ? staffDisplayName(savedStaff) : '';
       if (els.posStoreChoice) els.posStoreChoice.value = state.staffGateStoreId;
@@ -3793,7 +3854,7 @@
       els.posStaffModal.setAttribute('aria-hidden', 'true');
     }
 
-    function staffContextFor(staffName, preferredStoreId) {
+    function staffContextFor(staffName, preferredStoreId, options = {}) {
       const selectedName = staffDisplayName(staffName).trim();
       if (!selectedName) {
         return { ok: false, message: 'Choose a staff member.' };
@@ -3802,7 +3863,7 @@
       if (!assignedStores.length) {
         return { ok: false, message: 'This staff member is not assigned to any POS store.' };
       }
-      const shift = findScheduledShift(selectedName);
+      const shift = options.ignoreSchedule ? null : findScheduledShift(selectedName);
       const scheduledStore = shift ? posStores.find(store => store.id === shift.storeId) : null;
       if (shift && !scheduledStore) {
         return { ok: false, message: 'The scheduled store is not available in POS.' };
@@ -3832,24 +3893,35 @@
       state.openingConfirmed = Boolean(options.keepOpeningConfirmed);
       sessionStorage.setItem(POS_STAFF_KEY, context.selectedName);
       localStorage.setItem(POS_STAFF_KEY, context.selectedName);
-      setCurrentStore(context.nextStoreId, false);
+      setCurrentStore(context.nextStoreId, false, { skipShift: true, bypassRoleCheck: true });
       ensureActiveShiftRecord();
     }
 
     function resumeActiveShift() {
       const activeShift = readActiveShift();
       if (!activeShift) return false;
-      const context = staffContextFor(activeShift.staffName, activeShift.storeId);
+      const savedStaff = state.selectedStaffName
+        || localStorage.getItem(POS_STAFF_KEY)
+        || sessionStorage.getItem(POS_STAFF_KEY)
+        || activeShift.currentStaffName
+        || activeShift.lastStaffName
+        || activeShift.staffName;
+      let context = staffContextFor(savedStaff, activeShift.storeId, { ignoreSchedule: true });
+      if (!context.ok && activeShift.staffName) {
+        context = staffContextFor(activeShift.staffName, activeShift.storeId, { ignoreSchedule: true });
+      }
       if (!context.ok) {
         localStorage.removeItem(POS_ACTIVE_SHIFT_KEY);
         return false;
       }
+      context.nextStoreId = activeShift.storeId;
+      if (!staffCanSwitchStore(context.selectedName)) context.allowedStoreIds = [activeShift.storeId];
       setStaffContext(context, { keepOpeningConfirmed: true });
       return true;
     }
 
     function applySelectedStaff(staffName, storeId) {
-      const selectedName = String(staffName || '').trim();
+      const selectedName = staffDisplayName(staffName).trim();
       const selectedStoreId = String(storeId || '').trim();
       const pin = String(els.posStaffPin.value || '').trim();
       if (!selectedStoreId || !posStores.some(store => store.id === selectedStoreId)) {
@@ -3870,20 +3942,32 @@
         els.posStaffError.textContent = 'Incorrect PIN or PIN is not configured in Schedule Admin.';
         return false;
       }
-      const context = staffContextFor(selectedName, selectedStoreId);
+      const activeShift = readActiveShift();
+      const canSwitchStore = staffCanSwitchStore(selectedName);
+      const effectiveStoreId = activeShift && !canSwitchStore ? activeShift.storeId : selectedStoreId;
+      const context = staffContextFor(selectedName, effectiveStoreId, { ignoreSchedule: Boolean(activeShift) });
       if (!context.ok) {
         els.posStaffError.textContent = context.message;
         return false;
       }
-      if (!context.allowedStoreIds.includes(selectedStoreId)) {
+      if (!context.allowedStoreIds.includes(effectiveStoreId)) {
         els.posStaffError.textContent = context.scheduledStoreId
           ? `This staff member is scheduled at ${storeById(context.scheduledStoreId).name} today.`
           : 'This staff member is not assigned to the selected shop.';
         return false;
       }
-      context.nextStoreId = selectedStoreId;
+      if (activeShift && !canSwitchStore) {
+        context.allowedStoreIds = [activeShift.storeId];
+        context.nextStoreId = activeShift.storeId;
+      } else {
+        context.nextStoreId = selectedStoreId;
+      }
+      const continuedStoreId = context.nextStoreId;
       setStaffContext(context);
       closeStaffModal();
+      if (activeShift && !canSwitchStore && selectedStoreId !== activeShift.storeId) {
+        showToast(`Current shift continues at ${storeById(continuedStoreId).code}.`);
+      }
       if (staffAccessResolve) {
         staffAccessResolve(true);
         staffAccessResolve = null;
