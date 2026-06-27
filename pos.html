@@ -1360,6 +1360,11 @@
       box-shadow: inset 0 -10px 18px rgba(0, 0, 0, 0.08);
     }
 
+    .choice-icon.staff-icon {
+      color: #1f6fbf;
+      background: #e7f1ff;
+    }
+
     .choice-icon.staff-icon.male {
       color: #1f6fbf;
       background: #e7f1ff;
@@ -1374,29 +1379,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-
-    .gender-badge {
-      position: absolute;
-      right: 4px;
-      bottom: 4px;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #fff;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      font-size: 12px;
-      background: #7a8b94;
-    }
-
-    .gender-badge.male {
-      background: #1f6fbf;
-    }
-
-    .gender-badge.female {
-      background: #b23b72;
     }
 
     .choice-name {
@@ -2789,7 +2771,7 @@
       <div class="staff-gate-footer">
         <label class="staff-pin-field">
           4-digit PIN
-          <input id="posStaffPin" type="password" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}" placeholder="0000">
+          <input id="posStaffPin" type="password" inputmode="numeric" autocomplete="one-time-code" maxlength="4" pattern="[0-9]{4}">
         </label>
         <div class="special-actions staff-gate-buttons">
           <button id="posStaffCancel" class="soft-action" type="button" hidden>Cancel</button>
@@ -3342,8 +3324,7 @@
       Jinny: ['PR', 'NL', 'BS', 'FF', 'TW'],
       'Joanna Chen': ['PR', 'NL', 'BS', 'FF', 'TW'],
       'Steven T': ['PR', 'NL', 'BS', 'FF', 'TW'],
-      Bowen: ['PR', 'NL', 'BS', 'FF', 'TW'],
-      'Bowen Miao': ['PR', 'NL', 'BS', 'FF', 'TW']
+      Bowen: ['PR', 'NL', 'BS', 'FF', 'TW']
     };
 
     const POS_STAFF_DEFAULT_GENDERS = {
@@ -3355,13 +3336,11 @@
       Jinny: 'female',
       'Joanna Chen': 'female',
       'Steven T': 'male',
-      Bowen: 'male',
-      'Bowen Miao': 'male'
+      Bowen: 'male'
     };
 
     const POS_DEFAULT_STAFF_PINS = {
-      Bowen: '0000',
-      'Bowen Miao': '0000'
+      Bowen: '0000'
     };
 
     let staffAccessResolve = null;
@@ -3393,8 +3372,14 @@
     }
 
     function staffDisplayName(staff) {
-      if (typeof staff === 'string') return staff;
-      return staff && (staff.display_name || staff.staff_name || staff.name || staff.full_name || '') || '';
+      const name = typeof staff === 'string'
+        ? staff
+        : staff && (staff.displayName || staff.display_name || staff.staff_name || staff.name || staff.full_name || '') || '';
+      return normalizeStaffKey(name) === 'bowen miao' ? 'Bowen' : name;
+    }
+
+    function staffIdentityKey(staff) {
+      return normalizeStaffKey(staffDisplayName(staff));
     }
 
     function staffAvatarUrl(staff) {
@@ -3411,7 +3396,7 @@
 
       const name = staffDisplayName(staff);
       const matchedName = Object.keys(POS_STAFF_DEFAULT_GENDERS)
-        .find(key => normalizeStaffKey(key) === normalizeStaffKey(name));
+        .find(key => staffIdentityKey(key) === staffIdentityKey(name));
       return matchedName ? POS_STAFF_DEFAULT_GENDERS[matchedName] : 'unknown';
     }
 
@@ -3423,7 +3408,7 @@
       function addStaff(staff) {
         const displayName = staffDisplayName(staff).trim();
         if (!displayName) return;
-        const key = normalizeStaffKey(displayName);
+        const key = staffIdentityKey(displayName);
         const existing = records.get(key) || {};
         const data = staff && typeof staff === 'object' ? staff : {};
         records.set(key, { ...existing, ...data, displayName });
@@ -3450,15 +3435,9 @@
         `;
       }
 
-      const genderIcon = gender === 'female'
-        ? 'bi-gender-female'
-        : gender === 'male'
-          ? 'bi-gender-male'
-          : '';
       return `
         <span class="choice-icon staff-icon ${genderClass}">
           <i class="bi bi-person-circle"></i>
-          ${genderIcon ? `<span class="gender-badge ${genderClass}"><i class="bi ${genderIcon}"></i></span>` : ''}
         </span>
       `;
     }
@@ -3646,9 +3625,6 @@
         const pin = String(value || '').trim();
         if (/^\d{4}$/.test(pin)) pins[name] = pin;
       });
-      const bowenPin = pins['Bowen Miao'] || pins.Bowen || '0000';
-      pins.Bowen = bowenPin;
-      pins['Bowen Miao'] = bowenPin;
       return pins;
     }
 
@@ -3659,8 +3635,8 @@
     function findScheduledShift(staffName) {
       const today = brisbaneDateIso();
       const daySchedule = loadStaffSchedule()[today] || {};
-      const staffKey = normalizeStaffKey(staffName);
-      const matchedName = Object.keys(daySchedule).find(name => normalizeStaffKey(name) === staffKey);
+      const staffKey = staffIdentityKey(staffName);
+      const matchedName = Object.keys(daySchedule).find(name => staffIdentityKey(name) === staffKey);
       const shift = matchedName ? daySchedule[matchedName] : null;
       return shift && shift.storeId ? shift : null;
     }
@@ -3686,8 +3662,8 @@
 
     function allowedStoresForStaff(staffName) {
       const assignments = loadStaffStoreAssignments();
-      const staffKey = normalizeStaffKey(staffName);
-      const matchedKey = Object.keys(assignments).find(key => normalizeStaffKey(key) === staffKey);
+      const staffKey = staffIdentityKey(staffName);
+      const matchedKey = Object.keys(assignments).find(key => staffIdentityKey(key) === staffKey);
       const codes = matchedKey ? assignments[matchedKey] : [];
       return (Array.isArray(codes) ? codes : [])
         .map(storeByCode)
@@ -3795,7 +3771,7 @@
       const savedStore = (activeShift && activeShift.storeId) || localStorage.getItem(POS_STORE_KEY) || state.storeId || posStores[0].id;
       const savedStaff = state.selectedStaffName || (activeShift && activeShift.staffName) || localStorage.getItem(POS_STAFF_KEY) || sessionStorage.getItem(POS_STAFF_KEY);
       state.staffGateStoreId = posStores.some(store => store.id === savedStore) ? savedStore : posStores[0].id;
-      state.staffGateStaffName = savedStaff || '';
+      state.staffGateStaffName = savedStaff ? staffDisplayName(savedStaff) : '';
       if (els.posStoreChoice) els.posStoreChoice.value = state.staffGateStoreId;
       if (els.posStaffSelect) els.posStaffSelect.value = state.staffGateStaffName;
       els.posStaffCancel.hidden = options.canCancel === false || !state.selectedStaffName;
@@ -3812,7 +3788,7 @@
     }
 
     function staffContextFor(staffName, preferredStoreId) {
-      const selectedName = String(staffName || '').trim();
+      const selectedName = staffDisplayName(staffName).trim();
       if (!selectedName) {
         return { ok: false, message: 'Choose a staff member.' };
       }
@@ -3883,7 +3859,7 @@
         return false;
       }
       const pins = loadStaffPins();
-      const pinStaffKey = Object.keys(pins).find(name => normalizeStaffKey(name) === normalizeStaffKey(selectedName));
+      const pinStaffKey = Object.keys(pins).find(name => staffIdentityKey(name) === staffIdentityKey(selectedName));
       if (!pinStaffKey || String(pins[pinStaffKey]) !== pin) {
         els.posStaffError.textContent = 'Incorrect PIN or PIN is not configured in Schedule Admin.';
         return false;
