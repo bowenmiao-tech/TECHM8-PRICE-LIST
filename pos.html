@@ -3340,6 +3340,14 @@
     };
 
     const POS_DEFAULT_STAFF_PINS = {
+      Andy: '0000',
+      Bonnie: '0000',
+      Fiona: '0000',
+      'Henry Ang': '0000',
+      JANAPHY: '0000',
+      Jinny: '0000',
+      'Joanna Chen': '0000',
+      'Steven T': '0000',
       Bowen: '0000'
     };
 
@@ -3619,11 +3627,9 @@
     }
 
     function loadStaffPins() {
-      const configuredPins = readLocalJson(POS_STAFF_PINS_KEY, {});
       const pins = { ...POS_DEFAULT_STAFF_PINS };
-      Object.entries(configuredPins).forEach(([name, value]) => {
-        const pin = String(value || '').trim();
-        if (/^\d{4}$/.test(pin)) pins[name] = pin;
+      staffChoiceRecords().forEach(staff => {
+        pins[staff.displayName] = '0000';
       });
       return pins;
     }

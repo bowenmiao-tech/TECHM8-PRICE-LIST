@@ -347,7 +347,8 @@
   <script>
     const POS_STAFF_PINS_KEY = 'techm8_pos_staff_pins';
     const POS_STAFF_SCHEDULE_KEY = 'techm8_pos_staff_schedule';
-    const staffNames = ['Andy', 'Bonnie', 'Fiona', 'Henry Ang', 'JANAPHY', 'Jinny', 'Joanna Chen', 'Steven T', 'Bowen Miao'];
+    const staffNames = ['Andy', 'Bonnie', 'Fiona', 'Henry Ang', 'JANAPHY', 'Jinny', 'Joanna Chen', 'Steven T', 'Bowen'];
+    const DEFAULT_STAFF_PINS = Object.fromEntries(staffNames.map(name => [name, '0000']));
     const stores = [
       { id: '', code: 'OFF', name: 'Off' },
       { id: 'park-ridge', code: 'PR', name: 'Park Ridge' },
@@ -434,8 +435,8 @@
 
     function renderPins() {
       const pins = {
-        'Bowen Miao': '0000',
-        ...readLocalJson(POS_STAFF_PINS_KEY, {})
+        ...readLocalJson(POS_STAFF_PINS_KEY, {}),
+        ...DEFAULT_STAFF_PINS
       };
       els.pinGrid.innerHTML = staffNames.map(name => `
         <label class="pin-card">
