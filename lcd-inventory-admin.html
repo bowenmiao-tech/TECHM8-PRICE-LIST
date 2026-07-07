@@ -352,7 +352,7 @@
     }
     .transfer-line-grid {
       display: grid;
-      grid-template-columns: minmax(220px, 1.2fr) minmax(170px, .9fr) 130px 140px auto;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 10px;
       align-items: end;
     }
@@ -593,7 +593,7 @@
           <div class="table-head">
             <div>
               <div class="table-title">Warehouse Transfer</div>
-              <div class="table-subtitle">Send stock from Brassall Shopping Centre to a store. Warehouse stock is reduced immediately; store stock is added after staff upload a photo and confirm receipt.</div>
+              <div class="table-subtitle">Send stock from Warehouse or create a supplier purchase transfer. Warehouse transfers reduce warehouse stock immediately; supplier transfers do not.</div>
             </div>
             <div class="table-subtitle">{{ transferRows.length }} transfer(s)</div>
           </div>
@@ -603,6 +603,10 @@
               <div class="panel">
                 <div class="panel-title">Create Transfer</div>
                 <div class="stack">
+                  <el-select v-model="transferForm.source_type" placeholder="Transfer source">
+                    <el-option label="Warehouse Stock" value="warehouse"></el-option>
+                    <el-option label="Supplier Purchase" value="supplier"></el-option>
+                  </el-select>
                   <el-select v-model="transferForm.to_store_code" filterable placeholder="Send to store">
                     <el-option
                       v-for="store in transferTargetStoreOptions"
@@ -619,10 +623,17 @@
                       <div class="transfer-line-grid">
                         <div>
                           <label class="field-label">Model</label>
-                          <el-select v-model="line.model_name" filterable placeholder="Warehouse model" style="width:100%;" @change="onTransferModelChange(line)">
+                          <el-select
+                            v-model="line.model_name"
+                            filterable
+                            allow-create
+                            default-first-option
+                            :placeholder="transferForm.source_type === 'supplier' ? 'Model' : 'Warehouse model'"
+                            style="width:100%;"
+                            @change="onTransferModelChange(line)">
                             <el-option
-                              v-for="model in warehouseModelOptions"
-                              :key="'warehouse-model-' + model"
+                              v-for="model in transferModelOptions"
+                              :key="'transfer-model-' + model"
                               :label="model"
                               :value="model">
                             </el-option>
@@ -630,12 +641,30 @@
                         </div>
                         <div>
                           <label class="field-label">Part / Type</label>
-                          <el-select v-model="line.variant_name" filterable placeholder="Part / type" style="width:100%;" :disabled="!line.model_name">
+                          <el-select
+                            v-model="line.variant_name"
+                            filterable
+                            allow-create
+                            default-first-option
+                            placeholder="Part / type"
+                            style="width:100%;"
+                            :disabled="!line.model_name">
                             <el-option
-                              v-for="variant in warehouseVariantOptions(line.model_name)"
-                              :key="'warehouse-variant-' + line.model_name + '-' + variant"
+                              v-for="variant in transferVariantOptions(line.model_name)"
+                              :key="'transfer-variant-' + line.model_name + '-' + variant"
                               :label="variant"
                               :value="variant">
+                            </el-option>
+                          </el-select>
+                        </div>
+                        <div v-if="transferForm.source_type === 'supplier'">
+                          <label class="field-label">Category</label>
+                          <el-select v-model="line.category_key" placeholder="Category" style="width:100%;">
+                            <el-option
+                              v-for="option in lcdCategoryOptions"
+                              :key="'transfer-category-' + option.value"
+                              :label="option.label"
+                              :value="option.value">
                             </el-option>
                           </el-select>
                         </div>
@@ -643,7 +672,7 @@
                           <label class="field-label">Qty</label>
                           <el-input-number v-model="line.quantity" :min="1" :step="1" controls-position="right" style="width:100%;"></el-input-number>
                         </div>
-                        <div>
+                        <div v-if="transferForm.source_type === 'warehouse'">
                           <label class="field-label">Warehouse Stock</label>
                           <div class="updated-cell">{{ transferAvailableLabel(line) }}</div>
                         </div>
@@ -685,6 +714,7 @@
                     <div class="review-meta">
                       Created {{ formatTimestamp(transfer.created_at) }}
                       <span v-if="transfer.created_by"> by {{ transfer.created_by }}</span>
+                      <br>Source: {{ transfer.source_type === 'supplier' ? 'Supplier Purchase' : transfer.from_store_name }}
                       <br>Status: {{ transfer.status }}
                       <span v-if="transfer.received_by"><br>Received by {{ transfer.received_by }} on {{ formatTimestamp(transfer.received_at) }}</span>
                       <span v-if="transfer.notes"><br>Notes: {{ transfer.notes }}</span>
@@ -950,6 +980,7 @@
           transferSubmitting: false,
           transfers: [],
           transferForm: {
+            source_type: 'warehouse',
             to_store_code: '',
             created_by: '',
             notes: '',
@@ -981,10 +1012,10 @@
           return Array.from(seen.values()).sort((a, b) => this.naturalSort(a.store_name, b.store_name));
         },
         transferTargetStoreOptions() {
-          return this.storeOptions.filter(store => store.store_code !== 'brassall');
+          return this.storeOptions.filter(store => store.store_code !== 'warehouse');
         },
         warehouseRows() {
-          return this.rows.filter(row => row.store_code === 'brassall' && row.active !== false);
+          return this.rows.filter(row => row.store_code === 'warehouse' && row.active !== false);
         },
         warehouseModelOptions() {
           return Array.from(new Set(
@@ -992,6 +1023,21 @@
               .map(row => row.model_name)
               .filter(Boolean)
           )).sort((a, b) => this.compareLcdModels(a, b));
+        },
+        supplierCatalogRows() {
+          return this.rows.filter(row => row.active !== false);
+        },
+        supplierModelOptions() {
+          return Array.from(new Set(
+            this.supplierCatalogRows
+              .map(row => row.model_name)
+              .filter(Boolean)
+          )).sort((a, b) => this.compareLcdModels(a, b));
+        },
+        transferModelOptions() {
+          return this.transferForm.source_type === 'supplier'
+            ? this.supplierModelOptions
+            : this.warehouseModelOptions;
         },
         modelOptions() {
           return Array.from(new Set(
@@ -1113,6 +1159,9 @@
         },
         transferStatusFilter() {
           this.loadTransfers();
+        },
+        'transferForm.source_type'() {
+          this.transferForm.lines = [this.makeTransferLine()];
         }
       },
       methods: {
@@ -1518,6 +1567,7 @@
           return {
             id: raw.id,
             transfer_code: raw.transfer_code || '',
+            source_type: raw.source_type || 'warehouse',
             from_store_name: raw.from_store_name || '',
             to_store_code: raw.to_store_code || '',
             to_store_name: raw.to_store_name || '',
@@ -1532,7 +1582,7 @@
           };
         },
         makeTransferLine() {
-          return { model_name: '', variant_name: '', quantity: 1 };
+          return { model_name: '', variant_name: '', category_key: 'other', quantity: 1 };
         },
         addTransferLine() {
           this.transferForm.lines.push(this.makeTransferLine());
@@ -1540,8 +1590,11 @@
         removeTransferLine(index) {
           this.transferForm.lines.splice(index, 1);
         },
-        warehouseVariantOptions(modelName) {
-          return this.warehouseRows
+        transferVariantOptions(modelName) {
+          const rows = this.transferForm.source_type === 'supplier'
+            ? this.supplierCatalogRows
+            : this.warehouseRows;
+          return rows
             .filter(row => row.model_name === modelName)
             .map(row => row.variant_name)
             .sort((a, b) => {
@@ -1552,6 +1605,10 @@
         },
         onTransferModelChange(line) {
           line.variant_name = '';
+          if (this.transferForm.source_type === 'supplier') {
+            const match = this.supplierCatalogRows.find(row => row.model_name === line.model_name);
+            line.category_key = match ? (match.category_key || 'other') : this.lcdFamilyInfo(line.model_name).key || 'other';
+          }
         },
         findWarehouseItem(line) {
           return this.warehouseRows.find(row =>
@@ -1565,6 +1622,7 @@
         },
         resetTransferForm() {
           this.transferForm = {
+            source_type: 'warehouse',
             to_store_code: '',
             created_by: '',
             notes: '',
@@ -1583,24 +1641,41 @@
           const payloadLines = [];
           for (const line of this.transferForm.lines) {
             if (!line.model_name && !line.variant_name && !Number(line.quantity || 0)) continue;
-            const item = this.findWarehouseItem(line);
             const quantity = Number(line.quantity || 0);
-            if (!item) {
-              this.$message.error('Each transfer row must include a warehouse model and part.');
-              return;
-            }
             if (quantity <= 0) {
               this.$message.error('Transfer quantity must be greater than 0.');
               return;
             }
-            if (item.current_qty < quantity) {
-              this.$message.error(`${item.model_name} / ${item.variant_name} only has ${item.current_qty} in warehouse.`);
-              return;
+
+            if (this.transferForm.source_type === 'warehouse') {
+              const item = this.findWarehouseItem(line);
+              if (!item) {
+                this.$message.error('Each warehouse transfer row must include a warehouse model and part.');
+                return;
+              }
+              if (item.current_qty < quantity) {
+                this.$message.error(`${item.model_name} / ${item.variant_name} only has ${item.current_qty} in warehouse.`);
+                return;
+              }
+              payloadLines.push({
+                inventory_item_id: item.id,
+                quantity
+              });
+            } else {
+              const modelName = String(line.model_name || '').trim();
+              const variantName = String(line.variant_name || '').trim();
+              const categoryKey = String(line.category_key || '').trim() || 'other';
+              if (!modelName || !variantName) {
+                this.$message.error('Each supplier transfer row must include model and part.');
+                return;
+              }
+              payloadLines.push({
+                model_name: modelName,
+                variant_name: variantName,
+                category_key: categoryKey,
+                quantity
+              });
             }
-            payloadLines.push({
-              inventory_item_id: item.id,
-              quantity
-            });
           }
 
           if (!payloadLines.length) {
@@ -1613,6 +1688,7 @@
             const result = await window.Techm8StaffAuth.callRpc('create_inventory_transfer', {
               session_token: window.Techm8StaffAuth.getToken(),
               payload: {
+                source_type: this.transferForm.source_type,
                 to_store_code: this.transferForm.to_store_code,
                 created_by: this.transferForm.created_by,
                 notes: this.transferForm.notes,
