@@ -645,6 +645,20 @@
       padding: 10px 12px;
     }
 
+    .transfer-receipt-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+    }
+
+    .transfer-receipt-row input[type="file"] {
+      min-height: 40px;
+      max-width: 100%;
+    }
+
     .el-button--primary {
       background: linear-gradient(135deg, #1d4c3e 0%, #163129 100%);
       border-color: #163129;
@@ -753,7 +767,8 @@
         width: 100%;
       }
       .footer-actions .el-button,
-      .section-head .el-button {
+      .section-head .el-button,
+      .transfer-receipt-row .el-button {
         width: 100%;
         margin-left: 0;
       }
@@ -871,6 +886,50 @@
                 No saved report has been found for this store today.
               </div>
             </template>
+          </div>
+
+          <div class="panel" v-if="selectedStoreCode" style="margin-top:14px;">
+            <div class="section-head">
+              <div>
+                <h2 class="panel-title">Pending Warehouse Transfers</h2>
+                <div class="hint">Upload a photo of the received stock, then confirm receipt. Store inventory is updated after confirmation.</div>
+              </div>
+              <div class="toolbar">
+                <el-button plain @click="loadPendingTransfers" :loading="transferLoading">Refresh Transfers</el-button>
+              </div>
+            </div>
+
+            <div class="line-stack" v-if="pendingTransfers.length">
+              <div class="line-card" v-for="transfer in pendingTransfers" :key="'pending-transfer-' + transfer.id">
+                <div class="section-head">
+                  <div>
+                    <div class="draft-item-title">{{ transfer.transfer_code || ('Transfer #' + transfer.id) }}</div>
+                    <div class="draft-item-meta">
+                      From {{ transfer.from_store_name }} | Created {{ formatDateTime(transfer.created_at) }}
+                      <span v-if="transfer.notes"> | {{ transfer.notes }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <table class="summary-table" style="margin-top:10px;">
+                  <tbody>
+                    <tr v-for="line in transfer.lines" :key="'pending-transfer-line-' + transfer.id + '-' + line.id">
+                      <td class="summary-label-cell">{{ line.model_name }}</td>
+                      <td>{{ line.variant_name }}</td>
+                      <td class="summary-money">x {{ line.quantity }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="transfer-receipt-row">
+                  <input type="file" accept="image/*" @change="onTransferPhotoChange(transfer, $event)">
+                  <el-button type="primary" @click="confirmTransferReceived(transfer)" :loading="transferConfirmingId === transfer.id" :disabled="!selectedStaffName">
+                    Confirm Received
+                  </el-button>
+                </div>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No pending warehouse transfers for this store.</div>
           </div>
         </div>
 
@@ -1489,6 +1548,8 @@
   </div>
 
   <script>
+    const SUPABASE = window.TECHM8_SUPABASE || null;
+
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
       title: 'Daily Report Access',
@@ -1530,6 +1591,9 @@
             inventoryCountWeekStart: '',
             inventoryCountExistingSubmission: null,
             inventoryCountSubmitting: false,
+            pendingTransfers: [],
+            transferLoading: false,
+            transferConfirmingId: null,
             repairLines: [],
             faultyBrokenLines: [],
             deviceSalesLines: [],
@@ -1638,8 +1702,10 @@
             this.inventoryCountNotes = '';
             this.inventoryCountWeekStart = '';
             this.inventoryCountExistingSubmission = null;
+            this.pendingTransfers = [];
             if (newValue) {
               this.loadStoreDrafts(newValue);
+              this.loadPendingTransfers();
             }
           }
         },
@@ -1929,6 +1995,107 @@
               console.error(error);
               this.storeDrafts = [];
               this.submittedTodayForStore = false;
+            }
+          },
+          normalizePendingTransfer(raw) {
+            return {
+              id: raw.id,
+              transfer_code: raw.transfer_code || '',
+              from_store_name: raw.from_store_name || '',
+              to_store_name: raw.to_store_name || '',
+              status: raw.status || 'pending',
+              notes: raw.notes || '',
+              created_at: raw.created_at || '',
+              lines: Array.isArray(raw.lines) ? raw.lines : [],
+              receiptFile: null
+            };
+          },
+          async loadPendingTransfers() {
+            if (!this.selectedStoreCode) {
+              this.pendingTransfers = [];
+              return;
+            }
+            this.transferLoading = true;
+            try {
+              const result = await window.Techm8StaffAuth.callRpc('list_pending_inventory_transfers', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                target_store_code: this.selectedStoreCode
+              });
+              this.pendingTransfers = Array.isArray(result.transfers)
+                ? result.transfers.map(this.normalizePendingTransfer)
+                : [];
+            } catch (error) {
+              console.error(error);
+              this.pendingTransfers = [];
+              this.$message.error(error.message || 'Could not load pending warehouse transfers.');
+            } finally {
+              this.transferLoading = false;
+            }
+          },
+          onTransferPhotoChange(transfer, event) {
+            const file = event && event.target && event.target.files ? event.target.files[0] : null;
+            this.$set(transfer, 'receiptFile', file || null);
+          },
+          async uploadTransferReceiptPhoto(transfer) {
+            if (!transfer.receiptFile) {
+              throw new Error('Please upload a receipt photo first.');
+            }
+            if (!SUPABASE) {
+              throw new Error('Supabase config is missing.');
+            }
+
+            const safeName = String(transfer.receiptFile.name || 'receipt.jpg').replace(/[^a-z0-9.\-_]+/gi, '-');
+            const path = [
+              this.selectedStoreCode,
+              String(transfer.transfer_code || transfer.id).replace(/[^a-z0-9.\-_]+/gi, '-'),
+              Date.now() + '-' + safeName
+            ].join('/');
+
+            const response = await fetch(`${SUPABASE.url}/storage/v1/object/inventory-transfer-receipts/${path}`, {
+              method: 'POST',
+              headers: {
+                apikey: SUPABASE.anonKey,
+                Authorization: 'Bearer ' + SUPABASE.anonKey,
+                'Content-Type': transfer.receiptFile.type || 'application/octet-stream',
+                'x-upsert': 'false'
+              },
+              body: transfer.receiptFile
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error((result && result.message) || 'Could not upload receipt photo.');
+            }
+
+            return `${SUPABASE.url}/storage/v1/object/public/inventory-transfer-receipts/${path}`;
+          },
+          async confirmTransferReceived(transfer) {
+            if (!this.selectedStaffName) {
+              this.$message.error('Please choose your staff name before confirming a transfer.');
+              return;
+            }
+
+            this.transferConfirmingId = transfer.id;
+            try {
+              const receiptUrl = await this.uploadTransferReceiptPhoto(transfer);
+              const result = await window.Techm8StaffAuth.callRpc('confirm_inventory_transfer_received', {
+                session_token: window.Techm8StaffAuth.getToken(),
+                target_transfer_id: transfer.id,
+                target_store_code: this.selectedStoreCode,
+                staff_name: this.selectedStaffName,
+                receipt_photo_url: receiptUrl
+              });
+              if (!result || !result.ok) {
+                throw new Error((result && result.message) || 'Could not confirm transfer.');
+              }
+              this.$message.success('Warehouse transfer received. Store inventory has been updated.');
+              await this.loadPendingTransfers();
+              await this.loadSetup(this.selectedStoreCode);
+            } catch (error) {
+              console.error(error);
+              this.$message.error(error.message || 'Could not confirm transfer.');
+            } finally {
+              this.transferConfirmingId = null;
             }
           },
           async resumeDraftFromSetup(draft) {

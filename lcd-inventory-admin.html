@@ -350,6 +350,12 @@
       padding-left: 0;
       padding-right: 0;
     }
+    .transfer-line-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.2fr) minmax(170px, .9fr) 130px 140px auto;
+      gap: 10px;
+      align-items: end;
+    }
     .store-status-pill.pending {
       color: #8a5b00;
       background: #fff8dd;
@@ -392,6 +398,8 @@
     .review-pill.pending { color: #8a5b00; background: #fff8dd; border-color: #f0d79e; }
     .review-pill.approved { color: #126a42; background: #e7f7ef; border-color: #bfe4cf; }
     .review-pill.rejected { color: #b2342c; background: #fff0ee; border-color: #f0c7c2; }
+    .review-pill.received { color: #126a42; background: #e7f7ef; border-color: #bfe4cf; }
+    .review-pill.cancelled { color: #566973; background: #f4f7f9; border-color: #d9e4e9; }
     .review-table {
       width: 100%;
       border-collapse: collapse;
@@ -436,6 +444,7 @@
 
     @media (max-width: 1180px) {
       .tool-grid { grid-template-columns: 1fr; }
+      .transfer-line-grid { grid-template-columns: 1fr; }
       .collapse-title-side {
         flex-basis: 100%;
         justify-items: start;
@@ -577,6 +586,132 @@
               Keep model and variant exactly the way you want staff to see them in the daily report.
               Quantity must be zero or higher. Inactive rows stay in the database but will not appear for staff.
             </div>
+          </div>
+        </div>
+
+        <div class="table-panel">
+          <div class="table-head">
+            <div>
+              <div class="table-title">Warehouse Transfer</div>
+              <div class="table-subtitle">Send stock from Brassall Shopping Centre to a store. Warehouse stock is reduced immediately; store stock is added after staff upload a photo and confirm receipt.</div>
+            </div>
+            <div class="table-subtitle">{{ transferRows.length }} transfer(s)</div>
+          </div>
+
+          <div class="content" style="padding-top:16px;">
+            <div class="tool-grid">
+              <div class="panel">
+                <div class="panel-title">Create Transfer</div>
+                <div class="stack">
+                  <el-select v-model="transferForm.to_store_code" filterable placeholder="Send to store">
+                    <el-option
+                      v-for="store in transferTargetStoreOptions"
+                      :key="'transfer-target-' + store.store_code"
+                      :label="store.store_name"
+                      :value="store.store_code">
+                    </el-option>
+                  </el-select>
+                  <el-input v-model="transferForm.created_by" placeholder="Created by (optional)"></el-input>
+                  <el-input v-model="transferForm.notes" placeholder="Notes (optional)"></el-input>
+
+                  <div class="line-stack" v-if="transferForm.lines.length">
+                    <div class="line-card" v-for="(line, index) in transferForm.lines" :key="'transfer-line-' + index">
+                      <div class="transfer-line-grid">
+                        <div>
+                          <label class="field-label">Model</label>
+                          <el-select v-model="line.model_name" filterable placeholder="Warehouse model" style="width:100%;" @change="onTransferModelChange(line)">
+                            <el-option
+                              v-for="model in warehouseModelOptions"
+                              :key="'warehouse-model-' + model"
+                              :label="model"
+                              :value="model">
+                            </el-option>
+                          </el-select>
+                        </div>
+                        <div>
+                          <label class="field-label">Part / Type</label>
+                          <el-select v-model="line.variant_name" filterable placeholder="Part / type" style="width:100%;" :disabled="!line.model_name">
+                            <el-option
+                              v-for="variant in warehouseVariantOptions(line.model_name)"
+                              :key="'warehouse-variant-' + line.model_name + '-' + variant"
+                              :label="variant"
+                              :value="variant">
+                            </el-option>
+                          </el-select>
+                        </div>
+                        <div>
+                          <label class="field-label">Qty</label>
+                          <el-input-number v-model="line.quantity" :min="1" :step="1" controls-position="right" style="width:100%;"></el-input-number>
+                        </div>
+                        <div>
+                          <label class="field-label">Warehouse Stock</label>
+                          <div class="updated-cell">{{ transferAvailableLabel(line) }}</div>
+                        </div>
+                        <div>
+                          <el-button type="danger" plain icon="el-icon-delete" @click="removeTransferLine(index)"></el-button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="button-row">
+                    <el-button plain icon="el-icon-plus" @click="addTransferLine">Add Transfer Row</el-button>
+                    <el-button type="primary" @click="createTransfer" :loading="transferSubmitting">Create Transfer</el-button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel-title">Transfer Filters</div>
+                <div class="stack">
+                  <el-select v-model="transferStatusFilter" clearable placeholder="Filter transfer status">
+                    <el-option label="Pending" value="pending"></el-option>
+                    <el-option label="Received" value="received"></el-option>
+                    <el-option label="Cancelled" value="cancelled"></el-option>
+                  </el-select>
+                  <div class="button-row">
+                    <el-button plain @click="loadTransfers" :loading="transferLoading">Load Transfers</el-button>
+                    <el-button plain @click="clearTransferFilters">Clear Transfer Filters</el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-stack" v-if="transferRows.length">
+              <div class="review-card" v-for="transfer in transferRows" :key="'transfer-' + transfer.id">
+                <div class="review-head">
+                  <div>
+                    <div class="review-title">{{ transfer.transfer_code || ('Transfer #' + transfer.id) }} | {{ transfer.to_store_name }}</div>
+                    <div class="review-meta">
+                      Created {{ formatTimestamp(transfer.created_at) }}
+                      <span v-if="transfer.created_by"> by {{ transfer.created_by }}</span>
+                      <br>Status: {{ transfer.status }}
+                      <span v-if="transfer.received_by"><br>Received by {{ transfer.received_by }} on {{ formatTimestamp(transfer.received_at) }}</span>
+                      <span v-if="transfer.notes"><br>Notes: {{ transfer.notes }}</span>
+                      <span v-if="transfer.receipt_photo_url"><br><a :href="transfer.receipt_photo_url" target="_blank">View receipt photo</a></span>
+                    </div>
+                  </div>
+                  <span class="review-pill" :class="transfer.status">{{ transfer.status }}</span>
+                </div>
+                <table class="review-table">
+                  <thead>
+                    <tr>
+                      <th>Model</th>
+                      <th>Part / Type</th>
+                      <th>Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="line in transfer.lines" :key="'transfer-line-view-' + transfer.id + '-' + line.id">
+                      <td>{{ line.model_name }}</td>
+                      <td>{{ line.variant_name }}</td>
+                      <td>{{ line.quantity }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No warehouse transfers found for the current filters.</div>
           </div>
         </div>
 
@@ -805,11 +940,21 @@
           variantFilter: '',
           activeFilter: '',
           countStatusFilter: 'pending',
+          transferStatusFilter: 'pending',
           loadError: '',
           loading: false,
           savingAllRows: false,
           countLoading: false,
-          countSubmissions: []
+          countSubmissions: [],
+          transferLoading: false,
+          transferSubmitting: false,
+          transfers: [],
+          transferForm: {
+            to_store_code: '',
+            created_by: '',
+            notes: '',
+            lines: []
+          }
         };
       },
       computed: {
@@ -834,6 +979,19 @@
             }
           });
           return Array.from(seen.values()).sort((a, b) => this.naturalSort(a.store_name, b.store_name));
+        },
+        transferTargetStoreOptions() {
+          return this.storeOptions.filter(store => store.store_code !== 'brassall');
+        },
+        warehouseRows() {
+          return this.rows.filter(row => row.store_code === 'brassall' && row.active !== false);
+        },
+        warehouseModelOptions() {
+          return Array.from(new Set(
+            this.warehouseRows
+              .map(row => row.model_name)
+              .filter(Boolean)
+          )).sort((a, b) => this.compareLcdModels(a, b));
         },
         modelOptions() {
           return Array.from(new Set(
@@ -937,6 +1095,13 @@
             if (this.countStatusFilter && submission.status !== this.countStatusFilter) return false;
             return true;
           });
+        },
+        transferRows() {
+          return this.transfers.filter(transfer => {
+            if (this.storeFilter && transfer.to_store_code !== this.storeFilter) return false;
+            if (this.transferStatusFilter && transfer.status !== this.transferStatusFilter) return false;
+            return true;
+          });
         }
       },
       watch: {
@@ -945,6 +1110,9 @@
         },
         countStatusFilter() {
           this.loadCountSubmissions();
+        },
+        transferStatusFilter() {
+          this.loadTransfers();
         }
       },
       methods: {
@@ -1325,6 +1493,146 @@
             this.countLoading = false;
           }
         },
+        async loadTransfers() {
+          this.transferLoading = true;
+          this.loadError = '';
+          try {
+            const token = window.Techm8StaffAuth.getToken();
+            const result = await window.Techm8StaffAuth.callRpc('get_inventory_transfers', {
+              session_token: token,
+              target_status: '',
+              target_store_code: ''
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to load warehouse transfers.');
+            }
+            this.transfers = Array.isArray(result.transfers) ? result.transfers.map(this.normalizeTransfer) : [];
+          } catch (error) {
+            console.error(error);
+            this.loadError = error.message || 'Failed to load warehouse transfers.';
+          } finally {
+            this.transferLoading = false;
+          }
+        },
+        normalizeTransfer(raw) {
+          return {
+            id: raw.id,
+            transfer_code: raw.transfer_code || '',
+            from_store_name: raw.from_store_name || '',
+            to_store_code: raw.to_store_code || '',
+            to_store_name: raw.to_store_name || '',
+            status: raw.status || 'pending',
+            notes: raw.notes || '',
+            created_by: raw.created_by || '',
+            received_by: raw.received_by || '',
+            receipt_photo_url: raw.receipt_photo_url || '',
+            created_at: raw.created_at || '',
+            received_at: raw.received_at || '',
+            lines: Array.isArray(raw.lines) ? raw.lines : []
+          };
+        },
+        makeTransferLine() {
+          return { model_name: '', variant_name: '', quantity: 1 };
+        },
+        addTransferLine() {
+          this.transferForm.lines.push(this.makeTransferLine());
+        },
+        removeTransferLine(index) {
+          this.transferForm.lines.splice(index, 1);
+        },
+        warehouseVariantOptions(modelName) {
+          return this.warehouseRows
+            .filter(row => row.model_name === modelName)
+            .map(row => row.variant_name)
+            .sort((a, b) => {
+              const rankDiff = this.lcdVariantTypeRank(a) - this.lcdVariantTypeRank(b);
+              if (rankDiff !== 0) return rankDiff;
+              return this.naturalSort(a, b);
+            });
+        },
+        onTransferModelChange(line) {
+          line.variant_name = '';
+        },
+        findWarehouseItem(line) {
+          return this.warehouseRows.find(row =>
+            row.model_name === line.model_name &&
+            row.variant_name === line.variant_name
+          ) || null;
+        },
+        transferAvailableLabel(line) {
+          const item = this.findWarehouseItem(line);
+          return item ? `${item.current_qty} in warehouse` : 'Choose item';
+        },
+        resetTransferForm() {
+          this.transferForm = {
+            to_store_code: '',
+            created_by: '',
+            notes: '',
+            lines: [this.makeTransferLine()]
+          };
+        },
+        clearTransferFilters() {
+          this.transferStatusFilter = 'pending';
+        },
+        async createTransfer() {
+          if (!this.transferForm.to_store_code) {
+            this.$message.error('Choose the destination store.');
+            return;
+          }
+
+          const payloadLines = [];
+          for (const line of this.transferForm.lines) {
+            if (!line.model_name && !line.variant_name && !Number(line.quantity || 0)) continue;
+            const item = this.findWarehouseItem(line);
+            const quantity = Number(line.quantity || 0);
+            if (!item) {
+              this.$message.error('Each transfer row must include a warehouse model and part.');
+              return;
+            }
+            if (quantity <= 0) {
+              this.$message.error('Transfer quantity must be greater than 0.');
+              return;
+            }
+            if (item.current_qty < quantity) {
+              this.$message.error(`${item.model_name} / ${item.variant_name} only has ${item.current_qty} in warehouse.`);
+              return;
+            }
+            payloadLines.push({
+              inventory_item_id: item.id,
+              quantity
+            });
+          }
+
+          if (!payloadLines.length) {
+            this.$message.error('Add at least one transfer row.');
+            return;
+          }
+
+          this.transferSubmitting = true;
+          try {
+            const result = await window.Techm8StaffAuth.callRpc('create_inventory_transfer', {
+              session_token: window.Techm8StaffAuth.getToken(),
+              payload: {
+                to_store_code: this.transferForm.to_store_code,
+                created_by: this.transferForm.created_by,
+                notes: this.transferForm.notes,
+                lines: payloadLines
+              }
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to create transfer.');
+            }
+            this.$message.success(`Transfer ${result.transfer_code || ''} created.`);
+            this.resetTransferForm();
+            await this.loadInventory();
+            await this.loadTransfers();
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to create transfer.');
+          } finally {
+            this.transferSubmitting = false;
+          }
+        },
         addRow() {
           const fallbackStore = this.storeFilter || (this.storeOptions[0] && this.storeOptions[0].store_code) || '';
           this.rows.unshift(this.normalizeRow({
@@ -1649,8 +1957,10 @@
         }
       },
       mounted() {
+        this.resetTransferForm();
         this.loadInventory();
         this.loadCountSubmissions();
+        this.loadTransfers();
       }
     })).catch(error => {
       console.error(error);
