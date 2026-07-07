@@ -1041,8 +1041,8 @@
 
     .footer-actions {
       display: grid;
-      grid-template-columns: 72px 72px minmax(0, 1fr);
-      gap: 10px;
+      grid-template-columns: 62px 62px 72px minmax(0, 1fr);
+      gap: 8px;
     }
 
     .soft-action,
@@ -1084,6 +1084,11 @@
       cursor: not-allowed;
     }
 
+    .checkout-pay {
+      font-size: 16px;
+      line-height: 1.15;
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1116,6 +1121,261 @@
       margin: 0;
       font-size: 22px;
       line-height: 1.2;
+    }
+
+    .payment-modal {
+      width: min(980px, calc(100vw - 36px));
+      min-height: min(640px, calc(100vh - 36px));
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .payment-modal-header,
+    .payment-modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--tm-line);
+    }
+
+    .payment-modal-footer {
+      border-top: 1px solid var(--tm-line);
+      border-bottom: 0;
+      justify-content: flex-end;
+      background: #f7fafb;
+    }
+
+    .modal-close {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 12px;
+      background: #eef4f5;
+      color: #506068;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+    }
+
+    .payment-modal-body {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr) 360px;
+      min-height: 460px;
+    }
+
+    .payment-method-list {
+      border-right: 1px solid var(--tm-line);
+      background: #fbfdfd;
+    }
+
+    .payment-method-tab {
+      width: 100%;
+      min-height: 58px;
+      border: 0;
+      border-bottom: 1px solid var(--tm-line);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      background: transparent;
+      color: #27333a;
+      font-size: 16px;
+      font-weight: 900;
+      text-align: left;
+    }
+
+    .payment-method-tab i {
+      color: #73848c;
+      font-size: 19px;
+    }
+
+    .payment-method-tab.active {
+      background: var(--tm-green);
+      color: #fff;
+    }
+
+    .payment-method-tab.active i {
+      color: #fff;
+    }
+
+    .payment-entry-panel {
+      display: grid;
+      align-content: start;
+      gap: 16px;
+      padding: 26px;
+      background: #f7fafb;
+    }
+
+    .payment-entry-card {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    .payment-due-large {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: baseline;
+      color: #506068;
+      font-weight: 850;
+    }
+
+    .payment-due-large strong {
+      color: var(--tm-ink);
+      font-size: 28px;
+      font-weight: 950;
+    }
+
+    .payment-amount-input {
+      width: 100%;
+      height: 56px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      padding: 0 16px;
+      font-size: 24px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .payment-quick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .payment-quick-grid button {
+      min-height: 44px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #fff;
+      font-weight: 900;
+      color: #27333a;
+    }
+
+    .payment-quick-grid button:first-child {
+      grid-column: span 3;
+      color: var(--tm-green-dark);
+      background: #e7f7f4;
+      border-color: #bce6dd;
+    }
+
+    .payment-action-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    .payment-confirm,
+    .payment-full {
+      min-height: 54px;
+      border: 0;
+      border-radius: 14px;
+      font-weight: 950;
+      font-size: 16px;
+    }
+
+    .payment-confirm {
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .payment-full {
+      color: #27333a;
+      background: #e9eef0;
+    }
+
+    .payment-error {
+      min-height: 18px;
+      color: #d24034;
+      font-weight: 850;
+      font-size: 13px;
+    }
+
+    .payment-summary-panel {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding: 26px;
+      border-left: 1px solid var(--tm-line);
+      background: #fff;
+    }
+
+    .payment-summary-card {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 16px;
+      background: #f7fafb;
+      border: 1px solid var(--tm-line);
+    }
+
+    .payment-summary-line,
+    .paid-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #506068;
+      font-weight: 850;
+    }
+
+    .payment-summary-line.total,
+    .payment-summary-line.due {
+      padding-top: 12px;
+      border-top: 1px solid #d7e4e8;
+      color: var(--tm-ink);
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .payment-summary-line.due {
+      color: #d24034;
+    }
+
+    .paid-list {
+      display: grid;
+      gap: 8px;
+      min-height: 32px;
+    }
+
+    .paid-empty {
+      color: #7b8d95;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .hold-list {
+      display: grid;
+      gap: 10px;
+      max-height: min(420px, 64vh);
+      overflow: auto;
+    }
+
+    .hold-order-button {
+      width: 100%;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 14px;
+      display: grid;
+      gap: 6px;
+      text-align: left;
+    }
+
+    .hold-order-button strong {
+      font-size: 16px;
+    }
+
+    .hold-order-button span {
+      color: #64767f;
+      font-size: 13px;
+      font-weight: 750;
     }
 
     .special-fields {
@@ -2379,6 +2639,15 @@
       .product-grid {
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       }
+
+      .payment-modal-body {
+        grid-template-columns: 190px minmax(0, 1fr) 300px;
+      }
+
+      .payment-entry-panel,
+      .payment-summary-panel {
+        padding: 18px;
+      }
     }
 
     @media (max-width: 720px) {
@@ -2527,11 +2796,26 @@
       }
 
       .footer-actions {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 58px 58px 66px minmax(0, 1fr);
+        gap: 7px;
       }
 
-      .pay-action {
-        grid-column: 1 / -1;
+      .payment-modal {
+        width: max(700px, calc(100vw - 20px));
+      }
+
+      .payment-modal-body {
+        grid-template-columns: 160px 1fr 260px;
+      }
+
+      .payment-method-tab {
+        padding: 0 12px;
+        font-size: 14px;
+      }
+
+      .payment-entry-panel,
+      .payment-summary-panel {
+        padding: 14px;
       }
     }
   </style>
@@ -2614,21 +2898,54 @@
           <div class="summary-line total"><span>Total</span><strong id="summaryTotal">$0.00</strong></div>
         </div>
 
-        <div class="payment-row" role="group" aria-label="Payment method">
-          <button class="payment-option active" type="button" data-payment="Cash">Cash</button>
-          <button class="payment-option" type="button" data-payment="Card">Card</button>
-          <button class="payment-option" type="button" data-payment="Afterpay">Afterpay</button>
-          <button class="payment-option" type="button" data-payment="CNYpay">CNYpay</button>
-          <button class="payment-option" type="button" data-payment="Bank Transfer">Bank Transfer</button>
-        </div>
-
         <div class="footer-actions">
-          <button id="discardBtn" class="soft-action danger" type="button"><i class="bi bi-trash3"></i>Discard</button>
+          <button id="discardBtn" class="soft-action danger" type="button"><i class="bi bi-trash3"></i>Cancel</button>
           <button id="holdBtn" class="soft-action" type="button"><i class="bi bi-pause-circle-fill"></i>Hold</button>
-          <button id="payBtn" class="pay-action" type="button" disabled>Pay Balance</button>
+          <button id="resumeBtn" class="soft-action" type="button"><i class="bi bi-play-circle-fill"></i>Resume</button>
+          <button id="payBtn" class="pay-action checkout-pay" type="button" disabled>Checkout</button>
         </div>
       </div>
     </aside>
+  </div>
+
+  <div id="paymentModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal payment-modal" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+      <div class="payment-modal-header">
+        <h2 id="paymentModalTitle">Payment</h2>
+        <button id="paymentCloseBtn" class="modal-close" type="button" aria-label="Close payment"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="payment-modal-body">
+        <div id="paymentMethodList" class="payment-method-list" role="tablist" aria-label="Payment methods"></div>
+        <section class="payment-entry-panel" aria-label="Payment entry">
+          <div class="payment-entry-card">
+            <div class="payment-due-large">
+              <span id="paymentCurrentMethod">Cash</span>
+              <strong id="paymentRemainingLarge">$0.00</strong>
+            </div>
+            <input id="paymentAmountInput" class="payment-amount-input" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off" placeholder="0.00">
+            <div id="paymentQuickGrid" class="payment-quick-grid"></div>
+            <div class="payment-action-row">
+              <button id="paymentConfirmBtn" class="payment-confirm" type="button">Confirm Amount</button>
+              <button id="paymentFullBtn" class="payment-full" type="button">Full Payment</button>
+            </div>
+            <div id="paymentError" class="payment-error" role="alert"></div>
+          </div>
+        </section>
+        <aside class="payment-summary-panel" aria-label="Payment summary">
+          <div id="paymentSummaryCard" class="payment-summary-card"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div id="holdListModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal" role="dialog" aria-modal="true" aria-labelledby="holdListTitle">
+      <div class="payment-modal-header">
+        <h2 id="holdListTitle">Held Orders</h2>
+        <button id="holdListCloseBtn" class="modal-close" type="button" aria-label="Close held orders"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="holdList" class="hold-list"></div>
+    </div>
   </div>
 
   <div id="specialProductModal" class="modal-backdrop" aria-hidden="true">
@@ -3061,6 +3378,11 @@
       scheduledStoreId: '',
       openingConfirmed: false,
       payment: 'Cash',
+      paymentSession: {
+        method: 'Cash',
+        payments: [],
+        amount: ''
+      },
       activeView: 'target',
       repair: {
         started: false,
@@ -3139,7 +3461,22 @@
       customerError: document.getElementById('customerError'),
       payBtn: document.getElementById('payBtn'),
       holdBtn: document.getElementById('holdBtn'),
+      resumeBtn: document.getElementById('resumeBtn'),
       discardBtn: document.getElementById('discardBtn'),
+      paymentModal: document.getElementById('paymentModal'),
+      paymentCloseBtn: document.getElementById('paymentCloseBtn'),
+      paymentMethodList: document.getElementById('paymentMethodList'),
+      paymentCurrentMethod: document.getElementById('paymentCurrentMethod'),
+      paymentRemainingLarge: document.getElementById('paymentRemainingLarge'),
+      paymentAmountInput: document.getElementById('paymentAmountInput'),
+      paymentQuickGrid: document.getElementById('paymentQuickGrid'),
+      paymentConfirmBtn: document.getElementById('paymentConfirmBtn'),
+      paymentFullBtn: document.getElementById('paymentFullBtn'),
+      paymentError: document.getElementById('paymentError'),
+      paymentSummaryCard: document.getElementById('paymentSummaryCard'),
+      holdListModal: document.getElementById('holdListModal'),
+      holdListCloseBtn: document.getElementById('holdListCloseBtn'),
+      holdList: document.getElementById('holdList'),
       specialProductBtn: document.getElementById('specialProductBtn'),
       specialProductModal: document.getElementById('specialProductModal'),
       specialProductForm: document.getElementById('specialProductForm'),
@@ -3270,6 +3607,7 @@
     const POS_OPENINGS_KEY = 'techm8_pos_openings';
     const POS_ACTIVE_SHIFT_KEY = 'techm8_pos_active_shift';
     const POS_ORDERS_KEY = 'techm8_pos_demo_orders';
+    const POS_HELD_ORDERS_KEY = 'techm8_pos_held_orders';
     const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
     const POS_DAILY_TARGETS_KEY = 'techm8_pos_daily_targets';
     const TODAY_TARGET_DEFAULT_AMOUNT = 1000;
@@ -4143,6 +4481,13 @@
       readLocalArray(POS_ORDERS_KEY)
         .filter(order => orderBelongsToCurrentShift(order, activeShift))
         .forEach(order => {
+          if (Array.isArray(order.payments) && order.payments.length) {
+            order.payments.forEach(payment => {
+              const key = paymentKeyForMethod(payment.method);
+              totals[key] = roundedMoneyValue(totals[key] + numberValue(payment.amount));
+            });
+            return;
+          }
           const key = paymentKeyForMethod(order.payment_method);
           totals[key] = roundedMoneyValue(totals[key] + numberValue(order.total));
         });
@@ -5893,7 +6238,7 @@
       els.summarySubtotal.textContent = money(subtotal);
       els.summaryGst.textContent = money(gst);
       els.summaryTotal.textContent = money(subtotal);
-      els.payBtn.textContent = subtotal > 0 ? `${money(subtotal)} Pay Balance` : 'Pay Balance';
+      els.payBtn.textContent = subtotal > 0 ? `${money(subtotal)} Checkout` : 'Checkout';
       els.payBtn.disabled = subtotal <= 0;
     }
 
@@ -6156,14 +6501,243 @@
       showToast('Special product added to cart.');
     }
 
-    function checkout() {
+    function cartTotal() {
+      return roundedMoneyValue(state.cart.reduce((sum, item) => sum + item.sale_price * item.qty, 0));
+    }
+
+    function cartItemCount() {
+      return state.cart.reduce((sum, item) => sum + item.qty, 0);
+    }
+
+    function paymentPaidTotal() {
+      return roundedMoneyValue(state.paymentSession.payments.reduce((sum, payment) => sum + numberValue(payment.amount), 0));
+    }
+
+    function paymentRemaining() {
+      return Math.max(0, roundedMoneyValue(cartTotal() - paymentPaidTotal()));
+    }
+
+    function setPaymentAmountToRemaining() {
+      const remaining = paymentRemaining();
+      state.paymentSession.amount = remaining > 0 ? remaining.toFixed(2) : '';
+      if (els.paymentAmountInput) els.paymentAmountInput.value = state.paymentSession.amount;
+    }
+
+    function paymentMethodLabel(method) {
+      const match = POS_PAYMENT_METHODS.find(item => item.label === method || item.key === method);
+      return match ? match.label : String(method || 'Card');
+    }
+
+    function summarizePayments(payments) {
+      const grouped = payments.reduce((acc, payment) => {
+        const label = paymentMethodLabel(payment.method);
+        acc[label] = roundedMoneyValue((acc[label] || 0) + numberValue(payment.amount));
+        return acc;
+      }, {});
+      return Object.keys(grouped).join(' + ') || 'Card';
+    }
+
+    function renderPaymentMethods() {
+      if (!els.paymentMethodList) return;
+      els.paymentMethodList.innerHTML = POS_PAYMENT_METHODS.map(method => `
+        <button class="payment-method-tab ${state.paymentSession.method === method.label ? 'active' : ''}" type="button" data-payment-method="${escapeHtml(method.label)}">
+          <i class="bi bi-credit-card-2-front"></i>
+          <span>${escapeHtml(method.label)}</span>
+        </button>
+      `).join('');
+    }
+
+    function renderPaymentQuickAmounts() {
+      if (!els.paymentQuickGrid) return;
+      const remaining = paymentRemaining();
+      const quickAmounts = [
+        { label: `${money(remaining)} Remaining`, value: remaining },
+        { label: '$100.00', value: 100 },
+        { label: '$50.00', value: 50 },
+        { label: '$20.00', value: 20 },
+        { label: '$10.00', value: 10 },
+        { label: '$5.00', value: 5 },
+        { label: '$1.00', value: 1 },
+        { label: '$0.50', value: 0.5 },
+        { label: '$0.10', value: 0.1 }
+      ];
+      els.paymentQuickGrid.innerHTML = quickAmounts.map(item => `
+        <button type="button" data-payment-quick="${item.value.toFixed(2)}"${item.value <= 0 ? ' disabled' : ''}>${item.label}</button>
+      `).join('');
+    }
+
+    function renderPaymentSummary() {
+      if (!els.paymentSummaryCard) return;
+      const total = cartTotal();
+      const gst = total / 11;
+      const paid = paymentPaidTotal();
+      const remaining = paymentRemaining();
+      const paidLines = state.paymentSession.payments.length
+        ? state.paymentSession.payments.map(payment => `
+          <div class="paid-line">
+            <span>${escapeHtml(paymentMethodLabel(payment.method))}</span>
+            <strong>${money(payment.amount)}</strong>
+          </div>
+        `).join('')
+        : '<div class="paid-empty">No payment confirmed yet.</div>';
+
+      els.paymentSummaryCard.innerHTML = `
+        <div class="payment-summary-line"><span>Total Items</span><strong>${cartItemCount()}</strong></div>
+        <div class="payment-summary-line"><span>Subtotal</span><strong>${money(total)}</strong></div>
+        <div class="payment-summary-line"><span>GST Included</span><strong>${money(gst)}</strong></div>
+        <div class="payment-summary-line total"><span>Total</span><strong>${money(total)}</strong></div>
+        <div class="paid-list">${paidLines}</div>
+        <div class="payment-summary-line"><span>Paid</span><strong>${money(paid)}</strong></div>
+        <div class="payment-summary-line due"><span>Due</span><strong>${money(remaining)}</strong></div>
+      `;
+    }
+
+    function renderPaymentModal() {
+      const remaining = paymentRemaining();
+      if (els.paymentCurrentMethod) els.paymentCurrentMethod.textContent = state.paymentSession.method;
+      if (els.paymentRemainingLarge) els.paymentRemainingLarge.textContent = money(remaining);
+      if (els.paymentAmountInput && document.activeElement !== els.paymentAmountInput) {
+        els.paymentAmountInput.value = state.paymentSession.amount || (remaining > 0 ? remaining.toFixed(2) : '');
+      }
+      if (els.paymentError) els.paymentError.textContent = '';
+      renderPaymentMethods();
+      renderPaymentQuickAmounts();
+      renderPaymentSummary();
+    }
+
+    function openPaymentModal() {
+      if (!state.cart.length) return;
+      if (!state.selectedStaffName) {
+        openStaffModal({ canCancel: false });
+        return;
+      }
+      state.paymentSession = {
+        method: 'Cash',
+        payments: [],
+        amount: ''
+      };
+      setPaymentAmountToRemaining();
+      els.paymentModal.classList.add('show');
+      els.paymentModal.setAttribute('aria-hidden', 'false');
+      renderPaymentModal();
+      setTimeout(() => {
+        els.paymentAmountInput.focus();
+        els.paymentAmountInput.select();
+      }, 0);
+    }
+
+    function closePaymentModal() {
+      els.paymentModal.classList.remove('show');
+      els.paymentModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function selectPaymentMethod(method) {
+      state.paymentSession.method = paymentMethodLabel(method);
+      setPaymentAmountToRemaining();
+      renderPaymentModal();
+      setTimeout(() => {
+        els.paymentAmountInput.focus();
+        els.paymentAmountInput.select();
+      }, 0);
+    }
+
+    function confirmPaymentAmount(useFullAmount = false) {
+      const remaining = paymentRemaining();
+      const amount = useFullAmount ? remaining : roundedMoneyValue(els.paymentAmountInput.value);
+      if (remaining <= 0) return;
+      if (!Number.isFinite(amount) || amount <= 0) {
+        els.paymentError.textContent = 'Enter an amount above $0.';
+        return;
+      }
+      if (amount > remaining) {
+        els.paymentError.textContent = `Amount cannot exceed ${money(remaining)}.`;
+        return;
+      }
+
+      state.paymentSession.payments.push({
+        method: state.paymentSession.method,
+        amount: roundedMoneyValue(amount)
+      });
+
+      if (paymentRemaining() <= 0) {
+        const payments = state.paymentSession.payments.slice();
+        closePaymentModal();
+        checkout(payments);
+        return;
+      }
+
+      setPaymentAmountToRemaining();
+      renderPaymentModal();
+    }
+
+    function heldOrders() {
+      return readLocalArray(POS_HELD_ORDERS_KEY);
+    }
+
+    function renderHoldList() {
+      const held = heldOrders();
+      if (!els.holdList) return;
+      if (!held.length) {
+        els.holdList.innerHTML = '<div class="empty-state"><strong>No held orders</strong><span>Paused carts will appear here.</span></div>';
+        return;
+      }
+      els.holdList.innerHTML = held.map(order => {
+        const total = (Array.isArray(order.items) ? order.items : []).reduce((sum, item) => sum + numberValue(item.sale_price) * itemQuantity(item), 0);
+        const created = order.created_at ? new Date(order.created_at).toLocaleString('en-AU') : '';
+        return `
+          <button class="hold-order-button" type="button" data-resume-hold="${escapeHtml(order.id)}">
+            <strong>${escapeHtml(order.customer || 'Walk-in Customer')} &middot; ${money(total)}</strong>
+            <span>${(order.items || []).length} lines &middot; ${escapeHtml(created)}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function openHoldListModal() {
+      renderHoldList();
+      els.holdListModal.classList.add('show');
+      els.holdListModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeHoldListModal() {
+      els.holdListModal.classList.remove('show');
+      els.holdListModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function restoreHeldOrder(id) {
+      const held = heldOrders();
+      const index = held.findIndex(order => order.id === id);
+      if (index < 0) return;
+      if (state.cart.length && !confirm('Replace current cart with this held order?')) return;
+      const [order] = held.splice(index, 1);
+      state.cart = Array.isArray(order.items) ? order.items : [];
+      els.customerInput.value = order.customer && order.customer !== 'Walk-in Customer' ? order.customer : '';
+      localStorage.setItem(POS_HELD_ORDERS_KEY, JSON.stringify(held));
+      closeHoldListModal();
+      renderCart();
+      showToast('Held order restored.');
+    }
+
+    function checkout(payments) {
       if (!state.cart.length) return;
       if (!state.selectedStaffName) {
         openStaffModal({ canCancel: false });
         return;
       }
 
-      const total = state.cart.reduce((sum, item) => sum + item.sale_price * item.qty, 0);
+      const normalizedPayments = Array.isArray(payments) && payments.length
+        ? payments.map(payment => ({
+          method: paymentMethodLabel(payment.method),
+          amount: roundedMoneyValue(payment.amount)
+        })).filter(payment => payment.amount > 0)
+        : [{ method: state.payment, amount: cartTotal() }];
+      const total = cartTotal();
+      const paymentTotal = roundedMoneyValue(normalizedPayments.reduce((sum, payment) => sum + payment.amount, 0));
+      if (paymentTotal < total) {
+        showToast('Payment is not complete.');
+        return;
+      }
+      const paymentSummary = summarizePayments(normalizedPayments);
       const activeShift = ensureActiveShiftRecord();
       const order = {
         id: 'POS-' + Date.now(),
@@ -6174,7 +6748,8 @@
         shift_id: activeShift && activeShift.id,
         shift_started_at: activeShift && activeShift.startedAt,
         customer_name: els.customerInput.value.trim() || 'Walk-in Customer',
-        payment_method: state.payment,
+        payment_method: paymentSummary,
+        payments: normalizedPayments,
         total,
         items: state.cart.map(item => ({
           product_id: item.id,
@@ -6264,7 +6839,7 @@
         showToast('Cart is empty.');
         return;
       }
-      const held = JSON.parse(localStorage.getItem('techm8_pos_held_orders') || '[]');
+      const held = heldOrders();
       held.unshift({
         id: 'HOLD-' + Date.now(),
         customer: els.customerInput.value.trim() || 'Walk-in Customer',
@@ -6272,8 +6847,9 @@
         items: state.cart,
         created_at: new Date().toISOString()
       });
-      localStorage.setItem('techm8_pos_held_orders', JSON.stringify(held.slice(0, 20)));
+      localStorage.setItem(POS_HELD_ORDERS_KEY, JSON.stringify(held.slice(0, 20)));
       state.cart = [];
+      els.customerInput.value = '';
       renderCart();
       showToast('Order placed on hold.');
     }
@@ -6576,14 +7152,6 @@
       if (removeButton) removeFromCart(removeButton.dataset.remove);
     });
 
-    document.querySelectorAll('.payment-option').forEach(button => {
-      button.addEventListener('click', () => {
-        document.querySelectorAll('.payment-option').forEach(item => item.classList.remove('active'));
-        button.classList.add('active');
-        state.payment = button.dataset.payment;
-      });
-    });
-
     els.searchInput.addEventListener('input', event => {
       state.search = event.target.value;
       renderProducts();
@@ -6608,9 +7176,46 @@
       setActiveView(button.dataset.targetNav);
     });
 
-    els.payBtn.addEventListener('click', checkout);
+    els.payBtn.addEventListener('click', openPaymentModal);
     els.holdBtn.addEventListener('click', holdOrder);
+    els.resumeBtn.addEventListener('click', openHoldListModal);
     els.discardBtn.addEventListener('click', discardCart);
+    els.paymentCloseBtn.addEventListener('click', closePaymentModal);
+    els.paymentModal.addEventListener('click', event => {
+      if (event.target === els.paymentModal) closePaymentModal();
+    });
+    els.paymentMethodList.addEventListener('click', event => {
+      const button = event.target.closest('[data-payment-method]');
+      if (!button) return;
+      selectPaymentMethod(button.dataset.paymentMethod);
+    });
+    els.paymentQuickGrid.addEventListener('click', event => {
+      const button = event.target.closest('[data-payment-quick]');
+      if (!button) return;
+      state.paymentSession.amount = button.dataset.paymentQuick;
+      els.paymentAmountInput.value = state.paymentSession.amount;
+      els.paymentAmountInput.focus();
+    });
+    els.paymentAmountInput.addEventListener('input', event => {
+      state.paymentSession.amount = event.target.value;
+    });
+    els.paymentAmountInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        confirmPaymentAmount(false);
+      }
+    });
+    els.paymentConfirmBtn.addEventListener('click', () => confirmPaymentAmount(false));
+    els.paymentFullBtn.addEventListener('click', () => confirmPaymentAmount(true));
+    els.holdListCloseBtn.addEventListener('click', closeHoldListModal);
+    els.holdListModal.addEventListener('click', event => {
+      if (event.target === els.holdListModal) closeHoldListModal();
+    });
+    els.holdList.addEventListener('click', event => {
+      const button = event.target.closest('[data-resume-hold]');
+      if (!button) return;
+      restoreHeldOrder(button.dataset.resumeHold);
+    });
     els.specialProductBtn.addEventListener('click', openSpecialProductModal);
     els.specialProductCancel.addEventListener('click', closeSpecialProductModal);
     els.specialProductModal.addEventListener('click', event => {
