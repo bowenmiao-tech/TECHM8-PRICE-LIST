@@ -714,7 +714,7 @@
                     <div class="review-meta">
                       Created {{ formatTimestamp(transfer.created_at) }}
                       <span v-if="transfer.created_by"> by {{ transfer.created_by }}</span>
-                      <br>Source: {{ transfer.source_type === 'supplier' ? 'Supplier Purchase' : transfer.from_store_name }}
+                      <br>Source: {{ transferSourceLabel(transfer) }}
                       <br>Status: {{ transfer.status }}
                       <span v-if="transfer.received_by"><br>Received by {{ transfer.received_by }} on {{ formatTimestamp(transfer.received_at) }}</span>
                       <span v-if="transfer.notes"><br>Notes: {{ transfer.notes }}</span>
@@ -1594,9 +1594,10 @@
           const rows = this.transferForm.source_type === 'supplier'
             ? this.supplierCatalogRows
             : this.warehouseRows;
-          return rows
+          return Array.from(new Set(rows
             .filter(row => row.model_name === modelName)
             .map(row => row.variant_name)
+            .filter(Boolean)))
             .sort((a, b) => {
               const rankDiff = this.lcdVariantTypeRank(a) - this.lcdVariantTypeRank(b);
               if (rankDiff !== 0) return rankDiff;
@@ -1619,6 +1620,12 @@
         transferAvailableLabel(line) {
           const item = this.findWarehouseItem(line);
           return item ? `${item.current_qty} in warehouse` : 'Choose item';
+        },
+        transferSourceLabel(transfer) {
+          if (transfer.source_type === 'supplier') return 'Supplier Purchase';
+          const sourceName = String(transfer.from_store_name || '').trim();
+          if (!sourceName || /brassall/i.test(sourceName)) return 'Warehouse';
+          return sourceName;
         },
         resetTransferForm() {
           this.transferForm = {

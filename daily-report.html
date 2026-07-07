@@ -905,7 +905,7 @@
                   <div>
                     <div class="draft-item-title">{{ transfer.transfer_code || ('Transfer #' + transfer.id) }}</div>
                     <div class="draft-item-meta">
-                      From {{ transfer.from_store_name }} | Created {{ formatDateTime(transfer.created_at) }}
+                      From {{ transferSourceLabel(transfer) }} | Created {{ formatDateTime(transfer.created_at) }}
                       <span v-if="transfer.notes"> | {{ transfer.notes }}</span>
                     </div>
                   </div>
@@ -2035,6 +2035,11 @@
           onTransferPhotoChange(transfer, event) {
             const file = event && event.target && event.target.files ? event.target.files[0] : null;
             this.$set(transfer, 'receiptFile', file || null);
+          },
+          transferSourceLabel(transfer) {
+            const sourceName = String(transfer && transfer.from_store_name ? transfer.from_store_name : '').trim();
+            if (!sourceName || /brassall/i.test(sourceName)) return 'Warehouse';
+            return sourceName;
           },
           async uploadTransferReceiptPhoto(transfer) {
             if (!transfer.receiptFile) {
