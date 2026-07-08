@@ -4109,6 +4109,7 @@
       renderStoreSelectOptions();
       updateStoreBadge();
       renderTargetDashboard();
+      if (state.activeView === 'repair') renderRepairWorkspace();
       if (state.selectedStaffName && !options.skipShift) ensureActiveShiftRecord();
       if (reloadProducts) {
         state.cart = [];
@@ -5237,6 +5238,21 @@
       ticket.intake = ticket.intake && typeof ticket.intake === 'object' ? ticket.intake : {};
       if (!ticket.customerName) ticket.customerName = 'Walk-in Customer';
       if (!ticket.createdBy) ticket.createdBy = 'Unknown staff';
+      const ticketStoreId = ticket.store_id || ticket.storeId || '';
+      const matchedStore = ticketStoreId
+        ? posStores.find(store => {
+          return normalizeStoreKey(store.id) === normalizeStoreKey(ticketStoreId)
+            || normalizeStoreKey(store.dbCode) === normalizeStoreKey(ticketStoreId)
+            || String(store.code).toUpperCase() === String(ticketStoreId).toUpperCase();
+        })
+        : null;
+      if (matchedStore) {
+        ticket.store_id = matchedStore.id;
+        ticket.storeId = matchedStore.id;
+        ticket.store_code = matchedStore.code;
+        ticket.storeCode = matchedStore.code;
+        ticket.store_name = matchedStore.name;
+      }
       if (!ticket.activity.length && ticket.createdAt) {
         ticket.activity.push({
           id: 'ACT-' + ticket.createdAt,
@@ -5247,6 +5263,30 @@
         });
       }
       return ticket;
+    }
+
+    function repairTicketStoreMatches(ticket) {
+      if (!ticket) return false;
+      const currentStore = storeById(state.storeId);
+      const candidates = [
+        ticket.store_id,
+        ticket.storeId,
+        ticket.store_code,
+        ticket.storeCode,
+        ticket.store_name,
+        ticket.storeName
+      ].filter(Boolean);
+      if (!candidates.length) return true;
+      return candidates.some(value => {
+        return normalizeStoreKey(value) === normalizeStoreKey(currentStore.id)
+          || normalizeStoreKey(value) === normalizeStoreKey(currentStore.dbCode)
+          || String(value).toUpperCase() === currentStore.code
+          || normalizeStoreKey(value) === normalizeStoreKey(currentStore.name);
+      });
+    }
+
+    function currentStoreRepairTickets() {
+      return state.repairTickets.filter(repairTicketStoreMatches);
     }
 
     function currentRepairSnapshot() {
@@ -5505,8 +5545,14 @@
       const quote = draft.quote;
       const createdAt = new Date().toISOString();
       const initialStatusLabel = repairStatusText(status);
+      const currentStore = storeById(state.storeId);
       const ticket = {
         id: ticketId,
+        store_id: currentStore.id,
+        storeId: currentStore.id,
+        store_code: currentStore.code,
+        storeCode: currentStore.code,
+        store_name: currentStore.name,
         title: draft.specialOrder ? draft.specialName : `${quote.brand} ${quote.model}`,
         issue: quote.issue,
         price: quotePriceLabel(quote.price),
@@ -5522,7 +5568,7 @@
         activity: [{
           id: 'ACT-' + createdAt,
           type: 'created',
-          text: `created this repair ticket in ${initialStatusLabel}`,
+          text: `created this repair ticket in ${initialStatusLabel} at ${currentStore.code}`,
           staffName: currentStaffName(),
           at: createdAt
         }],
@@ -5758,10 +5804,11 @@
 
     function repairBoardHtml() {
       applyRepairTicketAutomation();
+      const storeTickets = currentStoreRepairTickets();
       return `
         <div class="repair-board">
           ${repairBoardColumns.map(column => {
-            const tickets = state.repairTickets.filter(ticket => ticket.status === column.id);
+            const tickets = storeTickets.filter(ticket => ticket.status === column.id);
             return `
               <div class="board-column" data-board-status="${column.id}">
                 <div class="board-column-title">
@@ -5776,7 +5823,7 @@
                         <i class="bi bi-cart-plus"></i>
                       </button>
                     </div>
-                    <div class="ticket-meta">${escapeHtml(ticket.id)} · ${escapeHtml(ticket.issue || 'Repair')} · ${escapeHtml(ticket.price || '')}</div>
+                    <div class="ticket-meta">${escapeHtml(ticket.id)} · ${escapeHtml(ticket.store_code || storeById(state.storeId).code)} · ${escapeHtml(ticket.issue || 'Repair')} · ${escapeHtml(ticket.price || '')}</div>
                     <div class="ticket-tags">
                       ${ticket.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
                       ${ticket.deviceInStore ? '<span class="ticket-tag">Device in store</span>' : ''}
@@ -5856,6 +5903,7 @@
         <h2 id="ticketDetailTitle" class="ticket-detail-title">${escapeHtml(ticket.id)} ${escapeHtml(ticket.customerName || 'Walk-in Customer')} ${escapeHtml(ticket.title || '')} ${escapeHtml(ticket.issue || '')}</h2>
         <div class="ticket-detail-grid">
           <div class="ticket-detail-box"><div class="ticket-detail-label">Customer</div><div class="ticket-detail-value">${escapeHtml(ticket.customerName || 'Walk-in Customer')}</div></div>
+          <div class="ticket-detail-box"><div class="ticket-detail-label">Store</div><div class="ticket-detail-value">${escapeHtml(ticket.store_name || storeById(state.storeId).name)}</div></div>
           <div class="ticket-detail-box"><div class="ticket-detail-label">Device</div><div class="ticket-detail-value">${escapeHtml(ticket.title || '')}</div></div>
           <div class="ticket-detail-box"><div class="ticket-detail-label">Issue</div><div class="ticket-detail-value">${escapeHtml(ticket.issue || '')}</div></div>
           <div class="ticket-detail-box"><div class="ticket-detail-label">Price</div><div class="ticket-detail-value">${escapeHtml(ticket.price || intake.quotedPrice || '')}</div></div>
