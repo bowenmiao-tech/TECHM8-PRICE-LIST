@@ -3418,6 +3418,7 @@
     };
 
     const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products';
+    const POS_REPAIR_TICKETS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-repair-tickets';
     const els = {
       productGrid: document.getElementById('productGrid'),
       storeSwitchBtn: document.getElementById('storeSwitchBtn'),
@@ -4109,7 +4110,11 @@
       renderStoreSelectOptions();
       updateStoreBadge();
       renderTargetDashboard();
-      if (state.activeView === 'repair') renderRepairWorkspace();
+      if (state.selectedStaffName) {
+        loadRepairTickets().then(() => {
+          if (state.activeView === 'repair') renderRepairWorkspace();
+        });
+      }
       if (state.selectedStaffName && !options.skipShift) ensureActiveShiftRecord();
       if (reloadProducts) {
         state.cart = [];
@@ -5190,20 +5195,130 @@
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
       if (view === 'target') renderTargetDashboard();
-      if (view === 'repair' && !state.repair.started) renderRepairWorkspace();
-    }
-
-    function loadRepairTickets() {
-      try {
-        const rows = JSON.parse(localStorage.getItem(REPAIR_TICKETS_KEY) || '[]');
-        state.repairTickets = Array.isArray(rows) ? rows.map(normalizeRepairTicket) : [];
-      } catch (error) {
-        state.repairTickets = [];
+      if (view === 'repair') {
+        loadRepairTickets().then(() => {
+          if (!state.repair.started) renderRepairWorkspace();
+        });
       }
     }
 
-    function saveRepairTickets() {
-      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 200)));
+    function repairTicketStoreCode() {
+      return storeById(state.storeId).dbCode || normalizeStoreKey(state.storeId).replace(/\s+/g, '');
+    }
+
+    function repairTicketApiHeaders() {
+      const staffToken = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+        ? window.Techm8StaffAuth.getToken()
+        : '';
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-staff-session': staffToken
+      };
+      if (window.TECHM8_SUPABASE && window.TECHM8_SUPABASE.anonKey) {
+        headers.apikey = window.TECHM8_SUPABASE.anonKey;
+        headers.Authorization = `Bearer ${window.TECHM8_SUPABASE.anonKey}`;
+      }
+      return headers;
+    }
+
+    function readCachedRepairTickets() {
+      try {
+        const rows = JSON.parse(localStorage.getItem(REPAIR_TICKETS_KEY) || '[]');
+        return Array.isArray(rows) ? rows.map(normalizeRepairTicket) : [];
+      } catch (error) {
+        console.error(error);
+        return [];
+      }
+    }
+
+    async function loadRepairTickets() {
+      const url = new URL(POS_REPAIR_TICKETS_ENDPOINT);
+      url.searchParams.set('store_code', repairTicketStoreCode());
+
+      try {
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: repairTicketApiHeaders()
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.message || 'Repair ticket API request failed.');
+        }
+        const rows = Array.isArray(payload.tickets) ? payload.tickets : [];
+        state.repairTickets = rows.map(normalizeRepairTicket);
+        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+      } catch (error) {
+        console.error(error);
+        state.repairTickets = readCachedRepairTickets();
+        showToast('Repair Board using local cache. Database sync unavailable.');
+      }
+    }
+
+    function repairTicketPayload(ticket) {
+      const currentStore = storeById(state.storeId);
+      const normalized = normalizeRepairTicket(ticket);
+      return {
+        ...normalized,
+        id: normalized.id,
+        ticket_code: normalized.id,
+        store_id: currentStore.dbCode,
+        storeId: currentStore.dbCode,
+        store_code: currentStore.dbCode,
+        storeCode: currentStore.dbCode,
+        store_name: currentStore.name,
+        staff_name: state.selectedStaffName || normalized.updatedBy || normalized.createdBy || ''
+      };
+    }
+
+    async function persistRepairTicket(ticket) {
+      if (!ticket || !ticket.id) return;
+      try {
+        const response = await fetch(POS_REPAIR_TICKETS_ENDPOINT, {
+          method: 'PUT',
+          headers: repairTicketApiHeaders(),
+          body: JSON.stringify(repairTicketPayload(ticket))
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.message || 'Repair ticket save failed.');
+        }
+        if (payload.ticket) {
+          const savedTicket = normalizeRepairTicket(payload.ticket);
+          const index = state.repairTickets.findIndex(item => item.id === savedTicket.id);
+          if (index >= 0) state.repairTickets[index] = savedTicket;
+        }
+      } catch (error) {
+        console.error(error);
+        showToast('Repair ticket saved locally. Database sync failed.');
+      }
+    }
+
+    function saveRepairTickets(ticketToSync) {
+      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+      if (ticketToSync) {
+        window.clearTimeout(saveRepairTickets.timer);
+        saveRepairTickets.timer = window.setTimeout(() => persistRepairTicket(ticketToSync), 350);
+      }
+    }
+
+    async function deleteRepairTicketFromDatabase(ticketId) {
+      if (!ticketId) return;
+      const url = new URL(POS_REPAIR_TICKETS_ENDPOINT);
+      url.searchParams.set('ticket_code', ticketId);
+      url.searchParams.set('staff_name', state.selectedStaffName || '');
+      try {
+        const response = await fetch(url.toString(), {
+          method: 'DELETE',
+          headers: repairTicketApiHeaders()
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.message || 'Repair ticket delete failed.');
+        }
+      } catch (error) {
+        console.error(error);
+        showToast('Repair ticket removed locally. Database delete failed.');
+      }
     }
 
     function currentStaffName() {
@@ -5319,7 +5434,7 @@
       ticket.customerName = els.customerInput.value.trim() || ticket.customerName || 'Walk-in Customer';
       ticket.price = state.repair.quotedPrice || ticket.price;
       ticket.intake = currentRepairSnapshot();
-      saveRepairTickets();
+      saveRepairTickets(ticket);
     }
 
     function loadCustomers() {
@@ -5397,20 +5512,23 @@
 
     function applyRepairTicketAutomation() {
       const cutoff = Date.now() - (90 * 24 * 60 * 60 * 1000);
-      let changed = false;
+      const changedTickets = [];
       state.repairTickets.forEach(ticket => {
         if (!ticket.statusUpdatedAt) {
           ticket.statusUpdatedAt = ticket.createdAt || new Date().toISOString();
-          changed = true;
+          changedTickets.push(ticket);
         }
         const statusTime = new Date(ticket.statusUpdatedAt || ticket.createdAt || Date.now()).getTime();
         if (ticket.status === 'waiting_pickup' && Number.isFinite(statusTime) && statusTime < cutoff) {
           ticket.status = 'over_3_months_uncollected';
           ticket.statusUpdatedAt = new Date().toISOString();
-          changed = true;
+          changedTickets.push(ticket);
         }
       });
-      if (changed) saveRepairTickets();
+      if (changedTickets.length) {
+        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+        changedTickets.forEach(ticket => persistRepairTicket(ticket));
+      }
     }
 
     function updateRepairTicketStatus(ticketId, status) {
@@ -5421,7 +5539,7 @@
       ticket.statusUpdatedAt = new Date().toISOString();
       normalizeRepairTicket(ticket);
       addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText(status)}`, ticket.statusUpdatedAt);
-      saveRepairTickets();
+      saveRepairTickets(ticket);
       if (state.selectedTicketId === ticketId && els.ticketDetailModal.classList.contains('show')) renderTicketDetailModal();
       renderRepairWorkspace();
     }
@@ -5583,7 +5701,7 @@
       };
 
       state.repairTickets.unshift(ticket);
-      saveRepairTickets();
+      saveRepairTickets(ticket);
       resetRepairState();
       state.repair.started = true;
       state.repair.intakeOpen = true;
@@ -5610,6 +5728,7 @@
       if (!state.repair.started) return;
       if (!confirm('Clear this repair ticket?')) return;
       if (state.repair.ticketId) {
+        deleteRepairTicketFromDatabase(state.repair.ticketId);
         state.repairTickets = state.repairTickets.filter(ticket => ticket.id !== state.repair.ticketId);
         saveRepairTickets();
       }
@@ -6441,7 +6560,7 @@
         normalizeRepairTicket(ticket);
         ticket.price = money(price);
         addTicketActivity(ticket, 'cart', 'added this repair ticket to the cart');
-        saveRepairTickets();
+        saveRepairTickets(ticket);
       }
       state.repair.addedToCart = true;
       renderCart();
@@ -6481,7 +6600,7 @@
       });
       normalizeRepairTicket(ticket);
       addTicketActivity(ticket, 'cart', 'added this repair ticket to the cart');
-      saveRepairTickets();
+      saveRepairTickets(ticket);
       renderCart();
       showToast('Ticket added to cart.');
     }
@@ -6855,6 +6974,7 @@
         .filter(item => item.is_repair && item.ticket_id)
         .map(item => item.ticket_id);
       if (paidRepairIds.length) {
+        const changedTickets = [];
         state.repairTickets.forEach(ticket => {
           if (paidRepairIds.includes(ticket.id)) {
             const previousStatus = ticket.status;
@@ -6865,9 +6985,11 @@
             if (previousStatus !== 'finished') {
               addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText('finished')}`, ticket.statusUpdatedAt);
             }
+            changedTickets.push(ticket);
           }
         });
-        saveRepairTickets();
+        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+        changedTickets.forEach(ticket => persistRepairTicket(ticket));
         if (paidRepairIds.includes(state.repair.ticketId)) {
           resetRepairState();
         }
@@ -7311,7 +7433,7 @@
       const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
       if (!ticket) return;
       addTicketActivity(ticket, 'comment', `commented: ${text}`);
-      saveRepairTickets();
+      saveRepairTickets(ticket);
       renderTicketDetailModal();
     });
     els.repairPatternClose.addEventListener('click', closeRepairPatternModal);
@@ -7454,7 +7576,7 @@
     }).then(async () => {
       await ensureStaffStoreAccess();
       await ensureOpeningCash();
-      loadRepairTickets();
+      await loadRepairTickets();
       loadCustomers();
       renderRepairWorkspace();
       renderTargetDashboard();
