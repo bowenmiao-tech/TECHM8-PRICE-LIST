@@ -4377,9 +4377,11 @@ create table if not exists public.pos_repair_tickets (
   constraint pos_repair_tickets_status_check check (
     status in (
       'need_to_order',
+      'waiting_shipping',
       'repairing',
       'waiting_pickup',
       'finished',
+      'waiting_customer_confirmation',
       'over_3_months_uncollected'
     )
   )
@@ -4536,7 +4538,7 @@ begin
   end if;
 
   status_value := coalesce(nullif(trim(payload->>'status'), ''), 'repairing');
-  if status_value not in ('need_to_order', 'repairing', 'waiting_pickup', 'finished', 'over_3_months_uncollected') then
+  if status_value not in ('need_to_order', 'waiting_shipping', 'repairing', 'waiting_pickup', 'finished', 'waiting_customer_confirmation', 'over_3_months_uncollected') then
     raise exception 'Invalid ticket status';
   end if;
 

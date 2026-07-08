@@ -5234,6 +5234,7 @@
     async function loadRepairTickets() {
       const url = new URL(POS_REPAIR_TICKETS_ENDPOINT);
       url.searchParams.set('store_code', repairTicketStoreCode());
+      const pendingTickets = state.repairTickets.filter(ticket => ticket && ticket.syncPending);
 
       try {
         const response = await fetch(url.toString(), {
@@ -5245,7 +5246,10 @@
           throw new Error(payload.message || 'Repair ticket API request failed.');
         }
         const rows = Array.isArray(payload.tickets) ? payload.tickets : [];
-        state.repairTickets = rows.map(normalizeRepairTicket);
+        const remoteTickets = rows.map(normalizeRepairTicket);
+        const remoteIds = new Set(remoteTickets.map(ticket => ticket.id));
+        const stillPending = pendingTickets.filter(ticket => !remoteIds.has(ticket.id));
+        state.repairTickets = [...stillPending, ...remoteTickets].map(normalizeRepairTicket);
         localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
       } catch (error) {
         console.error(error);
@@ -5284,21 +5288,26 @@
         }
         if (payload.ticket) {
           const savedTicket = normalizeRepairTicket(payload.ticket);
+          delete savedTicket.syncPending;
           const index = state.repairTickets.findIndex(item => item.id === savedTicket.id);
           if (index >= 0) state.repairTickets[index] = savedTicket;
         }
+        ticket.syncPending = false;
+        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
       } catch (error) {
         console.error(error);
+        ticket.syncPending = true;
+        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
         showToast('Repair ticket saved locally. Database sync failed.');
       }
     }
 
     function saveRepairTickets(ticketToSync) {
-      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
       if (ticketToSync) {
-        window.clearTimeout(saveRepairTickets.timer);
-        saveRepairTickets.timer = window.setTimeout(() => persistRepairTicket(ticketToSync), 350);
+        ticketToSync.syncPending = true;
+        persistRepairTicket(ticketToSync);
       }
+      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
     }
 
     async function deleteRepairTicketFromDatabase(ticketId) {
@@ -5426,15 +5435,16 @@
       };
     }
 
-    function syncCurrentRepairTicketSnapshot() {
-      if (!state.repair.ticketId) return;
+    function syncCurrentRepairTicketSnapshot(options = {}) {
+      if (!state.repair.ticketId) return null;
       const ticket = state.repairTickets.find(item => item.id === state.repair.ticketId);
-      if (!ticket) return;
+      if (!ticket) return null;
       normalizeRepairTicket(ticket);
       ticket.customerName = els.customerInput.value.trim() || ticket.customerName || 'Walk-in Customer';
       ticket.price = state.repair.quotedPrice || ticket.price;
       ticket.intake = currentRepairSnapshot();
-      saveRepairTickets(ticket);
+      if (options.persist !== false) saveRepairTickets(ticket);
+      return ticket;
     }
 
     function loadCustomers() {
@@ -5531,7 +5541,7 @@
       }
     }
 
-    function updateRepairTicketStatus(ticketId, status) {
+    async function updateRepairTicketStatus(ticketId, status) {
       const ticket = state.repairTickets.find(item => item.id === ticketId);
       if (!ticket || ticket.status === status) return;
       const previousStatus = ticket.status;
@@ -5539,7 +5549,8 @@
       ticket.statusUpdatedAt = new Date().toISOString();
       normalizeRepairTicket(ticket);
       addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText(status)}`, ticket.statusUpdatedAt);
-      saveRepairTickets(ticket);
+      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+      await persistRepairTicket(ticket);
       if (state.selectedTicketId === ticketId && els.ticketDetailModal.classList.contains('show')) renderTicketDetailModal();
       renderRepairWorkspace();
     }
@@ -5653,7 +5664,7 @@
       state.pendingRepairDraft = null;
     }
 
-    function createRepairTicketFromDraft() {
+    async function createRepairTicketFromDraft() {
       const draft = state.pendingRepairDraft;
       if (!draft || !draft.quote) return;
       const status = els.ticketNeedOrder.value === 'yes' ? 'need_to_order' : 'repairing';
@@ -5701,7 +5712,6 @@
       };
 
       state.repairTickets.unshift(ticket);
-      saveRepairTickets(ticket);
       resetRepairState();
       state.repair.started = true;
       state.repair.intakeOpen = true;
@@ -5717,7 +5727,9 @@
       state.repair.model = quote.model || '';
       state.repair.issue = quote.issue || '';
       state.repair.quotedPrice = quotePriceLabel(quote.price);
-      syncCurrentRepairTicketSnapshot();
+      const syncedTicket = syncCurrentRepairTicketSnapshot({ persist: false }) || ticket;
+      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+      await persistRepairTicket(syncedTicket);
       closeTicketDetailsModal();
       setActiveView('repair');
       renderRepairWorkspace();
@@ -6517,7 +6529,7 @@
       renderCart();
     }
 
-    function addCurrentRepairToCart() {
+    async function addCurrentRepairToCart() {
       if (!state.repair.intakeOpen || !state.repair.ticketId) {
         showToast('Create a repair ticket first.');
         return;
@@ -6527,7 +6539,7 @@
         showToast('Please complete the required intake details before adding to cart.');
         return;
       }
-      syncCurrentRepairTicketSnapshot();
+      syncCurrentRepairTicketSnapshot({ persist: false });
 
       const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
       if (price <= 0) {
@@ -6560,7 +6572,8 @@
         normalizeRepairTicket(ticket);
         ticket.price = money(price);
         addTicketActivity(ticket, 'cart', 'added this repair ticket to the cart');
-        saveRepairTickets(ticket);
+        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+        await persistRepairTicket(ticket);
       }
       state.repair.addedToCart = true;
       renderCart();
