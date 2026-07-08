@@ -721,7 +721,10 @@
                       <span v-if="transfer.receipt_photo_url"><br><a :href="transfer.receipt_photo_url" target="_blank">View receipt photo</a></span>
                     </div>
                   </div>
-                  <span class="review-pill" :class="transfer.status">{{ transfer.status }}</span>
+                  <div class="button-row">
+                    <span class="review-pill" :class="transfer.status">{{ transfer.status }}</span>
+                    <el-button v-if="transfer.status === 'pending'" type="danger" plain @click="cancelTransfer(transfer)">Cancel Transfer</el-button>
+                  </div>
                 </div>
                 <table class="review-table">
                   <thead>
@@ -1714,6 +1717,37 @@
             this.$message.error(error.message || 'Failed to create transfer.');
           } finally {
             this.transferSubmitting = false;
+          }
+        },
+        async cancelTransfer(transfer) {
+          try {
+            await this.$confirm(
+              `Cancel ${transfer.transfer_code || ('Transfer #' + transfer.id)}? Warehouse transfers will restore the deducted warehouse stock. Supplier transfers will only be marked cancelled.`,
+              'Cancel Transfer',
+              {
+                confirmButtonText: 'Cancel Transfer',
+                cancelButtonText: 'Keep Transfer',
+                type: 'warning'
+              }
+            );
+          } catch (cancelled) {
+            return;
+          }
+
+          try {
+            const result = await window.Techm8StaffAuth.callRpc('cancel_inventory_transfer', {
+              session_token: window.Techm8StaffAuth.getToken(),
+              target_transfer_id: transfer.id
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || 'Failed to cancel transfer.');
+            }
+            this.$message.success('Transfer cancelled.');
+            await this.loadInventory();
+            await this.loadTransfers();
+          } catch (error) {
+            console.error(error);
+            this.$message.error(error.message || 'Failed to cancel transfer.');
           }
         },
         addRow() {

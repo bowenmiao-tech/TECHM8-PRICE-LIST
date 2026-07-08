@@ -4092,6 +4092,75 @@ begin
 end;
 $$;
 
+create or replace function public.cancel_inventory_transfer(
+  session_token text,
+  target_transfer_id bigint
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  transfer_row public.inventory_transfers%rowtype;
+  line_row record;
+  restored_rows integer := 0;
+begin
+  if not public.is_valid_admin_session(session_token) then
+    raise exception 'Invalid admin session';
+  end if;
+
+  select *
+  into transfer_row
+  from public.inventory_transfers
+  where id = target_transfer_id
+  for update;
+
+  if not found then
+    raise exception 'Transfer not found';
+  end if;
+
+  if transfer_row.status <> 'pending' then
+    raise exception 'Only pending transfers can be cancelled';
+  end if;
+
+  if transfer_row.source_type = 'warehouse' then
+    for line_row in
+      select *
+      from public.inventory_transfer_lines
+      where transfer_id = transfer_row.id
+      order by line_order
+    loop
+      if line_row.source_inventory_item_id is null then
+        continue;
+      end if;
+
+      update public.lcd_inventory_items
+      set
+        current_qty = current_qty + line_row.quantity,
+        active = true,
+        updated_at = now()
+      where id = line_row.source_inventory_item_id;
+
+      restored_rows := restored_rows + 1;
+    end loop;
+  end if;
+
+  update public.inventory_transfers
+  set
+    status = 'cancelled',
+    updated_at = now()
+  where id = transfer_row.id;
+
+  return jsonb_build_object(
+    'ok', true,
+    'transfer_id', transfer_row.id,
+    'status', 'cancelled',
+    'restored_rows', restored_rows
+  );
+end;
+$$;
+
 create or replace function public.list_pending_inventory_transfers(
   session_token text,
   target_store_code text
@@ -4279,5 +4348,6 @@ $$;
 
 grant execute on function public.create_inventory_transfer(text, jsonb) to anon, authenticated;
 grant execute on function public.get_inventory_transfers(text, text, text) to anon, authenticated;
+grant execute on function public.cancel_inventory_transfer(text, bigint) to anon, authenticated;
 grant execute on function public.list_pending_inventory_transfers(text, text) to anon, authenticated;
 grant execute on function public.confirm_inventory_transfer_received(text, bigint, text, text, text) to anon, authenticated;
