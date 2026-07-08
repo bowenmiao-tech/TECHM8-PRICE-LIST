@@ -2088,7 +2088,7 @@
                 target_transfer_id: transfer.id,
                 target_store_code: this.selectedStoreCode,
                 staff_name: this.selectedStaffName,
-                receipt_photo_url: receiptUrl
+                target_receipt_photo_url: receiptUrl
               });
               if (!result || !result.ok) {
                 throw new Error((result && result.message) || 'Could not confirm transfer.');

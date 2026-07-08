@@ -4164,7 +4164,7 @@ create or replace function public.confirm_inventory_transfer_received(
   target_transfer_id bigint,
   target_store_code text,
   staff_name text,
-  receipt_photo_url text
+  target_receipt_photo_url text
 )
 returns jsonb
 language plpgsql
@@ -4183,7 +4183,7 @@ begin
     raise exception 'Invalid session';
   end if;
 
-  if coalesce(trim(receipt_photo_url), '') = '' then
+  if coalesce(trim(target_receipt_photo_url), '') = '' then
     raise exception 'Receipt photo is required';
   end if;
 
@@ -4264,7 +4264,7 @@ begin
   set
     status = 'received',
     received_by = selected_staff.display_name,
-    receipt_photo_url = trim(receipt_photo_url),
+    receipt_photo_url = trim(target_receipt_photo_url),
     received_at = now(),
     updated_at = now()
   where id = transfer_row.id;
