@@ -795,9 +795,20 @@
               <div class="receipt-feedback-head">
                 <div>
                   <div class="table-title">Received Transfer Feedback</div>
-                  <div class="table-subtitle">Staff receipt photos and received stock details from the last 7 days.</div>
+                  <div class="table-subtitle">Staff receipt photos and received stock details for the selected date.</div>
                 </div>
-                <div class="table-subtitle">{{ receivedTransferFeedbackRows.length }} received feedback item(s)</div>
+                <div class="button-row">
+                  <el-date-picker
+                    v-model="receiptFeedbackDate"
+                    type="date"
+                    value-format="yyyy-MM-dd"
+                    format="dd MMM yyyy"
+                    :clearable="false"
+                    placeholder="Select date">
+                  </el-date-picker>
+                  <el-button plain @click="receiptFeedbackDate = todayDateValue()">Today</el-button>
+                  <div class="table-subtitle">{{ receivedTransferFeedbackRows.length }} received feedback item(s)</div>
+                </div>
               </div>
 
               <div class="review-stack" v-if="receivedTransferFeedbackRows.length">
@@ -840,7 +851,7 @@
                   </div>
                 </div>
               </div>
-              <div class="empty-note" v-else>No received transfer feedback in the last 7 days.</div>
+              <div class="empty-note" v-else>No received transfer feedback for {{ formatDate(receiptFeedbackDate) }}.</div>
             </div>
           </div>
         </div>
@@ -1071,6 +1082,7 @@
           activeFilter: '',
           countStatusFilter: 'pending',
           transferStatusFilter: 'pending',
+          receiptFeedbackDate: this.todayDateValue(),
           loadError: '',
           loading: false,
           savingAllRows: false,
@@ -1254,6 +1266,7 @@
             .filter(transfer => {
               if (transfer.status !== 'received') return false;
               if (this.storeFilter && transfer.to_store_code !== this.storeFilter) return false;
+              if (this.receiptFeedbackDate && this.dateInputValue(transfer.received_at) !== this.receiptFeedbackDate) return false;
               return true;
             })
             .slice()
@@ -1442,6 +1455,18 @@
               lines: group.lines.slice().sort((a, b) => this.compareLcdRows(a, b))
             }))
             .sort((a, b) => a.rank - b.rank);
+        },
+        todayDateValue() {
+          return this.dateInputValue(new Date());
+        },
+        dateInputValue(value) {
+          if (!value) return '';
+          const date = value instanceof Date ? value : new Date(value);
+          if (Number.isNaN(date.getTime())) return '';
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
         },
         formatTimestamp(value) {
           if (!value) return '-';
