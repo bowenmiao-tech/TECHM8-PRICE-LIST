@@ -3840,6 +3840,30 @@ for select
 to anon, authenticated
 using (false);
 
+create or replace function public.cleanup_old_inventory_transfers()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  deleted_count integer := 0;
+begin
+  delete from public.inventory_transfers
+  where status in ('received', 'cancelled')
+    and coalesce(received_at, updated_at, created_at) < now() - interval '7 days';
+
+  get diagnostics deleted_count = row_count;
+
+  return jsonb_build_object(
+    'ok', true,
+    'deleted_transfers', deleted_count
+  );
+end;
+$$;
+
+revoke execute on function public.cleanup_old_inventory_transfers() from public, anon, authenticated;
+
 create or replace function public.create_inventory_transfer(
   session_token text,
   payload jsonb
@@ -3869,6 +3893,8 @@ begin
   if not public.is_valid_admin_session(session_token) then
     raise exception 'Invalid admin session';
   end if;
+
+  perform public.cleanup_old_inventory_transfers();
 
   if jsonb_typeof(payload) <> 'object' then
     raise exception 'Payload must be a JSON object';
@@ -4041,6 +4067,8 @@ begin
     raise exception 'Invalid admin session';
   end if;
 
+  perform public.cleanup_old_inventory_transfers();
+
   select coalesce(
     jsonb_agg(
       jsonb_build_object(
@@ -4086,6 +4114,10 @@ begin
     and (
       coalesce(trim(target_store_code), '') = ''
       or target_store.store_code = trim(target_store_code)
+    )
+    and (
+      transfer.status = 'pending'
+      or coalesce(transfer.received_at, transfer.updated_at, transfer.created_at) >= now() - interval '7 days'
     );
 
   return jsonb_build_object('ok', true, 'transfers', transfers_payload);
@@ -4109,6 +4141,8 @@ begin
   if not public.is_valid_admin_session(session_token) then
     raise exception 'Invalid admin session';
   end if;
+
+  perform public.cleanup_old_inventory_transfers();
 
   select *
   into transfer_row
@@ -4177,6 +4211,8 @@ begin
   if not public.is_valid_staff_session(session_token) then
     raise exception 'Invalid session';
   end if;
+
+  perform public.cleanup_old_inventory_transfers();
 
   select *
   into selected_store
@@ -4251,6 +4287,8 @@ begin
   if not public.is_valid_staff_session(session_token) then
     raise exception 'Invalid session';
   end if;
+
+  perform public.cleanup_old_inventory_transfers();
 
   if coalesce(trim(target_receipt_photo_url), '') = '' then
     raise exception 'Receipt photo is required';

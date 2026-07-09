@@ -423,6 +423,50 @@
       font-weight: 700;
       background: #f8fbfc;
     }
+    .receipt-feedback-section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--tm-border);
+    }
+    .receipt-feedback-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .receipt-card {
+      display: grid;
+      grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .receipt-photo-link {
+      display: block;
+      border: 1px solid var(--tm-border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
+      min-height: 180px;
+    }
+    .receipt-photo {
+      display: block;
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      background: #f5f8fa;
+    }
+    .receipt-photo-missing {
+      display: grid;
+      place-items: center;
+      min-height: 180px;
+      color: var(--tm-muted);
+      border: 1px dashed var(--tm-border);
+      border-radius: 14px;
+      background: #fff;
+      font-size: 13px;
+    }
     .family-section {
       display: grid;
       gap: 10px;
@@ -445,6 +489,7 @@
     @media (max-width: 1180px) {
       .tool-grid { grid-template-columns: 1fr; }
       .transfer-line-grid { grid-template-columns: 1fr; }
+      .receipt-card { grid-template-columns: 1fr; }
       .collapse-title-side {
         flex-basis: 100%;
         justify-items: start;
@@ -745,6 +790,58 @@
               </div>
             </div>
             <div class="empty-note" v-else>No warehouse transfers found for the current filters.</div>
+
+            <div class="receipt-feedback-section">
+              <div class="receipt-feedback-head">
+                <div>
+                  <div class="table-title">Received Transfer Feedback</div>
+                  <div class="table-subtitle">Staff receipt photos and received stock details from the last 7 days.</div>
+                </div>
+                <div class="table-subtitle">{{ receivedTransferFeedbackRows.length }} received feedback item(s)</div>
+              </div>
+
+              <div class="review-stack" v-if="receivedTransferFeedbackRows.length">
+                <div class="review-card receipt-card" v-for="transfer in receivedTransferFeedbackRows" :key="'receipt-feedback-' + transfer.id">
+                  <div>
+                    <a v-if="transfer.receipt_photo_url" class="receipt-photo-link" :href="transfer.receipt_photo_url" target="_blank">
+                      <img class="receipt-photo" :src="transfer.receipt_photo_url" alt="Receipt photo">
+                    </a>
+                    <div v-else class="receipt-photo-missing">No photo attached</div>
+                  </div>
+                  <div>
+                    <div class="review-head">
+                      <div>
+                        <div class="review-title">{{ transfer.transfer_code || ('Transfer #' + transfer.id) }} | {{ transfer.to_store_name }}</div>
+                        <div class="review-meta">
+                          Source: {{ transferSourceLabel(transfer) }}
+                          <br>Received by {{ transfer.received_by || 'Unknown staff' }} on {{ formatTimestamp(transfer.received_at) }}
+                          <span v-if="transfer.created_by"><br>Created by {{ transfer.created_by }}</span>
+                          <span v-if="transfer.notes"><br>Notes: {{ transfer.notes }}</span>
+                        </div>
+                      </div>
+                      <span class="review-pill received">received</span>
+                    </div>
+                    <table class="review-table">
+                      <thead>
+                        <tr>
+                          <th>Model</th>
+                          <th>Part / Type</th>
+                          <th>Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="line in transfer.lines" :key="'receipt-line-' + transfer.id + '-' + line.id">
+                          <td>{{ line.model_name }}</td>
+                          <td>{{ line.variant_name }}</td>
+                          <td>{{ line.quantity }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="empty-note" v-else>No received transfer feedback in the last 7 days.</div>
+            </div>
           </div>
         </div>
 
@@ -1151,6 +1248,20 @@
             if (this.transferStatusFilter && transfer.status !== this.transferStatusFilter) return false;
             return true;
           });
+        },
+        receivedTransferFeedbackRows() {
+          return this.transfers
+            .filter(transfer => {
+              if (transfer.status !== 'received') return false;
+              if (this.storeFilter && transfer.to_store_code !== this.storeFilter) return false;
+              return true;
+            })
+            .slice()
+            .sort((a, b) => {
+              const bTime = Date.parse(b.received_at || b.created_at || '') || 0;
+              const aTime = Date.parse(a.received_at || a.created_at || '') || 0;
+              return bTime - aTime;
+            });
         }
       },
       watch: {
