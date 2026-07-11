@@ -70,3 +70,40 @@ supabase functions deploy pos-repair-tickets --no-verify-jwt
 ```
 
 `--no-verify-jwt` is intentional here because the function verifies the existing staff session token through the database RPCs.
+
+## POS Sales Orders
+
+`pos-sales-orders` saves completed POS sales to the database and returns individual orders for receipt delivery. The browser first records the paid order locally, then calls this endpoint with the same order id. Retries are idempotent.
+
+Browser calls:
+
+```text
+POST https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders
+GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?order_id=POS-...
+```
+
+Apply `supabase/migrations/20260711140805_pos_sales_orders.sql` to the staff-auth database, then deploy:
+
+```bash
+supabase functions deploy pos-sales-orders --no-verify-jwt
+```
+
+## POS Receipt Email
+
+`send-pos-receipt-email` loads an already-saved POS order, renders the store-specific email receipt, sends it through Resend, and records the successful delivery on the order.
+
+The function uses the existing booking email secrets when dedicated POS secrets are not set:
+
+```text
+RESEND_API_KEY or RESEND_API_KEY_BOOKING
+POS_RECEIPT_FROM or BOOKING_FROM_EMAIL
+POS_RECEIPT_COPY_TO (optional; defaults to techm8contact@gmail.com)
+```
+
+Deploy:
+
+```bash
+supabase functions deploy send-pos-receipt-email --no-verify-jwt
+```
+
+Both functions use `x-staff-session` and the same public Supabase headers documented above. Email provider keys remain server-side.

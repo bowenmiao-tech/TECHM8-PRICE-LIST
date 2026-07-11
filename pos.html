@@ -1338,6 +1338,189 @@
       color: #d24034;
     }
 
+    .receipt-complete-modal {
+      width: min(560px, calc(100vw - 36px));
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .receipt-complete-head,
+    .email-receipt-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--tm-line);
+    }
+
+    .receipt-complete-body {
+      display: grid;
+      justify-items: center;
+      gap: 18px;
+      padding: 30px 24px 26px;
+      text-align: center;
+    }
+
+    .receipt-success-icon {
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--tm-green);
+      font-size: 32px;
+      box-shadow: 0 12px 28px rgba(7, 137, 111, 0.24);
+    }
+
+    .receipt-complete-summary {
+      display: grid;
+      gap: 5px;
+    }
+
+    .receipt-complete-summary strong {
+      color: var(--tm-ink);
+      font-size: 24px;
+      font-weight: 950;
+    }
+
+    .receipt-complete-summary span {
+      color: var(--tm-muted);
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .receipt-sync-note {
+      min-height: 20px;
+      color: #3c6b5e;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .receipt-sync-note.pending {
+      color: #b36a16;
+    }
+
+    .receipt-action-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .receipt-action-button {
+      min-height: 112px;
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 10px;
+      padding: 16px;
+      color: #203039;
+      background: #fff;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .receipt-action-button i {
+      color: var(--tm-green);
+      font-size: 31px;
+    }
+
+    .receipt-action-button.primary {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .receipt-action-button.primary i {
+      color: #fff;
+    }
+
+    .email-receipt-modal {
+      width: min(590px, calc(100vw - 36px));
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .email-receipt-form {
+      display: grid;
+      gap: 16px;
+      padding: 22px;
+    }
+
+    .email-receipt-form label {
+      display: grid;
+      gap: 7px;
+      color: #34454d;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .email-receipt-form input,
+    .email-receipt-form textarea {
+      width: 100%;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--tm-ink);
+      background: #fff;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .email-receipt-form input {
+      min-height: 48px;
+    }
+
+    .email-receipt-form textarea {
+      min-height: 106px;
+      resize: vertical;
+    }
+
+    .email-copy-row {
+      display: flex !important;
+      grid-template-columns: none !important;
+      align-items: center;
+      gap: 10px !important;
+      padding-top: 2px;
+      font-weight: 800 !important;
+    }
+
+    .email-copy-row input {
+      width: 18px;
+      min-height: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--tm-green);
+    }
+
+    .email-receipt-error {
+      min-height: 20px;
+      color: #d24034;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .email-receipt-submit {
+      min-height: 52px;
+      border: 0;
+      border-radius: 14px;
+      color: #fff;
+      background: var(--tm-green);
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .email-receipt-submit:disabled {
+      background: #9bbcb4;
+      cursor: wait;
+    }
+
     .paid-list {
       display: grid;
       gap: 8px;
@@ -2817,6 +3000,10 @@
       .payment-summary-panel {
         padding: 14px;
       }
+
+      .receipt-action-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -2935,6 +3122,62 @@
           <div id="paymentSummaryCard" class="payment-summary-card"></div>
         </aside>
       </div>
+    </div>
+  </div>
+
+  <div id="receiptCompleteModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal receipt-complete-modal" role="dialog" aria-modal="true" aria-labelledby="receiptCompleteTitle">
+      <div class="receipt-complete-head">
+        <h2 id="receiptCompleteTitle">Payment Complete</h2>
+        <button id="receiptCompleteCloseBtn" class="modal-close" type="button" aria-label="Close receipt options"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="receipt-complete-body">
+        <div class="receipt-success-icon"><i class="bi bi-check-lg"></i></div>
+        <div class="receipt-complete-summary">
+          <strong id="receiptCompleteTotal">$0.00 paid</strong>
+          <span id="receiptCompleteMeta">Order completed</span>
+        </div>
+        <div id="receiptSyncNote" class="receipt-sync-note">Order saved to POS.</div>
+        <div class="receipt-action-grid">
+          <button id="printThermalReceiptBtn" class="receipt-action-button primary" type="button">
+            <i class="bi bi-printer-fill"></i>
+            <span>Print Thermal Receipt</span>
+          </button>
+          <button id="emailThermalReceiptBtn" class="receipt-action-button" type="button">
+            <i class="bi bi-envelope-paper-fill"></i>
+            <span>Email Thermal Receipt</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="emailReceiptModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal email-receipt-modal" role="dialog" aria-modal="true" aria-labelledby="emailReceiptTitle">
+      <div class="email-receipt-head">
+        <h2 id="emailReceiptTitle">Email Receipt</h2>
+        <button id="emailReceiptCloseBtn" class="modal-close" type="button" aria-label="Close email receipt"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form id="emailReceiptForm" class="email-receipt-form">
+        <label>
+          To
+          <input id="emailReceiptTo" type="email" autocomplete="email" placeholder="customer@email.com" required>
+        </label>
+        <label>
+          Subject
+          <input id="emailReceiptSubject" type="text" maxlength="180" required>
+        </label>
+        <label>
+          Note to Customer
+          <textarea id="emailReceiptNote" maxlength="1500" placeholder="Add a message..."></textarea>
+        </label>
+        <label class="email-copy-row">
+          <input id="emailReceiptCopy" type="checkbox">
+          <span>Send a copy to techm8contact@gmail.com</span>
+        </label>
+        <div id="emailReceiptError" class="email-receipt-error" role="alert"></div>
+        <button id="emailReceiptSubmit" class="email-receipt-submit" type="submit">Send Thermal Receipt</button>
+      </form>
     </div>
   </div>
 
@@ -3383,6 +3626,7 @@
         payments: [],
         amount: ''
       },
+      lastCompletedOrder: null,
       activeView: 'target',
       repair: {
         started: false,
@@ -3419,6 +3663,8 @@
 
     const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products';
     const POS_REPAIR_TICKETS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-repair-tickets';
+    const POS_SALES_ORDERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders';
+    const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
     const els = {
       productGrid: document.getElementById('productGrid'),
       storeSwitchBtn: document.getElementById('storeSwitchBtn'),
@@ -3475,6 +3721,22 @@
       paymentFullBtn: document.getElementById('paymentFullBtn'),
       paymentError: document.getElementById('paymentError'),
       paymentSummaryCard: document.getElementById('paymentSummaryCard'),
+      receiptCompleteModal: document.getElementById('receiptCompleteModal'),
+      receiptCompleteCloseBtn: document.getElementById('receiptCompleteCloseBtn'),
+      receiptCompleteTotal: document.getElementById('receiptCompleteTotal'),
+      receiptCompleteMeta: document.getElementById('receiptCompleteMeta'),
+      receiptSyncNote: document.getElementById('receiptSyncNote'),
+      printThermalReceiptBtn: document.getElementById('printThermalReceiptBtn'),
+      emailThermalReceiptBtn: document.getElementById('emailThermalReceiptBtn'),
+      emailReceiptModal: document.getElementById('emailReceiptModal'),
+      emailReceiptCloseBtn: document.getElementById('emailReceiptCloseBtn'),
+      emailReceiptForm: document.getElementById('emailReceiptForm'),
+      emailReceiptTo: document.getElementById('emailReceiptTo'),
+      emailReceiptSubject: document.getElementById('emailReceiptSubject'),
+      emailReceiptNote: document.getElementById('emailReceiptNote'),
+      emailReceiptCopy: document.getElementById('emailReceiptCopy'),
+      emailReceiptError: document.getElementById('emailReceiptError'),
+      emailReceiptSubmit: document.getElementById('emailReceiptSubmit'),
       holdListModal: document.getElementById('holdListModal'),
       holdListCloseBtn: document.getElementById('holdListCloseBtn'),
       holdList: document.getElementById('holdList'),
@@ -3649,21 +3911,51 @@
     const posStores = [
       { id: 'park-ridge', code: 'PR', dbCode: 'parkridge', name: 'TechM8 Park Ridge' },
       { id: 'north-lakes', code: 'NL', dbCode: 'northlakes', name: 'TechM8 North Lakes' },
-      { id: 'brassall', code: 'BS', dbCode: 'brassall', name: 'TechM8 Brassall' },
       { id: 'fairfield', code: 'FF', dbCode: 'fairfield', name: 'TechM8 Fairfield' },
       { id: 'toowong', code: 'TW', dbCode: 'toowong', name: 'TechM8 Toowong' }
     ];
 
+    const POS_RECEIPT_PROFILES = {
+      'park-ridge': {
+        name: 'TechM8 Park Ridge',
+        address: 'Shop 11/3744 Mount Lindesay Hwy, Park Ridge South QLD 4125',
+        phone: '+61 452 488 710',
+        website: 'www.techm8australia.com',
+        abn: '12 645 861 463'
+      },
+      'north-lakes': {
+        name: 'TechM8 North Lakes',
+        address: 'OZTECHM8 (Near BigW) Shop 1114A, N Lakes Dr, North Lakes QLD 4509',
+        phone: '+61 482 390 009',
+        website: 'www.techm8australia.com',
+        abn: '12 645 861 463'
+      },
+      fairfield: {
+        name: 'TechM8 Fairfield',
+        address: 'Shop 8 Fairfield Gardens Shopping Centre',
+        phone: '+61 412 788 818',
+        website: 'www.techm8australia.com',
+        abn: '12 645 861 463'
+      },
+      toowong: {
+        name: 'TechM8 Toowong',
+        address: 'G53/9 Sherwood Rd, Toowong QLD 4066',
+        phone: '+61 485 500 099',
+        website: 'www.techm8australia.com',
+        abn: '69 656 056 352'
+      }
+    };
+
     const POS_STAFF_STORE_ASSIGNMENTS = {
-      Andy: ['PR', 'NL', 'BS', 'FF', 'TW'],
-      Bonnie: ['PR', 'NL', 'BS', 'FF', 'TW'],
-      Fiona: ['PR', 'NL', 'BS', 'FF', 'TW'],
-      'Henry Ang': ['PR', 'NL', 'BS', 'FF', 'TW'],
-      JANAPHY: ['PR', 'NL', 'BS', 'FF', 'TW'],
-      Jinny: ['PR', 'NL', 'BS', 'FF', 'TW'],
-      'Joanna Chen': ['PR', 'NL', 'BS', 'FF', 'TW'],
-      'Steven T': ['PR', 'NL', 'BS', 'FF', 'TW'],
-      Bowen: ['PR', 'NL', 'BS', 'FF', 'TW']
+      Andy: ['PR', 'NL', 'FF', 'TW'],
+      Bonnie: ['PR', 'NL', 'FF', 'TW'],
+      Fiona: ['PR', 'NL', 'FF', 'TW'],
+      'Henry Ang': ['PR', 'NL', 'FF', 'TW'],
+      JANAPHY: ['PR', 'NL', 'FF', 'TW'],
+      Jinny: ['PR', 'NL', 'FF', 'TW'],
+      'Joanna Chen': ['PR', 'NL', 'FF', 'TW'],
+      'Steven T': ['PR', 'NL', 'FF', 'TW'],
+      Bowen: ['PR', 'NL', 'FF', 'TW']
     };
 
     const POS_STAFF_DEFAULT_GENDERS = {
@@ -6850,6 +7142,307 @@
       renderPaymentModal();
     }
 
+    function posOrderApiHeaders() {
+      const staffToken = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+        ? window.Techm8StaffAuth.getToken()
+        : '';
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-staff-session': staffToken
+      };
+      if (window.TECHM8_SUPABASE && window.TECHM8_SUPABASE.anonKey) {
+        headers.apikey = window.TECHM8_SUPABASE.anonKey;
+        headers.Authorization = `Bearer ${window.TECHM8_SUPABASE.anonKey}`;
+      }
+      return headers;
+    }
+
+    function updateStoredOrder(order) {
+      const orders = readLocalArray(POS_ORDERS_KEY);
+      const index = orders.findIndex(item => item.id === order.id);
+      if (index >= 0) orders[index] = order;
+      else orders.unshift(order);
+      localStorage.setItem(POS_ORDERS_KEY, JSON.stringify(orders.slice(0, 500)));
+    }
+
+    async function persistPosOrder(order, silent = false) {
+      if (!order || !order.id) return false;
+      try {
+        const response = await fetch(POS_SALES_ORDERS_ENDPOINT, {
+          method: 'POST',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify(order)
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.message || 'Order database save failed.');
+        }
+        order.sync_pending = false;
+        order.database_saved_at = new Date().toISOString();
+        updateStoredOrder(order);
+        return true;
+      } catch (error) {
+        console.error(error);
+        order.sync_pending = true;
+        updateStoredOrder(order);
+        if (!silent) showToast('Sale completed locally. Database sync will retry automatically.');
+        return false;
+      }
+    }
+
+    async function syncPendingPosOrders() {
+      const pendingOrders = readLocalArray(POS_ORDERS_KEY)
+        .filter(order => order && order.id && order.sync_pending)
+        .slice(0, 20);
+      for (const order of pendingOrders) {
+        await persistPosOrder(order, true);
+      }
+    }
+
+    function customerDetailsForOrder(customerName) {
+      const target = String(customerName || '').trim().toLowerCase();
+      if (!target || target === 'walk-in customer') return null;
+      return state.customers.find(customer => {
+        const fullName = customer.name
+          || [customer.firstName || customer.first_name, customer.lastName || customer.last_name].filter(Boolean).join(' ');
+        return String(fullName || '').trim().toLowerCase() === target;
+      }) || null;
+    }
+
+    function receiptProfileForOrder(order) {
+      const storeId = String(order && order.store_id || '').trim();
+      return POS_RECEIPT_PROFILES[storeId] || {
+        name: storeById(storeId).name,
+        address: '',
+        phone: '',
+        website: 'www.techm8australia.com',
+        abn: ''
+      };
+    }
+
+    function receiptDateTime(value) {
+      const date = value ? new Date(value) : new Date();
+      return new Intl.DateTimeFormat('en-AU', {
+        timeZone: 'Australia/Brisbane',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
+    }
+
+    function thermalReceiptContent(order) {
+      const profile = receiptProfileForOrder(order);
+      const items = Array.isArray(order.items) ? order.items : [];
+      const payments = Array.isArray(order.payments) ? order.payments : [];
+      const total = roundedMoneyValue(order.total);
+      const gst = roundedMoneyValue(total / 11);
+      const subtotalExGst = roundedMoneyValue(total - gst);
+      const itemRows = items.map(item => `
+        <div class="receipt-item">
+          <div class="receipt-item-name">${escapeHtml(item.name || 'Product')}</div>
+          ${item.sku ? `<div class="receipt-item-sku">SKU: ${escapeHtml(item.sku)}</div>` : ''}
+          <div class="receipt-item-line">
+            <span>${Math.max(1, Number(item.qty || 1))} x ${money(item.unit_price)}</span>
+            <strong>${money(item.line_total)}</strong>
+          </div>
+        </div>
+      `).join('');
+      const paymentRows = payments.map(payment => `
+        <div class="receipt-total-row"><span>${escapeHtml(paymentMethodLabel(payment.method))}</span><strong>${money(payment.amount)}</strong></div>
+      `).join('');
+      const customerRows = order.customer_name && order.customer_name !== 'Walk-in Customer'
+        ? `
+          <div class="receipt-meta-row"><span>Customer</span><strong>${escapeHtml(order.customer_name)}</strong></div>
+          ${order.customer_phone ? `<div class="receipt-meta-row"><span>Phone</span><strong>${escapeHtml(order.customer_phone)}</strong></div>` : ''}
+          ${order.customer_email ? `<div class="receipt-meta-row"><span>Email</span><strong>${escapeHtml(order.customer_email)}</strong></div>` : ''}
+        `
+        : '';
+
+      return `
+        <header class="receipt-header">
+          <div class="receipt-brand">TECHM8</div>
+          <div class="receipt-store">${escapeHtml(profile.name)}</div>
+          ${profile.address ? `<div>${escapeHtml(profile.address)}</div>` : ''}
+          ${profile.phone ? `<div>Tel: ${escapeHtml(profile.phone)}</div>` : ''}
+          ${profile.website ? `<div>${escapeHtml(profile.website)}</div>` : ''}
+          ${profile.abn ? `<div>ABN: ${escapeHtml(profile.abn)}</div>` : ''}
+        </header>
+        <div class="receipt-rule"></div>
+        <div class="receipt-title">TAX INVOICE</div>
+        <div class="receipt-meta">
+          <div class="receipt-meta-row"><span>Receipt</span><strong>${escapeHtml(order.id)}</strong></div>
+          <div class="receipt-meta-row"><span>Date</span><strong>${escapeHtml(receiptDateTime(order.created_at))}</strong></div>
+          <div class="receipt-meta-row"><span>Staff</span><strong>${escapeHtml(order.staff_name || '')}</strong></div>
+          ${customerRows}
+        </div>
+        <div class="receipt-rule"></div>
+        <section class="receipt-items">${itemRows}</section>
+        <div class="receipt-rule"></div>
+        <section class="receipt-totals">
+          <div class="receipt-total-row"><span>Subtotal (ex GST)</span><strong>${money(subtotalExGst)}</strong></div>
+          <div class="receipt-total-row"><span>GST</span><strong>${money(gst)}</strong></div>
+          <div class="receipt-total-row receipt-grand-total"><span>TOTAL</span><strong>${money(total)}</strong></div>
+        </section>
+        <div class="receipt-rule"></div>
+        <section class="receipt-totals">
+          <div class="receipt-section-label">PAYMENT</div>
+          ${paymentRows}
+          <div class="receipt-total-row"><span>Balance</span><strong>$0.00</strong></div>
+        </section>
+        <div class="receipt-rule"></div>
+        <section class="receipt-terms">
+          <strong>Terms &amp; Conditions</strong>
+          <p>Please retain this receipt as proof of purchase. Warranty claims are subject to assessment and the manufacturer's or TechM8 warranty terms. Change-of-mind returns must be approved and may be subject to product condition and applicable fees. Your rights under Australian Consumer Law are not excluded.</p>
+        </section>
+        <footer class="receipt-footer">
+          <strong>Thanks for shopping at TechM8 Australia</strong>
+          <span>${escapeHtml(order.id)}</span>
+        </footer>
+      `;
+    }
+
+    function thermalReceiptDocument(order) {
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(order.id)} Thermal Receipt</title>
+  <style>
+    @page { size: 80mm auto; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; color: #000; background: #fff; font-family: Arial, Helvetica, sans-serif; }
+    body { width: 80mm; }
+    .thermal-receipt { width: 70mm; margin: 0 auto; padding: 3mm 0 4mm; font-size: 10.5px; line-height: 1.35; overflow-wrap: anywhere; }
+    .receipt-header, .receipt-footer { display: grid; justify-items: center; gap: 1.2mm; text-align: center; }
+    .receipt-brand { font-size: 24px; font-weight: 900; line-height: 1; }
+    .receipt-store { font-size: 14px; font-weight: 800; }
+    .receipt-title { padding: 1mm 0; text-align: center; font-size: 13px; font-weight: 900; }
+    .receipt-rule { margin: 2.2mm 0; border-top: 1px dashed #000; }
+    .receipt-meta, .receipt-items, .receipt-totals { display: grid; gap: 1.4mm; }
+    .receipt-meta-row, .receipt-total-row, .receipt-item-line { display: flex; justify-content: space-between; align-items: flex-start; gap: 4mm; }
+    .receipt-meta-row strong, .receipt-total-row strong { max-width: 43mm; text-align: right; }
+    .receipt-item { display: grid; gap: .7mm; padding-bottom: 1.3mm; }
+    .receipt-item-name { font-weight: 800; }
+    .receipt-item-sku { color: #333; font-size: 9px; }
+    .receipt-grand-total { margin-top: 1mm; padding-top: 1.5mm; border-top: 1px solid #000; font-size: 13px; }
+    .receipt-section-label { font-weight: 900; }
+    .receipt-terms { font-size: 8.5px; line-height: 1.3; text-align: left; }
+    .receipt-terms p { margin: 1mm 0 0; }
+    .receipt-footer { margin-top: 3mm; }
+    .receipt-footer span { font-size: 8px; }
+    @media screen { body { margin: 12px auto; box-shadow: 0 0 20px rgba(0,0,0,.14); } }
+  </style>
+</head>
+<body>
+  <main class="thermal-receipt">${thermalReceiptContent(order)}</main>
+</body>
+</html>`;
+    }
+
+    function openReceiptCompleteModal(order) {
+      state.lastCompletedOrder = order;
+      const profile = receiptProfileForOrder(order);
+      els.receiptCompleteTotal.textContent = `${money(order.total)} paid`;
+      els.receiptCompleteMeta.textContent = `${order.id} - ${profile.name}`;
+      els.receiptSyncNote.textContent = order.sync_pending
+        ? 'Saved locally. Database sync is pending and will retry automatically.'
+        : 'Order saved to the POS database.';
+      els.receiptSyncNote.classList.toggle('pending', Boolean(order.sync_pending));
+      els.receiptCompleteModal.classList.add('show');
+      els.receiptCompleteModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeReceiptCompleteModal() {
+      els.receiptCompleteModal.classList.remove('show');
+      els.receiptCompleteModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function printThermalReceipt() {
+      const order = state.lastCompletedOrder;
+      if (!order) return;
+      const printWindow = window.open('', '_blank', 'width=420,height=760');
+      if (!printWindow) {
+        showToast('Allow pop-ups to print the thermal receipt.');
+        return;
+      }
+      printWindow.document.open();
+      printWindow.document.write(thermalReceiptDocument(order));
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 250);
+    }
+
+    function openEmailReceiptModal() {
+      const order = state.lastCompletedOrder;
+      if (!order) return;
+      const profile = receiptProfileForOrder(order);
+      els.emailReceiptForm.reset();
+      els.emailReceiptTo.value = order.customer_email || '';
+      els.emailReceiptSubject.value = `Payment Receipt ${order.id} from ${profile.name}`;
+      els.emailReceiptError.textContent = '';
+      els.emailReceiptSubmit.disabled = false;
+      els.emailReceiptSubmit.textContent = 'Send Thermal Receipt';
+      els.emailReceiptModal.classList.add('show');
+      els.emailReceiptModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => els.emailReceiptTo.focus(), 0);
+    }
+
+    function closeEmailReceiptModal() {
+      els.emailReceiptModal.classList.remove('show');
+      els.emailReceiptModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function sendThermalReceiptEmail() {
+      const order = state.lastCompletedOrder;
+      if (!order) return;
+      const recipient = els.emailReceiptTo.value.trim();
+      if (!recipient || !els.emailReceiptTo.checkValidity()) {
+        els.emailReceiptError.textContent = 'Enter a valid customer email address.';
+        els.emailReceiptTo.focus();
+        return;
+      }
+
+      els.emailReceiptError.textContent = '';
+      els.emailReceiptSubmit.disabled = true;
+      els.emailReceiptSubmit.textContent = 'Sending...';
+      try {
+        if (order.sync_pending) {
+          const databaseSaved = await persistPosOrder(order, true);
+          if (!databaseSaved) {
+            throw new Error('This order is waiting for database sync. Check the connection and try again.');
+          }
+          els.receiptSyncNote.textContent = 'Order saved to the POS database.';
+          els.receiptSyncNote.classList.remove('pending');
+        }
+        const response = await fetch(POS_RECEIPT_EMAIL_ENDPOINT, {
+          method: 'POST',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify({
+            order_id: order.id,
+            to: recipient,
+            subject: els.emailReceiptSubject.value.trim(),
+            note: els.emailReceiptNote.value.trim(),
+            send_copy: els.emailReceiptCopy.checked
+          })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.message || 'Receipt email could not be sent.');
+        }
+        closeEmailReceiptModal();
+        showToast(`Thermal receipt emailed to ${recipient}.`);
+      } catch (error) {
+        console.error(error);
+        els.emailReceiptError.textContent = error.message || 'Receipt email could not be sent.';
+      } finally {
+        els.emailReceiptSubmit.disabled = false;
+        els.emailReceiptSubmit.textContent = 'Send Thermal Receipt';
+      }
+    }
+
     function heldOrders() {
       return readLocalArray(POS_HELD_ORDERS_KEY);
     }
@@ -6898,7 +7491,7 @@
       showToast('Held order restored.');
     }
 
-    function checkout(payments) {
+    async function checkout(payments) {
       if (!state.cart.length) return;
       if (!state.selectedStaffName) {
         openStaffModal({ canCancel: false });
@@ -6919,15 +7512,20 @@
       }
       const paymentSummary = summarizePayments(normalizedPayments);
       const activeShift = ensureActiveShiftRecord();
+      const customerName = els.customerInput.value.trim() || 'Walk-in Customer';
+      const customer = customerDetailsForOrder(customerName);
       const order = {
         id: 'POS-' + Date.now(),
         store_id: state.storeId,
+        store_db_code: storeById(state.storeId).dbCode,
         store_code: storeById(state.storeId).code,
         business_date: brisbaneDateIso(),
         staff_name: state.selectedStaffName,
         shift_id: activeShift && activeShift.id,
         shift_started_at: activeShift && activeShift.startedAt,
-        customer_name: els.customerInput.value.trim() || 'Walk-in Customer',
+        customer_name: customerName,
+        customer_phone: customer ? (customer.phone || customer.phone_number || '') : '',
+        customer_email: customer ? (customer.email || '') : '',
         payment_method: paymentSummary,
         payments: normalizedPayments,
         total,
@@ -6940,14 +7538,14 @@
           is_special: Boolean(item.is_special),
           qty: item.qty,
           unit_price: item.sale_price,
-          line_total: item.sale_price * item.qty
+          line_total: roundedMoneyValue(item.sale_price * item.qty)
         })),
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        sync_pending: true
       };
 
-      const orders = readLocalArray(POS_ORDERS_KEY);
-      orders.unshift(order);
-      localStorage.setItem(POS_ORDERS_KEY, JSON.stringify(orders.slice(0, 500)));
+      updateStoredOrder(order);
+      await persistPosOrder(order, true);
 
       state.cart.forEach(item => {
         const product = state.products.find(productItem => productItem.id === item.id);
@@ -7014,7 +7612,10 @@
       renderRepairWorkspace();
       renderTargetDashboard();
       renderCart();
-      showToast(`${order.id} paid by ${order.payment_method}. ${money(total)} recorded locally.`);
+      openReceiptCompleteModal(order);
+      showToast(order.sync_pending
+        ? `${order.id} paid. Database sync is pending.`
+        : `${order.id} paid and saved to the POS database.`);
     }
 
     function holdOrder() {
@@ -7390,6 +7991,20 @@
     });
     els.paymentConfirmBtn.addEventListener('click', () => confirmPaymentAmount(false));
     els.paymentFullBtn.addEventListener('click', () => confirmPaymentAmount(true));
+    els.receiptCompleteCloseBtn.addEventListener('click', closeReceiptCompleteModal);
+    els.receiptCompleteModal.addEventListener('click', event => {
+      if (event.target === els.receiptCompleteModal) closeReceiptCompleteModal();
+    });
+    els.printThermalReceiptBtn.addEventListener('click', printThermalReceipt);
+    els.emailThermalReceiptBtn.addEventListener('click', openEmailReceiptModal);
+    els.emailReceiptCloseBtn.addEventListener('click', closeEmailReceiptModal);
+    els.emailReceiptModal.addEventListener('click', event => {
+      if (event.target === els.emailReceiptModal) closeEmailReceiptModal();
+    });
+    els.emailReceiptForm.addEventListener('submit', event => {
+      event.preventDefault();
+      sendThermalReceiptEmail();
+    });
     els.holdListCloseBtn.addEventListener('click', closeHoldListModal);
     els.holdListModal.addEventListener('click', event => {
       if (event.target === els.holdListModal) closeHoldListModal();
@@ -7580,6 +8195,11 @@
       if (event.key === 'Escape' && els.customerModal.classList.contains('show')) {
         closeCustomerModal();
       }
+      if (event.key === 'Escape' && els.emailReceiptModal.classList.contains('show')) {
+        closeEmailReceiptModal();
+      } else if (event.key === 'Escape' && els.receiptCompleteModal.classList.contains('show')) {
+        closeReceiptCompleteModal();
+      }
     });
 
     window.Techm8StaffAuth.init({
@@ -7589,6 +8209,7 @@
     }).then(async () => {
       await ensureStaffStoreAccess();
       await ensureOpeningCash();
+      await syncPendingPosOrders();
       await loadRepairTickets();
       loadCustomers();
       renderRepairWorkspace();
