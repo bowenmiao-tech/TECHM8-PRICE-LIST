@@ -2526,9 +2526,9 @@
 
     .repair-board {
       display: grid;
-      grid-template-columns: repeat(7, minmax(220px, 1fr));
+      grid-template-columns: repeat(6, minmax(220px, 1fr));
       gap: 12px;
-      min-width: 1560px;
+      min-width: 1320px;
     }
 
     .board-column {
@@ -2636,6 +2636,177 @@
     .ticket-tag.danger {
       background: #fff0ee;
       color: var(--tm-red);
+    }
+
+    .ticket-tag.paid {
+      background: #e8f4ff;
+      color: #12639a;
+    }
+
+    .repair-board-toolbar,
+    .invoice-toolbar {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin: 14px 0;
+    }
+
+    .repair-search-status,
+    .invoice-result-count {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .invoice-view {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .invoice-page {
+      height: 100%;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+
+    .invoice-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+
+    .invoice-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .invoice-filter-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .invoice-list {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+      padding-right: 4px;
+    }
+
+    .invoice-row {
+      display: grid;
+      grid-template-columns: 110px minmax(170px, 1fr) minmax(150px, .7fr) 120px auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .invoice-number {
+      font-size: 17px;
+      font-weight: 950;
+      color: var(--tm-green-dark);
+    }
+
+    .invoice-row-main,
+    .invoice-row-meta {
+      min-width: 0;
+    }
+
+    .invoice-row-main strong,
+    .invoice-row-meta strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .invoice-row-main span,
+    .invoice-row-meta span {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .invoice-total {
+      font-size: 16px;
+      font-weight: 950;
+      text-align: right;
+    }
+
+    .invoice-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .invoice-actions .repair-action {
+      min-height: 38px;
+      white-space: nowrap;
+    }
+
+    .refund-modal {
+      width: min(720px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      overflow: auto;
+    }
+
+    .refund-lines {
+      display: grid;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .refund-line {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr) 130px;
+      gap: 10px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #f8fbfc;
+    }
+
+    .refund-line-name {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .refund-line-meta {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .refund-line input[type="number"] {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--tm-line-strong);
+      border-radius: 7px;
+      padding: 0 10px;
+      text-align: right;
+      font-weight: 900;
+    }
+
+    .refund-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-top: 1px solid var(--tm-line);
+      font-size: 18px;
+      font-weight: 950;
     }
 
     .ticket-detail-modal {
@@ -2833,6 +3004,26 @@
       }
     }
 
+    @media (max-width: 1200px) {
+      .invoice-row {
+        grid-template-columns: 70px minmax(150px, 1fr) 86px 82px;
+        gap: 8px;
+      }
+
+      .invoice-row-meta {
+        display: none;
+      }
+
+      .invoice-actions {
+        gap: 4px;
+      }
+
+      .invoice-actions .repair-action {
+        width: 38px;
+        padding: 0;
+      }
+    }
+
     @media (max-width: 720px) {
       body {
         overflow-x: auto;
@@ -2939,10 +3130,22 @@
       .staff-gate-footer,
       .cash-calculator-grid,
       .shift-cash-breakdown,
-      .shift-payment-row,
-      .repair-board {
+      .shift-payment-row {
         grid-template-columns: 1fr;
         min-width: 0;
+      }
+
+      .repair-board-toolbar,
+      .invoice-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .invoice-row {
+        grid-template-columns: 90px minmax(160px, 1fr) 110px auto;
+      }
+
+      .invoice-row-meta {
+        display: none;
       }
 
       .shift-payment-row.header {
@@ -3015,7 +3218,7 @@
         <button id="targetNavBtn" class="rail-button active" type="button" title="Today target"><i class="bi bi-speedometer2"></i></button>
         <button id="productNavBtn" class="rail-button" type="button" title="Products"><i class="bi bi-house-door-fill"></i></button>
         <button id="repairNavBtn" class="rail-button" type="button" title="Repair tickets"><i class="bi bi-clipboard2-plus"></i></button>
-        <button class="rail-button" type="button" title="Orders"><i class="bi bi-receipt"></i></button>
+        <button id="ordersNavBtn" class="rail-button" type="button" title="Invoices"><i class="bi bi-receipt"></i></button>
         <button class="rail-button" type="button" title="Shift"><i class="bi bi-cash-stack"></i></button>
       </nav>
       <div class="rail-bottom">
@@ -3063,6 +3266,29 @@
           </div>
         </div>
         <div id="repairWorkspace" class="repair-scroll"></div>
+      </section>
+
+      <section id="ordersView" class="workspace-view invoice-view" aria-label="Invoice history">
+        <div class="invoice-page">
+          <div class="invoice-head">
+            <div>
+              <h1 class="invoice-title">Invoice History</h1>
+              <div class="repair-subtitle">Retail, repair, and mixed invoices for the current store.</div>
+            </div>
+            <button id="invoiceReloadBtn" class="repair-action" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+          </div>
+          <div>
+            <div class="invoice-toolbar">
+              <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input id="invoiceSearchInput" class="search-input" type="search" placeholder="Invoice / customer / phone / ticket / product">
+              </div>
+              <div id="invoiceResultCount" class="invoice-result-count">0 invoices</div>
+            </div>
+            <div id="invoiceFilterTabs" class="invoice-filter-tabs"></div>
+          </div>
+          <div id="invoiceList" class="invoice-list"></div>
+        </div>
       </section>
     </main>
 
@@ -3196,6 +3422,14 @@
       <h2 id="specialProductTitle">Special Productes</h2>
       <div class="special-fields">
         <label>
+          Customer name *
+          <input id="ticketCustomerName" class="repair-input" type="text" autocomplete="name" required>
+        </label>
+        <label>
+          Customer phone *
+          <input id="ticketCustomerPhone" class="repair-input" type="tel" autocomplete="tel" required>
+        </label>
+        <label>
           Product name
           <input id="specialProductName" type="text" autocomplete="off" placeholder="Custom product name">
         </label>
@@ -3259,6 +3493,7 @@
           </select>
         </label>
       </div>
+      <div id="ticketDetailsError" class="special-error"></div>
       <div class="special-actions">
         <button id="ticketDetailsCancel" class="soft-action" type="button">Cancel</button>
         <button class="pay-action" type="submit">Create Ticket</button>
@@ -3294,6 +3529,42 @@
         <aside id="ticketDetailSide" class="ticket-detail-side"></aside>
       </div>
     </div>
+  </div>
+
+  <div id="refundModal" class="modal-backdrop" aria-hidden="true">
+    <form id="refundForm" class="special-modal refund-modal" role="dialog" aria-modal="true" aria-labelledby="refundModalTitle">
+      <div class="customer-modal-header">
+        <div class="customer-modal-icon"><i class="bi bi-arrow-counterclockwise"></i></div>
+        <div>
+          <h2 id="refundModalTitle" class="customer-modal-title">Refund Invoice</h2>
+          <div id="refundInvoiceMeta" class="customer-modal-subtitle"></div>
+        </div>
+        <button id="refundCloseBtn" class="customer-close" type="button" title="Close"><i class="bi bi-x"></i></button>
+      </div>
+      <div id="refundLines" class="refund-lines"></div>
+      <div class="refund-total"><span>Refund total</span><strong id="refundTotal">$0.00</strong></div>
+      <div class="special-fields customer-field-grid">
+        <label>
+          Refund method *
+          <select id="refundMethod" class="repair-select" required>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="Afterpay">Afterpay</option>
+            <option value="CNYpay">CNYpay</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+          </select>
+        </label>
+        <label class="span-2">
+          Reason *
+          <textarea id="refundReason" class="repair-textarea" placeholder="Reason for refund" required></textarea>
+        </label>
+      </div>
+      <div id="refundError" class="special-error"></div>
+      <div class="special-actions">
+        <button id="refundCancelBtn" class="soft-action" type="button">Cancel</button>
+        <button id="refundSubmitBtn" class="pay-action" type="submit">Confirm Refund</button>
+      </div>
+    </form>
   </div>
 
   <div id="posStaffModal" class="modal-backdrop" aria-hidden="true">
@@ -3602,6 +3873,8 @@
       products: [],
       repairQuotes: [],
       repairTickets: [],
+      repairSearch: '',
+      repairSearchLoading: false,
       pendingRepairDraft: null,
       customers: [],
       cart: [],
@@ -3628,6 +3901,11 @@
       },
       lastCompletedOrder: null,
       activeView: 'target',
+      invoiceSearch: '',
+      invoiceFilter: 'all',
+      invoiceOrders: [],
+      invoiceLoading: false,
+      refundOrder: null,
       repair: {
         started: false,
         intakeOpen: false,
@@ -3675,10 +3953,17 @@
       targetDashboard: document.getElementById('targetDashboard'),
       productView: document.getElementById('productView'),
       repairView: document.getElementById('repairView'),
+      ordersView: document.getElementById('ordersView'),
       repairWorkspace: document.getElementById('repairWorkspace'),
       targetNavBtn: document.getElementById('targetNavBtn'),
       productNavBtn: document.getElementById('productNavBtn'),
       repairNavBtn: document.getElementById('repairNavBtn'),
+      ordersNavBtn: document.getElementById('ordersNavBtn'),
+      invoiceSearchInput: document.getElementById('invoiceSearchInput'),
+      invoiceReloadBtn: document.getElementById('invoiceReloadBtn'),
+      invoiceFilterTabs: document.getElementById('invoiceFilterTabs'),
+      invoiceResultCount: document.getElementById('invoiceResultCount'),
+      invoiceList: document.getElementById('invoiceList'),
       newRepairBtn: document.getElementById('newRepairBtn'),
       specialRepairBtn: document.getElementById('specialRepairBtn'),
       clearRepairBtn: document.getElementById('clearRepairBtn'),
@@ -3758,6 +4043,9 @@
       ticketNeedOrder: document.getElementById('ticketNeedOrder'),
       ticketDeviceInStore: document.getElementById('ticketDeviceInStore'),
       ticketMotherboardRepair: document.getElementById('ticketMotherboardRepair'),
+      ticketCustomerName: document.getElementById('ticketCustomerName'),
+      ticketCustomerPhone: document.getElementById('ticketCustomerPhone'),
+      ticketDetailsError: document.getElementById('ticketDetailsError'),
       ticketDetailsCancel: document.getElementById('ticketDetailsCancel'),
       repairPatternModal: document.getElementById('repairPatternModal'),
       repairPatternCanvas: document.getElementById('repairPatternCanvas'),
@@ -3770,6 +4058,17 @@
       ticketDetailSide: document.getElementById('ticketDetailSide'),
       ticketDetailStatus: document.getElementById('ticketDetailStatus'),
       ticketDetailClose: document.getElementById('ticketDetailClose'),
+      refundModal: document.getElementById('refundModal'),
+      refundForm: document.getElementById('refundForm'),
+      refundCloseBtn: document.getElementById('refundCloseBtn'),
+      refundCancelBtn: document.getElementById('refundCancelBtn'),
+      refundInvoiceMeta: document.getElementById('refundInvoiceMeta'),
+      refundLines: document.getElementById('refundLines'),
+      refundTotal: document.getElementById('refundTotal'),
+      refundMethod: document.getElementById('refundMethod'),
+      refundReason: document.getElementById('refundReason'),
+      refundError: document.getElementById('refundError'),
+      refundSubmitBtn: document.getElementById('refundSubmitBtn'),
       posStaffModal: document.getElementById('posStaffModal'),
       posStaffForm: document.getElementById('posStaffForm'),
       posStoreChoice: document.getElementById('posStoreChoice'),
@@ -3854,9 +4153,8 @@
       { id: 'need_to_order', label: 'Need to order' },
       { id: 'waiting_shipping', label: 'Waiting shipping' },
       { id: 'repairing', label: 'Parts arrived / Repairing' },
-      { id: 'waiting_pickup', label: 'Waiting pickup' },
-      { id: 'finished', label: 'Finished' },
       { id: 'waiting_customer_confirmation', label: 'Waiting customer confirmation' },
+      { id: 'waiting_pickup', label: 'Waiting pickup' },
       { id: 'over_3_months_uncollected', label: 'Over 3 months uncollected' }
     ];
 
@@ -4410,6 +4708,7 @@
         loadRepairTickets().then(() => {
           if (state.activeView === 'repair') renderRepairWorkspace();
         });
+        if (state.activeView === 'orders') loadInvoiceHistory();
       }
       if (state.selectedStaffName && !options.skipShift) ensureActiveShiftRecord();
       if (reloadProducts) {
@@ -5487,15 +5786,18 @@
       els.targetView.classList.toggle('active', view === 'target');
       els.productView.classList.toggle('active', view === 'products');
       els.repairView.classList.toggle('active', view === 'repair');
+      els.ordersView.classList.toggle('active', view === 'orders');
       els.targetNavBtn.classList.toggle('active', view === 'target');
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
+      els.ordersNavBtn.classList.toggle('active', view === 'orders');
       if (view === 'target') renderTargetDashboard();
       if (view === 'repair') {
         loadRepairTickets().then(() => {
           if (!state.repair.started) renderRepairWorkspace();
         });
       }
+      if (view === 'orders') loadInvoiceHistory();
     }
 
     function repairTicketStoreCode() {
@@ -5530,7 +5832,10 @@
     async function loadRepairTickets() {
       const url = new URL(POS_REPAIR_TICKETS_ENDPOINT);
       url.searchParams.set('store_code', repairTicketStoreCode());
+      url.searchParams.set('q', state.repairSearch || '');
+      url.searchParams.set('limit', '500');
       const pendingTickets = state.repairTickets.filter(ticket => ticket && ticket.syncPending);
+      state.repairSearchLoading = true;
 
       try {
         const response = await fetch(url.toString(), {
@@ -5549,8 +5854,10 @@
         localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
       } catch (error) {
         console.error(error);
-        state.repairTickets = readCachedRepairTickets();
+        if (!state.repairSearch) state.repairTickets = readCachedRepairTickets();
         showToast('Repair Board using local cache. Database sync unavailable.');
+      } finally {
+        state.repairSearchLoading = false;
       }
     }
 
@@ -5571,7 +5878,7 @@
     }
 
     async function persistRepairTicket(ticket) {
-      if (!ticket || !ticket.id) return;
+      if (!ticket || !ticket.id) return false;
       try {
         const response = await fetch(POS_REPAIR_TICKETS_ENDPOINT, {
           method: 'PUT',
@@ -5590,11 +5897,13 @@
         }
         ticket.syncPending = false;
         localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+        return true;
       } catch (error) {
         console.error(error);
         ticket.syncPending = true;
         localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
         showToast('Repair ticket saved locally. Database sync failed.');
+        return false;
       }
     }
 
@@ -5657,6 +5966,8 @@
       ticket.comments = Array.isArray(ticket.comments) ? ticket.comments : [];
       ticket.intake = ticket.intake && typeof ticket.intake === 'object' ? ticket.intake : {};
       if (!ticket.customerName) ticket.customerName = 'Walk-in Customer';
+      ticket.customerPhone = String(ticket.customerPhone || ticket.customerContact || '').trim();
+      ticket.paymentStatus = ticket.paymentStatus || 'unpaid';
       if (!ticket.createdBy) ticket.createdBy = 'Unknown staff';
       const ticketStoreId = ticket.store_id || ticket.storeId || '';
       const matchedStore = ticketStoreId
@@ -5736,7 +6047,6 @@
       const ticket = state.repairTickets.find(item => item.id === state.repair.ticketId);
       if (!ticket) return null;
       normalizeRepairTicket(ticket);
-      ticket.customerName = els.customerInput.value.trim() || ticket.customerName || 'Walk-in Customer';
       ticket.price = state.repair.quotedPrice || ticket.price;
       ticket.intake = currentRepairSnapshot();
       if (options.persist !== false) saveRepairTickets(ticket);
@@ -5824,7 +6134,7 @@
           ticket.statusUpdatedAt = ticket.createdAt || new Date().toISOString();
           changedTickets.push(ticket);
         }
-        const statusTime = new Date(ticket.statusUpdatedAt || ticket.createdAt || Date.now()).getTime();
+        const statusTime = new Date(ticket.readyForPickupAt || ticket.statusUpdatedAt || ticket.createdAt || Date.now()).getTime();
         if (ticket.status === 'waiting_pickup' && Number.isFinite(statusTime) && statusTime < cutoff) {
           ticket.status = 'over_3_months_uncollected';
           ticket.statusUpdatedAt = new Date().toISOString();
@@ -5840,13 +6150,27 @@
     async function updateRepairTicketStatus(ticketId, status) {
       const ticket = state.repairTickets.find(item => item.id === ticketId);
       if (!ticket || ticket.status === status) return;
+      if (ticket.paymentStatus && ticket.paymentStatus !== 'unpaid') {
+        showToast('Paid repair tickets cannot be changed from the Repair Board.');
+        return;
+      }
+      if (!ticket.customerName || ticket.customerName.toLowerCase() === 'walk-in customer' || !ticket.customerPhone) {
+        showToast('Save the customer name and phone before changing this ticket.');
+        openTicketDetailModal(ticket.id);
+        return;
+      }
       const previousStatus = ticket.status;
       ticket.status = status;
       ticket.statusUpdatedAt = new Date().toISOString();
       normalizeRepairTicket(ticket);
       addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText(status)}`, ticket.statusUpdatedAt);
       localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
-      await persistRepairTicket(ticket);
+      const saved = await persistRepairTicket(ticket);
+      if (!saved) {
+        ticket.status = previousStatus;
+        ticket.activity.shift();
+        return;
+      }
       if (state.selectedTicketId === ticketId && els.ticketDetailModal.classList.contains('show')) renderTicketDetailModal();
       renderRepairWorkspace();
     }
@@ -5946,6 +6270,11 @@
 
     function openTicketDetailsModal(draft) {
       state.pendingRepairDraft = draft;
+      const customerName = els.customerInput.value.trim();
+      const customer = customerDetailsForOrder(customerName);
+      els.ticketCustomerName.value = customerName && customerName !== 'Walk-in Customer' ? customerName : '';
+      els.ticketCustomerPhone.value = customer ? (customer.phone || customer.phone_number || customer.alert_number || '') : '';
+      els.ticketDetailsError.textContent = '';
       els.ticketNeedOrder.value = 'no';
       els.ticketDeviceInStore.value = 'yes';
       els.ticketMotherboardRepair.value = 'no';
@@ -5963,6 +6292,18 @@
     async function createRepairTicketFromDraft() {
       const draft = state.pendingRepairDraft;
       if (!draft || !draft.quote) return;
+      const customerName = els.ticketCustomerName.value.trim();
+      const customerPhone = els.ticketCustomerPhone.value.trim();
+      if (!customerName || customerName.toLowerCase() === 'walk-in customer') {
+        els.ticketDetailsError.textContent = 'Customer name is required for every repair ticket.';
+        els.ticketCustomerName.focus();
+        return;
+      }
+      if (!customerPhone) {
+        els.ticketDetailsError.textContent = 'Customer phone is required for every repair ticket.';
+        els.ticketCustomerPhone.focus();
+        return;
+      }
       const status = els.ticketNeedOrder.value === 'yes' ? 'need_to_order' : 'repairing';
       const deviceInStore = els.ticketDeviceInStore.value === 'yes';
       const motherboardRepair = els.ticketMotherboardRepair.value === 'yes';
@@ -5985,8 +6326,9 @@
         deviceInStore,
         motherboardRepair,
         specialOrder: Boolean(draft.specialOrder),
-        customerName: els.customerInput.value.trim() || 'Walk-in Customer',
-        customerContact: '',
+        customerName,
+        customerPhone,
+        customerContact: customerPhone,
         createdBy: currentStaffName(),
         createdAt,
         statusUpdatedAt: createdAt,
@@ -6023,6 +6365,7 @@
       state.repair.model = quote.model || '';
       state.repair.issue = quote.issue || '';
       state.repair.quotedPrice = quotePriceLabel(quote.price);
+      els.customerInput.value = customerName;
       const syncedTicket = syncCurrentRepairTicketSnapshot({ persist: false }) || ticket;
       localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
       await persistRepairTicket(syncedTicket);
@@ -6233,6 +6576,13 @@
       applyRepairTicketAutomation();
       const storeTickets = currentStoreRepairTickets();
       return `
+        <div class="repair-board-toolbar">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input id="repairBoardSearch" class="search-input" type="search" value="${escapeHtml(state.repairSearch)}" placeholder="Ticket / customer / phone / device / IMEI">
+          </div>
+          <div class="repair-search-status">${state.repairSearchLoading ? 'Searching...' : `${storeTickets.length} open ticket${storeTickets.length === 1 ? '' : 's'}`}</div>
+        </div>
         <div class="repair-board">
           ${repairBoardColumns.map(column => {
             const tickets = storeTickets.filter(ticket => ticket.status === column.id);
@@ -6243,18 +6593,24 @@
                   <span class="board-count">${tickets.length}</span>
                 </div>
                 ${tickets.map(ticket => `
-                  <div class="ticket-card" draggable="true" data-ticket-id="${escapeHtml(ticket.id)}">
+                  <div class="ticket-card" draggable="${ticket.paymentStatus === 'unpaid' ? 'true' : 'false'}" data-ticket-id="${escapeHtml(ticket.id)}">
                     <div class="ticket-top">
                       <div class="ticket-title">${escapeHtml(ticket.title || 'Repair ticket')}</div>
-                      <button class="ticket-cart-button" type="button" data-ticket-cart="${escapeHtml(ticket.id)}" title="Add ticket to cart">
-                        <i class="bi bi-cart-plus"></i>
-                      </button>
+                      ${ticket.paymentStatus === 'unpaid' && !ticket.closedAt ? `
+                        <button class="ticket-cart-button" type="button" data-ticket-cart="${escapeHtml(ticket.id)}" title="Add ticket to cart" ${state.cart.some(item => item.ticket_id === ticket.id) ? 'disabled' : ''}>
+                          <i class="bi bi-cart-plus"></i>
+                        </button>
+                      ` : '<span></span>'}
                     </div>
                     <div class="ticket-meta">${escapeHtml(ticket.id)} · ${escapeHtml(ticket.store_code || storeById(state.storeId).code)} · ${escapeHtml(ticket.issue || 'Repair')} · ${escapeHtml(ticket.price || '')}</div>
+                    <div class="ticket-meta">${escapeHtml(ticket.customerName || '')} · ${escapeHtml(ticket.customerPhone || 'Phone missing')}</div>
                     <div class="ticket-tags">
                       ${ticket.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
                       ${ticket.deviceInStore ? '<span class="ticket-tag">Device in store</span>' : ''}
                       ${ticket.motherboardRepair ? '<span class="ticket-tag danger">Mainboard</span>' : ''}
+                      ${ticket.resolution === 'cancelled' ? '<span class="ticket-tag warn">Cancelled</span>' : ''}
+                      ${ticket.resolution === 'returned_unrepaired' ? '<span class="ticket-tag warn">Returned unrepaired</span>' : ''}
+                      ${ticket.paymentStatus !== 'unpaid' ? `<span class="ticket-tag paid">${escapeHtml(ticket.paymentStatus.replaceAll('_', ' '))}</span>` : ''}
                     </div>
                   </div>
                 `).join('') || '<div class="ticket-meta">No tickets</div>'}
@@ -6326,15 +6682,31 @@
       if (!ticket) return;
       const intake = ticket.intake || {};
       els.ticketDetailStatus.innerHTML = repairBoardColumns.map(column => `<option value="${column.id}" ${ticket.status === column.id ? 'selected' : ''}>${escapeHtml(column.label)}</option>`).join('');
+      els.ticketDetailStatus.disabled = ticket.paymentStatus !== 'unpaid';
       els.ticketDetailMain.innerHTML = `
         <h2 id="ticketDetailTitle" class="ticket-detail-title">${escapeHtml(ticket.id)} ${escapeHtml(ticket.customerName || 'Walk-in Customer')} ${escapeHtml(ticket.title || '')} ${escapeHtml(ticket.issue || '')}</h2>
         <div class="ticket-detail-grid">
-          <div class="ticket-detail-box"><div class="ticket-detail-label">Customer</div><div class="ticket-detail-value">${escapeHtml(ticket.customerName || 'Walk-in Customer')}</div></div>
+          ${ticket.paymentStatus === 'unpaid' ? `
+            <label class="ticket-detail-box"><div class="ticket-detail-label">Customer *</div><input id="ticketDetailCustomerName" class="repair-input" value="${escapeHtml(ticket.customerName === 'Walk-in Customer' ? '' : ticket.customerName || '')}"></label>
+            <label class="ticket-detail-box"><div class="ticket-detail-label">Phone *</div><input id="ticketDetailCustomerPhone" class="repair-input" type="tel" value="${escapeHtml(ticket.customerPhone || '')}"></label>
+          ` : `
+            <div class="ticket-detail-box"><div class="ticket-detail-label">Customer</div><div class="ticket-detail-value">${escapeHtml(ticket.customerName || 'Walk-in Customer')}</div></div>
+            <div class="ticket-detail-box"><div class="ticket-detail-label">Phone</div><div class="ticket-detail-value">${escapeHtml(ticket.customerPhone || 'Missing')}</div></div>
+          `}
           <div class="ticket-detail-box"><div class="ticket-detail-label">Store</div><div class="ticket-detail-value">${escapeHtml(ticket.store_name || storeById(state.storeId).name)}</div></div>
           <div class="ticket-detail-box"><div class="ticket-detail-label">Device</div><div class="ticket-detail-value">${escapeHtml(ticket.title || '')}</div></div>
           <div class="ticket-detail-box"><div class="ticket-detail-label">Issue</div><div class="ticket-detail-value">${escapeHtml(ticket.issue || '')}</div></div>
           <div class="ticket-detail-box"><div class="ticket-detail-label">Price</div><div class="ticket-detail-value">${escapeHtml(ticket.price || intake.quotedPrice || '')}</div></div>
+          ${ticket.paymentStatus === 'unpaid' ? `
+            <label class="ticket-detail-box"><div class="ticket-detail-label">Outcome</div><select id="ticketDetailResolution" class="repair-select">
+              <option value="" ${!ticket.resolution ? 'selected' : ''}>In progress</option>
+              <option value="repaired" ${ticket.resolution === 'repaired' ? 'selected' : ''}>Repaired</option>
+              <option value="cancelled" ${ticket.resolution === 'cancelled' ? 'selected' : ''}>Cancelled - waiting pickup</option>
+              <option value="returned_unrepaired" ${ticket.resolution === 'returned_unrepaired' ? 'selected' : ''}>Returned unrepaired - waiting pickup</option>
+            </select></label>
+          ` : ''}
         </div>
+        ${ticket.paymentStatus === 'unpaid' ? '<button id="ticketCustomerSave" class="repair-action primary" type="button"><i class="bi bi-floppy"></i> Save ticket details</button>' : ''}
         <div class="ticket-detail-sections">
           ${[
             ['password', 'Password'],
@@ -6345,7 +6717,13 @@
         </div>
         <div class="ticket-detail-content">${ticketDetailSectionHtml(ticket)}</div>
       `;
-      els.ticketDetailSide.innerHTML = `
+      els.ticketDetailSide.innerHTML = ticket.paymentStatus !== 'unpaid' ? `
+        <h3 style="margin:0 0 12px;">Invoice #${escapeHtml(ticket.invoiceNumber || '')}</h3>
+        <div class="repair-stack">
+          <button class="repair-action primary" type="button" data-ticket-view-invoice="${escapeHtml(ticket.invoiceOrderId || '')}"><i class="bi bi-receipt"></i> View Invoice</button>
+          <button class="repair-action" type="button" data-ticket-refund-invoice="${escapeHtml(ticket.invoiceOrderId || '')}"><i class="bi bi-arrow-counterclockwise"></i> Refund</button>
+        </div>
+      ` : `
         <h3 style="margin:0 0 12px;">Comments and activity</h3>
         <div class="ticket-comment-row">
           <input id="ticketCommentInput" class="repair-input" placeholder="Add a comment...">
@@ -6369,6 +6747,46 @@
       els.ticketDetailModal.classList.remove('show');
       els.ticketDetailModal.setAttribute('aria-hidden', 'true');
       state.selectedTicketId = '';
+    }
+
+    async function saveTicketCustomerDetails() {
+      const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (!ticket || ticket.paymentStatus !== 'unpaid') return;
+      const nameInput = els.ticketDetailMain.querySelector('#ticketDetailCustomerName');
+      const phoneInput = els.ticketDetailMain.querySelector('#ticketDetailCustomerPhone');
+      const resolutionInput = els.ticketDetailMain.querySelector('#ticketDetailResolution');
+      const customerName = nameInput ? nameInput.value.trim() : '';
+      const customerPhone = phoneInput ? phoneInput.value.trim() : '';
+      if (!customerName || customerName.toLowerCase() === 'walk-in customer') {
+        showToast('Customer name is required for every repair ticket.');
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      if (!customerPhone) {
+        showToast('Customer phone is required for every repair ticket.');
+        if (phoneInput) phoneInput.focus();
+        return;
+      }
+      ticket.customerName = customerName;
+      ticket.customerPhone = customerPhone;
+      ticket.customerContact = customerPhone;
+      const previousStatus = ticket.status;
+      ticket.resolution = resolutionInput ? resolutionInput.value : (ticket.resolution || '');
+      if (ticket.resolution === 'cancelled' || ticket.resolution === 'returned_unrepaired') {
+        ticket.status = 'waiting_pickup';
+        ticket.statusUpdatedAt = new Date().toISOString();
+        ticket.readyForPickupAt = ticket.readyForPickupAt || ticket.statusUpdatedAt;
+      }
+      ticket.updatedBy = currentStaffName();
+      addTicketActivity(ticket, 'customer', 'updated the customer and repair outcome');
+      if (previousStatus !== ticket.status) {
+        addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText(ticket.status)}`);
+      }
+      const saved = await persistRepairTicket(ticket);
+      if (!saved) return;
+      renderTicketDetailModal();
+      renderRepairWorkspace();
+      showToast('Customer details saved.');
     }
 
     function renderRepairWorkspace() {
@@ -6866,10 +7284,16 @@
       const ticket = state.repairTickets.find(item => item.id === state.repair.ticketId);
       if (ticket) {
         normalizeRepairTicket(ticket);
+        if (ticket.paymentStatus !== 'unpaid' || ticket.closedAt || ticket.invoiceOrderId) {
+          state.cart = state.cart.filter(item => item.id !== id);
+          showToast('This repair ticket has already been invoiced.');
+          return;
+        }
         ticket.price = money(price);
         addTicketActivity(ticket, 'cart', 'added this repair ticket to the cart');
         localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
         await persistRepairTicket(ticket);
+        els.customerInput.value = ticket.customerName;
       }
       state.repair.addedToCart = true;
       renderCart();
@@ -6881,6 +7305,29 @@
     function addRepairTicketToCart(ticketId) {
       const ticket = state.repairTickets.find(item => item.id === ticketId);
       if (!ticket) return;
+
+      normalizeRepairTicket(ticket);
+      if (ticket.paymentStatus !== 'unpaid' || ticket.closedAt || ticket.invoiceOrderId) {
+        showToast('This repair ticket has already been invoiced.');
+        return;
+      }
+      if (!ticket.customerName || ticket.customerName.toLowerCase() === 'walk-in customer' || !ticket.customerPhone) {
+        showToast('Add the customer name and phone before checkout.');
+        openTicketDetailModal(ticket.id);
+        return;
+      }
+
+      const cartRepair = state.cart.find(item => item.is_repair && item.ticket_id);
+      if (cartRepair) {
+        const existingTicket = state.repairTickets.find(item => item.id === cartRepair.ticket_id);
+        if (existingTicket && (
+          existingTicket.customerName.toLowerCase() !== ticket.customerName.toLowerCase()
+          || existingTicket.customerPhone.replace(/\D/g, '') !== ticket.customerPhone.replace(/\D/g, '')
+        )) {
+          showToast('Repair tickets for different customers must be checked out separately.');
+          return;
+        }
+      }
 
       const id = 'repair-' + ticket.id;
       if (state.cart.some(item => item.id === id)) {
@@ -6907,9 +7354,9 @@
         is_repair: true,
         ticket_id: ticket.id
       });
-      normalizeRepairTicket(ticket);
       addTicketActivity(ticket, 'cart', 'added this repair ticket to the cart');
       saveRepairTickets(ticket);
+      els.customerInput.value = ticket.customerName;
       renderCart();
       showToast('Ticket added to cart.');
     }
@@ -7161,12 +7608,239 @@
       return headers;
     }
 
+    function invoiceTypeLabel(type) {
+      if (type === 'repair') return 'Repair';
+      if (type === 'mixed') return 'Mixed';
+      return 'Retail';
+    }
+
+    function invoiceRefundLabel(status) {
+      if (status === 'refunded') return 'Refunded';
+      if (status === 'partially_refunded') return 'Partially refunded';
+      return 'Paid';
+    }
+
+    function filteredInvoiceOrders() {
+      if (state.invoiceFilter === 'all') return state.invoiceOrders;
+      return state.invoiceOrders.filter(order => (order.sale_type || 'retail') === state.invoiceFilter);
+    }
+
+    function renderInvoiceHistory() {
+      if (!els.invoiceList) return;
+      const filters = [
+        ['all', 'All'],
+        ['retail', 'Retail'],
+        ['repair', 'Repair'],
+        ['mixed', 'Mixed']
+      ];
+      els.invoiceFilterTabs.innerHTML = filters.map(([id, label]) => `
+        <button class="tab-chip ${state.invoiceFilter === id ? 'active' : ''}" type="button" data-invoice-filter="${id}">${label}</button>
+      `).join('');
+
+      const orders = filteredInvoiceOrders();
+      els.invoiceResultCount.textContent = state.invoiceLoading
+        ? 'Loading...'
+        : `${orders.length} invoice${orders.length === 1 ? '' : 's'}`;
+
+      if (state.invoiceLoading && !state.invoiceOrders.length) {
+        els.invoiceList.innerHTML = '<div class="empty-state"><div><strong>Loading invoices...</strong></div></div>';
+        return;
+      }
+      if (!orders.length) {
+        els.invoiceList.innerHTML = `
+          <div class="empty-state"><div><div class="cart-empty-icon"><i class="bi bi-receipt"></i></div><strong>No matching invoices</strong><div>Try another invoice number, customer, phone, ticket, or product.</div></div></div>
+        `;
+        return;
+      }
+
+      els.invoiceList.innerHTML = orders.map(order => {
+        const itemCount = Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + Number(item.qty || 1), 0) : 0;
+        const refundable = Number(order.refundable_total ?? order.total ?? 0) > 0;
+        return `
+          <article class="invoice-row" data-invoice-id="${escapeHtml(order.id)}">
+            <div class="invoice-number">#${escapeHtml(invoiceNumberText(order))}</div>
+            <div class="invoice-row-main">
+              <strong>${escapeHtml(order.customer_name || 'Walk-in Customer')}</strong>
+              <span>${escapeHtml(order.customer_phone || order.id)} · ${itemCount} item${itemCount === 1 ? '' : 's'}</span>
+            </div>
+            <div class="invoice-row-meta">
+              <strong>${escapeHtml(invoiceTypeLabel(order.sale_type))}</strong>
+              <span>${escapeHtml(formatDateTime(order.created_at))} · ${escapeHtml(invoiceRefundLabel(order.refund_status))}</span>
+            </div>
+            <div class="invoice-total">${money(order.total)}</div>
+            <div class="invoice-actions">
+              <button class="repair-action primary" type="button" data-view-invoice="${escapeHtml(order.id)}" title="View invoice"><i class="bi bi-eye"></i></button>
+              <button class="repair-action" type="button" data-refund-invoice="${escapeHtml(order.id)}" title="Refund" ${refundable ? '' : 'disabled'}><i class="bi bi-arrow-counterclockwise"></i></button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function loadInvoiceHistory() {
+      if (!els.invoiceList) return;
+      state.invoiceLoading = true;
+      renderInvoiceHistory();
+      const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+      url.searchParams.set('store_code', repairTicketStoreCode());
+      url.searchParams.set('q', state.invoiceSearch || '');
+      url.searchParams.set('limit', '200');
+      try {
+        const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Invoice search failed.');
+        state.invoiceOrders = Array.isArray(payload.orders) ? payload.orders : [];
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Invoice history unavailable.');
+      } finally {
+        state.invoiceLoading = false;
+        renderInvoiceHistory();
+      }
+    }
+
+    async function invoiceOrderById(orderId) {
+      const cached = state.invoiceOrders.find(order => order.id === orderId);
+      if (cached) return cached;
+      const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+      url.searchParams.set('order_id', orderId);
+      const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.ok === false || !payload.order) {
+        throw new Error(payload.message || 'Invoice could not be loaded.');
+      }
+      return payload.order;
+    }
+
+    async function viewInvoiceById(orderId) {
+      if (!orderId) return;
+      try {
+        const order = await invoiceOrderById(orderId);
+        closeTicketDetailModal();
+        openReceiptCompleteModal(order);
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Invoice could not be loaded.');
+      }
+    }
+
+    function refundSelectedLines() {
+      return [...els.refundLines.querySelectorAll('[data-refund-line]')].map(row => {
+        const checkbox = row.querySelector('[data-refund-check]');
+        const amountInput = row.querySelector('[data-refund-amount]');
+        return {
+          line_id: Number(row.dataset.refundLine),
+          amount: roundedMoneyValue(amountInput ? amountInput.value : 0),
+          selected: Boolean(checkbox && checkbox.checked)
+        };
+      }).filter(line => line.selected && line.line_id && line.amount > 0);
+    }
+
+    function updateRefundTotal() {
+      const total = roundedMoneyValue(refundSelectedLines().reduce((sum, line) => sum + line.amount, 0));
+      els.refundTotal.textContent = money(total);
+      els.refundSubmitBtn.disabled = total <= 0;
+    }
+
+    function renderRefundLines() {
+      const order = state.refundOrder;
+      const lines = order && Array.isArray(order.items)
+        ? order.items.filter(item => Number(item.refundable_amount ?? item.line_total ?? 0) > 0)
+        : [];
+      els.refundLines.innerHTML = lines.map(item => {
+        const refundable = roundedMoneyValue(item.refundable_amount ?? item.line_total ?? 0);
+        return `
+          <label class="refund-line" data-refund-line="${Number(item.line_id)}">
+            <input type="checkbox" data-refund-check checked>
+            <span>
+              <span class="refund-line-name">${escapeHtml(item.name || 'Sale item')}</span>
+              <span class="refund-line-meta">${escapeHtml(item.ticket_id ? `Ticket ${item.ticket_id}` : item.sku || invoiceTypeLabel(item.line_type))} · Available ${money(refundable)}</span>
+            </span>
+            <input type="number" min="0.01" max="${refundable.toFixed(2)}" step="0.01" value="${refundable.toFixed(2)}" data-refund-amount aria-label="Refund amount for ${escapeHtml(item.name || 'item')}">
+          </label>
+        `;
+      }).join('') || '<div class="ticket-meta">No refundable balance remains.</div>';
+      updateRefundTotal();
+    }
+
+    async function openRefundModalById(orderId) {
+      if (!orderId) return;
+      try {
+        state.refundOrder = await invoiceOrderById(orderId);
+        els.refundInvoiceMeta.textContent = `Invoice #${invoiceNumberText(state.refundOrder)} · ${money(state.refundOrder.total)}`;
+        els.refundReason.value = '';
+        els.refundMethod.value = 'Cash';
+        els.refundError.textContent = '';
+        renderRefundLines();
+        closeTicketDetailModal();
+        els.refundModal.classList.add('show');
+        els.refundModal.setAttribute('aria-hidden', 'false');
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Invoice could not be loaded.');
+      }
+    }
+
+    function closeRefundModal() {
+      els.refundModal.classList.remove('show');
+      els.refundModal.setAttribute('aria-hidden', 'true');
+      state.refundOrder = null;
+    }
+
+    async function submitInvoiceRefund() {
+      const order = state.refundOrder;
+      if (!order) return;
+      const lines = refundSelectedLines();
+      const reason = els.refundReason.value.trim();
+      if (!lines.length) {
+        els.refundError.textContent = 'Select at least one line and enter a refund amount.';
+        return;
+      }
+      if (!reason) {
+        els.refundError.textContent = 'Refund reason is required.';
+        els.refundReason.focus();
+        return;
+      }
+      els.refundError.textContent = '';
+      els.refundSubmitBtn.disabled = true;
+      try {
+        const response = await fetch(POS_SALES_ORDERS_ENDPOINT, {
+          method: 'PUT',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify({
+            order_id: order.id,
+            staff_name: state.selectedStaffName,
+            refund_method: els.refundMethod.value,
+            reason,
+            lines
+          })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false || !payload.order) throw new Error(payload.message || 'Refund failed.');
+        const index = state.invoiceOrders.findIndex(item => item.id === payload.order.id);
+        if (index >= 0) state.invoiceOrders[index] = payload.order;
+        updateStoredOrder(payload.order);
+        closeRefundModal();
+        renderInvoiceHistory();
+        showToast(`Refund ${payload.refund_id} recorded.`);
+      } catch (error) {
+        console.error(error);
+        els.refundError.textContent = error.message || 'Refund failed.';
+        els.refundSubmitBtn.disabled = false;
+      }
+    }
+
     function updateStoredOrder(order) {
       const orders = readLocalArray(POS_ORDERS_KEY);
       const index = orders.findIndex(item => item.id === order.id);
       if (index >= 0) orders[index] = order;
       else orders.unshift(order);
       localStorage.setItem(POS_ORDERS_KEY, JSON.stringify(orders.slice(0, 500)));
+    }
+
+    function removeStoredOrder(orderId) {
+      const orders = readLocalArray(POS_ORDERS_KEY).filter(order => order && order.id !== orderId);
+      localStorage.setItem(POS_ORDERS_KEY, JSON.stringify(orders));
     }
 
     async function persistPosOrder(order, silent = false) {
@@ -7279,6 +7953,7 @@
       const hasRepair = items.some(item => item && item.is_repair);
       const invoiceNumber = invoiceNumberText(order);
       const total = roundedMoneyValue(order.total);
+      const refundTotal = roundedMoneyValue(order.refund_total || 0);
       const gst = roundedMoneyValue(total / 11);
       const subtotalExGst = roundedMoneyValue(total - gst);
       const itemRows = items.map(item => `
@@ -7333,6 +8008,8 @@
         <section class="receipt-totals">
           <div class="receipt-section-label">PAYMENT</div>
           ${paymentRows}
+          ${refundTotal > 0 ? `<div class="receipt-total-row"><span>Refunded</span><strong>-${money(refundTotal)}</strong></div>` : ''}
+          ${refundTotal > 0 ? `<div class="receipt-total-row"><span>Net paid</span><strong>${money(Math.max(0, total - refundTotal))}</strong></div>` : ''}
           <div class="receipt-total-row"><span>Balance</span><strong>$0.00</strong></div>
         </section>
         <div class="receipt-rule"></div>
@@ -7575,8 +8252,36 @@
       }
       const paymentSummary = summarizePayments(normalizedPayments);
       const activeShift = ensureActiveShiftRecord();
-      const customerName = els.customerInput.value.trim() || 'Walk-in Customer';
+      const repairCartItems = state.cart.filter(item => item.is_repair && item.ticket_id);
+      const repairTickets = repairCartItems.map(item => state.repairTickets.find(ticket => ticket.id === item.ticket_id)).filter(Boolean).map(normalizeRepairTicket);
+      if (repairCartItems.length !== repairTickets.length) {
+        showToast('A repair ticket in the cart could not be loaded.');
+        return;
+      }
+      if (repairTickets.some(ticket => ticket.paymentStatus !== 'unpaid' || ticket.closedAt || ticket.invoiceOrderId)) {
+        showToast('A repair ticket in this cart has already been invoiced.');
+        return;
+      }
+      if (repairTickets.some(ticket => !ticket.customerName || ticket.customerName.toLowerCase() === 'walk-in customer' || !ticket.customerPhone)) {
+        showToast('Customer name and phone are required for every repair.');
+        return;
+      }
+      if (repairTickets.length > 1) {
+        const firstName = repairTickets[0].customerName.toLowerCase();
+        const firstPhone = repairTickets[0].customerPhone.replace(/\D/g, '');
+        if (repairTickets.some(ticket => ticket.customerName.toLowerCase() !== firstName || ticket.customerPhone.replace(/\D/g, '') !== firstPhone)) {
+          showToast('Repair tickets for different customers must be checked out separately.');
+          return;
+        }
+      }
+
+      const customerName = repairTickets.length
+        ? repairTickets[0].customerName
+        : (els.customerInput.value.trim() || 'Walk-in Customer');
       const customer = customerDetailsForOrder(customerName);
+      const customerPhone = repairTickets.length
+        ? repairTickets[0].customerPhone
+        : (customer ? (customer.phone || customer.phone_number || '') : '');
       const order = {
         id: 'POS-' + Date.now(),
         store_id: state.storeId,
@@ -7587,7 +8292,7 @@
         shift_id: activeShift && activeShift.id,
         shift_started_at: activeShift && activeShift.startedAt,
         customer_name: customerName,
-        customer_phone: customer ? (customer.phone || customer.phone_number || '') : '',
+        customer_phone: customerPhone,
         customer_email: customer ? (customer.email || '') : '',
         payment_method: paymentSummary,
         payments: normalizedPayments,
@@ -7599,6 +8304,7 @@
           category: item.category || '',
           is_repair: Boolean(item.is_repair),
           is_special: Boolean(item.is_special),
+          ticket_id: item.ticket_id || '',
           qty: item.qty,
           unit_price: item.sale_price,
           line_total: roundedMoneyValue(item.sale_price * item.qty)
@@ -7607,8 +8313,12 @@
         sync_pending: true
       };
 
-      updateStoredOrder(order);
-      await persistPosOrder(order, true);
+      const databaseSaved = await persistPosOrder(order, true);
+      if (!databaseSaved) {
+        removeStoredOrder(order.id);
+        showToast('Checkout was not completed. The cart is unchanged; check the connection and try again.');
+        return;
+      }
 
       state.cart.forEach(item => {
         const product = state.products.find(productItem => productItem.id === item.id);
@@ -7644,33 +8354,11 @@
         }
       });
 
-      const paidRepairIds = state.cart
-        .filter(item => item.is_repair && item.ticket_id)
-        .map(item => item.ticket_id);
-      if (paidRepairIds.length) {
-        const changedTickets = [];
-        state.repairTickets.forEach(ticket => {
-          if (paidRepairIds.includes(ticket.id)) {
-            const previousStatus = ticket.status;
-            ticket.status = 'finished';
-            ticket.statusUpdatedAt = new Date().toISOString();
-            normalizeRepairTicket(ticket);
-            addTicketActivity(ticket, 'paid', `checked out this repair by ${order.payment_method} for ${money(total)}`, ticket.statusUpdatedAt);
-            if (previousStatus !== 'finished') {
-              addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText('finished')}`, ticket.statusUpdatedAt);
-            }
-            changedTickets.push(ticket);
-          }
-        });
-        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
-        changedTickets.forEach(ticket => persistRepairTicket(ticket));
-        if (paidRepairIds.includes(state.repair.ticketId)) {
-          resetRepairState();
-        }
-      }
+      if (repairTickets.length) resetRepairState();
 
       state.cart = [];
       els.customerInput.value = '';
+      await loadRepairTickets();
       renderProducts();
       renderRepairWorkspace();
       renderTargetDashboard();
@@ -7846,6 +8534,25 @@
     els.targetNavBtn.addEventListener('click', () => setActiveView('target'));
     els.productNavBtn.addEventListener('click', () => setActiveView('products'));
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
+    els.ordersNavBtn.addEventListener('click', () => setActiveView('orders'));
+    els.invoiceReloadBtn.addEventListener('click', loadInvoiceHistory);
+    els.invoiceSearchInput.addEventListener('input', event => {
+      state.invoiceSearch = event.target.value;
+      clearTimeout(loadInvoiceHistory.searchTimer);
+      loadInvoiceHistory.searchTimer = setTimeout(loadInvoiceHistory, 300);
+    });
+    els.invoiceFilterTabs.addEventListener('click', event => {
+      const button = event.target.closest('[data-invoice-filter]');
+      if (!button) return;
+      state.invoiceFilter = button.dataset.invoiceFilter;
+      renderInvoiceHistory();
+    });
+    els.invoiceList.addEventListener('click', event => {
+      const viewButton = event.target.closest('[data-view-invoice]');
+      const refundButton = event.target.closest('[data-refund-invoice]');
+      if (viewButton) viewInvoiceById(viewButton.dataset.viewInvoice);
+      if (refundButton) openRefundModalById(refundButton.dataset.refundInvoice);
+    });
     els.storeSwitchBtn.addEventListener('click', openStoreSwitchModal);
     els.endShiftBtn.addEventListener('click', openEndShiftModal);
     els.switchUserBtn.addEventListener('click', () => openStaffModal({ canCancel: true }));
@@ -7873,6 +8580,15 @@
     });
 
     els.repairWorkspace.addEventListener('input', event => {
+      if (event.target.id === 'repairBoardSearch') {
+        state.repairSearch = event.target.value;
+        clearTimeout(loadRepairTickets.searchTimer);
+        loadRepairTickets.searchTimer = setTimeout(async () => {
+          await loadRepairTickets();
+          renderRepairWorkspace();
+        }, 300);
+        return;
+      }
       const map = {
         repairQuotedPrice: 'quotedPrice',
         repairDeviceImei: 'deviceImei',
@@ -7959,6 +8675,11 @@
     els.repairWorkspace.addEventListener('dragstart', event => {
       const card = event.target.closest('[data-ticket-id]');
       if (!card) return;
+      const ticket = state.repairTickets.find(item => item.id === card.dataset.ticketId);
+      if (!ticket || ticket.paymentStatus !== 'unpaid') {
+        event.preventDefault();
+        return;
+      }
       card.classList.add('dragging');
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', card.dataset.ticketId);
@@ -8110,12 +8831,27 @@
       if (state.selectedTicketId) updateRepairTicketStatus(state.selectedTicketId, event.target.value);
     });
     els.ticketDetailMain.addEventListener('click', event => {
+      const customerSave = event.target.closest('#ticketCustomerSave');
+      if (customerSave) {
+        saveTicketCustomerDetails();
+        return;
+      }
       const button = event.target.closest('[data-ticket-section]');
       if (!button) return;
       state.selectedTicketSection = button.dataset.ticketSection;
       renderTicketDetailModal();
     });
     els.ticketDetailSide.addEventListener('click', event => {
+      const viewInvoiceButton = event.target.closest('[data-ticket-view-invoice]');
+      const refundInvoiceButton = event.target.closest('[data-ticket-refund-invoice]');
+      if (viewInvoiceButton) {
+        viewInvoiceById(viewInvoiceButton.dataset.ticketViewInvoice);
+        return;
+      }
+      if (refundInvoiceButton) {
+        openRefundModalById(refundInvoiceButton.dataset.ticketRefundInvoice);
+        return;
+      }
       const addButton = event.target.closest('#ticketCommentAdd');
       if (!addButton) return;
       const input = els.ticketDetailSide.querySelector('#ticketCommentInput');
@@ -8126,6 +8862,23 @@
       addTicketActivity(ticket, 'comment', `commented: ${text}`);
       saveRepairTickets(ticket);
       renderTicketDetailModal();
+    });
+    els.refundCloseBtn.addEventListener('click', closeRefundModal);
+    els.refundCancelBtn.addEventListener('click', closeRefundModal);
+    els.refundModal.addEventListener('click', event => {
+      if (event.target === els.refundModal) closeRefundModal();
+    });
+    els.refundLines.addEventListener('input', event => {
+      const row = event.target.closest('[data-refund-line]');
+      if (event.target.matches('[data-refund-check]') && row) {
+        const amount = row.querySelector('[data-refund-amount]');
+        if (amount) amount.disabled = !event.target.checked;
+      }
+      updateRefundTotal();
+    });
+    els.refundForm.addEventListener('submit', event => {
+      event.preventDefault();
+      submitInvoiceRefund();
     });
     els.repairPatternClose.addEventListener('click', closeRepairPatternModal);
     els.repairPatternClear.addEventListener('click', clearRepairPattern);
@@ -8260,6 +9013,8 @@
       }
       if (event.key === 'Escape' && els.emailReceiptModal.classList.contains('show')) {
         closeEmailReceiptModal();
+      } else if (event.key === 'Escape' && els.refundModal.classList.contains('show')) {
+        closeRefundModal();
       } else if (event.key === 'Escape' && els.receiptCompleteModal.classList.contains('show')) {
         closeReceiptCompleteModal();
       }

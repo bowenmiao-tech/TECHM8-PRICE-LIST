@@ -1,7 +1,7 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-staff-session",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -82,14 +82,39 @@ Deno.serve(async (request) => {
       });
     }
 
-    if (request.method === "GET") {
-      const orderCode = new URL(request.url).searchParams.get("order_id") || "";
-      if (!orderCode) {
-        return jsonResponse({ ok: false, message: "order_id is required." }, 400);
+    if (request.method === "PUT") {
+      const payload = await request.json().catch(() => null);
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+        return jsonResponse({ ok: false, message: "Refund payload must be an object." }, 400);
       }
-      return await rpcResponse(request, "get_pos_sales_order", {
+      return await rpcResponse(request, "refund_pos_sales_order", {
         session_token: sessionToken,
-        target_order_code: orderCode,
+        payload,
+      });
+    }
+
+    if (request.method === "GET") {
+      const url = new URL(request.url);
+      const orderCode = url.searchParams.get("order_id") || "";
+      if (orderCode) {
+        return await rpcResponse(request, "get_pos_sales_order", {
+          session_token: sessionToken,
+          target_order_code: orderCode,
+        });
+      }
+
+      const storeCode = url.searchParams.get("store_code") || "";
+      if (!storeCode) {
+        return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+      }
+      const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 200);
+      const offset = Math.max(Number(url.searchParams.get("offset") || 0), 0);
+      return await rpcResponse(request, "search_pos_sales_orders", {
+        session_token: sessionToken,
+        target_store_code: storeCode,
+        search_query: url.searchParams.get("q") || "",
+        result_limit: limit,
+        result_offset: offset,
       });
     }
 

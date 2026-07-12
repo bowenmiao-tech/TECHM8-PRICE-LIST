@@ -73,13 +73,15 @@ supabase functions deploy pos-repair-tickets --no-verify-jwt
 
 ## POS Sales Orders
 
-`pos-sales-orders` saves completed POS sales to the database and returns individual orders for receipt delivery. The browser first records the paid order locally, then calls this endpoint with the same order id. Retries are idempotent.
+`pos-sales-orders` is the single invoice API for retail products, repairs, special items, and mixed baskets. Checkout must be saved to the database before the cart is cleared. Retries with the same order id are idempotent.
 
 Browser calls:
 
 ```text
 POST https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders
 GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?order_id=POS-...
+GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?store_code=northlakes&q=customer
+PUT  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders
 ```
 
 Apply `supabase/migrations/20260711140805_pos_sales_orders.sql` to the staff-auth database, then deploy:
@@ -87,6 +89,12 @@ Apply `supabase/migrations/20260711140805_pos_sales_orders.sql` to the staff-aut
 ```bash
 supabase functions deploy pos-sales-orders --no-verify-jwt
 ```
+
+Apply `supabase/migrations/20260712122942_unify_pos_invoices_and_repair_workflow.sql` after the invoice-number migration. It adds normalized order lines and payments, repair-ticket invoice links, line-level refunds, Repair Board search, and Invoice History search.
+
+Every store has one shared invoice sequence across all sale types. A retail sale, repair sale, or mixed sale consumes the next number from the same store counter. Repair invoices are not stored in a separate invoice table.
+
+Repair tickets require a real customer name and phone at both the browser and database layers. A repair ticket can be linked to only one original sales-order line, preventing duplicate checkout. Refunds create separate immutable refund records and do not alter or delete the original invoice.
 
 ### Invoice Numbers
 
