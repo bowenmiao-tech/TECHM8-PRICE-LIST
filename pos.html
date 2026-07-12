@@ -3920,6 +3920,7 @@
         name: 'TechM8 Park Ridge',
         address: 'Shop 11/3744 Mount Lindesay Hwy, Park Ridge South QLD 4125',
         phone: '+61 452 488 710',
+        email: 'techm8contact@gmail.com',
         website: 'www.techm8australia.com',
         abn: '12 645 861 463'
       },
@@ -3927,6 +3928,7 @@
         name: 'TechM8 North Lakes',
         address: 'OZTECHM8 (Near BigW) Shop 1114A, N Lakes Dr, North Lakes QLD 4509',
         phone: '+61 482 390 009',
+        email: 'techm8contact@gmail.com',
         website: 'www.techm8australia.com',
         abn: '12 645 861 463'
       },
@@ -3934,6 +3936,7 @@
         name: 'TechM8 Fairfield',
         address: 'Shop 8 Fairfield Gardens Shopping Centre',
         phone: '+61 412 788 818',
+        email: 'techm8contact@gmail.com',
         website: 'www.techm8australia.com',
         abn: '12 645 861 463'
       },
@@ -3941,6 +3944,7 @@
         name: 'TechM8 Toowong',
         address: 'G53/9 Sherwood Rd, Toowong QLD 4066',
         phone: '+61 485 500 099',
+        email: 'techm8contact@gmail.com',
         website: 'www.techm8australia.com',
         abn: '69 656 056 352'
       }
@@ -7177,6 +7181,9 @@
         if (!response.ok || payload.ok === false) {
           throw new Error(payload.message || 'Order database save failed.');
         }
+        if (payload.order && typeof payload.order === 'object') {
+          Object.assign(order, payload.order);
+        }
         order.sync_pending = false;
         order.database_saved_at = new Date().toISOString();
         updateStoredOrder(order);
@@ -7216,8 +7223,16 @@
         address: '',
         phone: '',
         website: 'www.techm8australia.com',
+        email: 'techm8contact@gmail.com',
         abn: ''
       };
+    }
+
+    function invoiceNumberText(order) {
+      const invoiceNumber = Number(order && order.invoice_number);
+      return Number.isSafeInteger(invoiceNumber) && invoiceNumber > 0
+        ? String(invoiceNumber)
+        : 'Pending';
     }
 
     function receiptDateTime(value) {
@@ -7233,10 +7248,36 @@
       }).format(date);
     }
 
+    function receiptTermsHtml(profile, hasRepair) {
+      return `
+        <div class="receipt-term-block">
+          <strong>Terms &amp; Conditions for device repairs:</strong>
+          <ul>
+            <li>Physical and Liquid damage of device repairs will not be covered under warranty.</li>
+            <li>Any attempted repair performed to your device by any Third Party will void your warranty.</li>
+            <li>All repair jobs performed by TechM8 will come with 6 months warranty.</li>
+            <li>While it is rare, in some cases your device may need to be sent away for further examination. This may take up to 10 Working Days.</li>
+            <li>In some cases where a refund has been provided, we will still charge a labour fee.</li>
+            <li>If there is a problem with the repair performed, we will repair or replace the item within 10 working days. If it is not repaired or replaced at this time, you can choose a refund.</li>
+          </ul>
+        </div>
+        <div class="receipt-term-block">
+          <strong>Refund Policy:</strong>
+          <ul>
+            <li>All accessories and Repair come with a 6 months warranty unless otherwise specified on the product packaging. This excludes physical and liquid damage.</li>
+            <li>If there is a problem with the product, we will repair or replace the item within 10 working days. If it is not repaired or replaced at this time, you can choose a refund.</li>
+            <li>Please keep your proof of purchase - e.g. your receipt.</li>
+          </ul>
+        </div>
+      `;
+    }
+
     function thermalReceiptContent(order) {
       const profile = receiptProfileForOrder(order);
       const items = Array.isArray(order.items) ? order.items : [];
       const payments = Array.isArray(order.payments) ? order.payments : [];
+      const hasRepair = items.some(item => item && item.is_repair);
+      const invoiceNumber = invoiceNumberText(order);
       const total = roundedMoneyValue(order.total);
       const gst = roundedMoneyValue(total / 11);
       const subtotalExGst = roundedMoneyValue(total - gst);
@@ -7267,13 +7308,15 @@
           <div class="receipt-store">${escapeHtml(profile.name)}</div>
           ${profile.address ? `<div>${escapeHtml(profile.address)}</div>` : ''}
           ${profile.phone ? `<div>Tel: ${escapeHtml(profile.phone)}</div>` : ''}
+          ${profile.email ? `<div>${escapeHtml(profile.email)}</div>` : ''}
           ${profile.website ? `<div>${escapeHtml(profile.website)}</div>` : ''}
           ${profile.abn ? `<div>ABN: ${escapeHtml(profile.abn)}</div>` : ''}
         </header>
         <div class="receipt-rule"></div>
-        <div class="receipt-title">TAX INVOICE</div>
+        <div class="receipt-title">TAX INVOICE #${escapeHtml(invoiceNumber)}</div>
         <div class="receipt-meta">
-          <div class="receipt-meta-row"><span>Receipt</span><strong>${escapeHtml(order.id)}</strong></div>
+          <div class="receipt-meta-row"><span>Invoice No.</span><strong>#${escapeHtml(invoiceNumber)}</strong></div>
+          <div class="receipt-meta-row"><span>Order Ref.</span><strong>${escapeHtml(order.id)}</strong></div>
           <div class="receipt-meta-row"><span>Date</span><strong>${escapeHtml(receiptDateTime(order.created_at))}</strong></div>
           <div class="receipt-meta-row"><span>Staff</span><strong>${escapeHtml(order.staff_name || '')}</strong></div>
           ${customerRows}
@@ -7294,12 +7337,12 @@
         </section>
         <div class="receipt-rule"></div>
         <section class="receipt-terms">
-          <strong>Terms &amp; Conditions</strong>
-          <p>Please retain this receipt as proof of purchase. Warranty claims are subject to assessment and the manufacturer's or TechM8 warranty terms. Change-of-mind returns must be approved and may be subject to product condition and applicable fees. Your rights under Australian Consumer Law are not excluded.</p>
+          <div class="receipt-terms-title">Terms &amp; Condition</div>
+          ${receiptTermsHtml(profile, hasRepair)}
         </section>
         <footer class="receipt-footer">
           <strong>Thanks for shopping at TechM8 Australia</strong>
-          <span>${escapeHtml(order.id)}</span>
+          <span>Invoice #${escapeHtml(invoiceNumber)} - ${escapeHtml(order.id)}</span>
         </footer>
       `;
     }
@@ -7309,7 +7352,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>${escapeHtml(order.id)} Thermal Receipt</title>
+  <title>Invoice ${escapeHtml(invoiceNumberText(order))} - ${escapeHtml(order.id)}</title>
   <style>
     @page { size: 80mm auto; margin: 0; }
     * { box-sizing: border-box; }
@@ -7329,8 +7372,11 @@
     .receipt-item-sku { color: #333; font-size: 9px; }
     .receipt-grand-total { margin-top: 1mm; padding-top: 1.5mm; border-top: 1px solid #000; font-size: 13px; }
     .receipt-section-label { font-weight: 900; }
-    .receipt-terms { font-size: 8.5px; line-height: 1.3; text-align: left; }
-    .receipt-terms p { margin: 1mm 0 0; }
+    .receipt-terms { display: grid; gap: 2mm; font-size: 9px; line-height: 1.36; text-align: left; }
+    .receipt-terms-title { font-size: 10.5px; font-weight: 900; }
+    .receipt-term-block { display: grid; gap: .7mm; }
+    .receipt-term-block p { margin: 0; }
+    .receipt-term-block ul { margin: 0; padding-left: 4mm; }
     .receipt-footer { margin-top: 3mm; }
     .receipt-footer span { font-size: 8px; }
     @media screen { body { margin: 12px auto; box-shadow: 0 0 20px rgba(0,0,0,.14); } }
@@ -7345,12 +7391,15 @@
     function openReceiptCompleteModal(order) {
       state.lastCompletedOrder = order;
       const profile = receiptProfileForOrder(order);
+      const invoiceNumber = invoiceNumberText(order);
       els.receiptCompleteTotal.textContent = `${money(order.total)} paid`;
-      els.receiptCompleteMeta.textContent = `${order.id} - ${profile.name}`;
-      els.receiptSyncNote.textContent = order.sync_pending
+      els.receiptCompleteMeta.textContent = invoiceNumber === 'Pending'
+        ? `${order.id} - ${profile.name}`
+        : `Invoice #${invoiceNumber} - ${profile.name}`;
+      els.receiptSyncNote.textContent = order.sync_pending || invoiceNumber === 'Pending'
         ? 'Saved locally. Database sync is pending and will retry automatically.'
         : 'Order saved to the POS database.';
-      els.receiptSyncNote.classList.toggle('pending', Boolean(order.sync_pending));
+      els.receiptSyncNote.classList.toggle('pending', Boolean(order.sync_pending || invoiceNumber === 'Pending'));
       els.receiptCompleteModal.classList.add('show');
       els.receiptCompleteModal.setAttribute('aria-hidden', 'false');
     }
@@ -7360,9 +7409,17 @@
       els.receiptCompleteModal.setAttribute('aria-hidden', 'true');
     }
 
-    function printThermalReceipt() {
+    async function printThermalReceipt() {
       const order = state.lastCompletedOrder;
       if (!order) return;
+      if (order.sync_pending || invoiceNumberText(order) === 'Pending') {
+        const databaseSaved = await persistPosOrder(order, true);
+        if (!databaseSaved || invoiceNumberText(order) === 'Pending') {
+          showToast('Invoice number is waiting for database sync. Check the connection and try again.');
+          return;
+        }
+        openReceiptCompleteModal(order);
+      }
       const printWindow = window.open('', '_blank', 'width=420,height=760');
       if (!printWindow) {
         showToast('Allow pop-ups to print the thermal receipt.');
@@ -7379,9 +7436,12 @@
       const order = state.lastCompletedOrder;
       if (!order) return;
       const profile = receiptProfileForOrder(order);
+      const invoiceNumber = invoiceNumberText(order);
       els.emailReceiptForm.reset();
       els.emailReceiptTo.value = order.customer_email || '';
-      els.emailReceiptSubject.value = `Payment Receipt ${order.id} from ${profile.name}`;
+      els.emailReceiptSubject.value = invoiceNumber === 'Pending'
+        ? `Tax Invoice Pending (${order.id}) from ${profile.name}`
+        : `Tax Invoice #${invoiceNumber} from ${profile.name}`;
       els.emailReceiptError.textContent = '';
       els.emailReceiptSubmit.disabled = false;
       els.emailReceiptSubmit.textContent = 'Send Thermal Receipt';
@@ -7409,13 +7469,16 @@
       els.emailReceiptSubmit.disabled = true;
       els.emailReceiptSubmit.textContent = 'Sending...';
       try {
-        if (order.sync_pending) {
+        if (order.sync_pending || invoiceNumberText(order) === 'Pending') {
           const databaseSaved = await persistPosOrder(order, true);
-          if (!databaseSaved) {
+          if (!databaseSaved || invoiceNumberText(order) === 'Pending') {
             throw new Error('This order is waiting for database sync. Check the connection and try again.');
           }
           els.receiptSyncNote.textContent = 'Order saved to the POS database.';
           els.receiptSyncNote.classList.remove('pending');
+          if (els.emailReceiptSubject.value.startsWith('Tax Invoice Pending')) {
+            els.emailReceiptSubject.value = `Tax Invoice #${invoiceNumberText(order)} from ${receiptProfileForOrder(order).name}`;
+          }
         }
         const response = await fetch(POS_RECEIPT_EMAIL_ENDPOINT, {
           method: 'POST',

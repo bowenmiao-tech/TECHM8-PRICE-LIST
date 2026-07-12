@@ -88,6 +88,20 @@ Apply `supabase/migrations/20260711140805_pos_sales_orders.sql` to the staff-aut
 supabase functions deploy pos-sales-orders --no-verify-jwt
 ```
 
+### Invoice Numbers
+
+`invoice_number` is a positive `bigint` allocated independently for each store. Park Ridge, North Lakes, Fairfield, and Toowong each begin at `1`. The database counter update and order insert run in the same transaction, and repeating the same order save keeps its original invoice number.
+
+Apply `supabase/migrations/20260711144825_pos_invoice_numbers.sql` after the sales-order migration.
+
+Historical invoices can be inserted with their original store and invoice number. After a historical import, reseed every store counter through a privileged database connection:
+
+```sql
+select public.reseed_pos_store_invoice_counters();
+```
+
+The function returns the next invoice number for each store after its imported maximum. It is executable only by `service_role` and database administrators.
+
 ## POS Receipt Email
 
 `send-pos-receipt-email` loads an already-saved POS order, renders the store-specific email receipt, sends it through Resend, and records the successful delivery on the order.

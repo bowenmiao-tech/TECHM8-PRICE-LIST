@@ -6,41 +6,49 @@ const corsHeaders = {
 
 type JsonRecord = Record<string, unknown>;
 
-const storeProfiles: Record<string, { name: string; address: string; phone: string; abn: string }> = {
+type StoreProfile = { name: string; address: string; phone: string; email: string; abn: string };
+
+const storeProfiles: Record<string, StoreProfile> = {
   "park-ridge": {
     name: "TechM8 Park Ridge",
     address: "Shop 11/3744 Mount Lindesay Hwy, Park Ridge South QLD 4125",
     phone: "+61 452 488 710",
+    email: "techm8contact@gmail.com",
     abn: "12 645 861 463",
   },
   parkridge: {
     name: "TechM8 Park Ridge",
     address: "Shop 11/3744 Mount Lindesay Hwy, Park Ridge South QLD 4125",
     phone: "+61 452 488 710",
+    email: "techm8contact@gmail.com",
     abn: "12 645 861 463",
   },
   "north-lakes": {
     name: "TechM8 North Lakes",
     address: "OZTECHM8 (Near BigW) Shop 1114A, N Lakes Dr, North Lakes QLD 4509",
     phone: "+61 482 390 009",
+    email: "techm8contact@gmail.com",
     abn: "12 645 861 463",
   },
   northlakes: {
     name: "TechM8 North Lakes",
     address: "OZTECHM8 (Near BigW) Shop 1114A, N Lakes Dr, North Lakes QLD 4509",
     phone: "+61 482 390 009",
+    email: "techm8contact@gmail.com",
     abn: "12 645 861 463",
   },
   fairfield: {
     name: "TechM8 Fairfield",
     address: "Shop 8 Fairfield Gardens Shopping Centre",
     phone: "+61 412 788 818",
+    email: "techm8contact@gmail.com",
     abn: "12 645 861 463",
   },
   toowong: {
     name: "TechM8 Toowong",
     address: "G53/9 Sherwood Rd, Toowong QLD 4066",
     phone: "+61 485 500 099",
+    email: "techm8contact@gmail.com",
     abn: "69 656 056 352",
   },
 };
@@ -91,15 +99,50 @@ function orderDate(value: unknown): string {
   }).format(date);
 }
 
+function invoiceNumberText(order: JsonRecord): string {
+  const invoiceNumber = Number(order.invoice_number);
+  return Number.isSafeInteger(invoiceNumber) && invoiceNumber > 0
+    ? String(invoiceNumber)
+    : "Pending";
+}
+
+function receiptTermsHtml(profile: StoreProfile, hasRepair: boolean): string {
+  return `
+    <div style="font-weight:900;font-size:16px;color:#14231e;">Terms &amp; Condition</div>
+    <div style="margin-top:14px;">
+      <div style="font-weight:800;color:#14231e;">Terms &amp; Conditions for device repairs:</div>
+      <ul style="margin:6px 0 0;padding-left:20px;">
+        <li>Physical and Liquid damage of device repairs will not be covered under warranty.</li>
+        <li>Any attempted repair performed to your device by any Third Party will void your warranty.</li>
+        <li>All repair jobs performed by TechM8 will come with 6 months warranty.</li>
+        <li>While it is rare, in some cases your device may need to be sent away for further examination. This may take up to 10 Working Days.</li>
+        <li>In some cases where a refund has been provided, we will still charge a labour fee.</li>
+        <li>If there is a problem with the repair performed, we will repair or replace the item within 10 working days. If it is not repaired or replaced at this time, you can choose a refund.</li>
+      </ul>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="font-weight:800;color:#14231e;">Refund Policy:</div>
+      <ul style="margin:6px 0 0;padding-left:20px;">
+        <li>All accessories and Repair come with a 6 months warranty unless otherwise specified on the product packaging. This excludes physical and liquid damage.</li>
+        <li>If there is a problem with the product, we will repair or replace the item within 10 working days. If it is not repaired or replaced at this time, you can choose a refund.</li>
+        <li>Please keep your proof of purchase - e.g. your receipt.</li>
+      </ul>
+    </div>
+  `;
+}
+
 function receiptEmailHtml(order: JsonRecord, note: string): string {
   const profile = storeProfiles[normalizedStoreKey(order)] || {
     name: String(order.store_name || "TechM8 Australia"),
     address: "",
     phone: "",
+    email: "techm8contact@gmail.com",
     abn: "",
   };
   const items = Array.isArray(order.items) ? order.items as JsonRecord[] : [];
   const payments = Array.isArray(order.payments) ? order.payments as JsonRecord[] : [];
+  const hasRepair = items.some((item) => Boolean(item && item.is_repair));
+  const invoiceNumber = invoiceNumberText(order);
   const total = Number(order.total || 0);
   const gst = Math.round((total / 11) * 100) / 100;
   const subtotal = Math.round((total - gst) * 100) / 100;
@@ -133,11 +176,12 @@ function receiptEmailHtml(order: JsonRecord, note: string): string {
         <div style="margin-top:6px;font-size:15px;font-weight:700;">${escapeHtml(profile.name)}</div>
       </div>
       <div style="padding:30px;">
-        <h1 style="margin:0 0 8px;font-size:27px;line-height:1.2;">Here's your tax receipt</h1>
+        <h1 style="margin:0 0 8px;font-size:27px;line-height:1.2;">Here's your tax invoice #${escapeHtml(invoiceNumber)}</h1>
         <p style="margin:0 0 22px;color:#62736b;line-height:1.6;">Thanks for shopping with us. Your payment has been completed and recorded.</p>
         ${noteHtml}
         <table role="presentation" style="width:100%;margin-bottom:22px;border-collapse:collapse;font-size:14px;">
-          <tr><td style="padding:4px 0;color:#708078;">Receipt</td><td style="padding:4px 0;text-align:right;font-weight:800;">${escapeHtml(order.id)}</td></tr>
+          <tr><td style="padding:4px 0;color:#708078;">Invoice No.</td><td style="padding:4px 0;text-align:right;font-weight:800;">#${escapeHtml(invoiceNumber)}</td></tr>
+          <tr><td style="padding:4px 0;color:#708078;">Order Ref.</td><td style="padding:4px 0;text-align:right;font-weight:800;">${escapeHtml(order.id)}</td></tr>
           <tr><td style="padding:4px 0;color:#708078;">Date</td><td style="padding:4px 0;text-align:right;font-weight:800;">${escapeHtml(orderDate(order.created_at))}</td></tr>
           <tr><td style="padding:4px 0;color:#708078;">Customer</td><td style="padding:4px 0;text-align:right;font-weight:800;">${escapeHtml(customerName)}</td></tr>
           <tr><td style="padding:4px 0;color:#708078;">Served by</td><td style="padding:4px 0;text-align:right;font-weight:800;">${escapeHtml(order.staff_name)}</td></tr>
@@ -154,11 +198,15 @@ function receiptEmailHtml(order: JsonRecord, note: string): string {
           ${paymentRows}
           <tr><td style="padding:5px 0;color:#52625b;">Balance</td><td style="padding:5px 0;text-align:right;font-weight:700;">$0.00</td></tr>
         </table>
+        <div style="margin-top:28px;padding-top:22px;border-top:1px solid #dce6e2;color:#52625b;font-size:12px;line-height:1.55;">
+          ${receiptTermsHtml(profile, hasRepair)}
+        </div>
       </div>
       <div style="padding:22px 30px;background:#f5f8f7;color:#687870;font-size:12px;line-height:1.6;text-align:center;">
         <div style="font-weight:800;color:#33473f;">${escapeHtml(profile.name)}</div>
         ${profile.address ? `<div>${escapeHtml(profile.address)}</div>` : ""}
         ${profile.phone ? `<div>${escapeHtml(profile.phone)}</div>` : ""}
+        ${profile.email ? `<div>${escapeHtml(profile.email)}</div>` : ""}
         ${profile.abn ? `<div>ABN ${escapeHtml(profile.abn)}</div>` : ""}
         <div><a href="https://www.techm8australia.com/" style="color:#07896f;">www.techm8australia.com</a></div>
       </div>
@@ -252,7 +300,7 @@ Deno.serve(async (request) => {
     const resendPayload: JsonRecord = {
       from: fromAddress,
       to: [recipient],
-      subject: subject || `Payment Receipt ${orderCode} from ${order.store_name || "TechM8"}`,
+      subject: subject || `Tax Invoice #${invoiceNumberText(order)} from ${order.store_name || "TechM8"}`,
       html: receiptEmailHtml(order, note),
     };
     if (sendCopy) resendPayload.cc = [copyAddress];
