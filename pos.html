@@ -3502,7 +3502,7 @@
         </label>
         <label class="email-copy-row">
           <input id="emailReceiptCopy" type="checkbox">
-          <span>Send a copy to techm8contact@gmail.com</span>
+          <span id="emailReceiptCopyLabel">Send a copy to the store</span>
         </label>
         <div id="emailReceiptError" class="email-receipt-error" role="alert"></div>
         <button id="emailReceiptSubmit" class="email-receipt-submit" type="submit">Send Thermal Receipt</button>
@@ -4131,6 +4131,7 @@
       emailReceiptSubject: document.getElementById('emailReceiptSubject'),
       emailReceiptNote: document.getElementById('emailReceiptNote'),
       emailReceiptCopy: document.getElementById('emailReceiptCopy'),
+      emailReceiptCopyLabel: document.getElementById('emailReceiptCopyLabel'),
       emailReceiptError: document.getElementById('emailReceiptError'),
       emailReceiptSubmit: document.getElementById('emailReceiptSubmit'),
       holdListModal: document.getElementById('holdListModal'),
@@ -4329,7 +4330,7 @@
         name: 'TechM8 Park Ridge',
         address: 'Shop 11/3744 Mount Lindesay Hwy, Park Ridge South QLD 4125',
         phone: '+61 452 488 710',
-        email: 'techm8contact@gmail.com',
+        email: 'techm8.parkridge@gmail.com',
         website: 'www.techm8australia.com',
         abn: '12 645 861 463'
       },
@@ -4337,7 +4338,7 @@
         name: 'TechM8 North Lakes',
         address: 'OZTECHM8 (Near BigW) Shop 1114A, N Lakes Dr, North Lakes QLD 4509',
         phone: '+61 482 390 009',
-        email: 'techm8contact@gmail.com',
+        email: 'techm8.northlakes@gmail.com',
         website: 'www.techm8australia.com',
         abn: '12 645 861 463'
       },
@@ -4345,7 +4346,7 @@
         name: 'TechM8 Fairfield',
         address: 'Shop 8 Fairfield Gardens Shopping Centre',
         phone: '+61 412 788 818',
-        email: 'techm8contact@gmail.com',
+        email: 'techm8.fairfield@gmail.com',
         website: 'www.techm8australia.com',
         abn: '12 645 861 463'
       },
@@ -4353,7 +4354,7 @@
         name: 'TechM8 Toowong',
         address: 'G53/9 Sherwood Rd, Toowong QLD 4066',
         phone: '+61 485 500 099',
-        email: 'techm8contact@gmail.com',
+        email: 'techm8.toowong@gmail.com',
         website: 'www.techm8australia.com',
         abn: '69 656 056 352'
       }
@@ -8047,7 +8048,12 @@
     }
 
     function receiptProfileForOrder(order) {
-      const storeId = String(order && order.store_id || '').trim();
+      const rawStoreId = String(order && (order.store_id || order.store_db_code) || '').trim().toLowerCase();
+      const storeId = rawStoreId === 'parkridge'
+        ? 'park-ridge'
+        : rawStoreId === 'northlakes'
+          ? 'north-lakes'
+          : rawStoreId;
       return POS_RECEIPT_PROFILES[storeId] || {
         name: storeById(storeId).name,
         address: '',
@@ -8282,6 +8288,7 @@
       els.emailReceiptSubject.value = invoiceNumber === 'Pending'
         ? `Tax Invoice Pending (${order.id}) from ${profile.name}`
         : `Tax Invoice #${invoiceNumber} from ${profile.name}`;
+      els.emailReceiptCopyLabel.textContent = `Send a copy to ${profile.email}`;
       els.emailReceiptError.textContent = '';
       els.emailReceiptSubmit.disabled = false;
       els.emailReceiptSubmit.textContent = 'Send Thermal Receipt';

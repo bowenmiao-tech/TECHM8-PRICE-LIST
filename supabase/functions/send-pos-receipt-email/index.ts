@@ -13,42 +13,42 @@ const storeProfiles: Record<string, StoreProfile> = {
     name: "TechM8 Park Ridge",
     address: "Shop 11/3744 Mount Lindesay Hwy, Park Ridge South QLD 4125",
     phone: "+61 452 488 710",
-    email: "techm8contact@gmail.com",
+    email: "techm8.parkridge@gmail.com",
     abn: "12 645 861 463",
   },
   parkridge: {
     name: "TechM8 Park Ridge",
     address: "Shop 11/3744 Mount Lindesay Hwy, Park Ridge South QLD 4125",
     phone: "+61 452 488 710",
-    email: "techm8contact@gmail.com",
+    email: "techm8.parkridge@gmail.com",
     abn: "12 645 861 463",
   },
   "north-lakes": {
     name: "TechM8 North Lakes",
     address: "OZTECHM8 (Near BigW) Shop 1114A, N Lakes Dr, North Lakes QLD 4509",
     phone: "+61 482 390 009",
-    email: "techm8contact@gmail.com",
+    email: "techm8.northlakes@gmail.com",
     abn: "12 645 861 463",
   },
   northlakes: {
     name: "TechM8 North Lakes",
     address: "OZTECHM8 (Near BigW) Shop 1114A, N Lakes Dr, North Lakes QLD 4509",
     phone: "+61 482 390 009",
-    email: "techm8contact@gmail.com",
+    email: "techm8.northlakes@gmail.com",
     abn: "12 645 861 463",
   },
   fairfield: {
     name: "TechM8 Fairfield",
     address: "Shop 8 Fairfield Gardens Shopping Centre",
     phone: "+61 412 788 818",
-    email: "techm8contact@gmail.com",
+    email: "techm8.fairfield@gmail.com",
     abn: "12 645 861 463",
   },
   toowong: {
     name: "TechM8 Toowong",
     address: "G53/9 Sherwood Rd, Toowong QLD 4066",
     phone: "+61 485 500 099",
-    email: "techm8contact@gmail.com",
+    email: "techm8.toowong@gmail.com",
     abn: "69 656 056 352",
   },
 };
@@ -81,10 +81,20 @@ function money(value: unknown): string {
 }
 
 function normalizedStoreKey(order: JsonRecord): string {
-  return String(order.store_id || order.store_db_code || "")
-    .trim()
-    .toLowerCase()
-    .replaceAll("_", "-");
+  const candidates = [order.store_id, order.store_db_code]
+    .map((value) => String(value || "").trim().toLowerCase().replaceAll("_", "-"))
+    .filter(Boolean);
+  return candidates.find((key) => Boolean(storeProfiles[key])) || candidates[0] || "";
+}
+
+function storeProfileForOrder(order: JsonRecord): StoreProfile {
+  return storeProfiles[normalizedStoreKey(order)] || {
+    name: String(order.store_name || "TechM8 Australia"),
+    address: "",
+    phone: "",
+    email: "techm8contact@gmail.com",
+    abn: "",
+  };
 }
 
 function orderDate(value: unknown): string {
@@ -132,13 +142,7 @@ function receiptTermsHtml(profile: StoreProfile, hasRepair: boolean): string {
 }
 
 function receiptEmailHtml(order: JsonRecord, note: string): string {
-  const profile = storeProfiles[normalizedStoreKey(order)] || {
-    name: String(order.store_name || "TechM8 Australia"),
-    address: "",
-    phone: "",
-    email: "techm8contact@gmail.com",
-    abn: "",
-  };
+  const profile = storeProfileForOrder(order);
   const items = Array.isArray(order.items) ? order.items as JsonRecord[] : [];
   const payments = Array.isArray(order.payments) ? order.payments as JsonRecord[] : [];
   const hasRepair = items.some((item) => Boolean(item && item.is_repair));
@@ -290,9 +294,9 @@ Deno.serve(async (request) => {
     }
 
     const order = orderResult.data.order as JsonRecord;
+    const profile = storeProfileForOrder(order);
     const resendApiKey = Deno.env.get("RESEND_API_KEY") || Deno.env.get("RESEND_API_KEY_BOOKING") || "";
     const fromAddress = Deno.env.get("POS_RECEIPT_FROM") || Deno.env.get("BOOKING_FROM_EMAIL") || "";
-    const copyAddress = Deno.env.get("POS_RECEIPT_COPY_TO") || "techm8contact@gmail.com";
     if (!resendApiKey || !fromAddress) {
       return jsonResponse({ ok: false, message: "Receipt email service is not configured." }, 500);
     }
@@ -300,10 +304,11 @@ Deno.serve(async (request) => {
     const resendPayload: JsonRecord = {
       from: fromAddress,
       to: [recipient],
+      reply_to: profile.email,
       subject: subject || `Tax Invoice #${invoiceNumberText(order)} from ${order.store_name || "TechM8"}`,
       html: receiptEmailHtml(order, note),
     };
-    if (sendCopy) resendPayload.cc = [copyAddress];
+    if (sendCopy) resendPayload.cc = [profile.email];
 
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
