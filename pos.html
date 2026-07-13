@@ -8031,19 +8031,20 @@
   <meta charset="utf-8">
   <title>Invoice ${escapeHtml(invoiceNumberText(order))} - ${escapeHtml(order.id)}</title>
   <style>
-    @page { size: 80mm auto; margin: 0; }
+    @page { margin: 0; }
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; color: #000; background: #fff; font-family: Arial, Helvetica, sans-serif; }
-    body { width: 80mm; }
-    .thermal-receipt { width: 70mm; margin: 0 auto; padding: 3mm 0 4mm; font-size: 10.5px; line-height: 1.35; overflow-wrap: anywhere; }
+    html, body { width: 100%; min-width: 0; margin: 0; padding: 0; color: #000; background: #fff; font-family: Arial, Helvetica, sans-serif; }
+    .thermal-receipt { width: 100%; max-width: 72mm; margin: 0 auto; padding: 3mm 3mm 4mm; font-size: 10.5px; line-height: 1.35; overflow-wrap: anywhere; }
     .receipt-header, .receipt-footer { display: grid; justify-items: center; gap: 1.2mm; text-align: center; }
+    .receipt-header > *, .receipt-footer > * { max-width: 100%; }
     .receipt-brand { font-size: 24px; font-weight: 900; line-height: 1; }
     .receipt-store { font-size: 14px; font-weight: 800; }
     .receipt-title { padding: 1mm 0; text-align: center; font-size: 13px; font-weight: 900; }
     .receipt-rule { margin: 2.2mm 0; border-top: 1px dashed #000; }
     .receipt-meta, .receipt-items, .receipt-totals { display: grid; gap: 1.4mm; }
-    .receipt-meta-row, .receipt-total-row, .receipt-item-line { display: flex; justify-content: space-between; align-items: flex-start; gap: 4mm; }
-    .receipt-meta-row strong, .receipt-total-row strong { max-width: 43mm; text-align: right; }
+    .receipt-meta-row, .receipt-total-row, .receipt-item-line { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); align-items: start; gap: 2.5mm; }
+    .receipt-meta-row > :first-child, .receipt-total-row > :first-child, .receipt-item-line > :first-child { min-width: 0; }
+    .receipt-meta-row strong, .receipt-total-row strong, .receipt-item-line strong { min-width: 0; max-width: 100%; text-align: right; overflow-wrap: anywhere; word-break: break-word; }
     .receipt-item { display: grid; gap: .7mm; padding-bottom: 1.3mm; }
     .receipt-item-name { font-weight: 800; }
     .receipt-item-sku { color: #333; font-size: 9px; }
@@ -8056,7 +8057,13 @@
     .receipt-term-block ul { margin: 0; padding-left: 4mm; }
     .receipt-footer { margin-top: 3mm; }
     .receipt-footer span { font-size: 8px; }
-    @media screen { body { margin: 12px auto; box-shadow: 0 0 20px rgba(0,0,0,.14); } }
+    @media screen {
+      body { width: 80mm; margin: 12px auto; box-shadow: 0 0 20px rgba(0,0,0,.14); }
+    }
+    @media print {
+      html, body { width: 100% !important; max-width: none !important; }
+      .thermal-receipt { width: 100% !important; max-width: none !important; margin: 0 !important; padding-right: 3mm !important; padding-left: 3mm !important; }
+    }
   </style>
 </head>
 <body>
