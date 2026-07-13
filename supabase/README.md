@@ -80,7 +80,7 @@ Browser calls:
 ```text
 POST https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders
 GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?order_id=POS-...
-GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?store_code=northlakes&q=customer
+GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?store_code=northlakes&q=customer&from_date=2026-07-01&to_date=2026-07-13
 PUT  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders
 ```
 
@@ -91,6 +91,8 @@ supabase functions deploy pos-sales-orders --no-verify-jwt
 ```
 
 Apply `supabase/migrations/20260712122942_unify_pos_invoices_and_repair_workflow.sql` after the invoice-number migration. It adds normalized order lines and payments, repair-ticket invoice links, line-level refunds, Repair Board search, and Invoice History search.
+
+Invoice History can combine its keyword search with `from_date` and `to_date` (`YYYY-MM-DD`). Dates are inclusive and use each order's Brisbane `business_date`; sending the same value for both parameters performs an exact-day search.
 
 Every store has one shared invoice sequence across all sale types. A retail sale, repair sale, or mixed sale consumes the next number from the same store counter. Repair invoices are not stored in a separate invoice table.
 

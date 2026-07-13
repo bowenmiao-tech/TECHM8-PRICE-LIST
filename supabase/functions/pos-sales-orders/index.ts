@@ -115,6 +115,8 @@ Deno.serve(async (request) => {
         search_query: url.searchParams.get("q") || "",
         result_limit: limit,
         result_offset: offset,
+        date_from: url.searchParams.get("from_date") || null,
+        date_to: url.searchParams.get("to_date") || null,
       });
     }
 

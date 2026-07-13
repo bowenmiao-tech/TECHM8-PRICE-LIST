@@ -2686,11 +2686,92 @@
       font-weight: 950;
     }
 
-    .invoice-filter-tabs {
+    .invoice-date-panel {
       display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 10px 14px;
+      margin: 0 0 14px;
+    }
+
+    .invoice-date-mode {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      min-width: 250px;
+      padding: 3px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #eaf0f2;
+    }
+
+    .invoice-date-mode-button {
+      min-height: 38px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 12px;
+      color: #53646c;
+      background: transparent;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .invoice-date-mode-button.active {
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .invoice-date-fields,
+    .invoice-date-presets {
+      display: flex;
+      flex-wrap: wrap;
       gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: thin;
+      align-items: end;
+    }
+
+    .invoice-date-field {
+      display: grid;
+      gap: 4px;
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .invoice-date-field[hidden] {
+      display: none;
+    }
+
+    .invoice-date-input {
+      width: 158px;
+      height: 44px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      padding: 0 10px;
+      color: var(--tm-ink);
+      background: #fff;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .invoice-date-presets {
+      flex: 1 1 390px;
+    }
+
+    .invoice-date-preset {
+      min-height: 38px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      padding: 0 12px;
+      color: #43545c;
+      background: #fff;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .invoice-date-preset.active {
+      color: var(--tm-green-dark);
+      border-color: #8bcfc0;
+      background: #e6f7f3;
     }
 
     .invoice-list {
@@ -3273,7 +3354,7 @@
           <div class="invoice-head">
             <div>
               <h1 class="invoice-title">Invoice History</h1>
-              <div class="repair-subtitle">Retail, repair, and mixed invoices for the current store.</div>
+              <div class="repair-subtitle">Search all invoices for the current store by date or customer details.</div>
             </div>
             <button id="invoiceReloadBtn" class="repair-action" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
           </div>
@@ -3285,7 +3366,29 @@
               </div>
               <div id="invoiceResultCount" class="invoice-result-count">0 invoices</div>
             </div>
-            <div id="invoiceFilterTabs" class="invoice-filter-tabs"></div>
+            <div class="invoice-date-panel">
+              <div id="invoiceDateMode" class="invoice-date-mode" role="group" aria-label="Invoice date search mode">
+                <button class="invoice-date-mode-button active" type="button" data-invoice-date-mode="day"><i class="bi bi-calendar-day"></i> Specific date</button>
+                <button class="invoice-date-mode-button" type="button" data-invoice-date-mode="range"><i class="bi bi-calendar-range"></i> Date range</button>
+              </div>
+              <div class="invoice-date-fields">
+                <label class="invoice-date-field">
+                  <span id="invoiceDateFromLabel">Date</span>
+                  <input id="invoiceDateFromInput" class="invoice-date-input" type="date">
+                </label>
+                <label id="invoiceDateToField" class="invoice-date-field" hidden>
+                  <span>End date</span>
+                  <input id="invoiceDateToInput" class="invoice-date-input" type="date">
+                </label>
+              </div>
+              <div id="invoiceDatePresets" class="invoice-date-presets" aria-label="Invoice date shortcuts">
+                <button class="invoice-date-preset active" type="button" data-invoice-date-preset="today">Today</button>
+                <button class="invoice-date-preset" type="button" data-invoice-date-preset="yesterday">Yesterday</button>
+                <button class="invoice-date-preset" type="button" data-invoice-date-preset="last7">Last 7 Days</button>
+                <button class="invoice-date-preset" type="button" data-invoice-date-preset="month">This Month</button>
+                <button class="invoice-date-preset" type="button" data-invoice-date-preset="all">All Dates</button>
+              </div>
+            </div>
           </div>
           <div id="invoiceList" class="invoice-list"></div>
         </div>
@@ -3902,7 +4005,10 @@
       lastCompletedOrder: null,
       activeView: 'target',
       invoiceSearch: '',
-      invoiceFilter: 'all',
+      invoiceDateMode: 'day',
+      invoiceDateFrom: brisbaneDateIso(),
+      invoiceDateTo: brisbaneDateIso(),
+      invoiceDatePreset: 'today',
       invoiceOrders: [],
       invoiceLoading: false,
       refundOrder: null,
@@ -3961,7 +4067,12 @@
       ordersNavBtn: document.getElementById('ordersNavBtn'),
       invoiceSearchInput: document.getElementById('invoiceSearchInput'),
       invoiceReloadBtn: document.getElementById('invoiceReloadBtn'),
-      invoiceFilterTabs: document.getElementById('invoiceFilterTabs'),
+      invoiceDateMode: document.getElementById('invoiceDateMode'),
+      invoiceDateFromLabel: document.getElementById('invoiceDateFromLabel'),
+      invoiceDateFromInput: document.getElementById('invoiceDateFromInput'),
+      invoiceDateToField: document.getElementById('invoiceDateToField'),
+      invoiceDateToInput: document.getElementById('invoiceDateToInput'),
+      invoiceDatePresets: document.getElementById('invoiceDatePresets'),
       invoiceResultCount: document.getElementById('invoiceResultCount'),
       invoiceList: document.getElementById('invoiceList'),
       newRepairBtn: document.getElementById('newRepairBtn'),
@@ -7608,36 +7719,78 @@
       return headers;
     }
 
-    function invoiceTypeLabel(type) {
-      if (type === 'repair') return 'Repair';
-      if (type === 'mixed') return 'Mixed';
-      return 'Retail';
-    }
-
     function invoiceRefundLabel(status) {
       if (status === 'refunded') return 'Refunded';
       if (status === 'partially_refunded') return 'Partially refunded';
       return 'Paid';
     }
 
-    function filteredInvoiceOrders() {
-      if (state.invoiceFilter === 'all') return state.invoiceOrders;
-      return state.invoiceOrders.filter(order => (order.sale_type || 'retail') === state.invoiceFilter);
+    function shiftInvoiceDate(dateValue, days) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateValue || ''));
+      if (!match) return '';
+      const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + Number(days || 0)));
+      return date.toISOString().slice(0, 10);
+    }
+
+    function invoiceDateRange() {
+      const from = String(state.invoiceDateFrom || '');
+      if (!from) return { from: '', to: '' };
+      if (state.invoiceDateMode === 'day') return { from, to: from };
+      return { from, to: String(state.invoiceDateTo || '') };
+    }
+
+    function renderInvoiceDateControls() {
+      if (!els.invoiceDateMode) return;
+      els.invoiceDateMode.querySelectorAll('[data-invoice-date-mode]').forEach(button => {
+        const active = button.dataset.invoiceDateMode === state.invoiceDateMode;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      els.invoiceDateFromLabel.textContent = state.invoiceDateMode === 'day' ? 'Date' : 'Start date';
+      els.invoiceDateFromInput.value = state.invoiceDateFrom || '';
+      els.invoiceDateToField.hidden = state.invoiceDateMode !== 'range';
+      els.invoiceDateToInput.value = state.invoiceDateTo || '';
+      els.invoiceDateToInput.min = state.invoiceDateFrom || '';
+      els.invoiceDatePresets.querySelectorAll('[data-invoice-date-preset]').forEach(button => {
+        const active = button.dataset.invoiceDatePreset === state.invoiceDatePreset;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+    }
+
+    function setInvoiceDatePreset(preset) {
+      const today = brisbaneDateIso();
+      state.invoiceDatePreset = preset;
+      if (preset === 'today') {
+        state.invoiceDateMode = 'day';
+        state.invoiceDateFrom = today;
+        state.invoiceDateTo = today;
+      } else if (preset === 'yesterday') {
+        const yesterday = shiftInvoiceDate(today, -1);
+        state.invoiceDateMode = 'day';
+        state.invoiceDateFrom = yesterday;
+        state.invoiceDateTo = yesterday;
+      } else if (preset === 'last7') {
+        state.invoiceDateMode = 'range';
+        state.invoiceDateFrom = shiftInvoiceDate(today, -6);
+        state.invoiceDateTo = today;
+      } else if (preset === 'month') {
+        state.invoiceDateMode = 'range';
+        state.invoiceDateFrom = `${today.slice(0, 7)}-01`;
+        state.invoiceDateTo = today;
+      } else {
+        state.invoiceDateMode = 'range';
+        state.invoiceDateFrom = '';
+        state.invoiceDateTo = '';
+      }
+      renderInvoiceDateControls();
+      loadInvoiceHistory();
     }
 
     function renderInvoiceHistory() {
       if (!els.invoiceList) return;
-      const filters = [
-        ['all', 'All'],
-        ['retail', 'Retail'],
-        ['repair', 'Repair'],
-        ['mixed', 'Mixed']
-      ];
-      els.invoiceFilterTabs.innerHTML = filters.map(([id, label]) => `
-        <button class="tab-chip ${state.invoiceFilter === id ? 'active' : ''}" type="button" data-invoice-filter="${id}">${label}</button>
-      `).join('');
-
-      const orders = filteredInvoiceOrders();
+      renderInvoiceDateControls();
+      const orders = state.invoiceOrders;
       els.invoiceResultCount.textContent = state.invoiceLoading
         ? 'Loading...'
         : `${orders.length} invoice${orders.length === 1 ? '' : 's'}`;
@@ -7648,7 +7801,7 @@
       }
       if (!orders.length) {
         els.invoiceList.innerHTML = `
-          <div class="empty-state"><div><div class="cart-empty-icon"><i class="bi bi-receipt"></i></div><strong>No matching invoices</strong><div>Try another invoice number, customer, phone, ticket, or product.</div></div></div>
+          <div class="empty-state"><div><div class="cart-empty-icon"><i class="bi bi-receipt"></i></div><strong>No matching invoices</strong><div>Try another date, invoice number, customer, phone, ticket, or product.</div></div></div>
         `;
         return;
       }
@@ -7661,11 +7814,11 @@
             <div class="invoice-number">#${escapeHtml(invoiceNumberText(order))}</div>
             <div class="invoice-row-main">
               <strong>${escapeHtml(order.customer_name || 'Walk-in Customer')}</strong>
-              <span>${escapeHtml(order.customer_phone || order.id)} · ${itemCount} item${itemCount === 1 ? '' : 's'}</span>
+              <span>${escapeHtml(order.customer_phone || order.id)} &middot; ${itemCount} item${itemCount === 1 ? '' : 's'}</span>
             </div>
             <div class="invoice-row-meta">
-              <strong>${escapeHtml(invoiceTypeLabel(order.sale_type))}</strong>
-              <span>${escapeHtml(formatDateTime(order.created_at))} · ${escapeHtml(invoiceRefundLabel(order.refund_status))}</span>
+              <strong>${escapeHtml(order.staff_name || 'Staff unavailable')}</strong>
+              <span>${escapeHtml(formatDateTime(order.created_at))} &middot; ${escapeHtml(invoiceRefundLabel(order.refund_status))}</span>
             </div>
             <div class="invoice-total">${money(order.total)}</div>
             <div class="invoice-actions">
@@ -7682,9 +7835,12 @@
       state.invoiceLoading = true;
       renderInvoiceHistory();
       const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+      const dateRange = invoiceDateRange();
       url.searchParams.set('store_code', repairTicketStoreCode());
       url.searchParams.set('q', state.invoiceSearch || '');
       url.searchParams.set('limit', '200');
+      if (dateRange.from) url.searchParams.set('from_date', dateRange.from);
+      if (dateRange.to) url.searchParams.set('to_date', dateRange.to);
       try {
         const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
         const payload = await response.json().catch(() => ({}));
@@ -7754,7 +7910,7 @@
             <input type="checkbox" data-refund-check checked>
             <span>
               <span class="refund-line-name">${escapeHtml(item.name || 'Sale item')}</span>
-              <span class="refund-line-meta">${escapeHtml(item.ticket_id ? `Ticket ${item.ticket_id}` : item.sku || invoiceTypeLabel(item.line_type))} · Available ${money(refundable)}</span>
+              <span class="refund-line-meta">${escapeHtml(item.ticket_id ? `Ticket ${item.ticket_id}` : item.sku || (item.line_type === 'repair' ? 'Repair' : 'Product'))} · Available ${money(refundable)}</span>
             </span>
             <input type="number" min="0.01" max="${refundable.toFixed(2)}" step="0.01" value="${refundable.toFixed(2)}" data-refund-amount aria-label="Refund amount for ${escapeHtml(item.name || 'item')}">
           </label>
@@ -8548,11 +8704,43 @@
       clearTimeout(loadInvoiceHistory.searchTimer);
       loadInvoiceHistory.searchTimer = setTimeout(loadInvoiceHistory, 300);
     });
-    els.invoiceFilterTabs.addEventListener('click', event => {
-      const button = event.target.closest('[data-invoice-filter]');
+    els.invoiceDateMode.addEventListener('click', event => {
+      const button = event.target.closest('[data-invoice-date-mode]');
       if (!button) return;
-      state.invoiceFilter = button.dataset.invoiceFilter;
-      renderInvoiceHistory();
+      state.invoiceDateMode = button.dataset.invoiceDateMode;
+      state.invoiceDatePreset = '';
+      if (state.invoiceDateMode === 'range' && state.invoiceDateFrom && !state.invoiceDateTo) {
+        state.invoiceDateTo = state.invoiceDateFrom;
+      }
+      renderInvoiceDateControls();
+      loadInvoiceHistory();
+    });
+    els.invoiceDateFromInput.addEventListener('change', event => {
+      state.invoiceDateFrom = event.target.value;
+      state.invoiceDatePreset = '';
+      if (state.invoiceDateMode === 'range' && state.invoiceDateFrom && (!state.invoiceDateTo || state.invoiceDateTo < state.invoiceDateFrom)) {
+        state.invoiceDateTo = state.invoiceDateFrom;
+      }
+      renderInvoiceDateControls();
+      loadInvoiceHistory();
+    });
+    els.invoiceDateToInput.addEventListener('change', event => {
+      state.invoiceDateTo = event.target.value;
+      state.invoiceDatePreset = '';
+      if (!state.invoiceDateFrom && state.invoiceDateTo) {
+        state.invoiceDateFrom = state.invoiceDateTo;
+      }
+      if (state.invoiceDateFrom && state.invoiceDateTo && state.invoiceDateTo < state.invoiceDateFrom) {
+        state.invoiceDateTo = state.invoiceDateFrom;
+        showToast('End date cannot be before start date.');
+      }
+      renderInvoiceDateControls();
+      loadInvoiceHistory();
+    });
+    els.invoiceDatePresets.addEventListener('click', event => {
+      const button = event.target.closest('[data-invoice-date-preset]');
+      if (!button) return;
+      setInvoiceDatePreset(button.dataset.invoiceDatePreset);
     });
     els.invoiceList.addEventListener('click', event => {
       const viewButton = event.target.closest('[data-view-invoice]');
