@@ -11,6 +11,7 @@ This repo is the internal staff site, not the public website.
 
 Front-end staff pages:
 - `index.html` - staff portal home
+- `pos.html` - store POS, Repair Board, and Invoice History
 - `quote.html` - repair quote lookup
 - `repair_workflow.html` - intake / workflow page
 - `daily-report.html` - daily report + weekly LCD count
@@ -49,6 +50,140 @@ Password rules:
 - Keep current password behavior unchanged unless explicitly requested.
 - `price-admin.html` keeps the front-end staff password update feature.
 - Do not add a general admin password edit UI unless explicitly requested.
+
+## POS System
+
+`pos.html` is the operational POS for Park Ridge, North Lakes, Fairfield, and Toowong. Brassall and Warehouse are not POS stores.
+
+### Current Scope
+
+Completed product-sale flow:
+- Live products load through the browser-safe `pos-products` Edge Function.
+- Product cards show image, name, sale price, and stock for the selected store.
+- Search supports product name, SKU, and barcode.
+- Category tabs come from the product API.
+- The entire product card adds the item to the cart.
+- Zero-stock products are intentionally allowed to be sold.
+- Quantity change, cancel, hold, and resume are available.
+- Held carts are limited to the same browser and are not shared between terminals.
+
+Completed checkout flow:
+- Cash, Card, Afterpay, CNYpay, and Bank Transfer are supported as recorded payment methods.
+- Split payments are supported. Each confirmed payment reduces the remaining balance.
+- `Full Payment` assigns the complete remaining balance to the selected method.
+- Checkout is complete only after the order is saved to the POS database.
+- The cart is retained when database saving fails, so staff can retry safely.
+- Repeating the same order ID is idempotent and does not create another invoice.
+- Payment methods are recorded only; there is no EFTPOS or payment-provider integration yet.
+
+Completed invoice flow:
+- Retail, repair, special-product, and mixed sales share `pos_sales_orders`.
+- Each store has its own invoice sequence starting at `1`.
+- Invoice numbers are not shared between stores.
+- Invoice History is always restricted to the selected store.
+- Search supports invoice number, order reference, customer, phone, repair ticket, product, and SKU.
+- Date search supports a specific day, date range, today, yesterday, last 7 days, this month, and all dates.
+- Refunds are immutable records linked to the original invoice and can be entered per line.
+- Original invoice lines are never deleted or overwritten by a refund.
+
+Completed receipt flow:
+- Completing payment opens receipt actions after the database save.
+- Available actions are `Print Thermal Receipt` and `Email Thermal Receipt` only.
+- Printing or emailing is optional; closing the receipt dialog does not undo the sale.
+- Thermal printing uses an 80 mm layout and store-specific business details.
+- Receipt email is sent by `send-pos-receipt-email` through Resend.
+- Email Reply-To and optional CC use the selected store's email address.
+- Email success is recorded against the saved order.
+
+### Repair Board
+
+Repair tickets belong to a store, not to the employee who created them. Every employee viewing the same store sees the same open tickets and has the same Repair Board permissions.
+
+Every repair ticket requires:
+- customer name
+- customer phone
+- store
+- device title / model
+- issue and quoted price
+- current status
+- creator/updater audit details
+
+Open Board columns:
+- `need_to_order` - Need to order
+- `waiting_shipping` - Waiting shipping
+- `repairing` - Parts arrived / Repairing
+- `waiting_customer_confirmation` - Waiting customer confirmation
+- `waiting_pickup` - Waiting pickup
+- `over_3_months_uncollected` - Over 3 months uncollected
+
+Repair rules:
+- `cancelled` and `returned_unrepaired` are resolutions that remain in Waiting pickup until collected.
+- A paid repair is closed and removed from the open Board.
+- A paid repair card cannot be added to the cart again.
+- A paid repair can only open its invoice or refund flow.
+- One repair ticket can be linked to only one original invoice line.
+- Board search supports ticket, customer, phone, device, issue, and IMEI/intake content.
+- Finished invoices are searched in Invoice History, not in a separate Finished Board column.
+
+### Data Ownership
+
+Database-backed and shared between terminals:
+- live product snapshot returned by `pos-products`
+- repair tickets and activity
+- invoices / sales orders
+- invoice lines and split payments
+- refunds and refund lines
+- receipt email audit fields
+- per-store invoice counters
+
+Browser-local convenience state:
+- held carts
+- customer address book
+- selected staff/store and local staff PIN/assignment overrides
+- opening cash, active shift, end-shift counts
+- Today Target amount and incentive progress
+- a local cache of recently saved orders
+
+Do not use browser-local values as the source of truth for accounting or management reports. They are not automatically shared with another iPad or POS terminal.
+
+### Supabase Deployment Map
+
+- Static front end: `pos.html` on the website Git deployment.
+- Edge Function project: `fwlronvmgqzkleofriis`.
+- Staff/POS database project: `abkjbhmifswfexpjkval`.
+- `pos-products` proxies the protected internal product API without exposing its API key.
+- `pos-repair-tickets`, `pos-sales-orders`, and `send-pos-receipt-email` validate `x-staff-session` and call staff/POS database RPCs.
+- Full endpoint and migration deployment notes are in `supabase/README.md`.
+
+Required POS migrations, in order:
+1. `20260711140805_pos_sales_orders.sql`
+2. `20260711144825_pos_invoice_numbers.sql`
+3. `20260712122942_unify_pos_invoices_and_repair_workflow.sql`
+4. `20260713084027_add_invoice_history_date_filters.sql`
+
+### Current Limitations And Roadmap
+
+Priority 1 - database-backed POS Report:
+- The current Today Target panel reads browser-local order cache and is not a formal report.
+- The existing `daily-report.html` is a separate manual staff report and is not generated from POS invoices.
+- Add a report RPC/page using saved invoices, payments, and refunds.
+- Required filters: store, single day, date range, and staff.
+- Required totals: gross sales, refunds, net sales, GST, invoice count, average sale, retail/repair split, category totals, payment-method totals, and staff totals.
+
+Priority 2 - second-hand device buy/sell:
+- Buying a device from a customer must be a separate purchase/intake record, not a negative sales invoice.
+- Capture seller name, phone, ID reference, ownership declaration, device model, IMEI/serial, condition checks, grade, photos, offered cost, approved cost, payout method, and staff/store audit.
+- Enforce unique IMEI/serial and record blacklist/ownership checks before purchase approval.
+- Suggested states: `draft`, `awaiting_check`, `offer_made`, `purchased`, `rejected`, `in_stock`, `sold`, `returned`.
+- Once purchased, create one used-device inventory item with its acquisition cost and store location.
+- Selling that item uses the existing unified POS invoice and marks the used-device inventory item as sold.
+
+Optional later work, only if multiple terminals require it:
+- database-backed held carts
+- shared customer directory
+- database-backed shift/opening/end-shift reconciliation
+- stock write-back to the product/inventory system
+- payment terminal integrations
 
 ## Homepage Rules
 
@@ -105,6 +240,7 @@ Encouragement messages:
 Staff currently seeded in `staff_directory`:
 - Andy
 - Bonnie
+- Bowen
 - Fiona
 - Henry Ang
 - JANAPHY

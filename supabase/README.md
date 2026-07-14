@@ -121,7 +121,17 @@ The function uses the existing booking email secrets when dedicated POS secrets 
 ```text
 RESEND_API_KEY or RESEND_API_KEY_BOOKING
 POS_RECEIPT_FROM or BOOKING_FROM_EMAIL
-POS_RECEIPT_COPY_TO (optional; defaults to techm8contact@gmail.com)
+```
+
+The selected store profile supplies the email Reply-To address. When staff select `Send a copy to the store`, the same store email is used as CC. Store addresses are defined in both `pos.html` and `send-pos-receipt-email/index.ts`; keep the two maps synchronized.
+
+Current store receipt emails:
+
+```text
+Park Ridge:  techm8.parkridge@gmail.com
+North Lakes: techm8.northlakes@gmail.com
+Fairfield:   techm8.fairfield@gmail.com
+Toowong:     techm8.toowong@gmail.com
 ```
 
 Deploy:
