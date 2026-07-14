@@ -2660,6 +2660,241 @@
       white-space: nowrap;
     }
 
+    .report-view {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .report-page {
+      height: 100%;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .report-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .report-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .report-control {
+      display: grid;
+      gap: 4px;
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .report-control input,
+    .report-control select {
+      width: 166px;
+      height: 42px;
+      border: 1px solid var(--tm-line);
+      border-radius: 7px;
+      padding: 0 10px;
+      color: var(--tm-ink);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .report-control select {
+      width: 190px;
+    }
+
+    .report-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+      flex: 1 1 330px;
+    }
+
+    .report-preset {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 7px;
+      color: #43545c;
+      background: #fff;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .report-preset.active {
+      color: var(--tm-green-dark);
+      border-color: #8bcfc0;
+      background: #e6f7f3;
+    }
+
+    .report-content {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding-right: 4px;
+    }
+
+    .report-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .report-stat {
+      min-width: 0;
+      min-height: 104px;
+      display: grid;
+      align-content: space-between;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .report-stat span {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .report-stat strong {
+      overflow-wrap: anywhere;
+      font-size: 25px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .report-stat.net {
+      color: #fff;
+      border-color: var(--tm-green-dark);
+      background: var(--tm-green-dark);
+    }
+
+    .report-stat.net span {
+      color: rgba(255,255,255,.76);
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+
+    .report-panel {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .report-panel.wide {
+      grid-column: 1 / -1;
+    }
+
+    .report-panel h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .report-breakdown {
+      display: grid;
+      gap: 9px;
+    }
+
+    .report-breakdown-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 1fr) minmax(90px, 1.4fr) auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 28px;
+    }
+
+    .report-breakdown-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .report-bar {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 4px;
+      background: #e7edef;
+    }
+
+    .report-bar span {
+      display: block;
+      height: 100%;
+      min-width: 2px;
+      border-radius: inherit;
+      background: var(--tm-green);
+    }
+
+    .report-breakdown-value {
+      min-width: 80px;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .report-table-wrap {
+      overflow-x: auto;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .report-table th,
+    .report-table td {
+      padding: 9px 8px;
+      border-bottom: 1px solid var(--tm-line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .report-table th:first-child,
+    .report-table td:first-child {
+      text-align: left;
+    }
+
+    .report-table th {
+      color: var(--tm-muted);
+      font-weight: 900;
+    }
+
+    .report-empty {
+      padding: 28px 12px;
+      color: var(--tm-muted);
+      text-align: center;
+      font-weight: 800;
+    }
+
     .invoice-view {
       min-height: 0;
       overflow: hidden;
@@ -3063,6 +3298,10 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .report-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .checkout-panel {
         grid-column: auto;
         min-height: 0;
@@ -3221,6 +3460,17 @@
         grid-template-columns: minmax(0, 1fr);
       }
 
+      .report-grid,
+      .report-summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .report-control,
+      .report-control input,
+      .report-control select {
+        width: 100%;
+      }
+
       .invoice-row {
         grid-template-columns: 90px minmax(160px, 1fr) 110px auto;
       }
@@ -3300,7 +3550,7 @@
         <button id="productNavBtn" class="rail-button" type="button" title="Products"><i class="bi bi-house-door-fill"></i></button>
         <button id="repairNavBtn" class="rail-button" type="button" title="Repair tickets"><i class="bi bi-clipboard2-plus"></i></button>
         <button id="ordersNavBtn" class="rail-button" type="button" title="Invoices"><i class="bi bi-receipt"></i></button>
-        <button class="rail-button" type="button" title="Shift"><i class="bi bi-cash-stack"></i></button>
+        <button id="reportNavBtn" class="rail-button" type="button" title="Reports"><i class="bi bi-graph-up-arrow"></i></button>
       </nav>
       <div class="rail-bottom">
         <button id="endShiftBtn" class="rail-button" type="button" title="End shift"><i class="bi bi-box-arrow-right"></i></button>
@@ -3393,13 +3643,47 @@
           <div id="invoiceList" class="invoice-list"></div>
         </div>
       </section>
+
+      <section id="reportView" class="workspace-view report-view" aria-label="POS reports">
+        <div class="report-page">
+          <div class="report-head">
+            <div>
+              <h1 class="invoice-title">POS Report</h1>
+              <div id="reportSubtitle" class="repair-subtitle">Database sales, refunds, payments, and staff performance for this store.</div>
+            </div>
+            <button id="reportReloadBtn" class="repair-action" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+          </div>
+          <div class="report-controls">
+            <label class="report-control">
+              Start date
+              <input id="reportDateFrom" type="date">
+            </label>
+            <label class="report-control">
+              End date
+              <input id="reportDateTo" type="date">
+            </label>
+            <label class="report-control">
+              Staff
+              <select id="reportStaffFilter"><option value="">All staff</option></select>
+            </label>
+            <div id="reportPresets" class="report-presets" aria-label="Report date shortcuts">
+              <button class="report-preset active" type="button" data-report-preset="today">Today</button>
+              <button class="report-preset" type="button" data-report-preset="yesterday">Yesterday</button>
+              <button class="report-preset" type="button" data-report-preset="last7">Last 7 Days</button>
+              <button class="report-preset" type="button" data-report-preset="month">This Month</button>
+            </div>
+          </div>
+          <div id="reportContent" class="report-content"></div>
+        </div>
+      </section>
     </main>
 
     <aside class="checkout-panel" aria-label="Checkout">
       <div class="customer-card">
         <div class="customer-row">
           <i class="bi bi-person"></i>
-          <input id="customerInput" class="customer-input" placeholder="Walk-in Customer">
+          <input id="customerInput" class="customer-input" list="customerSuggestions" placeholder="Walk-in Customer">
+          <datalist id="customerSuggestions"></datalist>
           <button id="customerAddBtn" class="customer-add-button" type="button" title="Add customer"><i class="bi bi-person-plus"></i></button>
         </div>
       </div>
@@ -4011,6 +4295,13 @@
       invoiceDatePreset: 'today',
       invoiceOrders: [],
       invoiceLoading: false,
+      reportDateFrom: brisbaneDateIso(),
+      reportDateTo: brisbaneDateIso(),
+      reportDatePreset: 'today',
+      reportStaffName: '',
+      reportData: null,
+      reportLoading: false,
+      shiftPaymentTotals: null,
       refundOrder: null,
       repair: {
         started: false,
@@ -4048,6 +4339,7 @@
     const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products';
     const POS_REPAIR_TICKETS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-repair-tickets';
     const POS_SALES_ORDERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders';
+    const POS_SHARED_STATE_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-shared-state';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
     const els = {
       productGrid: document.getElementById('productGrid'),
@@ -4060,11 +4352,13 @@
       productView: document.getElementById('productView'),
       repairView: document.getElementById('repairView'),
       ordersView: document.getElementById('ordersView'),
+      reportView: document.getElementById('reportView'),
       repairWorkspace: document.getElementById('repairWorkspace'),
       targetNavBtn: document.getElementById('targetNavBtn'),
       productNavBtn: document.getElementById('productNavBtn'),
       repairNavBtn: document.getElementById('repairNavBtn'),
       ordersNavBtn: document.getElementById('ordersNavBtn'),
+      reportNavBtn: document.getElementById('reportNavBtn'),
       invoiceSearchInput: document.getElementById('invoiceSearchInput'),
       invoiceReloadBtn: document.getElementById('invoiceReloadBtn'),
       invoiceDateMode: document.getElementById('invoiceDateMode'),
@@ -4075,6 +4369,13 @@
       invoiceDatePresets: document.getElementById('invoiceDatePresets'),
       invoiceResultCount: document.getElementById('invoiceResultCount'),
       invoiceList: document.getElementById('invoiceList'),
+      reportReloadBtn: document.getElementById('reportReloadBtn'),
+      reportSubtitle: document.getElementById('reportSubtitle'),
+      reportDateFrom: document.getElementById('reportDateFrom'),
+      reportDateTo: document.getElementById('reportDateTo'),
+      reportStaffFilter: document.getElementById('reportStaffFilter'),
+      reportPresets: document.getElementById('reportPresets'),
+      reportContent: document.getElementById('reportContent'),
       newRepairBtn: document.getElementById('newRepairBtn'),
       specialRepairBtn: document.getElementById('specialRepairBtn'),
       clearRepairBtn: document.getElementById('clearRepairBtn'),
@@ -4088,6 +4389,7 @@
       summaryGst: document.getElementById('summaryGst'),
       summaryTotal: document.getElementById('summaryTotal'),
       customerInput: document.getElementById('customerInput'),
+      customerSuggestions: document.getElementById('customerSuggestions'),
       customerAddBtn: document.getElementById('customerAddBtn'),
       customerModal: document.getElementById('customerModal'),
       customerForm: document.getElementById('customerForm'),
@@ -4659,6 +4961,7 @@
       state.allowedStoreIds = [];
       state.scheduledStoreId = '';
       state.openingConfirmed = false;
+      state.shiftPaymentTotals = null;
       updateStaffButton();
       updateStoreBadge();
       renderTargetDashboard();
@@ -4710,6 +5013,78 @@
       };
       writeActiveShift(shift);
       return shift;
+    }
+
+    function localShiftFromRemote(remoteShift) {
+      if (!remoteShift || !remoteShift.id) return null;
+      return {
+        id: remoteShift.id,
+        date: remoteShift.business_date || brisbaneDateIso(),
+        staffName: remoteShift.opened_by || state.selectedStaffName,
+        openedBy: remoteShift.opened_by || state.selectedStaffName,
+        currentStaffName: state.selectedStaffName || remoteShift.current_staff_name,
+        lastStaffName: state.selectedStaffName || remoteShift.last_staff_name,
+        storeId: state.storeId,
+        storeCode: storeById(state.storeId).code,
+        startedAt: remoteShift.opened_at || new Date().toISOString(),
+        openedAt: remoteShift.opened_at || new Date().toISOString(),
+        lastSeenAt: remoteShift.last_seen_at || new Date().toISOString(),
+        openingConfirmedAt: remoteShift.opening_confirmed_at || '',
+        databaseSynced: true
+      };
+    }
+
+    function cacheRemoteShiftOpening(remoteShift) {
+      if (!remoteShift || !remoteShift.id || !remoteShift.opening_confirmed_at) return;
+      const records = loadOpeningRecords();
+      records[remoteShift.id] = {
+        date: remoteShift.business_date || brisbaneDateIso(),
+        staffName: remoteShift.opened_by || state.selectedStaffName,
+        shiftId: remoteShift.id,
+        storeId: state.storeId,
+        storeCode: storeById(state.storeId).code,
+        total: roundedMoneyValue(remoteShift.opening_cash_total),
+        counts: remoteShift.opening_counts || {},
+        openedAt: remoteShift.opening_confirmed_at,
+        sync_pending: false
+      };
+      localStorage.setItem(POS_OPENINGS_KEY, JSON.stringify(records));
+      state.openingConfirmed = true;
+    }
+
+    async function syncCurrentShiftWithDatabase() {
+      if (!state.selectedStaffName || !state.storeId) return readActiveShift();
+      const localShift = ensureActiveShiftRecord();
+      if (!localShift) return null;
+      const localOpening = loadOpeningRecords()[localShift.id];
+      try {
+        const payload = await postSharedState('shift', 'open', {
+          id: localShift.id,
+          store_code: repairTicketStoreCode(),
+          staff_name: state.selectedStaffName,
+          business_date: localShift.date || brisbaneDateIso(),
+          opened_at: localShift.startedAt || new Date().toISOString()
+        });
+        let remoteShift = payload.shift;
+        if (!remoteShift) throw new Error('Shift response is incomplete.');
+        writeActiveShift(localShiftFromRemote(remoteShift));
+        cacheRemoteShiftOpening(remoteShift);
+
+        if (!remoteShift.opening_confirmed_at && localOpening && localOpening.total !== undefined) {
+          const openingPayload = await postSharedState('shift', 'opening', {
+            shift_id: remoteShift.id,
+            staff_name: state.selectedStaffName,
+            total: roundedMoneyValue(localOpening.total),
+            counts: localOpening.counts || {}
+          });
+          remoteShift = openingPayload.shift || remoteShift;
+          cacheRemoteShiftOpening(remoteShift);
+        }
+        return readActiveShift();
+      } catch (error) {
+        console.error(error);
+        return localShift;
+      }
     }
 
     function loadStaffPins() {
@@ -4821,8 +5196,14 @@
           if (state.activeView === 'repair') renderRepairWorkspace();
         });
         if (state.activeView === 'orders') loadInvoiceHistory();
+        if (state.activeView === 'report') loadPosReport();
       }
-      if (state.selectedStaffName && !options.skipShift) ensureActiveShiftRecord();
+      if (state.selectedStaffName && !options.skipShift) {
+        ensureActiveShiftRecord();
+        syncCurrentShiftWithDatabase();
+        loadCustomers();
+        loadHeldOrders();
+      }
       if (reloadProducts) {
         state.cart = [];
         loadProducts();
@@ -5023,7 +5404,7 @@
         staffAccessResolve(true);
         staffAccessResolve = null;
       } else {
-        ensureOpeningCash();
+        syncCurrentShiftWithDatabase().then(ensureOpeningCash);
       }
       return true;
     }
@@ -5066,27 +5447,50 @@
       updateOpeningCashTotal();
     }
 
-    function saveOpeningCash() {
+    async function saveOpeningCash() {
       const records = loadOpeningRecords();
       const counts = {};
       els.openingCashForm.querySelectorAll('[data-cash-value]').forEach(input => {
         counts[input.dataset.cashValue] = Math.max(0, Number(input.value || 0));
       });
-      records[openingKey()] = {
+      let shift = readActiveShift() || ensureActiveShiftRecord();
+      const record = {
         date: brisbaneDateIso(),
         staffName: state.selectedStaffName,
-        shiftId: state.activeShiftId,
+        shiftId: shift && shift.id,
         storeId: state.storeId,
         storeCode: storeById(state.storeId).code,
         total: Number(calculateOpeningCash().toFixed(2)),
         counts,
-        openedAt: new Date().toISOString()
+        openedAt: new Date().toISOString(),
+        sync_pending: true
       };
+      records[openingKey()] = record;
       localStorage.setItem(POS_OPENINGS_KEY, JSON.stringify(records));
+
+      shift = await syncCurrentShiftWithDatabase();
+      try {
+        const payload = await postSharedState('shift', 'opening', {
+          shift_id: shift && shift.id,
+          staff_name: state.selectedStaffName,
+          total: record.total,
+          counts
+        });
+        if (payload.shift) {
+          cacheRemoteShiftOpening(payload.shift);
+          record.sync_pending = false;
+          records[payload.shift.id] = { ...record, shiftId: payload.shift.id };
+          localStorage.setItem(POS_OPENINGS_KEY, JSON.stringify(records));
+        }
+      } catch (error) {
+        console.error(error);
+      }
       state.openingConfirmed = true;
       els.openingCashModal.classList.remove('show');
       els.openingCashModal.setAttribute('aria-hidden', 'true');
-      showToast(`Opening cash saved for ${storeById(state.storeId).code}.`);
+      showToast(record.sync_pending
+        ? `Opening cash saved locally for ${storeById(state.storeId).code}; database sync is pending.`
+        : `Opening cash shared for ${storeById(state.storeId).code}.`);
       if (openingResolve) {
         openingResolve(true);
         openingResolve = null;
@@ -5191,6 +5595,14 @@
         return acc;
       }, {});
 
+      if (state.shiftPaymentTotals && Array.isArray(state.shiftPaymentTotals.payment_totals)) {
+        state.shiftPaymentTotals.payment_totals.forEach(payment => {
+          const key = paymentKeyForMethod(payment.method);
+          totals[key] = roundedMoneyValue(payment.amount);
+        });
+        return totals;
+      }
+
       readLocalArray(POS_ORDERS_KEY)
         .filter(order => orderBelongsToCurrentShift(order, activeShift))
         .forEach(order => {
@@ -5206,6 +5618,21 @@
         });
 
       return totals;
+    }
+
+    async function loadShiftPaymentTotals() {
+      let activeShift = readActiveShift();
+      if (!activeShift || !activeShift.databaseSynced) {
+        activeShift = await syncCurrentShiftWithDatabase();
+      }
+      if (!activeShift || !activeShift.id) return null;
+      try {
+        state.shiftPaymentTotals = await getSharedState('shift-totals', { shift_id: activeShift.id });
+      } catch (error) {
+        console.error(error);
+        state.shiftPaymentTotals = null;
+      }
+      return state.shiftPaymentTotals;
     }
 
     function targetStorageKey() {
@@ -5588,7 +6015,7 @@
       return { system, actual };
     }
 
-    function openEndShiftModal() {
+    async function openEndShiftModal() {
       if (!state.selectedStaffName) {
         openStaffModal({ canCancel: false });
         return;
@@ -5600,6 +6027,8 @@
       updateEndShiftComparison();
       const firstInput = els.endShiftForm.querySelector('[data-end-cash-value]');
       if (firstInput) firstInput.focus();
+      await loadShiftPaymentTotals();
+      updateEndShiftComparison();
     }
 
     function closeEndShiftModal() {
@@ -5607,7 +6036,7 @@
       els.endShiftModal.setAttribute('aria-hidden', 'true');
     }
 
-    function saveEndShift() {
+    async function saveEndShift() {
       const comparison = updateEndShiftComparison();
       const missing = POS_PAYMENT_METHODS
         .filter(method => method.key !== 'cash' && comparison.actual[method.key] === null)
@@ -5626,8 +6055,7 @@
         acc[method.key] = roundedMoneyValue(comparison.actual[method.key] - comparison.system[method.key]);
         return acc;
       }, {});
-      const records = readLocalArray(POS_END_SHIFTS_KEY);
-      records.unshift({
+      const endShiftRecord = {
         id: 'END-' + Date.now(),
         shiftId: activeShift && activeShift.id,
         date: brisbaneDateIso(),
@@ -5643,7 +6071,27 @@
         openingCashTotal: currentOpeningCashTotal(),
         todayCashTotal: calculateEndShiftTodayCash(),
         cashCounts
-      });
+      };
+
+      els.endShiftError.textContent = 'Saving shared shift...';
+      try {
+        await postSharedState('shift', 'close', {
+          shift_id: activeShift && activeShift.id,
+          staff_name: state.selectedStaffName,
+          system: endShiftRecord.system,
+          actual: endShiftRecord.actual,
+          differences: endShiftRecord.differences,
+          closing_cash_total: endShiftRecord.closingCashTotal,
+          cash_counts: endShiftRecord.cashCounts
+        });
+      } catch (error) {
+        console.error(error);
+        els.endShiftError.textContent = error.message || 'Shift could not be closed in the database.';
+        return;
+      }
+
+      const records = readLocalArray(POS_END_SHIFTS_KEY);
+      records.unshift(endShiftRecord);
       localStorage.setItem(POS_END_SHIFTS_KEY, JSON.stringify(records.slice(0, 300)));
       closeEndShiftModal();
       const endedStaff = state.selectedStaffName;
@@ -5899,10 +6347,12 @@
       els.productView.classList.toggle('active', view === 'products');
       els.repairView.classList.toggle('active', view === 'repair');
       els.ordersView.classList.toggle('active', view === 'orders');
+      els.reportView.classList.toggle('active', view === 'report');
       els.targetNavBtn.classList.toggle('active', view === 'target');
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
       els.ordersNavBtn.classList.toggle('active', view === 'orders');
+      els.reportNavBtn.classList.toggle('active', view === 'report');
       if (view === 'target') renderTargetDashboard();
       if (view === 'repair') {
         loadRepairTickets().then(() => {
@@ -5910,6 +6360,7 @@
         });
       }
       if (view === 'orders') loadInvoiceHistory();
+      if (view === 'report') loadPosReport();
     }
 
     function repairTicketStoreCode() {
@@ -6165,17 +6616,54 @@
       return ticket;
     }
 
-    function loadCustomers() {
+    async function loadCustomers() {
+      const cached = readLocalArray(POS_CUSTOMERS_KEY)
+        .filter(customer => !customer.store_id || customer.store_id === state.storeId);
+      state.customers = cached;
+      renderCustomerSuggestions();
+      if (!state.selectedStaffName) return;
+
+      const pending = cached.filter(customer => customer.sync_pending);
+      for (const customer of pending) {
+        try {
+          const payload = await postSharedState('customer', 'save', {
+            ...customer,
+            store_code: repairTicketStoreCode(),
+            staff_name: state.selectedStaffName
+          });
+          customer.sync_pending = false;
+          if (payload.customer) Object.assign(customer, payload.customer, { store_id: state.storeId });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
       try {
-        const rows = JSON.parse(localStorage.getItem(POS_CUSTOMERS_KEY) || '[]');
-        state.customers = Array.isArray(rows) ? rows : [];
+        const payload = await getSharedState('customers');
+        const remote = (Array.isArray(payload.customers) ? payload.customers : [])
+          .map(customer => ({ ...customer, store_id: state.storeId, sync_pending: false }));
+        const stillPending = pending.filter(customer => customer.sync_pending);
+        state.customers = [...stillPending, ...remote.filter(customer => !stillPending.some(item => item.id === customer.id))];
+        saveCustomers();
+        renderCustomerSuggestions();
       } catch (error) {
-        state.customers = [];
+        console.error(error);
       }
     }
 
     function saveCustomers() {
-      localStorage.setItem(POS_CUSTOMERS_KEY, JSON.stringify(state.customers.slice(0, 500)));
+      const existingOtherStores = readLocalArray(POS_CUSTOMERS_KEY)
+        .filter(customer => customer.store_id && customer.store_id !== state.storeId);
+      localStorage.setItem(POS_CUSTOMERS_KEY, JSON.stringify([...state.customers, ...existingOtherStores].slice(0, 1000)));
+    }
+
+    function renderCustomerSuggestions() {
+      if (!els.customerSuggestions) return;
+      els.customerSuggestions.innerHTML = state.customers.map(customer => {
+        const name = [customer.first_name, customer.last_name].filter(Boolean).join(' ');
+        const details = [customer.phone, customer.company].filter(Boolean).join(' - ');
+        return `<option value="${escapeHtml(name)}">${escapeHtml(details)}</option>`;
+      }).join('');
     }
 
     function openCustomerModal() {
@@ -6197,7 +6685,7 @@
       return /^04\d{8}$/.test(compact) || /^\+614\d{8}$/.test(compact) || /^614\d{8}$/.test(compact);
     }
 
-    function addCustomer() {
+    async function addCustomer() {
       const firstName = els.customerFirstName.value.trim();
       const lastName = els.customerLastName.value.trim();
       const phone = els.customerPhone.value.trim();
@@ -6220,6 +6708,9 @@
 
       const customer = {
         id: 'CUS-' + Date.now(),
+        store_id: state.storeId,
+        store_code: repairTicketStoreCode(),
+        staff_name: state.selectedStaffName,
         first_name: firstName,
         last_name: lastName,
         company: els.customerCompany.value.trim(),
@@ -6228,14 +6719,29 @@
         email: els.customerEmail.value.trim(),
         group: els.customerGroup.value || 'Regular Customer',
         notes: els.customerNotes.value.trim(),
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        sync_pending: true
       };
 
-      state.customers.unshift(customer);
-      saveCustomers();
-      els.customerInput.value = [firstName, lastName].filter(Boolean).join(' ');
-      closeCustomerModal();
-      showToast('Customer saved.');
+      try {
+        const payload = await postSharedState('customer', 'save', customer);
+        if (!payload.customer) throw new Error('Customer response is incomplete.');
+        Object.assign(customer, payload.customer, { store_id: state.storeId, sync_pending: false });
+        state.customers.unshift(customer);
+        saveCustomers();
+        renderCustomerSuggestions();
+        els.customerInput.value = [firstName, lastName].filter(Boolean).join(' ');
+        closeCustomerModal();
+        showToast('Customer saved for this store.');
+      } catch (error) {
+        console.error(error);
+        state.customers.unshift(customer);
+        saveCustomers();
+        renderCustomerSuggestions();
+        els.customerInput.value = [firstName, lastName].filter(Boolean).join(' ');
+        closeCustomerModal();
+        showToast('Customer saved locally. Database sync is pending.');
+      }
     }
 
     function applyRepairTicketAutomation() {
@@ -7720,6 +8226,34 @@
       return headers;
     }
 
+    async function parsePosApiResponse(response, fallbackMessage) {
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.ok === false) {
+        throw new Error(payload.message || fallbackMessage);
+      }
+      return payload;
+    }
+
+    async function getSharedState(resource, parameters = {}) {
+      const url = new URL(POS_SHARED_STATE_ENDPOINT);
+      url.searchParams.set('resource', resource);
+      url.searchParams.set('store_code', repairTicketStoreCode());
+      Object.entries(parameters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, value);
+      });
+      const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+      return parsePosApiResponse(response, 'Shared POS data could not be loaded.');
+    }
+
+    async function postSharedState(resource, action, payload) {
+      const response = await fetch(POS_SHARED_STATE_ENDPOINT, {
+        method: 'POST',
+        headers: posOrderApiHeaders(),
+        body: JSON.stringify({ resource, action, payload })
+      });
+      return parsePosApiResponse(response, 'Shared POS data could not be saved.');
+    }
+
     function invoiceRefundLabel(status) {
       if (status === 'refunded') return 'Refunded';
       if (status === 'partially_refunded') return 'Partially refunded';
@@ -7731,6 +8265,178 @@
       if (!match) return '';
       const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + Number(days || 0)));
       return date.toISOString().slice(0, 10);
+    }
+
+    function setReportDatePreset(preset) {
+      const today = brisbaneDateIso();
+      state.reportDatePreset = preset;
+      if (preset === 'yesterday') {
+        state.reportDateFrom = shiftInvoiceDate(today, -1);
+        state.reportDateTo = state.reportDateFrom;
+      } else if (preset === 'last7') {
+        state.reportDateFrom = shiftInvoiceDate(today, -6);
+        state.reportDateTo = today;
+      } else if (preset === 'month') {
+        state.reportDateFrom = `${today.slice(0, 7)}-01`;
+        state.reportDateTo = today;
+      } else {
+        state.reportDateFrom = today;
+        state.reportDateTo = today;
+      }
+      renderReportControls();
+      loadPosReport();
+    }
+
+    function reportStaffNames() {
+      const setupNames = state.staffMembers.map(staffDisplayName);
+      const reportNames = state.reportData && Array.isArray(state.reportData.staff_totals)
+        ? state.reportData.staff_totals.map(row => row.staff_name)
+        : [];
+      return [...new Set([...setupNames, ...reportNames].map(name => String(name || '').trim()).filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right));
+    }
+
+    function renderReportControls() {
+      if (!els.reportDateFrom) return;
+      els.reportDateFrom.value = state.reportDateFrom || '';
+      els.reportDateTo.value = state.reportDateTo || '';
+      els.reportDateTo.min = state.reportDateFrom || '';
+      els.reportPresets.querySelectorAll('[data-report-preset]').forEach(button => {
+        const active = button.dataset.reportPreset === state.reportDatePreset;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      const selected = state.reportStaffName;
+      els.reportStaffFilter.innerHTML = '<option value="">All staff</option>' + reportStaffNames().map(name => `
+        <option value="${escapeHtml(name)}">${escapeHtml(name)}</option>
+      `).join('');
+      els.reportStaffFilter.value = selected;
+    }
+
+    function reportBreakdownRows(rows, labelKey, valueKey = 'net') {
+      if (!Array.isArray(rows) || !rows.length) return '<div class="report-empty">No activity in this period.</div>';
+      const max = Math.max(...rows.map(row => Math.abs(numberValue(row[valueKey]))), 1);
+      return `<div class="report-breakdown">${rows.map(row => {
+        const value = numberValue(row[valueKey]);
+        return `
+          <div class="report-breakdown-row">
+            <span class="report-breakdown-label" title="${escapeHtml(row[labelKey])}">${escapeHtml(row[labelKey])}</span>
+            <div class="report-bar"><span style="width:${Math.max(2, Math.abs(value) / max * 100)}%"></span></div>
+            <strong class="report-breakdown-value">${money(value)}</strong>
+          </div>
+        `;
+      }).join('')}</div>`;
+    }
+
+    function saleTypeLabel(value) {
+      if (value === 'repair') return 'Repairs';
+      if (value === 'special') return 'Special products';
+      return 'Retail products';
+    }
+
+    function renderPosReport() {
+      if (!els.reportContent) return;
+      renderReportControls();
+      if (state.reportLoading && !state.reportData) {
+        els.reportContent.innerHTML = '<div class="empty-state"><div><strong>Loading report...</strong></div></div>';
+        return;
+      }
+      const report = state.reportData;
+      if (!report || !report.summary) {
+        els.reportContent.innerHTML = '<div class="empty-state"><div><strong>Report unavailable</strong><div>Refresh after checking the staff session and connection.</div></div></div>';
+        return;
+      }
+
+      const summary = report.summary;
+      const typeRows = (report.sale_type_totals || []).map(row => ({ ...row, label: saleTypeLabel(row.type) }));
+      const paymentRows = (report.payment_totals || []).map(row => ({ ...row, label: row.method }));
+      const refundRows = (report.refund_method_totals || []).map(row => ({ ...row, label: row.method }));
+      const dailyRows = Array.isArray(report.daily_totals) ? report.daily_totals : [];
+      const staffRows = Array.isArray(report.staff_totals) ? report.staff_totals : [];
+      const store = storeById(state.storeId);
+      els.reportSubtitle.textContent = `${store.name} - ${state.reportDateFrom} to ${state.reportDateTo}${state.reportStaffName ? ` - ${state.reportStaffName}` : ''}`;
+
+      els.reportContent.innerHTML = `
+        <section class="report-summary-grid" aria-label="Report summary">
+          <div class="report-stat"><span>Gross sales</span><strong>${money(summary.gross_sales)}</strong></div>
+          <div class="report-stat"><span>Refunds issued</span><strong>${money(summary.refunds)}</strong></div>
+          <div class="report-stat net"><span>Net sales</span><strong>${money(summary.net_sales)}</strong></div>
+          <div class="report-stat"><span>GST included</span><strong>${money(summary.gst)}</strong></div>
+          <div class="report-stat"><span>Invoices</span><strong>${Number(summary.invoice_count || 0)}</strong></div>
+          <div class="report-stat"><span>Units sold</span><strong>${Number(summary.item_units || 0)}</strong></div>
+          <div class="report-stat"><span>Average invoice</span><strong>${money(summary.average_sale)}</strong></div>
+          <div class="report-stat"><span>Refund transactions</span><strong>${Number(summary.refund_count || 0)}</strong></div>
+        </section>
+        <section class="report-grid">
+          <article class="report-panel">
+            <h2>Net sales by type</h2>
+            ${reportBreakdownRows(typeRows, 'label')}
+          </article>
+          <article class="report-panel">
+            <h2>Payments received</h2>
+            ${reportBreakdownRows(paymentRows, 'label', 'amount')}
+          </article>
+          <article class="report-panel">
+            <h2>Refunds by method</h2>
+            ${reportBreakdownRows(refundRows, 'label', 'amount')}
+          </article>
+          <article class="report-panel">
+            <h2>Net sales by category</h2>
+            ${reportBreakdownRows(report.category_totals || [], 'category')}
+          </article>
+          <article class="report-panel wide">
+            <h2>Staff performance</h2>
+            <div class="report-table-wrap">
+              <table class="report-table">
+                <thead><tr><th>Staff</th><th>Invoices</th><th>Gross</th><th>Refunds</th><th>Net</th></tr></thead>
+                <tbody>${staffRows.map(row => `
+                  <tr><td>${escapeHtml(row.staff_name)}</td><td>${Number(row.invoice_count || 0)}</td><td>${money(row.gross)}</td><td>${money(row.refunds)}</td><td><strong>${money(row.net)}</strong></td></tr>
+                `).join('') || '<tr><td colspan="5">No activity in this period.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </article>
+          <article class="report-panel wide">
+            <h2>Daily totals</h2>
+            <div class="report-table-wrap">
+              <table class="report-table">
+                <thead><tr><th>Date</th><th>Invoices</th><th>Gross</th><th>Refunds</th><th>Net</th></tr></thead>
+                <tbody>${dailyRows.map(row => `
+                  <tr><td>${escapeHtml(row.date)}</td><td>${Number(row.invoice_count || 0)}</td><td>${money(row.gross)}</td><td>${money(row.refunds)}</td><td><strong>${money(row.net)}</strong></td></tr>
+                `).join('') || '<tr><td colspan="5">No activity in this period.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      `;
+    }
+
+    async function loadPosReport() {
+      if (!els.reportContent || !state.selectedStaffName) return;
+      if (!state.reportDateFrom || !state.reportDateTo) return;
+      if (state.reportDateTo < state.reportDateFrom) {
+        state.reportDateTo = state.reportDateFrom;
+        showToast('End date cannot be before start date.');
+      }
+      state.reportLoading = true;
+      renderPosReport();
+      const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+      url.searchParams.set('mode', 'report');
+      url.searchParams.set('store_code', repairTicketStoreCode());
+      url.searchParams.set('from_date', state.reportDateFrom);
+      url.searchParams.set('to_date', state.reportDateTo);
+      if (state.reportStaffName) url.searchParams.set('staff_name', state.reportStaffName);
+      try {
+        const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Report could not be loaded.');
+        state.reportData = payload;
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Report unavailable.');
+      } finally {
+        state.reportLoading = false;
+        renderPosReport();
+      }
     }
 
     function invoiceDateRange() {
@@ -7977,6 +8683,7 @@
         const index = state.invoiceOrders.findIndex(item => item.id === payload.order.id);
         if (index >= 0) state.invoiceOrders[index] = payload.order;
         updateStoredOrder(payload.order);
+        state.shiftPaymentTotals = null;
         closeRefundModal();
         renderInvoiceHistory();
         showToast(`Refund ${payload.refund_id} recorded.`);
@@ -8354,7 +9061,46 @@
     }
 
     function heldOrders() {
-      return readLocalArray(POS_HELD_ORDERS_KEY);
+      return readLocalArray(POS_HELD_ORDERS_KEY)
+        .filter(order => !order.store_id || order.store_id === state.storeId);
+    }
+
+    function cacheHeldOrders(rows) {
+      const otherStores = readLocalArray(POS_HELD_ORDERS_KEY)
+        .filter(order => order.store_id && order.store_id !== state.storeId);
+      localStorage.setItem(POS_HELD_ORDERS_KEY, JSON.stringify([...rows, ...otherStores].slice(0, 200)));
+    }
+
+    async function loadHeldOrders() {
+      if (!state.selectedStaffName) return heldOrders();
+      const cached = heldOrders();
+      const pending = cached.filter(order => order.sync_pending);
+      for (const order of pending) {
+        try {
+          const payload = await postSharedState('hold', 'save', {
+            ...order,
+            store_code: repairTicketStoreCode(),
+            staff_name: state.selectedStaffName
+          });
+          order.sync_pending = false;
+          if (payload.hold) Object.assign(order, payload.hold, { store_id: state.storeId });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      try {
+        const payload = await getSharedState('holds');
+        const remote = (Array.isArray(payload.holds) ? payload.holds : [])
+          .map(order => ({ ...order, store_id: state.storeId, sync_pending: false }));
+        const stillPending = pending.filter(order => order.sync_pending);
+        const combined = [...stillPending, ...remote.filter(order => !stillPending.some(item => item.id === order.id))];
+        cacheHeldOrders(combined);
+        return combined;
+      } catch (error) {
+        console.error(error);
+        return cached;
+      }
     }
 
     function renderHoldList() {
@@ -8376,10 +9122,12 @@
       }).join('');
     }
 
-    function openHoldListModal() {
+    async function openHoldListModal() {
       renderHoldList();
       els.holdListModal.classList.add('show');
       els.holdListModal.setAttribute('aria-hidden', 'false');
+      await loadHeldOrders();
+      renderHoldList();
     }
 
     function closeHoldListModal() {
@@ -8387,15 +9135,32 @@
       els.holdListModal.setAttribute('aria-hidden', 'true');
     }
 
-    function restoreHeldOrder(id) {
+    async function restoreHeldOrder(id) {
       const held = heldOrders();
       const index = held.findIndex(order => order.id === id);
       if (index < 0) return;
       if (state.cart.length && !confirm('Replace current cart with this held order?')) return;
-      const [order] = held.splice(index, 1);
+      const order = held[index];
+      if (!order.sync_pending) {
+        try {
+          const payload = await postSharedState('hold', 'restore', {
+            store_code: repairTicketStoreCode(),
+            hold_id: id,
+            staff_name: state.selectedStaffName
+          });
+          if (payload.hold) Object.assign(order, payload.hold);
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || 'Held order is no longer available.');
+          await loadHeldOrders();
+          renderHoldList();
+          return;
+        }
+      }
+      held.splice(index, 1);
       state.cart = Array.isArray(order.items) ? order.items : [];
       els.customerInput.value = order.customer && order.customer !== 'Walk-in Customer' ? order.customer : '';
-      localStorage.setItem(POS_HELD_ORDERS_KEY, JSON.stringify(held));
+      cacheHeldOrders(held);
       closeHoldListModal();
       renderCart();
       showToast('Held order restored.');
@@ -8489,6 +9254,7 @@
         showToast('Checkout was not completed. The cart is unchanged; check the connection and try again.');
         return;
       }
+      state.shiftPaymentTotals = null;
 
       state.cart.forEach(item => {
         const product = state.products.find(productItem => productItem.id === item.id);
@@ -8539,24 +9305,35 @@
         : `${order.id} paid and saved to the POS database.`);
     }
 
-    function holdOrder() {
+    async function holdOrder() {
       if (!state.cart.length) {
         showToast('Cart is empty.');
         return;
       }
       const held = heldOrders();
-      held.unshift({
+      const heldOrder = {
         id: 'HOLD-' + Date.now(),
         customer: els.customerInput.value.trim() || 'Walk-in Customer',
         store_id: state.storeId,
-        items: state.cart,
-        created_at: new Date().toISOString()
-      });
-      localStorage.setItem(POS_HELD_ORDERS_KEY, JSON.stringify(held.slice(0, 20)));
+        store_code: repairTicketStoreCode(),
+        staff_name: state.selectedStaffName,
+        items: state.cart.map(item => ({ ...item })),
+        created_at: new Date().toISOString(),
+        sync_pending: true
+      };
+      try {
+        const payload = await postSharedState('hold', 'save', heldOrder);
+        if (payload.hold) Object.assign(heldOrder, payload.hold);
+        heldOrder.sync_pending = false;
+      } catch (error) {
+        console.error(error);
+      }
+      held.unshift(heldOrder);
+      cacheHeldOrders(held.slice(0, 50));
       state.cart = [];
       els.customerInput.value = '';
       renderCart();
-      showToast('Order placed on hold.');
+      showToast(heldOrder.sync_pending ? 'Order held locally. Database sync is pending.' : 'Order placed on hold for this store.');
     }
 
     function discardCart() {
@@ -8705,6 +9482,34 @@
     els.productNavBtn.addEventListener('click', () => setActiveView('products'));
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
     els.ordersNavBtn.addEventListener('click', () => setActiveView('orders'));
+    els.reportNavBtn.addEventListener('click', () => setActiveView('report'));
+    els.reportReloadBtn.addEventListener('click', loadPosReport);
+    els.reportPresets.addEventListener('click', event => {
+      const button = event.target.closest('[data-report-preset]');
+      if (!button) return;
+      setReportDatePreset(button.dataset.reportPreset);
+    });
+    els.reportDateFrom.addEventListener('change', event => {
+      state.reportDateFrom = event.target.value;
+      state.reportDatePreset = '';
+      if (!state.reportDateTo || state.reportDateTo < state.reportDateFrom) state.reportDateTo = state.reportDateFrom;
+      renderReportControls();
+      loadPosReport();
+    });
+    els.reportDateTo.addEventListener('change', event => {
+      state.reportDateTo = event.target.value;
+      state.reportDatePreset = '';
+      if (state.reportDateTo < state.reportDateFrom) {
+        state.reportDateTo = state.reportDateFrom;
+        showToast('End date cannot be before start date.');
+      }
+      renderReportControls();
+      loadPosReport();
+    });
+    els.reportStaffFilter.addEventListener('change', event => {
+      state.reportStaffName = event.target.value;
+      loadPosReport();
+    });
     els.invoiceReloadBtn.addEventListener('click', loadInvoiceHistory);
     els.invoiceSearchInput.addEventListener('input', event => {
       state.invoiceSearch = event.target.value;
@@ -9171,12 +9976,15 @@
       if (event.target === els.endShiftModal) closeEndShiftModal();
     });
     els.storeSwitchCancel.addEventListener('click', closeStoreSwitchModal);
-    els.storeSwitchModal.addEventListener('click', event => {
+    els.storeSwitchModal.addEventListener('click', async event => {
       if (event.target === els.storeSwitchModal) closeStoreSwitchModal();
       const button = event.target.closest('[data-store-switch]');
       if (button) {
         closeStoreSwitchModal();
-        if (setCurrentStore(button.dataset.storeSwitch, true)) ensureOpeningCash();
+        if (setCurrentStore(button.dataset.storeSwitch, true)) {
+          await syncCurrentShiftWithDatabase();
+          ensureOpeningCash();
+        }
       }
     });
     els.customerCloseBtn.addEventListener('click', closeCustomerModal);
@@ -9228,12 +10036,15 @@
       subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
     }).then(async () => {
       await ensureStaffStoreAccess();
+      await syncCurrentShiftWithDatabase();
       await ensureOpeningCash();
       await syncPendingPosOrders();
       await loadRepairTickets();
-      loadCustomers();
+      await loadCustomers();
+      await loadHeldOrders();
       renderRepairWorkspace();
       renderTargetDashboard();
+      renderReportControls();
       loadProducts();
       loadRepairQuotes();
     });

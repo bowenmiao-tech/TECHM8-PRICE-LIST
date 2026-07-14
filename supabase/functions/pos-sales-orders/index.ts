@@ -95,6 +95,21 @@ Deno.serve(async (request) => {
 
     if (request.method === "GET") {
       const url = new URL(request.url);
+      const mode = url.searchParams.get("mode") || "";
+      if (mode === "report") {
+        const storeCode = url.searchParams.get("store_code") || "";
+        if (!storeCode) {
+          return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+        }
+        return await rpcResponse(request, "get_pos_sales_report", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          date_from: url.searchParams.get("from_date") || null,
+          date_to: url.searchParams.get("to_date") || null,
+          target_staff_name: url.searchParams.get("staff_name") || null,
+        });
+      }
+
       const orderCode = url.searchParams.get("order_id") || "";
       if (orderCode) {
         return await rpcResponse(request, "get_pos_sales_order", {

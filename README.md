@@ -11,7 +11,7 @@ This repo is the internal staff site, not the public website.
 
 Front-end staff pages:
 - `index.html` - staff portal home
-- `pos.html` - store POS, Repair Board, and Invoice History
+- `pos.html` - store POS, Repair Board, Invoice History, and POS Reports
 - `quote.html` - repair quote lookup
 - `repair_workflow.html` - intake / workflow page
 - `daily-report.html` - daily report + weekly LCD count
@@ -65,7 +65,8 @@ Completed product-sale flow:
 - The entire product card adds the item to the cart.
 - Zero-stock products are intentionally allowed to be sold.
 - Quantity change, cancel, hold, and resume are available.
-- Held carts are limited to the same browser and are not shared between terminals.
+- Held carts are stored per store and shared between POS terminals.
+- Restoring a held cart is atomic, so another terminal cannot restore the same cart again.
 
 Completed checkout flow:
 - Cash, Card, Afterpay, CNYpay, and Bank Transfer are supported as recorded payment methods.
@@ -94,6 +95,22 @@ Completed receipt flow:
 - Receipt email is sent by `send-pos-receipt-email` through Resend.
 - Email Reply-To and optional CC use the selected store's email address.
 - Email success is recorded against the saved order.
+
+Completed POS reporting:
+- Reports read saved invoices, normalized lines, split payments, and immutable refunds from the database.
+- Filters support selected store, start/end date, shortcut ranges, and optional staff member.
+- Summary totals include gross sales, refunds, net sales, GST, invoices, units, average invoice, and refund count.
+- Breakdowns include retail/repair/special sales, product category, payments received, refund method, staff, and daily totals.
+- Sales use Brisbane `business_date`; refunds use their Brisbane transaction date.
+- The Today Target page remains a local incentive panel and is not an accounting report.
+
+Completed multi-terminal state:
+- Customer records are shared within the selected store and cached locally for temporary network failure.
+- Held carts are shared within the selected store and cached locally until database sync succeeds.
+- One open store shift is shared by all terminals at that store.
+- Opening cash entered on one terminal is visible to the others.
+- All new sales use the shared shift ID, and end-shift reconciliation reloads payment/refund totals from the database before closing.
+- Closing a shift is database-authoritative; the local shift is not cleared when database closing fails.
 
 ### Repair Board
 
@@ -135,16 +152,17 @@ Database-backed and shared between terminals:
 - refunds and refund lines
 - receipt email audit fields
 - per-store invoice counters
+- formal POS report aggregates
+- per-store customer directory
+- per-store held carts
+- per-store opening cash, active shift, and end-shift reconciliation
 
 Browser-local convenience state:
-- held carts
-- customer address book
 - selected staff/store and local staff PIN/assignment overrides
-- opening cash, active shift, end-shift counts
+- offline cache for customers, held carts, shifts, and recent orders
 - Today Target amount and incentive progress
-- a local cache of recently saved orders
 
-Do not use browser-local values as the source of truth for accounting or management reports. They are not automatically shared with another iPad or POS terminal.
+Do not use browser-local values as the source of truth for accounting or management reports. Shared records and financial totals must come from the database APIs.
 
 ### Supabase Deployment Map
 
@@ -152,7 +170,7 @@ Do not use browser-local values as the source of truth for accounting or managem
 - Edge Function project: `fwlronvmgqzkleofriis`.
 - Staff/POS database project: `abkjbhmifswfexpjkval`.
 - `pos-products` proxies the protected internal product API without exposing its API key.
-- `pos-repair-tickets`, `pos-sales-orders`, and `send-pos-receipt-email` validate `x-staff-session` and call staff/POS database RPCs.
+- `pos-repair-tickets`, `pos-sales-orders`, `pos-shared-state`, and `send-pos-receipt-email` validate `x-staff-session` and call staff/POS database RPCs.
 - Full endpoint and migration deployment notes are in `supabase/README.md`.
 
 Required POS migrations, in order:
@@ -160,17 +178,11 @@ Required POS migrations, in order:
 2. `20260711144825_pos_invoice_numbers.sql`
 3. `20260712122942_unify_pos_invoices_and_repair_workflow.sql`
 4. `20260713084027_add_invoice_history_date_filters.sql`
+5. `20260714103000_add_pos_reports_and_shared_state.sql`
 
 ### Current Limitations And Roadmap
 
-Priority 1 - database-backed POS Report:
-- The current Today Target panel reads browser-local order cache and is not a formal report.
-- The existing `daily-report.html` is a separate manual staff report and is not generated from POS invoices.
-- Add a report RPC/page using saved invoices, payments, and refunds.
-- Required filters: store, single day, date range, and staff.
-- Required totals: gross sales, refunds, net sales, GST, invoice count, average sale, retail/repair split, category totals, payment-method totals, and staff totals.
-
-Priority 2 - second-hand device buy/sell:
+Next major module - second-hand device buy/sell:
 - Buying a device from a customer must be a separate purchase/intake record, not a negative sales invoice.
 - Capture seller name, phone, ID reference, ownership declaration, device model, IMEI/serial, condition checks, grade, photos, offered cost, approved cost, payout method, and staff/store audit.
 - Enforce unique IMEI/serial and record blacklist/ownership checks before purchase approval.
@@ -178,10 +190,7 @@ Priority 2 - second-hand device buy/sell:
 - Once purchased, create one used-device inventory item with its acquisition cost and store location.
 - Selling that item uses the existing unified POS invoice and marks the used-device inventory item as sold.
 
-Optional later work, only if multiple terminals require it:
-- database-backed held carts
-- shared customer directory
-- database-backed shift/opening/end-shift reconciliation
+Optional later integrations:
 - stock write-back to the product/inventory system
 - payment terminal integrations
 

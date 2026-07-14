@@ -82,6 +82,7 @@ POST https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders
 GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?order_id=POS-...
 GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?store_code=northlakes&q=customer&from_date=2026-07-01&to_date=2026-07-13
 PUT  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders
+GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?mode=report&store_code=northlakes&from_date=2026-07-01&to_date=2026-07-14&staff_name=Andy
 ```
 
 Apply `supabase/migrations/20260711140805_pos_sales_orders.sql` to the staff-auth database, then deploy:
@@ -97,6 +98,37 @@ Invoice History can combine its keyword search with `from_date` and `to_date` (`
 Every store has one shared invoice sequence across all sale types. A retail sale, repair sale, or mixed sale consumes the next number from the same store counter. Repair invoices are not stored in a separate invoice table.
 
 Repair tickets require a real customer name and phone at both the browser and database layers. A repair ticket can be linked to only one original sales-order line, preventing duplicate checkout. Refunds create separate immutable refund records and do not alter or delete the original invoice.
+
+Apply `supabase/migrations/20260714103000_add_pos_reports_and_shared_state.sql` after the invoice date-filter migration. Report mode calls `get_pos_sales_report` and returns database totals for sales, refunds, GST, invoice count, units, average invoice, sale type, category, payment method, staff, and day.
+
+## POS Shared State
+
+`pos-shared-state` stores customer records, held carts, and store shifts in the staff/POS database. Every operation validates `x-staff-session`; the tables themselves are not exposed to browser roles.
+
+Browser calls:
+
+```text
+GET  .../pos-shared-state?resource=customers&store_code=parkridge
+POST .../pos-shared-state  resource=customer, action=save
+GET  .../pos-shared-state?resource=holds&store_code=parkridge
+POST .../pos-shared-state  resource=hold, action=save|restore
+GET  .../pos-shared-state?resource=shift&store_code=parkridge
+GET  .../pos-shared-state?resource=shift-totals&store_code=parkridge&shift_id=SHIFT-...
+POST .../pos-shared-state  resource=shift, action=open|opening|close
+```
+
+Shift rules:
+- There is at most one open shift per store.
+- Every terminal opening the same store receives the same shift ID.
+- Opening cash is written once and then reused by other terminals.
+- Shift payment totals combine all invoices with that shift ID and subtract store refunds recorded during the shift window.
+- End shift writes system totals, actual totals, differences, closing cash count, closing staff, and closing timestamp.
+
+Deploy:
+
+```bash
+supabase functions deploy pos-shared-state --no-verify-jwt
+```
 
 ### Invoice Numbers
 
