@@ -145,6 +145,7 @@
 
     .workspace-view {
       display: none;
+      min-width: 0;
       min-height: 0;
       height: 100%;
     }
@@ -156,6 +157,10 @@
     .product-view {
       grid-template-rows: auto auto minmax(0, 1fr);
       gap: 16px;
+    }
+
+    .product-view > * {
+      min-width: 0;
     }
 
     .target-view {
@@ -342,9 +347,80 @@
       font-weight: 750;
     }
 
+    .target-live-value {
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .target-live-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .target-status-pill {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 9px;
+      border-radius: 7px;
+      color: var(--tm-green-dark);
+      background: #e4f6f1;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .target-status-pill.finalized {
+      color: #41525a;
+      background: #edf1f3;
+    }
+
+    .target-refresh-btn {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border: 1px solid var(--tm-line);
+      border-radius: 7px;
+      color: var(--tm-green-dark);
+      background: #fff;
+      font-size: 17px;
+    }
+
+    .target-refresh-btn:disabled {
+      opacity: .55;
+    }
+
+    .target-live-meta {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .target-sync-warning {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border: 1px solid #efc16e;
+      border-radius: 7px;
+      color: #704912;
+      background: #fff8e8;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .target-retry-btn {
+      margin-top: 14px;
+    }
+
     .target-stat-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -389,6 +465,11 @@
       color: var(--tm-muted);
       font-size: 12px;
       font-weight: 750;
+    }
+
+    .target-stat.refund .target-stat-top i {
+      color: #b44c27;
+      background: #fff0ea;
     }
 
     .target-panel {
@@ -709,7 +790,7 @@
       min-height: 0;
       overflow: auto;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
       align-content: start;
       gap: 16px;
       padding: 2px 2px 18px;
@@ -717,6 +798,7 @@
 
     .product-card {
       position: relative;
+      min-width: 0;
       height: 176px;
       display: grid;
       grid-template-columns: 104px minmax(0, 1fr);
@@ -2660,234 +2742,6 @@
       white-space: nowrap;
     }
 
-    .report-view {
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    .report-page {
-      height: 100%;
-      min-height: 0;
-      display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr);
-      gap: 14px;
-    }
-
-    .report-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-    }
-
-    .report-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: end;
-      gap: 10px;
-      padding: 12px;
-      border: 1px solid var(--tm-line);
-      border-radius: 8px;
-      background: #fff;
-    }
-
-    .report-control {
-      display: grid;
-      gap: 4px;
-      color: var(--tm-muted);
-      font-size: 11px;
-      font-weight: 900;
-    }
-
-    .report-control input,
-    .report-control select {
-      width: 166px;
-      height: 42px;
-      border: 1px solid var(--tm-line);
-      border-radius: 7px;
-      padding: 0 10px;
-      color: var(--tm-ink);
-      background: #fff;
-      font-size: 13px;
-      font-weight: 850;
-    }
-
-    .report-control select {
-      width: 190px;
-    }
-
-    .report-presets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      align-items: center;
-      flex: 1 1 330px;
-    }
-
-    .report-preset {
-      min-height: 38px;
-      padding: 0 12px;
-      border: 1px solid var(--tm-line);
-      border-radius: 7px;
-      color: #43545c;
-      background: #fff;
-      font-weight: 850;
-      white-space: nowrap;
-    }
-
-    .report-preset.active {
-      color: var(--tm-green-dark);
-      border-color: #8bcfc0;
-      background: #e6f7f3;
-    }
-
-    .report-content {
-      min-height: 0;
-      overflow: auto;
-      display: grid;
-      align-content: start;
-      gap: 12px;
-      padding-right: 4px;
-    }
-
-    .report-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .report-stat {
-      min-width: 0;
-      min-height: 104px;
-      display: grid;
-      align-content: space-between;
-      gap: 10px;
-      padding: 14px;
-      border: 1px solid var(--tm-line);
-      border-radius: 8px;
-      background: #fff;
-    }
-
-    .report-stat span {
-      color: var(--tm-muted);
-      font-size: 12px;
-      font-weight: 850;
-    }
-
-    .report-stat strong {
-      overflow-wrap: anywhere;
-      font-size: 25px;
-      line-height: 1;
-      font-weight: 950;
-    }
-
-    .report-stat.net {
-      color: #fff;
-      border-color: var(--tm-green-dark);
-      background: var(--tm-green-dark);
-    }
-
-    .report-stat.net span {
-      color: rgba(255,255,255,.76);
-    }
-
-    .report-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      align-items: start;
-    }
-
-    .report-panel {
-      min-width: 0;
-      padding: 14px;
-      border: 1px solid var(--tm-line);
-      border-radius: 8px;
-      background: #fff;
-    }
-
-    .report-panel.wide {
-      grid-column: 1 / -1;
-    }
-
-    .report-panel h2 {
-      margin: 0 0 12px;
-      font-size: 15px;
-      font-weight: 950;
-    }
-
-    .report-breakdown {
-      display: grid;
-      gap: 9px;
-    }
-
-    .report-breakdown-row {
-      display: grid;
-      grid-template-columns: minmax(110px, 1fr) minmax(90px, 1.4fr) auto;
-      gap: 10px;
-      align-items: center;
-      min-height: 28px;
-    }
-
-    .report-breakdown-label {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 12px;
-      font-weight: 850;
-    }
-
-    .report-bar {
-      height: 8px;
-      overflow: hidden;
-      border-radius: 4px;
-      background: #e7edef;
-    }
-
-    .report-bar span {
-      display: block;
-      height: 100%;
-      min-width: 2px;
-      border-radius: inherit;
-      background: var(--tm-green);
-    }
-
-    .report-breakdown-value {
-      min-width: 80px;
-      text-align: right;
-      font-size: 12px;
-      font-weight: 950;
-    }
-
-    .report-table-wrap {
-      overflow-x: auto;
-    }
-
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    .report-table th,
-    .report-table td {
-      padding: 9px 8px;
-      border-bottom: 1px solid var(--tm-line);
-      text-align: right;
-      white-space: nowrap;
-    }
-
-    .report-table th:first-child,
-    .report-table td:first-child {
-      text-align: left;
-    }
-
-    .report-table th {
-      color: var(--tm-muted);
-      font-weight: 900;
-    }
-
     .report-empty {
       padding: 28px 12px;
       color: var(--tm-muted);
@@ -3708,10 +3562,6 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .report-summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
       .used-summary-grid,
       .used-detail-summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3751,7 +3601,7 @@
       }
 
       .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
       }
 
       .payment-modal-body {
@@ -3785,6 +3635,15 @@
     }
 
     @media (max-width: 900px) {
+      .topbar {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .topbar .staff-pill {
+        width: 100%;
+        min-width: 0;
+      }
+
       .used-device-head,
       .used-device-toolbar {
         display: grid;
@@ -3952,8 +3811,6 @@
         grid-template-columns: minmax(0, 1fr);
       }
 
-      .report-grid,
-      .report-summary-grid,
       .used-summary-grid,
       .used-detail-summary,
       .used-form-grid,
@@ -3992,12 +3849,6 @@
       .used-transaction-row .used-transaction-staff,
       .used-transaction-row .used-transaction-date {
         display: none;
-      }
-
-      .report-control,
-      .report-control input,
-      .report-control select {
-        width: 100%;
       }
 
       .invoice-row {
@@ -4080,7 +3931,6 @@
         <button id="repairNavBtn" class="rail-button" type="button" title="Repair tickets"><i class="bi bi-clipboard2-plus"></i></button>
         <button id="usedDeviceNavBtn" class="rail-button" type="button" title="Used devices"><i class="bi bi-phone"></i></button>
         <button id="ordersNavBtn" class="rail-button" type="button" title="Invoices"><i class="bi bi-receipt"></i></button>
-        <button id="reportNavBtn" class="rail-button" type="button" title="Reports"><i class="bi bi-graph-up-arrow"></i></button>
       </nav>
       <div class="rail-bottom">
         <button id="endShiftBtn" class="rail-button" type="button" title="End shift"><i class="bi bi-box-arrow-right"></i></button>
@@ -4195,38 +4045,6 @@
         </div>
       </section>
 
-      <section id="reportView" class="workspace-view report-view" aria-label="POS reports">
-        <div class="report-page">
-          <div class="report-head">
-            <div>
-              <h1 class="invoice-title">POS Report</h1>
-              <div id="reportSubtitle" class="repair-subtitle">Database sales, refunds, payments, and staff performance for this store.</div>
-            </div>
-            <button id="reportReloadBtn" class="repair-action" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-          </div>
-          <div class="report-controls">
-            <label class="report-control">
-              Start date
-              <input id="reportDateFrom" type="date">
-            </label>
-            <label class="report-control">
-              End date
-              <input id="reportDateTo" type="date">
-            </label>
-            <label class="report-control">
-              Staff
-              <select id="reportStaffFilter"><option value="">All staff</option></select>
-            </label>
-            <div id="reportPresets" class="report-presets" aria-label="Report date shortcuts">
-              <button class="report-preset active" type="button" data-report-preset="today">Today</button>
-              <button class="report-preset" type="button" data-report-preset="yesterday">Yesterday</button>
-              <button class="report-preset" type="button" data-report-preset="last7">Last 7 Days</button>
-              <button class="report-preset" type="button" data-report-preset="month">This Month</button>
-            </div>
-          </div>
-          <div id="reportContent" class="report-content"></div>
-        </div>
-      </section>
     </main>
 
     <aside class="checkout-panel" aria-label="Checkout">
@@ -4859,12 +4677,10 @@
       invoiceDatePreset: 'today',
       invoiceOrders: [],
       invoiceLoading: false,
-      reportDateFrom: brisbaneDateIso(),
-      reportDateTo: brisbaneDateIso(),
-      reportDatePreset: 'today',
-      reportStaffName: '',
-      reportData: null,
-      reportLoading: false,
+      todayProgress: null,
+      todayProgressLoading: false,
+      todayProgressError: '',
+      todayProgressLastLoaded: '',
       usedDeviceTab: 'inventory',
       usedDeviceSearch: '',
       usedDeviceStatus: '',
@@ -4926,14 +4742,12 @@
       repairView: document.getElementById('repairView'),
       usedDeviceView: document.getElementById('usedDeviceView'),
       ordersView: document.getElementById('ordersView'),
-      reportView: document.getElementById('reportView'),
       repairWorkspace: document.getElementById('repairWorkspace'),
       targetNavBtn: document.getElementById('targetNavBtn'),
       productNavBtn: document.getElementById('productNavBtn'),
       repairNavBtn: document.getElementById('repairNavBtn'),
       usedDeviceNavBtn: document.getElementById('usedDeviceNavBtn'),
       ordersNavBtn: document.getElementById('ordersNavBtn'),
-      reportNavBtn: document.getElementById('reportNavBtn'),
       invoiceSearchInput: document.getElementById('invoiceSearchInput'),
       invoiceReloadBtn: document.getElementById('invoiceReloadBtn'),
       invoiceDateMode: document.getElementById('invoiceDateMode'),
@@ -4944,13 +4758,6 @@
       invoiceDatePresets: document.getElementById('invoiceDatePresets'),
       invoiceResultCount: document.getElementById('invoiceResultCount'),
       invoiceList: document.getElementById('invoiceList'),
-      reportReloadBtn: document.getElementById('reportReloadBtn'),
-      reportSubtitle: document.getElementById('reportSubtitle'),
-      reportDateFrom: document.getElementById('reportDateFrom'),
-      reportDateTo: document.getElementById('reportDateTo'),
-      reportStaffFilter: document.getElementById('reportStaffFilter'),
-      reportPresets: document.getElementById('reportPresets'),
-      reportContent: document.getElementById('reportContent'),
       usedDeviceSubtitle: document.getElementById('usedDeviceSubtitle'),
       newUsedDeviceBtn: document.getElementById('newUsedDeviceBtn'),
       usedDeviceReloadBtn: document.getElementById('usedDeviceReloadBtn'),
@@ -5184,34 +4991,6 @@
     const POS_ORDERS_KEY = 'techm8_pos_demo_orders';
     const POS_HELD_ORDERS_KEY = 'techm8_pos_held_orders';
     const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
-    const POS_DAILY_TARGETS_KEY = 'techm8_pos_daily_targets';
-    const TODAY_TARGET_DEFAULT_AMOUNT = 1000;
-    const TODAY_BONUS_DOLLARS_PER_POINT = 1;
-    const TODAY_TARGET_RULES = [
-      {
-        id: 'sales',
-        label: 'Complete today revenue target',
-        icon: 'bi-bullseye',
-        points: 30,
-        nav: 'products'
-      },
-      {
-        id: 'glass',
-        label: 'Sell 10 tempered glass',
-        icon: 'bi-phone-flip',
-        points: 20,
-        target: 10,
-        nav: 'products'
-      },
-      {
-        id: 'repairs',
-        label: 'Complete 10 repair jobs',
-        icon: 'bi-tools',
-        points: 20,
-        target: 10,
-        nav: 'repair'
-      }
-    ];
     const POS_PAYMENT_METHODS = [
       { key: 'cash', label: 'Cash' },
       { key: 'card', label: 'Card' },
@@ -5562,9 +5341,11 @@
       state.scheduledStoreId = '';
       state.openingConfirmed = false;
       state.shiftPaymentTotals = null;
+      state.todayProgress = null;
+      state.todayProgressError = '';
       updateStaffButton();
       updateStoreBadge();
-      renderTargetDashboard();
+      renderLiveTargetDashboard();
     }
 
     function ensureActiveShiftRecord() {
@@ -5788,15 +5569,17 @@
       }
       state.storeId = storeId;
       localStorage.setItem(POS_STORE_KEY, storeId);
+      state.todayProgress = null;
+      state.todayProgressError = '';
       renderStoreSelectOptions();
       updateStoreBadge();
-      renderTargetDashboard();
+      renderLiveTargetDashboard();
       if (state.selectedStaffName) {
         loadRepairTickets().then(() => {
           if (state.activeView === 'repair') renderRepairWorkspace();
         });
         if (state.activeView === 'orders') loadInvoiceHistory();
-        if (state.activeView === 'report') loadPosReport();
+        if (state.activeView === 'target') loadTodayProgress();
         if (state.activeView === 'used-devices') loadUsedDevices();
       }
       if (state.selectedStaffName && !options.skipShift) {
@@ -6236,184 +6019,16 @@
       return state.shiftPaymentTotals;
     }
 
-    function targetStorageKey() {
-      return [
-        brisbaneDateIso(),
-        normalizeStaffKey(state.selectedStaffName || 'staff'),
-        normalizeStoreKey(state.storeId || 'store')
-      ].join('|');
-    }
+    const POS_TODAY_PROGRESS_CACHE_PREFIX = 'techm8_pos_today_progress_cache';
 
-    function loadDailyTargets() {
-      return readLocalJson(POS_DAILY_TARGETS_KEY, {});
-    }
-
-    function currentDailyTargetAmount() {
-      const targets = loadDailyTargets();
-      const saved = numberValue(targets[targetStorageKey()]);
-      return saved > 0 ? saved : TODAY_TARGET_DEFAULT_AMOUNT;
-    }
-
-    function saveDailyTarget() {
-      const input = els.targetDashboard && els.targetDashboard.querySelector('#targetAmountInput');
-      const amount = roundedMoneyValue(input ? input.value : 0);
-      if (amount <= 0) {
-        showToast('Enter a target amount above $0.');
-        if (input) input.focus();
-        return;
-      }
-
-      const targets = loadDailyTargets();
-      targets[targetStorageKey()] = amount;
-      localStorage.setItem(POS_DAILY_TARGETS_KEY, JSON.stringify(targets));
-      renderTargetDashboard();
-      showToast(`Today target saved as ${money(amount)}.`);
-    }
-
-    function orderBelongsToTodayTarget(order) {
-      if (!orderStoreMatches(order)) return false;
-      if (orderBusinessDate(order) !== brisbaneDateIso()) return false;
-      if (!state.selectedStaffName) return true;
-      if (!order.staff_name) return true;
-      return normalizeStaffKey(order.staff_name) === normalizeStaffKey(state.selectedStaffName);
-    }
-
-    function orderItems(order) {
-      return Array.isArray(order.items) ? order.items : [];
-    }
-
-    function itemQuantity(item) {
-      const value = Number(item.qty ?? item.quantity ?? item.count ?? 1);
-      return Number.isFinite(value) && value > 0 ? value : 1;
-    }
-
-    function itemLineTotal(item) {
-      const explicit = numberValue(item.line_total ?? item.total);
-      if (explicit > 0) return explicit;
-      return roundedMoneyValue(numberValue(item.unit_price ?? item.price ?? item.sale_price) * itemQuantity(item));
-    }
-
-    function orderTotalValue(order) {
-      const total = numberValue(order.total ?? order.amount);
-      if (total > 0) return total;
-      return orderItems(order).reduce((sum, item) => roundedMoneyValue(sum + itemLineTotal(item)), 0);
-    }
-
-    function isRepairOrderItem(item) {
-      const sku = String(item.sku || '').trim().toUpperCase();
-      const category = String(item.category || '').trim().toLowerCase();
-      const name = String(item.name || '').trim().toLowerCase();
-      return Boolean(item.is_repair)
-        || sku === 'REPAIR'
-        || category === 'repair'
-        || name.includes('repair service');
-    }
-
-    function isTemperedGlassItem(item) {
-      if (isRepairOrderItem(item)) return false;
-      const text = [
-        item.sku,
-        item.name,
-        item.category,
-        item.product_type
-      ].filter(Boolean).join(' ').toLowerCase();
-      return /\btg[-\s]/.test(text)
-        || text.includes('tempered')
-        || text.includes('screen protector')
-        || text.includes('protector')
-        || text.includes('glass protector')
-        || text.includes('ganghua')
-        || text.includes('gang hua');
-    }
-
-    function countItems(orders, predicate) {
-      return orders.reduce((sum, order) => {
-        return sum + orderItems(order).reduce((lineSum, item) => {
-          return predicate(item) ? lineSum + itemQuantity(item) : lineSum;
-        }, 0);
-      }, 0);
-    }
-
-    function targetTaskProgress(current, target) {
-      if (target <= 0) return 0;
-      return Math.max(0, Math.min(100, (current / target) * 100));
-    }
-
-    function buildTodayTargetTasks(metrics) {
-      return TODAY_TARGET_RULES.map(rule => {
-        if (rule.id === 'sales') {
-          const complete = metrics.todaySales >= metrics.dailyTarget;
-          return {
-            ...rule,
-            current: metrics.todaySales,
-            target: metrics.dailyTarget,
-            complete,
-            progressPercent: targetTaskProgress(metrics.todaySales, metrics.dailyTarget),
-            progressText: `${money(metrics.todaySales)} / ${money(metrics.dailyTarget)}`,
-            statusText: complete ? 'Claimed' : `Need ${money(metrics.dailyTarget - metrics.todaySales)}`
-          };
-        }
-
-        if (rule.id === 'glass') {
-          const complete = metrics.glassCount >= rule.target;
-          return {
-            ...rule,
-            current: metrics.glassCount,
-            complete,
-            progressPercent: targetTaskProgress(metrics.glassCount, rule.target),
-            progressText: `${metrics.glassCount} / ${rule.target}`,
-            statusText: complete ? 'Claimed' : `${Math.max(0, rule.target - metrics.glassCount)} more`
-          };
-        }
-
-        const complete = metrics.repairCount >= rule.target;
-        return {
-          ...rule,
-          current: metrics.repairCount,
-          complete,
-          progressPercent: targetTaskProgress(metrics.repairCount, rule.target),
-          progressText: `${metrics.repairCount} / ${rule.target}`,
-          statusText: complete ? 'Claimed' : `${Math.max(0, rule.target - metrics.repairCount)} more`
-        };
-      });
-    }
-
-    function todayTargetMetrics() {
-      const orders = readLocalArray(POS_ORDERS_KEY).filter(orderBelongsToTodayTarget);
-      const dailyTarget = currentDailyTargetAmount();
-      const todaySales = roundedMoneyValue(orders.reduce((sum, order) => sum + orderTotalValue(order), 0));
-      const repairCount = countItems(orders, isRepairOrderItem);
-      const glassCount = countItems(orders, isTemperedGlassItem);
-      const productCount = countItems(orders, item => !isRepairOrderItem(item));
-      const tasks = buildTodayTargetTasks({
-        dailyTarget,
-        todaySales,
-        repairCount,
-        glassCount
-      });
-      const maxPoints = tasks.reduce((sum, task) => sum + task.points, 0);
-      const earnedPoints = tasks.reduce((sum, task) => sum + (task.complete ? task.points : 0), 0);
-
-      return {
-        orders,
-        orderCount: orders.length,
-        productCount,
-        todaySales,
-        dailyTarget,
-        repairCount,
-        glassCount,
-        tasks,
-        maxPoints,
-        earnedPoints,
-        bonusAmount: roundedMoneyValue(earnedPoints * TODAY_BONUS_DOLLARS_PER_POINT)
-      };
+    function liveTargetProgressPercent(current, target) {
+      if (numberValue(target) <= 0) return 0;
+      return Math.max(0, Math.min(100, (numberValue(current) / numberValue(target)) * 100));
     }
 
     function scoreMilestones(maxPoints) {
       const milestones = [];
-      for (let value = 20; value < maxPoints; value += 20) {
-        milestones.push(value);
-      }
+      for (let value = 20; value < maxPoints; value += 20) milestones.push(value);
       if (maxPoints > 0 && !milestones.includes(maxPoints)) milestones.push(maxPoints);
       return milestones;
     }
@@ -6428,30 +6043,186 @@
       }).format(new Date());
     }
 
-    function renderTargetDashboard() {
-      if (!els.targetDashboard) return;
+    function todayProgressCacheKey() {
+      return [
+        POS_TODAY_PROGRESS_CACHE_PREFIX,
+        brisbaneDateIso(),
+        normalizeStaffKey(state.selectedStaffName || 'staff'),
+        normalizeStoreKey(state.storeId || 'store')
+      ].join('|');
+    }
 
-      const metrics = todayTargetMetrics();
-      const scoreBase = metrics.maxPoints || 1;
-      const scorePercent = Math.max(0, Math.min(100, (metrics.earnedPoints / scoreBase) * 100));
-      const revenuePercent = targetTaskProgress(metrics.todaySales, metrics.dailyTarget);
-      const milestones = scoreMilestones(metrics.maxPoints);
+    function cachedTodayProgress() {
+      return readLocalJson(todayProgressCacheKey(), null);
+    }
+
+    function formatTargetSyncTime(value) {
+      if (!value) return 'Not synced yet';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return 'Not synced yet';
+      return new Intl.DateTimeFormat('en-AU', {
+        timeZone: 'Australia/Brisbane',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).format(date);
+    }
+
+    function buildLiveTargetTasks(progress) {
+      const target = progress && progress.target ? progress.target : {};
+      const metrics = progress && progress.metrics ? progress.metrics : {};
+      const taskDefinitions = [
+        {
+          id: 'sales',
+          label: 'Complete today net sales target',
+          icon: 'bi-bullseye',
+          nav: 'products',
+          current: numberValue(metrics.net_sales),
+          target: numberValue(target.revenue),
+          points: Number(target.revenue_points || 0),
+          money: true
+        },
+        {
+          id: 'glass',
+          label: `Sell ${Number(target.glass || 0)} tempered glass`,
+          icon: 'bi-phone-flip',
+          nav: 'products',
+          current: Number(metrics.glass_count || 0),
+          target: Number(target.glass || 0),
+          points: Number(target.glass_points || 0)
+        },
+        {
+          id: 'repairs',
+          label: `Complete ${Number(target.repairs || 0)} repair jobs`,
+          icon: 'bi-tools',
+          nav: 'repair',
+          current: Number(metrics.repair_count || 0),
+          target: Number(target.repairs || 0),
+          points: Number(target.repair_points || 0)
+        }
+      ];
+
+      return taskDefinitions.filter(task => task.target > 0).map(task => {
+        const complete = task.current >= task.target;
+        const remaining = Math.max(0, task.target - task.current);
+        return {
+          ...task,
+          complete,
+          progressPercent: liveTargetProgressPercent(task.current, task.target),
+          progressText: task.money
+            ? `${money(task.current)} / ${money(task.target)}`
+            : `${task.current} / ${task.target}`,
+          statusText: complete
+            ? 'Complete'
+            : task.money ? `Need ${money(remaining)}` : `${remaining} more`
+        };
+      });
+    }
+
+    async function loadTodayProgress(options = {}) {
+      if (!els.targetDashboard || !state.selectedStaffName || !state.storeId) {
+        state.todayProgress = null;
+        state.todayProgressError = '';
+        renderLiveTargetDashboard();
+        return null;
+      }
+      if (state.todayProgressLoading) return state.todayProgress;
+
+      state.todayProgressLoading = true;
+      if (!options.silent) state.todayProgressError = '';
+      renderLiveTargetDashboard();
+
+      const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+      url.searchParams.set('mode', 'today-progress');
+      url.searchParams.set('store_code', repairTicketStoreCode());
+      url.searchParams.set('staff_name', state.selectedStaffName);
+      url.searchParams.set('business_date', brisbaneDateIso());
+
+      try {
+        const response = await fetch(url.toString(), {
+          headers: posOrderApiHeaders(),
+          cache: 'no-store'
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.message || 'Today progress could not be loaded.');
+        }
+        state.todayProgress = payload;
+        state.todayProgressError = '';
+        state.todayProgressLastLoaded = payload.last_updated_at || new Date().toISOString();
+        localStorage.setItem(todayProgressCacheKey(), JSON.stringify(payload));
+      } catch (error) {
+        console.error(error);
+        const cached = cachedTodayProgress();
+        if (cached) {
+          state.todayProgress = cached;
+          state.todayProgressLastLoaded = cached.last_updated_at || '';
+          state.todayProgressError = 'Live data unavailable - showing the last synced result.';
+        } else {
+          state.todayProgress = null;
+          state.todayProgressError = error.message || 'Today progress is unavailable.';
+        }
+        if (!options.silent) showToast(state.todayProgressError);
+      } finally {
+        state.todayProgressLoading = false;
+        renderLiveTargetDashboard();
+      }
+      return state.todayProgress;
+    }
+
+    function renderLiveTargetDashboard() {
+      if (!els.targetDashboard) return;
+      const progress = state.todayProgress;
+
+      if (!state.selectedStaffName) {
+        els.targetDashboard.innerHTML = '<div class="empty-state"><div><strong>Select a staff member</strong><div>Today progress is linked to the signed-in staff member and store.</div></div></div>';
+        return;
+      }
+
+      if (state.todayProgressLoading && !progress) {
+        els.targetDashboard.innerHTML = '<div class="empty-state"><div><strong>Loading today progress...</strong><div>Reading invoices, refunds, and completed repairs from the POS database.</div></div></div>';
+        return;
+      }
+
+      if (!progress) {
+        els.targetDashboard.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <strong>Today progress unavailable</strong>
+              <div>${escapeHtml(state.todayProgressError || 'Check the connection and try again.')}</div>
+              <button class="repair-action target-retry-btn" type="button" data-target-refresh><i class="bi bi-arrow-clockwise"></i> Retry</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const target = progress.target || {};
+      const metrics = progress.metrics || {};
+      const score = progress.score || {};
+      const tasks = buildLiveTargetTasks(progress);
+      const maxPoints = Number(score.max_points || tasks.reduce((sum, task) => sum + task.points, 0));
+      const earnedPoints = Number(score.earned_points || 0);
+      const scorePercent = maxPoints > 0 ? Math.max(0, Math.min(100, earnedPoints / maxPoints * 100)) : 0;
+      const revenuePercent = liveTargetProgressPercent(metrics.net_sales, target.revenue);
       const store = storeById(state.storeId);
-      const glassRule = TODAY_TARGET_RULES.find(rule => rule.id === 'glass');
-      const repairRule = TODAY_TARGET_RULES.find(rule => rule.id === 'repairs');
+      const isFinalized = progress.status === 'finalized';
+      const bonusAmount = numberValue(score.projected_bonus);
+      const milestones = scoreMilestones(maxPoints);
+      const syncTime = formatTargetSyncTime(progress.last_updated_at || state.todayProgressLastLoaded);
 
       const milestoneHtml = milestones.map(value => {
-        const left = Math.max(0, Math.min(100, (value / scoreBase) * 100));
-        const claimed = metrics.earnedPoints >= value;
+        const left = maxPoints > 0 ? Math.max(0, Math.min(100, value / maxPoints * 100)) : 0;
+        const complete = earnedPoints >= value;
         return `
-          <div class="target-milestone ${claimed ? 'claimed' : ''}" style="left:${left}%">
-            <div class="target-milestone-dot"><i class="bi ${claimed ? 'bi-check2' : 'bi-gift'}"></i></div>
+          <div class="target-milestone ${complete ? 'claimed' : ''}" style="left:${left}%">
+            <div class="target-milestone-dot"><i class="bi ${complete ? 'bi-check2' : 'bi-gift'}"></i></div>
             <span>${value} pts</span>
           </div>
         `;
       }).join('');
 
-      const taskHtml = metrics.tasks.map(task => {
+      const taskHtml = tasks.map(task => {
         const destination = task.nav === 'repair' ? 'Repair' : 'Products';
         return `
           <article class="target-task ${task.complete ? 'done' : ''}">
@@ -6475,75 +6246,64 @@
       }).join('');
 
       els.targetDashboard.innerHTML = `
+        ${state.todayProgressError ? `<div class="target-sync-warning"><i class="bi bi-cloud-slash"></i>${escapeHtml(state.todayProgressError)}</div>` : ''}
         <div class="target-head">
           <section class="target-hero">
             <div>
               <p class="target-kicker">Today progress / target</p>
-              <h1 class="target-title">${money(metrics.todaySales)} today</h1>
+              <h1 class="target-title">${money(metrics.net_sales)} net sales</h1>
               <div class="target-meta">
                 <span><i class="bi bi-calendar3"></i> ${escapeHtml(todayDisplayDate())}</span>
-                <span><i class="bi bi-person-badge"></i> ${escapeHtml(state.selectedStaffName || 'No staff')}</span>
-                <span><i class="bi bi-shop"></i> ${escapeHtml(store.name)}</span>
+                <span><i class="bi bi-person-badge"></i> ${escapeHtml(progress.staff_name || state.selectedStaffName)}</span>
+                <span><i class="bi bi-shop"></i> ${escapeHtml(progress.store_name || store.name)}</span>
               </div>
             </div>
             <div class="target-score-badge">
-              <div class="target-score-label">Earned points</div>
-              <div class="target-score-value">${metrics.earnedPoints}/${metrics.maxPoints}</div>
-              <div class="target-score-money">${money(metrics.bonusAmount)} bonus</div>
+              <div class="target-score-label">${isFinalized ? 'Final bonus' : 'Projected bonus'}</div>
+              <div class="target-score-value">${earnedPoints}/${maxPoints}</div>
+              <div class="target-score-money">${money(bonusAmount)}</div>
             </div>
           </section>
 
-          <form id="targetSettingsForm" class="target-settings">
-            <div class="target-settings-title"><i class="bi bi-bullseye"></i> Today revenue target</div>
-            <label>
-              Target amount
-              <div class="target-input-row">
-                <input id="targetAmountInput" type="number" min="1" step="1" inputmode="decimal" value="${metrics.dailyTarget.toFixed(2)}">
-                <button class="target-save-btn" type="submit"><i class="bi bi-check2"></i>Save</button>
-              </div>
-            </label>
-            <div class="target-settings-note">Saved locally for this staff, store, and date. Current bonus rate is ${money(TODAY_BONUS_DOLLARS_PER_POINT)} per point.</div>
-          </form>
+          <section class="target-settings target-sync-card" aria-label="Today target status">
+            <div class="target-settings-title"><i class="bi bi-bullseye"></i> Today net sales target</div>
+            <div class="target-live-value">${money(target.revenue)}</div>
+            <div class="target-settings-note">Includes retail, repair, and used-device sales after refunds.</div>
+            <div class="target-live-footer">
+              <span class="target-status-pill ${isFinalized ? 'finalized' : ''}"><i class="bi ${isFinalized ? 'bi-lock-fill' : 'bi-broadcast'}"></i>${isFinalized ? 'Finalized' : 'Live projection'}</span>
+              <button class="target-refresh-btn" type="button" data-target-refresh title="Refresh today progress" ${state.todayProgressLoading ? 'disabled' : ''}><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div class="target-live-meta">Last updated ${escapeHtml(syncTime)}</div>
+          </section>
         </div>
 
         <section class="target-stat-grid" aria-label="Today performance">
           <div class="target-stat">
-            <div class="target-stat-top"><span>Revenue</span><i class="bi bi-graph-up-arrow"></i></div>
-            <div>
-              <div class="target-stat-value">${money(metrics.todaySales)}</div>
-              <div class="target-stat-sub">${Math.round(revenuePercent)}% of ${money(metrics.dailyTarget)}</div>
-            </div>
+            <div class="target-stat-top"><span>Net sales</span><i class="bi bi-graph-up-arrow"></i></div>
+            <div><div class="target-stat-value">${money(metrics.net_sales)}</div><div class="target-stat-sub">${Math.round(revenuePercent)}% of ${money(target.revenue)}</div></div>
           </div>
           <div class="target-stat">
-            <div class="target-stat-top"><span>Orders</span><i class="bi bi-receipt-cutoff"></i></div>
-            <div>
-              <div class="target-stat-value">${metrics.orderCount}</div>
-              <div class="target-stat-sub">${metrics.productCount} product units today</div>
-            </div>
+            <div class="target-stat-top"><span>Invoices</span><i class="bi bi-receipt-cutoff"></i></div>
+            <div><div class="target-stat-value">${Number(metrics.invoice_count || 0)}</div><div class="target-stat-sub">${money(metrics.average_sale)} average invoice</div></div>
+          </div>
+          <div class="target-stat">
+            <div class="target-stat-top"><span>Repair completed</span><i class="bi bi-tools"></i></div>
+            <div><div class="target-stat-value">${Number(metrics.repair_count || 0)}/${Number(target.repairs || 0)}</div><div class="target-stat-sub">Unique tickets moved to Waiting Pickup</div></div>
           </div>
           <div class="target-stat">
             <div class="target-stat-top"><span>Tempered glass</span><i class="bi bi-phone-flip"></i></div>
-            <div>
-              <div class="target-stat-value">${metrics.glassCount}/${glassRule.target}</div>
-              <div class="target-stat-sub">+${glassRule.points} pts when complete</div>
-            </div>
+            <div><div class="target-stat-value">${Number(metrics.glass_count || 0)}/${Number(target.glass || 0)}</div><div class="target-stat-sub">Net units after refunds</div></div>
           </div>
-          <div class="target-stat">
-            <div class="target-stat-top"><span>Repair jobs</span><i class="bi bi-tools"></i></div>
-            <div>
-              <div class="target-stat-value">${metrics.repairCount}/${repairRule.target}</div>
-              <div class="target-stat-sub">+${repairRule.points} pts when complete</div>
-            </div>
+          <div class="target-stat refund">
+            <div class="target-stat-top"><span>Refunds</span><i class="bi bi-arrow-counterclockwise"></i></div>
+            <div><div class="target-stat-value">${money(metrics.refunds)}</div><div class="target-stat-sub">${Number(metrics.refund_count || 0)} refund transaction${Number(metrics.refund_count || 0) === 1 ? '' : 's'}</div></div>
           </div>
         </section>
 
         <section class="target-panel">
           <div class="target-panel-head">
-            <div>
-              <h2 class="target-panel-title">Bonus score track</h2>
-              <div class="target-panel-sub">Points are awarded only after each target is completed.</div>
-            </div>
-            <div class="target-panel-score">${money(metrics.bonusAmount)} at close</div>
+            <div><h2 class="target-panel-title">Bonus score track</h2><div class="target-panel-sub">${isFinalized ? 'Locked when the store shift closed.' : 'Live until End Shift finalizes the result.'}</div></div>
+            <div class="target-panel-score">${money(bonusAmount)} ${isFinalized ? 'final' : 'projected'}</div>
           </div>
           <div class="target-track-wrap" aria-label="Bonus score progress">
             <div class="target-track-base"><div class="target-track-fill" style="width:${scorePercent}%"></div></div>
@@ -6553,15 +6313,10 @@
 
         <section class="target-panel">
           <div class="target-panel-head">
-            <div>
-              <h2 class="target-panel-title">Today bonus tasks</h2>
-              <div class="target-panel-sub">Finish these before end shift to increase today's bonus.</div>
-            </div>
-            <div class="target-panel-score">${metrics.earnedPoints} pts earned</div>
+            <div><h2 class="target-panel-title">Today bonus tasks</h2><div class="target-panel-sub">Database totals are shared by every terminal in this store.</div></div>
+            <div class="target-panel-score">${earnedPoints} pts earned</div>
           </div>
-          <div class="target-task-list">
-            ${taskHtml}
-          </div>
+          <div class="target-task-list">${taskHtml || '<div class="report-empty">No active targets for today.</div>'}</div>
         </section>
       `;
     }
@@ -6949,21 +6704,18 @@
       els.repairView.classList.toggle('active', view === 'repair');
       els.usedDeviceView.classList.toggle('active', view === 'used-devices');
       els.ordersView.classList.toggle('active', view === 'orders');
-      els.reportView.classList.toggle('active', view === 'report');
       els.targetNavBtn.classList.toggle('active', view === 'target');
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
       els.usedDeviceNavBtn.classList.toggle('active', view === 'used-devices');
       els.ordersNavBtn.classList.toggle('active', view === 'orders');
-      els.reportNavBtn.classList.toggle('active', view === 'report');
-      if (view === 'target') renderTargetDashboard();
+      if (view === 'target') loadTodayProgress();
       if (view === 'repair') {
         loadRepairTickets().then(() => {
           if (!state.repair.started) renderRepairWorkspace();
         });
       }
       if (view === 'orders') loadInvoiceHistory();
-      if (view === 'report') loadPosReport();
       if (view === 'used-devices') loadUsedDevices();
     }
 
@@ -8948,7 +8700,7 @@
       renderCategories();
       renderProducts();
       renderCart();
-      renderTargetDashboard();
+      renderLiveTargetDashboard();
     }
 
     function clearRepairValidation() {
@@ -9457,179 +9209,6 @@
       if (!match) return '';
       const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + Number(days || 0)));
       return date.toISOString().slice(0, 10);
-    }
-
-    function setReportDatePreset(preset) {
-      const today = brisbaneDateIso();
-      state.reportDatePreset = preset;
-      if (preset === 'yesterday') {
-        state.reportDateFrom = shiftInvoiceDate(today, -1);
-        state.reportDateTo = state.reportDateFrom;
-      } else if (preset === 'last7') {
-        state.reportDateFrom = shiftInvoiceDate(today, -6);
-        state.reportDateTo = today;
-      } else if (preset === 'month') {
-        state.reportDateFrom = `${today.slice(0, 7)}-01`;
-        state.reportDateTo = today;
-      } else {
-        state.reportDateFrom = today;
-        state.reportDateTo = today;
-      }
-      renderReportControls();
-      loadPosReport();
-    }
-
-    function reportStaffNames() {
-      const setupNames = state.staffMembers.map(staffDisplayName);
-      const reportNames = state.reportData && Array.isArray(state.reportData.staff_totals)
-        ? state.reportData.staff_totals.map(row => row.staff_name)
-        : [];
-      return [...new Set([...setupNames, ...reportNames].map(name => String(name || '').trim()).filter(Boolean))]
-        .sort((left, right) => left.localeCompare(right));
-    }
-
-    function renderReportControls() {
-      if (!els.reportDateFrom) return;
-      els.reportDateFrom.value = state.reportDateFrom || '';
-      els.reportDateTo.value = state.reportDateTo || '';
-      els.reportDateTo.min = state.reportDateFrom || '';
-      els.reportPresets.querySelectorAll('[data-report-preset]').forEach(button => {
-        const active = button.dataset.reportPreset === state.reportDatePreset;
-        button.classList.toggle('active', active);
-        button.setAttribute('aria-pressed', String(active));
-      });
-      const selected = state.reportStaffName;
-      els.reportStaffFilter.innerHTML = '<option value="">All staff</option>' + reportStaffNames().map(name => `
-        <option value="${escapeHtml(name)}">${escapeHtml(name)}</option>
-      `).join('');
-      els.reportStaffFilter.value = selected;
-    }
-
-    function reportBreakdownRows(rows, labelKey, valueKey = 'net') {
-      if (!Array.isArray(rows) || !rows.length) return '<div class="report-empty">No activity in this period.</div>';
-      const max = Math.max(...rows.map(row => Math.abs(numberValue(row[valueKey]))), 1);
-      return `<div class="report-breakdown">${rows.map(row => {
-        const value = numberValue(row[valueKey]);
-        return `
-          <div class="report-breakdown-row">
-            <span class="report-breakdown-label" title="${escapeHtml(row[labelKey])}">${escapeHtml(row[labelKey])}</span>
-            <div class="report-bar"><span style="width:${Math.max(2, Math.abs(value) / max * 100)}%"></span></div>
-            <strong class="report-breakdown-value">${money(value)}</strong>
-          </div>
-        `;
-      }).join('')}</div>`;
-    }
-
-    function saleTypeLabel(value) {
-      if (value === 'repair') return 'Repairs';
-      if (value === 'special') return 'Special products';
-      if (value === 'used_device') return 'Used devices';
-      return 'Retail products';
-    }
-
-    function renderPosReport() {
-      if (!els.reportContent) return;
-      renderReportControls();
-      if (state.reportLoading && !state.reportData) {
-        els.reportContent.innerHTML = '<div class="empty-state"><div><strong>Loading report...</strong></div></div>';
-        return;
-      }
-      const report = state.reportData;
-      if (!report || !report.summary) {
-        els.reportContent.innerHTML = '<div class="empty-state"><div><strong>Report unavailable</strong><div>Refresh after checking the staff session and connection.</div></div></div>';
-        return;
-      }
-
-      const summary = report.summary;
-      const typeRows = (report.sale_type_totals || []).map(row => ({ ...row, label: saleTypeLabel(row.type) }));
-      const paymentRows = (report.payment_totals || []).map(row => ({ ...row, label: row.method }));
-      const refundRows = (report.refund_method_totals || []).map(row => ({ ...row, label: row.method }));
-      const dailyRows = Array.isArray(report.daily_totals) ? report.daily_totals : [];
-      const staffRows = Array.isArray(report.staff_totals) ? report.staff_totals : [];
-      const store = storeById(state.storeId);
-      els.reportSubtitle.textContent = `${store.name} - ${state.reportDateFrom} to ${state.reportDateTo}${state.reportStaffName ? ` - ${state.reportStaffName}` : ''}`;
-
-      els.reportContent.innerHTML = `
-        <section class="report-summary-grid" aria-label="Report summary">
-          <div class="report-stat"><span>Gross sales</span><strong>${money(summary.gross_sales)}</strong></div>
-          <div class="report-stat"><span>Refunds issued</span><strong>${money(summary.refunds)}</strong></div>
-          <div class="report-stat net"><span>Net sales</span><strong>${money(summary.net_sales)}</strong></div>
-          <div class="report-stat"><span>GST included</span><strong>${money(summary.gst)}</strong></div>
-          <div class="report-stat"><span>Invoices</span><strong>${Number(summary.invoice_count || 0)}</strong></div>
-          <div class="report-stat"><span>Units sold</span><strong>${Number(summary.item_units || 0)}</strong></div>
-          <div class="report-stat"><span>Average invoice</span><strong>${money(summary.average_sale)}</strong></div>
-          <div class="report-stat"><span>Refund transactions</span><strong>${Number(summary.refund_count || 0)}</strong></div>
-        </section>
-        <section class="report-grid">
-          <article class="report-panel">
-            <h2>Net sales by type</h2>
-            ${reportBreakdownRows(typeRows, 'label')}
-          </article>
-          <article class="report-panel">
-            <h2>Payments received</h2>
-            ${reportBreakdownRows(paymentRows, 'label', 'amount')}
-          </article>
-          <article class="report-panel">
-            <h2>Refunds by method</h2>
-            ${reportBreakdownRows(refundRows, 'label', 'amount')}
-          </article>
-          <article class="report-panel">
-            <h2>Net sales by category</h2>
-            ${reportBreakdownRows(report.category_totals || [], 'category')}
-          </article>
-          <article class="report-panel wide">
-            <h2>Staff performance</h2>
-            <div class="report-table-wrap">
-              <table class="report-table">
-                <thead><tr><th>Staff</th><th>Invoices</th><th>Gross</th><th>Refunds</th><th>Net</th></tr></thead>
-                <tbody>${staffRows.map(row => `
-                  <tr><td>${escapeHtml(row.staff_name)}</td><td>${Number(row.invoice_count || 0)}</td><td>${money(row.gross)}</td><td>${money(row.refunds)}</td><td><strong>${money(row.net)}</strong></td></tr>
-                `).join('') || '<tr><td colspan="5">No activity in this period.</td></tr>'}</tbody>
-              </table>
-            </div>
-          </article>
-          <article class="report-panel wide">
-            <h2>Daily totals</h2>
-            <div class="report-table-wrap">
-              <table class="report-table">
-                <thead><tr><th>Date</th><th>Invoices</th><th>Gross</th><th>Refunds</th><th>Net</th></tr></thead>
-                <tbody>${dailyRows.map(row => `
-                  <tr><td>${escapeHtml(row.date)}</td><td>${Number(row.invoice_count || 0)}</td><td>${money(row.gross)}</td><td>${money(row.refunds)}</td><td><strong>${money(row.net)}</strong></td></tr>
-                `).join('') || '<tr><td colspan="5">No activity in this period.</td></tr>'}</tbody>
-              </table>
-            </div>
-          </article>
-        </section>
-      `;
-    }
-
-    async function loadPosReport() {
-      if (!els.reportContent || !state.selectedStaffName) return;
-      if (!state.reportDateFrom || !state.reportDateTo) return;
-      if (state.reportDateTo < state.reportDateFrom) {
-        state.reportDateTo = state.reportDateFrom;
-        showToast('End date cannot be before start date.');
-      }
-      state.reportLoading = true;
-      renderPosReport();
-      const url = new URL(POS_SALES_ORDERS_ENDPOINT);
-      url.searchParams.set('mode', 'report');
-      url.searchParams.set('store_code', repairTicketStoreCode());
-      url.searchParams.set('from_date', state.reportDateFrom);
-      url.searchParams.set('to_date', state.reportDateTo);
-      if (state.reportStaffName) url.searchParams.set('staff_name', state.reportStaffName);
-      try {
-        const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Report could not be loaded.');
-        state.reportData = payload;
-      } catch (error) {
-        console.error(error);
-        showToast(error.message || 'Report unavailable.');
-      } finally {
-        state.reportLoading = false;
-        renderPosReport();
-      }
     }
 
     function invoiceDateRange() {
@@ -10518,7 +10097,7 @@
       if (usedDeviceItems.length) await loadUsedDevices();
       renderProducts();
       renderRepairWorkspace();
-      renderTargetDashboard();
+      await loadTodayProgress({ silent: true });
       renderCart();
       openReceiptCompleteModal(order);
       showToast(order.sync_pending
@@ -10704,34 +10283,6 @@
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
     els.usedDeviceNavBtn.addEventListener('click', () => setActiveView('used-devices'));
     els.ordersNavBtn.addEventListener('click', () => setActiveView('orders'));
-    els.reportNavBtn.addEventListener('click', () => setActiveView('report'));
-    els.reportReloadBtn.addEventListener('click', loadPosReport);
-    els.reportPresets.addEventListener('click', event => {
-      const button = event.target.closest('[data-report-preset]');
-      if (!button) return;
-      setReportDatePreset(button.dataset.reportPreset);
-    });
-    els.reportDateFrom.addEventListener('change', event => {
-      state.reportDateFrom = event.target.value;
-      state.reportDatePreset = '';
-      if (!state.reportDateTo || state.reportDateTo < state.reportDateFrom) state.reportDateTo = state.reportDateFrom;
-      renderReportControls();
-      loadPosReport();
-    });
-    els.reportDateTo.addEventListener('change', event => {
-      state.reportDateTo = event.target.value;
-      state.reportDatePreset = '';
-      if (state.reportDateTo < state.reportDateFrom) {
-        state.reportDateTo = state.reportDateFrom;
-        showToast('End date cannot be before start date.');
-      }
-      renderReportControls();
-      loadPosReport();
-    });
-    els.reportStaffFilter.addEventListener('change', event => {
-      state.reportStaffName = event.target.value;
-      loadPosReport();
-    });
     els.usedDeviceTabs.addEventListener('click', event => {
       const button = event.target.closest('[data-used-tab]');
       if (button) setUsedDeviceTab(button.dataset.usedTab);
@@ -11037,15 +10588,14 @@
 
     els.syncStatus.addEventListener('click', loadProducts);
 
-    els.targetDashboard.addEventListener('submit', event => {
-      if (event.target.id !== 'targetSettingsForm') return;
-      event.preventDefault();
-      saveDailyTarget();
-    });
     els.targetDashboard.addEventListener('click', event => {
-      const button = event.target.closest('[data-target-nav]');
-      if (!button) return;
-      setActiveView(button.dataset.targetNav);
+      const refreshButton = event.target.closest('[data-target-refresh]');
+      if (refreshButton) {
+        loadTodayProgress();
+        return;
+      }
+      const navButton = event.target.closest('[data-target-nav]');
+      if (navButton) setActiveView(navButton.dataset.targetNav);
     });
 
     els.payBtn.addEventListener('click', openPaymentModal);
@@ -11343,11 +10893,16 @@
       await loadCustomers();
       await loadHeldOrders();
       renderRepairWorkspace();
-      renderTargetDashboard();
-      renderReportControls();
+      await loadTodayProgress();
       loadProducts();
       loadRepairQuotes();
     });
+
+    window.setInterval(() => {
+      if (state.activeView === 'target' && document.visibilityState === 'visible') {
+        loadTodayProgress({ silent: true });
+      }
+    }, 30000);
   </script>
 </body>
 </html>

@@ -83,6 +83,7 @@ GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?orde
 GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?store_code=northlakes&q=customer&from_date=2026-07-01&to_date=2026-07-13
 PUT  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders
 GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?mode=report&store_code=northlakes&from_date=2026-07-01&to_date=2026-07-14&staff_name=Andy
+GET  https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders?mode=today-progress&store_code=northlakes&staff_name=Andy
 ```
 
 Apply `supabase/migrations/20260711140805_pos_sales_orders.sql` to the staff-auth database, then deploy:
@@ -100,6 +101,30 @@ Every store has one shared invoice sequence across all sale types. A retail sale
 Repair tickets require a real customer name and phone at both the browser and database layers. A repair ticket can be linked to only one original sales-order line, preventing duplicate checkout. Refunds create separate immutable refund records and do not alter or delete the original invoice.
 
 Apply `supabase/migrations/20260714103000_add_pos_reports_and_shared_state.sql` after the invoice date-filter migration. Report mode calls `get_pos_sales_report` and returns database totals for sales, refunds, GST, invoice count, units, average invoice, sale type, category, payment method, staff, and day.
+
+The staff POS does not expose the report page. `mode=report` and `get_pos_sales_report` are retained as backend support for a future management-only reporting surface.
+
+Apply the Today Progress migrations after the used-device migrations:
+
+```text
+20260719010220_add_pos_today_progress.sql
+20260719011727_fix_pos_today_progress_category.sql
+20260719013325_fix_pos_today_progress_repair_attribution.sql
+20260719013856_index_pos_daily_target_results_shift_code.sql
+```
+
+`mode=today-progress` calls `get_pos_today_progress` and requires `store_code` and `staff_name`; `business_date` is optional and defaults to the current Brisbane date. It returns:
+
+- gross sales, refunds attributed to the original selling staff member, and net sales
+- invoice count and average invoice value
+- net `Screen Protectors` units after refunds
+- distinct repaired tickets completed by the staff member
+- active database targets, points earned, maximum points, and projected bonus
+- `projected` status during an open shift or a frozen `finalized` result after End Shift
+
+`pos_daily_targets` stores store/date/staff overrides. `pos_daily_target_results` stores immutable operational snapshots generated when a store shift closes. Both tables are protected by RLS and are not exposed directly to browser roles; staff access is through the session-validating RPC and Edge Function only.
+
+Repair completion is attributed to the employee recorded in the ticket activity that moved the job to Waiting pickup. A later checkout by another employee does not transfer the repair credit; `updated_by` is used only as a fallback for older tickets without status activity.
 
 ## POS Shared State
 

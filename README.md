@@ -11,7 +11,7 @@ This repo is the internal staff site, not the public website.
 
 Front-end staff pages:
 - `index.html` - staff portal home
-- `pos.html` - store POS, Repair Board, Invoice History, and POS Reports
+- `pos.html` - Today Progress, store POS, Repair Board, Used Devices, and Invoice History
 - `quote.html` - repair quote lookup
 - `repair_workflow.html` - intake / workflow page
 - `daily-report.html` - daily report + weekly LCD count
@@ -108,13 +108,16 @@ Completed receipt flow:
 - Email Reply-To and optional CC use the selected store's email address.
 - Email success is recorded against the saved order.
 
-Completed POS reporting:
-- Reports read saved invoices, normalized lines, split payments, and immutable refunds from the database.
-- Filters support selected store, start/end date, shortcut ranges, and optional staff member.
-- Summary totals include gross sales, refunds, net sales, GST, invoices, units, average invoice, and refund count.
-- Breakdowns include retail/repair/special sales, product category, payments received, refund method, staff, and daily totals.
-- Sales use Brisbane `business_date`; refunds use their Brisbane transaction date.
-- The Today Target page remains a local incentive panel and is not an accounting report.
+Completed Today Progress / Target flow:
+- The staff-facing POS Report page is removed. The existing aggregate report RPC remains available for a future management-only page.
+- Progress is calculated from saved database invoices, immutable refunds, normalized invoice lines, and Repair Board history; browser-local orders are not authoritative.
+- Net sales are gross sales minus refunds. A refund is deducted from the staff member who made the original sale, not the staff member who processed the refund.
+- Invoice count and average sale use the original paid invoices for the selected staff, store, and Brisbane business date.
+- Tempered-glass progress counts net units whose saved category is exactly `Screen Protectors`, after refunded quantities are deducted.
+- Repair progress counts distinct repaired tickets when they first reach Waiting pickup; cancelled and returned-unrepaired tickets do not count.
+- Revenue, repair, and tempered-glass targets, points, and the dollar-per-point rate are database configuration. Staff can view but cannot edit them in the POS.
+- The page refreshes from Supabase on entry, staff/store change, checkout, manual refresh, and every 30 seconds while visible. A labelled local cache is used only as a temporary offline display.
+- End Shift writes a finalized per-staff result snapshot. Closed shifts show the frozen result instead of recalculating historical performance.
 
 Completed multi-terminal state:
 - Customer records are shared within the selected store and cached locally for temporary network failure.
@@ -164,7 +167,7 @@ Database-backed and shared between terminals:
 - refunds and refund lines
 - receipt email audit fields
 - per-store invoice counters
-- formal POS report aggregates
+- formal POS report aggregates and database-backed Today Progress targets/results
 - per-store customer directory
 - per-store held carts
 - per-store opening cash, active shift, and end-shift reconciliation
@@ -173,7 +176,7 @@ Database-backed and shared between terminals:
 Browser-local convenience state:
 - selected staff/store and local staff PIN/assignment overrides
 - offline cache for customers, held carts, shifts, and recent orders
-- Today Target amount and incentive progress
+- cached Today Progress payload used only during temporary network failure
 
 Do not use browser-local values as the source of truth for accounting or management reports. Shared records and financial totals must come from the database APIs.
 
@@ -195,6 +198,10 @@ Required POS migrations, in order:
 6. `20260717134620_add_used_device_trading.sql`
 7. `20260717141622_fix_used_device_shift_integrity.sql`
 8. `20260717150100_index_used_device_sales_links.sql`
+9. `20260719010220_add_pos_today_progress.sql`
+10. `20260719011727_fix_pos_today_progress_category.sql`
+11. `20260719013325_fix_pos_today_progress_repair_attribution.sql`
+12. `20260719013856_index_pos_daily_target_results_shift_code.sql`
 
 ### Current Limitations And Roadmap
 

@@ -109,6 +109,22 @@ Deno.serve(async (request) => {
           target_staff_name: url.searchParams.get("staff_name") || null,
         });
       }
+      if (mode === "today-progress") {
+        const storeCode = url.searchParams.get("store_code") || "";
+        const staffName = url.searchParams.get("staff_name") || "";
+        if (!storeCode) {
+          return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+        }
+        if (!staffName) {
+          return jsonResponse({ ok: false, message: "staff_name is required." }, 400);
+        }
+        return await rpcResponse(request, "get_pos_today_progress", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          target_staff_name: staffName,
+          target_business_date: url.searchParams.get("business_date") || null,
+        });
+      }
 
       const orderCode = url.searchParams.get("order_id") || "";
       if (orderCode) {
