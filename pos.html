@@ -6480,8 +6480,7 @@
       return 0;
     }
 
-    function productImage(product) {
-      if (product.image_url) return product.image_url;
+    function productPlaceholderImage(product) {
       const label = escapeHtml((product.name || 'TECHM8').slice(0, 18));
       const svg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
@@ -6490,6 +6489,57 @@
           <text x="80" y="84" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#07896f">${label}</text>
         </svg>`;
       return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
+    function productImage(product) {
+      const rawUrl = String(product.image_url || '').trim().replace(/\\/g, '/');
+      if (!rawUrl || rawUrl === '[object Object]') return productPlaceholderImage(product);
+      if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
+      if (/^http:\/\//i.test(rawUrl)) return rawUrl.replace(/^http:\/\//i, 'https://');
+      return rawUrl;
+    }
+
+    function normalizeImageCandidate(value) {
+      if (value === null || value === undefined) return '';
+      if (typeof value === 'string' || typeof value === 'number') return String(value).trim();
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          const url = normalizeImageCandidate(item);
+          if (url) return url;
+        }
+        return '';
+      }
+      if (typeof value === 'object') {
+        const keys = [
+          'image_url',
+          'thumbnail_url',
+          'url',
+          'src',
+          'original_src',
+          'originalUrl',
+          'secure_url',
+          'public_url',
+          'path'
+        ];
+        for (const key of keys) {
+          const url = normalizeImageCandidate(value[key]);
+          if (url) return url;
+        }
+      }
+      return '';
+    }
+
+    function getProductImageUrl(item) {
+      return normalizeImageCandidate([
+        item.image_url,
+        item.thumbnail_url,
+        item.thumbnail,
+        item.photo_url,
+        item.picture_url,
+        item.image,
+        item.images,
+        item.media
+      ]);
     }
 
     function normalizeProducts(payload) {
@@ -6502,7 +6552,7 @@
         cost_price: Number(item.cost_price || item.cost || 0),
         sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
         barcode: item.barcode || '',
-        image_url: item.image_url || item.thumbnail_url || item.image || '',
+        image_url: getProductImageUrl(item),
         qty_on_hand: item.qty_on_hand == null && item.stock_qty == null && item.stock == null
           ? undefined
           : Number(item.qty_on_hand ?? item.stock_qty ?? item.stock ?? 0),
@@ -8048,7 +8098,7 @@
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
         return `
           <article class="product-card" data-add="${product.id}" role="button" tabindex="0" aria-label="Add ${escapeHtml(product.name)} to cart">
-            <img class="product-image" src="${productImage(product)}" alt="">
+            <img class="product-image" src="${escapeHtml(productImage(product))}" alt="" data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
               <div class="product-price">
