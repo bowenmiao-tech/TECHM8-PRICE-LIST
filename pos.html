@@ -835,6 +835,29 @@
       border: 1px solid #edf2f4;
     }
 
+    .product-media {
+      align-self: center;
+      display: grid;
+      gap: 7px;
+      width: 104px;
+    }
+
+    .product-gallery-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      min-height: 28px;
+    }
+
+    .product-gallery-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid #edf2f4;
+      background: #f8fafb;
+    }
+
     .product-info {
       min-width: 0;
       height: 100%;
@@ -6492,10 +6515,20 @@
     }
 
     function productImage(product) {
-      const rawUrl = String(product.image_url || '').trim().replace(/\\/g, '/');
+      const rawUrl = String(product.image_url || product.thumbnail_url || '').trim().replace(/\\/g, '/');
       if (!rawUrl || rawUrl === '[object Object]') return productPlaceholderImage(product);
       if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
       if (/^http:\/\//i.test(rawUrl)) return rawUrl.replace(/^http:\/\//i, 'https://');
+      if (rawUrl.startsWith('/')) return `https://www.techm8australia.com${rawUrl}`;
+      return rawUrl;
+    }
+
+    function normalizeImageUrl(value) {
+      const rawUrl = String(value || '').trim().replace(/\\/g, '/');
+      if (!rawUrl || rawUrl === '[object Object]') return '';
+      if (rawUrl.startsWith('//')) return `https:${rawUrl}`;
+      if (/^http:\/\//i.test(rawUrl)) return rawUrl.replace(/^http:\/\//i, 'https://');
+      if (rawUrl.startsWith('/')) return `https://www.techm8australia.com${rawUrl}`;
       return rawUrl;
     }
 
@@ -6531,15 +6564,38 @@
 
     function getProductImageUrl(item) {
       return normalizeImageCandidate([
-        item.image_url,
         item.thumbnail_url,
+        item.image_url,
         item.thumbnail,
         item.photo_url,
         item.picture_url,
         item.image,
+        item.gallery_images,
         item.images,
         item.media
       ]);
+    }
+
+    function getProductGalleryImages(item) {
+      const candidates = [
+        item.gallery_images,
+        item.images,
+        item.media,
+        item.image_urls,
+        item.product_images,
+        item.image_url,
+        item.thumbnail_url
+      ];
+      const urls = [];
+      candidates.forEach(candidate => {
+        if (!candidate) return;
+        const values = Array.isArray(candidate) ? candidate : [candidate];
+        values.forEach(value => {
+          const normalized = normalizeImageUrl(normalizeImageCandidate(value));
+          if (normalized && !urls.includes(normalized)) urls.push(normalized);
+        });
+      });
+      return urls;
     }
 
     function normalizeProducts(payload) {
@@ -6552,7 +6608,8 @@
         cost_price: Number(item.cost_price || item.cost || 0),
         sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
         barcode: item.barcode || '',
-        image_url: getProductImageUrl(item),
+        image_url: normalizeImageUrl(getProductImageUrl(item)),
+        gallery_images: getProductGalleryImages(item),
         qty_on_hand: item.qty_on_hand == null && item.stock_qty == null && item.stock == null
           ? undefined
           : Number(item.qty_on_hand ?? item.stock_qty ?? item.stock ?? 0),
@@ -8096,9 +8153,18 @@
       els.productGrid.innerHTML = products.map(product => {
         const stock = getProductStock(product);
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
+        const galleryImages = Array.isArray(product.gallery_images) ? product.gallery_images.slice(1, 4) : [];
+        const galleryMarkup = galleryImages.length
+          ? `<div class="product-gallery-strip">${galleryImages.map((imageUrl) => `
+              <img class="product-gallery-thumb" src="${escapeHtml(imageUrl)}" alt="" data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
+            `).join('')}</div>`
+          : '';
         return `
           <article class="product-card" data-add="${product.id}" role="button" tabindex="0" aria-label="Add ${escapeHtml(product.name)} to cart">
-            <img class="product-image" src="${escapeHtml(productImage(product))}" alt="" data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
+            <div class="product-media">
+              <img class="product-image" src="${escapeHtml(productImage(product))}" alt="" data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
+              ${galleryMarkup}
+            </div>
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
               <div class="product-price">
