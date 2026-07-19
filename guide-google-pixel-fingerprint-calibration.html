@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Pixel Fingerprint Calibration Guide</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js"></script>
+  <style>
+    :root {
+      --tm-dark: #163129;
+      --tm-dark-2: #27493f;
+      --tm-accent: #ef7204;
+      --tm-bg: #f4f7f9;
+      --tm-border: #dce5e9;
+      --tm-muted: #667781;
+      --tm-good: #126a42;
+      --tm-warn: #9a5b00;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--tm-bg);
+      color: #16242b;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .page-wrap {
+      min-height: 100vh;
+      padding: 24px 14px 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1240px;
+      background: #fff;
+      border: 1px solid var(--tm-border);
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(12, 21, 29, 0.12);
+    }
+
+    .hero {
+      padding: 30px;
+      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
+      color: #fff;
+    }
+
+    .back-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+    }
+
+    .hero-grid {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.02;
+      font-weight: 800;
+      max-width: 820px;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 820px;
+      color: rgba(255,255,255,0.84);
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    .hero-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(239,114,4,0.20);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .pixel-visual {
+      justify-self: end;
+      width: 220px;
+      height: 280px;
+      border-radius: 34px;
+      border: 8px solid rgba(255,255,255,0.20);
+      background: #0e191f;
+      position: relative;
+      box-shadow: 0 22px 44px rgba(0,0,0,0.20);
+      overflow: hidden;
+    }
+
+    .pixel-visual::before {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 24px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01)),
+        #152a31;
+    }
+
+    .fingerprint-ring {
+      position: absolute;
+      left: 50%;
+      bottom: 54px;
+      width: 86px;
+      height: 86px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      border: 2px solid rgba(239,114,4,0.88);
+      display: grid;
+      place-items: center;
+      color: #ffb36b;
+      font-size: 34px;
+      background: rgba(239,114,4,0.08);
+    }
+
+    .usb-line {
+      position: absolute;
+      left: 42%;
+      top: 18px;
+      width: 56px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.26);
+    }
+
+    .content {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .sidebar,
+    .step-card,
+    .note-card,
+    .source-note {
+      border: 1px solid var(--tm-border);
+      border-radius: 24px;
+      background: #fff;
+    }
+
+    .sidebar {
+      height: fit-content;
+      padding: 20px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .side-label,
+    .section-label {
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 12px;
+      color: #8a979f;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .side-title {
+      margin: 0 0 14px;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .side-text {
+      margin: 0 0 18px;
+      color: #56656d;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .meta-list {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .meta-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: #f5f8fa;
+      color: #2a3a42;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .meta-item i { color: var(--tm-accent); }
+
+    .action-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 800;
+      background: #163129;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .secondary-link {
+      background: #f4f7f9;
+      color: #23343b;
+      border: 1px solid var(--tm-border);
+    }
+
+    .key-box {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: #fff8ef;
+      border: 1px solid #f2d7b1;
+      color: #77511f;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .key-box strong { color: #4a3312; }
+
+    .main {
+      display: grid;
+      gap: 18px;
+    }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .note-card {
+      padding: 18px;
+    }
+
+    .note-card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .note-card p {
+      margin: 0;
+      color: #4f5f67;
+      line-height: 1.75;
+      font-size: 14px;
+    }
+
+    .note-card.good {
+      border-color: rgba(18,106,66,0.25);
+      background: #f3fbf7;
+    }
+
+    .note-card.warn {
+      border-color: rgba(154,91,0,0.25);
+      background: #fff8ed;
+    }
+
+    .steps {
+      display: grid;
+      gap: 18px;
+    }
+
+    .step-card {
+      padding: 22px;
+    }
+
+    .step-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .step-index {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 14px;
+      background: #163129;
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .step-title {
+      margin: 3px 0 0;
+      font-size: 24px;
+      line-height: 1.08;
+      font-weight: 800;
+    }
+
+    .step-card p,
+    .step-list {
+      line-height: 1.8;
+      color: #4f5f67;
+    }
+
+    .step-card p {
+      margin: 0;
+    }
+
+    .step-card p + p {
+      margin-top: 10px;
+    }
+
+    .step-list {
+      margin: 0;
+      padding-left: 19px;
+    }
+
+    .step-list li + li {
+      margin-top: 8px;
+    }
+
+    .step-note {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #f5f8fa;
+      border: 1px solid var(--tm-border);
+      color: #51616a;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .check-row {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .check-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: #26363d;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .check-item i {
+      color: var(--tm-accent);
+      margin-top: 2px;
+    }
+
+    .source-note {
+      padding: 18px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .source-note a {
+      color: inherit;
+    }
+
+    @media (max-width: 991px) {
+      .hero-grid,
+      .content,
+      .workflow-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pixel-visual {
+        justify-self: start;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero, .content { padding: 18px; }
+      .hero-grid { gap: 18px; }
+      .pixel-visual {
+        width: 180px;
+        height: 230px;
+      }
+      .step-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrap" data-auth-protected>
+    <div class="shell">
+      <div class="hero">
+        <div class="back-row">
+          <a class="back-link" href="./problem-solving.html"><i class="bi bi-arrow-left"></i> Problem Solving</a>
+          <a class="back-link" href="./index.html"><i class="bi bi-grid-1x2-fill"></i> Staff Portal</a>
+        </div>
+        <div class="hero-grid">
+          <div>
+            <h1>Google Pixel Fingerprint Calibration</h1>
+            <p>
+              Use this after replacing a Google Pixel screen with an under-display fingerprint sensor. The goal is to
+              register the new sensor with Google's repair tool, finish with a manual reboot, then re-enrol the customer's fingerprint.
+            </p>
+            <div class="hero-note"><i class="bi bi-exclamation-triangle-fill"></i> Pixel 6 and newer only</div>
+          </div>
+          <div class="pixel-visual" aria-label="Pixel fingerprint calibration illustration">
+            <div class="usb-line"></div>
+            <div class="fingerprint-ring"><i class="bi bi-fingerprint"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <aside class="sidebar">
+          <div class="side-label">Quick Reference</div>
+          <h2 class="side-title">Bench Checklist</h2>
+          <p class="side-text">
+            Best done from a Windows bench PC with Chrome or Edge, a known data cable, and the Google USB driver installed.
+          </p>
+
+          <div class="meta-list">
+            <div class="meta-item"><i class="bi bi-phone"></i> Pixel 6 or newer</div>
+            <div class="meta-item"><i class="bi bi-display"></i> After screen replacement</div>
+            <div class="meta-item"><i class="bi bi-browser-chrome"></i> Chrome or Edge browser</div>
+            <div class="meta-item"><i class="bi bi-usb-c"></i> USB-C data cable</div>
+          </div>
+
+          <a class="action-link" href="https://pixelrepair.withgoogle.com/udfps" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-box-arrow-up-right"></i> Open Google Tool
+          </a>
+          <a class="action-link secondary-link" href="https://developer.android.com/studio/run/win-usb" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-download"></i> Google USB Driver
+          </a>
+
+          <div class="key-box">
+            <strong>Do not skip:</strong><br>
+            When the tool says calibration is successful, unplug the phone and manually restart it one more time. Without
+            this final reboot, the sensor may still fail setup.
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="workflow-grid">
+            <section class="note-card good">
+              <h3><i class="bi bi-check-circle-fill"></i> Use This Guide When</h3>
+              <p>
+                A Pixel 6 or newer has just had the display replaced and fingerprint enrolment is missing, failing, or not
+                available after the repair.
+              </p>
+            </section>
+            <section class="note-card warn">
+              <h3><i class="bi bi-exclamation-triangle-fill"></i> Before You Start</h3>
+              <p>
+                Confirm the screen is fitted correctly, the phone can enter Fastboot mode, and the customer understands the
+                phone will reboot during the process.
+              </p>
+            </section>
+          </div>
+
+          <div class="steps">
+            <section class="step-card">
+              <div class="step-top">
+                <div class="step-index">1</div>
+                <div>
+                  <h3 class="step-title">Prepare The Bench Computer</h3>
+                </div>
+              </div>
+              <p>
+                Use Chrome or Edge on a computer with internet access. On Windows, install Google's USB driver before
+                connecting the phone. On Linux, make sure the user has USB device access and Android platform tools support.
+              </p>
+              <div class="step-note">
+                If the bench computer often handles Android repairs, keep the USB driver installed permanently. It prevents
+                most "device not found" failures when the phone is in Fastboot mode.
+              </div>
+            </section>
+
+            <section class="step-card">
+              <div class="step-top">
+                <div class="step-index">2</div>
+                <div>
+                  <h3 class="step-title">Enable Developer Options Before Powering Off</h3>
+                </div>
+              </div>
+              <p>
+                If the phone still boots into Android, enable Developer options and USB debugging first. Use this normal
+                Android path:
+              </p>
+              <ul class="step-list">
+                <li>Open <strong>Settings</strong>, then go to <strong>About phone</strong>.</li>
+                <li>Tap <strong>Build number</strong> seven times until Developer options are enabled.</li>
+                <li>Go back to <strong>System</strong>, open <strong>Developer options</strong>, then turn on <strong>USB debugging</strong>.</li>
+              </ul>
+              <div class="step-note">
+                If the phone is already stuck before Android setup, continue with Fastboot mode and test whether the Google
+                tool can still detect it.
+              </div>
+            </section>
+
+            <section class="step-card">
+              <div class="step-top">
+                <div class="step-index">3</div>
+                <div>
+                  <h3 class="step-title">Open The Pixel Fingerprint Tool</h3>
+                </div>
+              </div>
+              <p>
+                Open the Google Pixel Update and Software Repair fingerprint calibration page on the bench computer. Leave
+                the browser page ready before connecting the phone so the device prompt is easier to catch.
+              </p>
+              <div class="check-row">
+                <div class="check-item"><i class="bi bi-check-circle-fill"></i><span>Use the Google tool link in the sidebar.</span></div>
+                <div class="check-item"><i class="bi bi-check-circle-fill"></i><span>Allow browser USB permissions when prompted.</span></div>
+                <div class="check-item"><i class="bi bi-check-circle-fill"></i><span>Do not use the normal Android file transfer notification for this workflow.</span></div>
+              </div>
+            </section>
+
+            <section class="step-card">
+              <div class="step-top">
+                <div class="step-index">4</div>
+                <div>
+                  <h3 class="step-title">Put The Pixel Into Fastboot Mode</h3>
+                </div>
+              </div>
+              <p>
+                Power the phone off. Hold <strong>Power</strong> and <strong>Volume Down</strong> together for about three
+                seconds, then release when the Fastboot screen appears.
+              </p>
+              <p>
+                Connect the phone to the computer with a known good USB-C data cable. Avoid charge-only cables.
+              </p>
+              <div class="step-note">
+                The phone should show the Fastboot screen, not normal Android, recovery, or a charging-only screen.
+              </div>
+            </section>
+
+            <section class="step-card">
+              <div class="step-top">
+                <div class="step-index">5</div>
+                <div>
+                  <h3 class="step-title">Connect And Run Calibration</h3>
+                </div>
+              </div>
+              <p>
+                On the Google repair page, choose the connect device option, select the Pixel from the browser permission
+                popup, then start the software install or calibration step shown by Google.
+              </p>
+              <p>
+                Wait for the download and install process to finish. The phone may reboot automatically while the tool is
+                applying the calibration package.
+              </p>
+              <div class="step-note">
+                Do not disconnect the cable while the browser is downloading, installing, or waiting for the phone to reboot.
+              </div>
+            </section>
+
+            <section class="step-card">
+              <div class="step-top">
+                <div class="step-index">6</div>
+                <div>
+                  <h3 class="step-title">Finish With Manual Reboot And Test</h3>
+                </div>
+              </div>
+              <p>
+                When the browser reports that the install succeeded, unplug the phone and manually restart it once more.
+                After Android boots, remove any old fingerprint entry if needed and enrol a new fingerprint.
+              </p>
+              <div class="check-row">
+                <div class="check-item"><i class="bi bi-check-circle-fill"></i><span>Fingerprint setup screen opens without an error.</span></div>
+                <div class="check-item"><i class="bi bi-check-circle-fill"></i><span>New fingerprint can be enrolled from start to finish.</span></div>
+                <div class="check-item"><i class="bi bi-check-circle-fill"></i><span>Lock and unlock test works at least three times.</span></div>
+              </div>
+            </section>
+
+            <section class="step-card">
+              <div class="step-top">
+                <div class="step-index">7</div>
+                <div>
+                  <h3 class="step-title">Troubleshooting Notes</h3>
+                </div>
+              </div>
+              <ul class="step-list">
+                <li><strong>Device does not appear:</strong> try another USB port, another data cable, reinstall the Google USB driver, and confirm the phone is in Fastboot mode.</li>
+                <li><strong>Browser cannot connect:</strong> use Chrome or Edge, close other Android tools, reload the Google tool page, then reconnect the phone.</li>
+                <li><strong>Download or install fails:</strong> repeat the process once from a clean Fastboot start. If the same Google server error repeats, record the exact message with the job notes.</li>
+                <li><strong>Calibration says success but fingerprint still fails:</strong> manually reboot again, delete old fingerprints, re-enrol, and inspect the display/sensor connection before replacing parts.</li>
+              </ul>
+            </section>
+          </div>
+
+          <div class="source-note">
+            Source references rewritten for TECHM8 staff workflow:
+            <a href="https://zh.ifixit.com/Guide/%E5%A6%82%E4%BD%95%E6%A0%A1%E5%87%86+Google+Pixel+%E6%89%8B%E6%9C%BA%E4%B8%AD%E7%9A%84%E6%8C%87%E7%BA%B9%E4%BC%A0%E6%84%9F%E5%99%A8/166753" target="_blank" rel="noopener noreferrer">iFixit Pixel fingerprint calibration guide</a>,
+            <a href="https://pixelrepair.withgoogle.com/udfps" target="_blank" rel="noopener noreferrer">Google Pixel repair tool</a>,
+            <a href="https://developer.android.com/studio/run/win-usb" target="_blank" rel="noopener noreferrer">Google USB driver</a>,
+            <a href="https://developer.android.com/studio/debug/dev-options" target="_blank" rel="noopener noreferrer">Android developer options</a>.
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.Techm8StaffAuth.init({
+      rootSelector: '[data-auth-protected]',
+      title: 'Guide Access',
+      subtitle: 'Enter the staff password to open this internal guide.'
+    });
+  </script>
+</body>
+</html>
