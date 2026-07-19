@@ -77,6 +77,18 @@ Completed checkout flow:
 - Repeating the same order ID is idempotent and does not create another invoice.
 - Payment methods are recorded only; there is no EFTPOS or payment-provider integration yet.
 
+Completed second-hand device flow:
+- `Used Devices` is a separate POS workspace for both customer buyback and device sale.
+- Acquisitions are purchase/intake records and never create negative sales invoices.
+- Seller name, phone, address, ID reference, age, ownership, how the device was obtained, declaration, payout method, and staff/store audit are mandatory.
+- Device records use their own acquisition, inventory, and immutable transaction-ledger tables.
+- IMEI or serial is unique across the device inventory; phones require a 15-digit IMEI.
+- Inspection, IMEI status/reference, activation-lock removal, and data-erasure checks gate `Ready for sale`.
+- Every acquisition must use the selected store's open shift. Cash and bank-transfer payouts are included in shift reconciliation as paid-out amounts.
+- Ready devices can be added to the normal cart as one unique item. The database locks the record during checkout and blocks duplicate sales.
+- Used-device sales use the existing store invoice sequence, split payments, receipt, Invoice History, and refund flow.
+- A fully refunded device returns to `Inspection` before it can be sold again.
+
 Completed invoice flow:
 - Retail, repair, special-product, and mixed sales share `pos_sales_orders`.
 - Each store has its own invoice sequence starting at `1`.
@@ -156,6 +168,7 @@ Database-backed and shared between terminals:
 - per-store customer directory
 - per-store held carts
 - per-store opening cash, active shift, and end-shift reconciliation
+- second-hand seller acquisitions, unique device inventory, status history, and buy/sell ledger
 
 Browser-local convenience state:
 - selected staff/store and local staff PIN/assignment overrides
@@ -170,7 +183,7 @@ Do not use browser-local values as the source of truth for accounting or managem
 - Edge Function project: `fwlronvmgqzkleofriis`.
 - Staff/POS database project: `abkjbhmifswfexpjkval`.
 - `pos-products` proxies the protected internal product API without exposing its API key.
-- `pos-repair-tickets`, `pos-sales-orders`, `pos-shared-state`, and `send-pos-receipt-email` validate `x-staff-session` and call staff/POS database RPCs.
+- `pos-repair-tickets`, `pos-sales-orders`, `pos-shared-state`, `pos-used-devices`, and `send-pos-receipt-email` validate `x-staff-session` and call staff/POS database RPCs.
 - Full endpoint and migration deployment notes are in `supabase/README.md`.
 
 Required POS migrations, in order:
@@ -179,16 +192,17 @@ Required POS migrations, in order:
 3. `20260712122942_unify_pos_invoices_and_repair_workflow.sql`
 4. `20260713084027_add_invoice_history_date_filters.sql`
 5. `20260714103000_add_pos_reports_and_shared_state.sql`
+6. `20260717134620_add_used_device_trading.sql`
+7. `20260717141622_fix_used_device_shift_integrity.sql`
+8. `20260717150100_index_used_device_sales_links.sql`
 
 ### Current Limitations And Roadmap
 
-Next major module - second-hand device buy/sell:
-- Buying a device from a customer must be a separate purchase/intake record, not a negative sales invoice.
-- Capture seller name, phone, ID reference, ownership declaration, device model, IMEI/serial, condition checks, grade, photos, offered cost, approved cost, payout method, and staff/store audit.
-- Enforce unique IMEI/serial and record blacklist/ownership checks before purchase approval.
-- Suggested states: `draft`, `awaiting_check`, `offer_made`, `purchased`, `rejected`, `in_stock`, `sold`, `returned`.
-- Once purchased, create one used-device inventory item with its acquisition cost and store location.
-- Selling that item uses the existing unified POS invoice and marks the used-device inventory item as sold.
+Second-hand device follow-ups:
+- add Supabase Storage photo capture for seller ID and device-condition evidence
+- add a printable or signed acquisition agreement generated from the saved purchase record
+- integrate an approved IMEI/blacklist provider instead of storing only the manual AMTA result reference
+- add inter-store device transfer with immutable source/destination events
 
 Optional later integrations:
 - stock write-back to the product/inventory system

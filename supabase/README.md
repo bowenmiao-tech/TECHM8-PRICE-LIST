@@ -121,7 +121,7 @@ Shift rules:
 - There is at most one open shift per store.
 - Every terminal opening the same store receives the same shift ID.
 - Opening cash is written once and then reused by other terminals.
-- Shift payment totals combine all invoices with that shift ID and subtract store refunds recorded during the shift window.
+- Shift payment totals combine all invoices with that shift ID, subtract store refunds recorded during the shift window, and subtract used-device acquisition payouts assigned to the shift.
 - End shift writes system totals, actual totals, differences, closing cash count, closing staff, and closing timestamp.
 
 Deploy:
@@ -129,6 +129,43 @@ Deploy:
 ```bash
 supabase functions deploy pos-shared-state --no-verify-jwt
 ```
+
+## POS Used Devices
+
+`pos-used-devices` is the browser-safe API for buying, inspecting, listing, and tracing unique second-hand devices. Seller acquisitions and device inventory are stored separately from product stock; selling a ready device still uses the unified `pos-sales-orders` checkout and invoice sequence.
+
+Browser calls:
+
+```text
+GET  .../pos-used-devices?resource=devices&store_code=northlakes&q=iphone&status=ready_for_sale
+GET  .../pos-used-devices?resource=transactions&store_code=northlakes&q=USED-...
+POST .../pos-used-devices  action=acquire
+POST .../pos-used-devices  action=update
+```
+
+Rules enforced by the database:
+- Every acquisition belongs to the selected store and its currently open shift.
+- Seller identity, ownership declaration, acquisition history, payout, device identifier, and audit fields are required.
+- IMEI and serial identifiers are unique; phone IMEIs contain 15 digits.
+- A device cannot be marked ready until its inspection passes, IMEI result is recorded, activation lock is removed, and data erasure is confirmed.
+- Checkout locks the unique device row, validates store/status/current price, marks it sold, and appends a sale ledger event.
+- A full invoice-line refund returns the device to inspection and appends a refund-return event.
+
+Apply these migrations after POS shared state:
+
+```text
+20260717134620_add_used_device_trading.sql
+20260717141622_fix_used_device_shift_integrity.sql
+20260717150100_index_used_device_sales_links.sql
+```
+
+Deploy:
+
+```bash
+supabase functions deploy pos-used-devices --no-verify-jwt
+```
+
+`--no-verify-jwt` is intentional because the Edge Function and database RPCs validate the existing `x-staff-session` token. Browser requests must also include the public anon `apikey` and bearer authorization headers documented above.
 
 ### Invoice Numbers
 

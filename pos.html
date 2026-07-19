@@ -2895,6 +2895,416 @@
       font-weight: 800;
     }
 
+    .used-device-view {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .used-device-page {
+      height: 100%;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .used-device-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .used-device-head-actions,
+    .used-device-tabs,
+    .used-status-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .used-device-tabs {
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--tm-line);
+    }
+
+    .used-device-tab,
+    .used-status-filter {
+      min-height: 40px;
+      padding: 0 13px;
+      border: 1px solid var(--tm-line);
+      border-radius: 7px;
+      color: #43545c;
+      background: #fff;
+      font-weight: 900;
+    }
+
+    .used-device-tab.active,
+    .used-status-filter.active {
+      color: #fff;
+      border-color: var(--tm-green);
+      background: var(--tm-green);
+    }
+
+    .used-device-content {
+      min-height: 0;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .used-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .used-summary-item {
+      min-height: 84px;
+      display: grid;
+      align-content: space-between;
+      gap: 8px;
+      padding: 13px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .used-summary-item span {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .used-summary-item strong {
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 950;
+      overflow-wrap: anywhere;
+    }
+
+    .used-device-toolbar {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .used-device-list,
+    .used-transaction-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .used-device-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 120px 120px 132px auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 92px;
+      padding: 13px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .used-device-row:hover {
+      border-color: #9fcfc4;
+      box-shadow: 0 8px 20px rgba(17, 44, 39, .06);
+    }
+
+    .used-device-main,
+    .used-device-value {
+      min-width: 0;
+    }
+
+    .used-device-main strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .used-device-meta,
+    .used-device-value span,
+    .used-transaction-meta {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .used-device-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px 10px;
+      margin-top: 5px;
+    }
+
+    .used-device-value {
+      display: grid;
+      gap: 4px;
+    }
+
+    .used-device-value strong {
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .used-status {
+      width: fit-content;
+      max-width: 100%;
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: #36515a;
+      background: #edf2f4;
+      font-size: 11px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .used-status.ready_for_sale {
+      color: #076d5b;
+      background: #dff5ee;
+    }
+
+    .used-status.inspection {
+      color: #895500;
+      background: #fff1d6;
+    }
+
+    .used-status.sold {
+      color: #175d8c;
+      background: #e3f2fd;
+    }
+
+    .used-sell-button {
+      min-height: 42px;
+      padding: 0 13px;
+      border: 0;
+      border-radius: 7px;
+      color: #fff;
+      background: var(--tm-green);
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .used-sell-button:disabled {
+      color: #6c7c84;
+      background: #e6ecee;
+      cursor: not-allowed;
+    }
+
+    .used-form {
+      display: grid;
+      gap: 14px;
+      padding-bottom: 24px;
+    }
+
+    .used-form-section {
+      padding: 15px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .used-form-section h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .used-form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 11px;
+    }
+
+    .used-field {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      color: #4a5d66;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .used-field.span-2 {
+      grid-column: span 2;
+    }
+
+    .used-field.span-3 {
+      grid-column: 1 / -1;
+    }
+
+    .used-field input,
+    .used-field select,
+    .used-field textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--tm-line);
+      border-radius: 7px;
+      padding: 9px 10px;
+      color: var(--tm-ink);
+      background: #fff;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .used-field textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .used-inspection-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .used-inspection-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 96px;
+      gap: 8px;
+      align-items: center;
+      padding: 9px;
+      border: 1px solid var(--tm-line);
+      border-radius: 7px;
+      color: #40535c;
+      background: #f8fafb;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .used-inspection-item select {
+      width: 100%;
+      height: 36px;
+      border: 1px solid var(--tm-line);
+      border-radius: 6px;
+      padding: 0 7px;
+      background: #fff;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .used-declaration-grid {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .used-check {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      color: #33464f;
+      font-size: 12px;
+      line-height: 1.4;
+      font-weight: 800;
+    }
+
+    .used-check input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--tm-green);
+    }
+
+    .used-form-footer {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 12px;
+      border-top: 1px solid var(--tm-line);
+      background: rgba(242,245,247,.96);
+    }
+
+    .used-form-error {
+      flex: 1;
+      align-self: center;
+      color: var(--tm-red);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .used-transaction-row {
+      display: grid;
+      grid-template-columns: 145px minmax(180px, 1fr) 120px 120px 150px;
+      gap: 12px;
+      align-items: center;
+      padding: 13px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .used-transaction-type {
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: capitalize;
+    }
+
+    .used-detail-modal {
+      width: min(940px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      overflow: hidden;
+      padding: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .used-detail-body {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .used-detail-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .used-detail-summary > div {
+      min-width: 0;
+      padding: 11px;
+      border: 1px solid var(--tm-line);
+      border-radius: 7px;
+      background: #f8fafb;
+    }
+
+    .used-detail-summary span {
+      display: block;
+      color: var(--tm-muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .used-detail-summary strong {
+      display: block;
+      margin-top: 5px;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .used-detail-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+    }
+
     .invoice-view {
       min-height: 0;
       overflow: hidden;
@@ -3302,6 +3712,36 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .used-summary-grid,
+      .used-detail-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .used-device-row {
+        grid-template-columns: minmax(190px, 1fr) 105px 105px auto;
+      }
+
+      .used-device-row .used-device-cost {
+        display: none;
+      }
+
+      .used-form-grid,
+      .used-inspection-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .used-field.span-3 {
+        grid-column: 1 / -1;
+      }
+
+      .used-transaction-row {
+        grid-template-columns: 125px minmax(170px, 1fr) 100px 125px;
+      }
+
+      .used-transaction-row .used-transaction-staff {
+        display: none;
+      }
+
       .checkout-panel {
         grid-column: auto;
         min-height: 0;
@@ -3341,6 +3781,58 @@
       .invoice-actions .repair-action {
         width: 38px;
         padding: 0;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .used-device-head,
+      .used-device-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .used-device-head-actions .repair-action {
+        flex: 1;
+      }
+
+      .used-form-grid,
+      .used-inspection-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .used-device-row {
+        grid-template-columns: minmax(0, 1fr) 82px 48px;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .used-device-row .used-device-cost,
+      .used-device-row .used-device-condition {
+        display: none;
+      }
+
+      .used-sell-button {
+        width: 48px;
+        padding: 0;
+        font-size: 0;
+      }
+
+      .used-sell-button i {
+        font-size: 18px;
+      }
+
+      .used-transaction-row {
+        grid-template-columns: minmax(0, 1fr) 90px;
+      }
+
+      .used-transaction-row .used-device-main {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+
+      .used-transaction-row .used-transaction-staff,
+      .used-transaction-row .used-transaction-date {
+        display: none;
       }
     }
 
@@ -3461,8 +3953,45 @@
       }
 
       .report-grid,
-      .report-summary-grid {
+      .report-summary-grid,
+      .used-summary-grid,
+      .used-detail-summary,
+      .used-form-grid,
+      .used-inspection-grid {
         grid-template-columns: 1fr;
+      }
+
+      .used-device-head,
+      .used-device-toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .used-device-head-actions .repair-action {
+        flex: 1;
+      }
+
+      .used-device-row {
+        grid-template-columns: minmax(0, 1fr) 82px 48px;
+      }
+
+      .used-device-row .used-device-cost,
+      .used-device-row .used-device-condition {
+        display: none;
+      }
+
+      .used-field.span-2,
+      .used-field.span-3 {
+        grid-column: auto;
+      }
+
+      .used-transaction-row {
+        grid-template-columns: minmax(0, 1fr) 90px;
+      }
+
+      .used-transaction-row .used-transaction-staff,
+      .used-transaction-row .used-transaction-date {
+        display: none;
       }
 
       .report-control,
@@ -3549,6 +4078,7 @@
         <button id="targetNavBtn" class="rail-button active" type="button" title="Today target"><i class="bi bi-speedometer2"></i></button>
         <button id="productNavBtn" class="rail-button" type="button" title="Products"><i class="bi bi-house-door-fill"></i></button>
         <button id="repairNavBtn" class="rail-button" type="button" title="Repair tickets"><i class="bi bi-clipboard2-plus"></i></button>
+        <button id="usedDeviceNavBtn" class="rail-button" type="button" title="Used devices"><i class="bi bi-phone"></i></button>
         <button id="ordersNavBtn" class="rail-button" type="button" title="Invoices"><i class="bi bi-receipt"></i></button>
         <button id="reportNavBtn" class="rail-button" type="button" title="Reports"><i class="bi bi-graph-up-arrow"></i></button>
       </nav>
@@ -3597,6 +4127,27 @@
           </div>
         </div>
         <div id="repairWorkspace" class="repair-scroll"></div>
+      </section>
+
+      <section id="usedDeviceView" class="workspace-view used-device-view" aria-label="Used device trading">
+        <div class="used-device-page">
+          <div class="used-device-head">
+            <div>
+              <h1 class="invoice-title">Used Devices</h1>
+              <div id="usedDeviceSubtitle" class="repair-subtitle">Buy, inspect, stock, and sell unique devices for this store.</div>
+            </div>
+            <div class="used-device-head-actions">
+              <button id="newUsedDeviceBtn" class="repair-action primary" type="button"><i class="bi bi-plus-circle"></i> Buy Device</button>
+              <button id="usedDeviceReloadBtn" class="repair-action" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+          </div>
+          <div id="usedDeviceTabs" class="used-device-tabs" role="tablist" aria-label="Used device views">
+            <button class="used-device-tab active" type="button" data-used-tab="inventory"><i class="bi bi-box-seam"></i> Inventory</button>
+            <button class="used-device-tab" type="button" data-used-tab="buy"><i class="bi bi-box-arrow-in-down"></i> Buy Device</button>
+            <button class="used-device-tab" type="button" data-used-tab="transactions"><i class="bi bi-clock-history"></i> Transactions</button>
+          </div>
+          <div id="usedDeviceContent" class="used-device-content"></div>
+        </div>
       </section>
 
       <section id="ordersView" class="workspace-view invoice-view" aria-label="Invoice history">
@@ -4184,6 +4735,19 @@
     </form>
   </div>
 
+  <div id="usedDeviceDetailModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal used-detail-modal" role="dialog" aria-modal="true" aria-labelledby="usedDeviceDetailTitle">
+      <div class="ticket-detail-head">
+        <div>
+          <h2 id="usedDeviceDetailTitle">Used Device</h2>
+          <div id="usedDeviceDetailSubtitle" class="repair-subtitle"></div>
+        </div>
+        <button id="usedDeviceDetailClose" class="modal-close" type="button" aria-label="Close used device"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="usedDeviceDetailBody" class="used-detail-body"></div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -4301,6 +4865,14 @@
       reportStaffName: '',
       reportData: null,
       reportLoading: false,
+      usedDeviceTab: 'inventory',
+      usedDeviceSearch: '',
+      usedDeviceStatus: '',
+      usedDevices: [],
+      usedDeviceSummary: null,
+      usedDeviceTransactions: [],
+      usedDeviceLoading: false,
+      selectedUsedDeviceId: '',
       shiftPaymentTotals: null,
       refundOrder: null,
       repair: {
@@ -4340,6 +4912,7 @@
     const POS_REPAIR_TICKETS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-repair-tickets';
     const POS_SALES_ORDERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders';
     const POS_SHARED_STATE_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-shared-state';
+    const POS_USED_DEVICES_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-used-devices';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
     const els = {
       productGrid: document.getElementById('productGrid'),
@@ -4351,12 +4924,14 @@
       targetDashboard: document.getElementById('targetDashboard'),
       productView: document.getElementById('productView'),
       repairView: document.getElementById('repairView'),
+      usedDeviceView: document.getElementById('usedDeviceView'),
       ordersView: document.getElementById('ordersView'),
       reportView: document.getElementById('reportView'),
       repairWorkspace: document.getElementById('repairWorkspace'),
       targetNavBtn: document.getElementById('targetNavBtn'),
       productNavBtn: document.getElementById('productNavBtn'),
       repairNavBtn: document.getElementById('repairNavBtn'),
+      usedDeviceNavBtn: document.getElementById('usedDeviceNavBtn'),
       ordersNavBtn: document.getElementById('ordersNavBtn'),
       reportNavBtn: document.getElementById('reportNavBtn'),
       invoiceSearchInput: document.getElementById('invoiceSearchInput'),
@@ -4376,6 +4951,16 @@
       reportStaffFilter: document.getElementById('reportStaffFilter'),
       reportPresets: document.getElementById('reportPresets'),
       reportContent: document.getElementById('reportContent'),
+      usedDeviceSubtitle: document.getElementById('usedDeviceSubtitle'),
+      newUsedDeviceBtn: document.getElementById('newUsedDeviceBtn'),
+      usedDeviceReloadBtn: document.getElementById('usedDeviceReloadBtn'),
+      usedDeviceTabs: document.getElementById('usedDeviceTabs'),
+      usedDeviceContent: document.getElementById('usedDeviceContent'),
+      usedDeviceDetailModal: document.getElementById('usedDeviceDetailModal'),
+      usedDeviceDetailTitle: document.getElementById('usedDeviceDetailTitle'),
+      usedDeviceDetailSubtitle: document.getElementById('usedDeviceDetailSubtitle'),
+      usedDeviceDetailBody: document.getElementById('usedDeviceDetailBody'),
+      usedDeviceDetailClose: document.getElementById('usedDeviceDetailClose'),
       newRepairBtn: document.getElementById('newRepairBtn'),
       specialRepairBtn: document.getElementById('specialRepairBtn'),
       clearRepairBtn: document.getElementById('clearRepairBtn'),
@@ -4561,6 +5146,21 @@
       'Fan / Thermal Condition',
       'Hinges / Housing Condition',
       'Liquid Damage Indicators'
+    ];
+
+    const usedDeviceInspectionItems = [
+      { key: 'power', label: 'Power and boot' },
+      { key: 'display_touch', label: 'Display and touch' },
+      { key: 'housing', label: 'Housing and back glass' },
+      { key: 'buttons', label: 'Buttons and switches' },
+      { key: 'cameras', label: 'Front and rear cameras' },
+      { key: 'charging', label: 'Charging and battery' },
+      { key: 'audio', label: 'Speakers and microphone' },
+      { key: 'connectivity', label: 'Wi-Fi and Bluetooth' },
+      { key: 'network', label: 'SIM and mobile network' },
+      { key: 'biometrics', label: 'Face ID / fingerprint' },
+      { key: 'ports', label: 'Ports and accessories' },
+      { key: 'liquid', label: 'Liquid damage indicators' }
     ];
 
     const repairBoardColumns = [
@@ -5197,6 +5797,7 @@
         });
         if (state.activeView === 'orders') loadInvoiceHistory();
         if (state.activeView === 'report') loadPosReport();
+        if (state.activeView === 'used-devices') loadUsedDevices();
       }
       if (state.selectedStaffName && !options.skipShift) {
         ensureActiveShiftRecord();
@@ -6346,11 +6947,13 @@
       els.targetView.classList.toggle('active', view === 'target');
       els.productView.classList.toggle('active', view === 'products');
       els.repairView.classList.toggle('active', view === 'repair');
+      els.usedDeviceView.classList.toggle('active', view === 'used-devices');
       els.ordersView.classList.toggle('active', view === 'orders');
       els.reportView.classList.toggle('active', view === 'report');
       els.targetNavBtn.classList.toggle('active', view === 'target');
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
+      els.usedDeviceNavBtn.classList.toggle('active', view === 'used-devices');
       els.ordersNavBtn.classList.toggle('active', view === 'orders');
       els.reportNavBtn.classList.toggle('active', view === 'report');
       if (view === 'target') renderTargetDashboard();
@@ -6361,6 +6964,7 @@
       }
       if (view === 'orders') loadInvoiceHistory();
       if (view === 'report') loadPosReport();
+      if (view === 'used-devices') loadUsedDevices();
     }
 
     function repairTicketStoreCode() {
@@ -7705,6 +8309,589 @@
       }).join('');
     }
 
+    function usedDeviceStatusLabel(status) {
+      return ({
+        inspection: 'Inspection',
+        ready_for_sale: 'Ready for sale',
+        sold: 'Sold',
+        returned_to_seller: 'Returned to seller',
+        disposed: 'Disposed'
+      })[status] || String(status || 'Unknown');
+    }
+
+    function usedDeviceTransactionLabel(type) {
+      return ({
+        acquisition: 'Device purchased',
+        status_change: 'Status changed',
+        price_change: 'Price changed',
+        sale: 'Device sold',
+        refund_return: 'Refund return',
+        returned_to_seller: 'Returned to seller',
+        disposal: 'Disposed'
+      })[type] || String(type || '').replace(/_/g, ' ');
+    }
+
+    function usedDeviceTitle(device) {
+      return [device.brand, device.model, device.variant, device.storage, device.color]
+        .map(value => String(value || '').trim())
+        .filter(Boolean)
+        .join(' ');
+    }
+
+    function usedDeviceIdentifier(device) {
+      if (device.imei) return `IMEI ${device.imei}`;
+      if (device.serial_number) return `S/N ${device.serial_number}`;
+      return 'No identifier';
+    }
+
+    function usedDeviceInspectionFields(inspection = {}, prefix = 'buy') {
+      return usedDeviceInspectionItems.map(item => {
+        const value = String(inspection[item.key] || 'not_tested');
+        return `
+          <label class="used-inspection-item">
+            <span>${escapeHtml(item.label)}</span>
+            <select data-used-inspection="${escapeHtml(item.key)}" data-used-inspection-prefix="${escapeHtml(prefix)}">
+              <option value="not_tested" ${value === 'not_tested' ? 'selected' : ''}>Not tested</option>
+              <option value="pass" ${value === 'pass' ? 'selected' : ''}>Pass</option>
+              <option value="fail" ${value === 'fail' ? 'selected' : ''}>Fail</option>
+              <option value="na" ${value === 'na' ? 'selected' : ''}>N/A</option>
+            </select>
+          </label>
+        `;
+      }).join('');
+    }
+
+    function collectUsedDeviceInspection(root, prefix) {
+      return Array.from(root.querySelectorAll(`[data-used-inspection-prefix="${prefix}"]`)).reduce((results, select) => {
+        results[select.dataset.usedInspection] = select.value;
+        return results;
+      }, {});
+    }
+
+    function inspectionReadyForSale(inspection) {
+      const values = usedDeviceInspectionItems.map(item => inspection[item.key]);
+      return values.every(value => value === 'pass' || value === 'na');
+    }
+
+    async function usedDeviceApiGet(resource = 'devices') {
+      const url = new URL(POS_USED_DEVICES_ENDPOINT);
+      url.searchParams.set('resource', resource);
+      url.searchParams.set('store_code', repairTicketStoreCode());
+      url.searchParams.set('q', state.usedDeviceSearch || '');
+      url.searchParams.set('limit', '500');
+      if (resource === 'devices' && state.usedDeviceStatus) url.searchParams.set('status', state.usedDeviceStatus);
+      const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+      return parsePosApiResponse(response, 'Used-device data could not be loaded.');
+    }
+
+    async function usedDeviceApiPost(action, payload) {
+      const response = await fetch(POS_USED_DEVICES_ENDPOINT, {
+        method: 'POST',
+        headers: posOrderApiHeaders(),
+        body: JSON.stringify({ action, payload })
+      });
+      return parsePosApiResponse(response, 'Used-device data could not be saved.');
+    }
+
+    async function loadUsedDevices() {
+      if (!state.selectedStaffName) return;
+      state.usedDeviceLoading = true;
+      renderUsedDeviceView();
+      try {
+        const payload = await usedDeviceApiGet('devices');
+        state.usedDevices = Array.isArray(payload.devices) ? payload.devices : [];
+        state.usedDeviceSummary = payload.summary || {};
+        if (state.usedDeviceTab === 'transactions') await loadUsedDeviceTransactions({ render: false });
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Used-device inventory unavailable.');
+      } finally {
+        state.usedDeviceLoading = false;
+        renderUsedDeviceView();
+      }
+    }
+
+    async function loadUsedDeviceTransactions(options = {}) {
+      if (!state.selectedStaffName) return;
+      if (options.render !== false) {
+        state.usedDeviceLoading = true;
+        renderUsedDeviceView();
+      }
+      try {
+        const payload = await usedDeviceApiGet('transactions');
+        state.usedDeviceTransactions = Array.isArray(payload.transactions) ? payload.transactions : [];
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Used-device transactions unavailable.');
+      } finally {
+        if (options.render !== false) {
+          state.usedDeviceLoading = false;
+          renderUsedDeviceView();
+        }
+      }
+    }
+
+    function renderUsedDeviceInventory() {
+      const summary = state.usedDeviceSummary || {};
+      const devices = state.usedDevices;
+      return `
+        <section class="used-summary-grid" aria-label="Used-device inventory summary">
+          <div class="used-summary-item"><span>Ready for sale</span><strong>${Number(summary.ready_count || 0)}</strong></div>
+          <div class="used-summary-item"><span>Inspection</span><strong>${Number(summary.inspection_count || 0)}</strong></div>
+          <div class="used-summary-item"><span>Stock cost</span><strong>${money(summary.stock_cost)}</strong></div>
+          <div class="used-summary-item"><span>Listed value</span><strong>${money(summary.stock_retail)}</strong></div>
+        </section>
+        <div class="used-device-toolbar">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input id="usedDeviceSearch" class="search-input" type="search" value="${escapeHtml(state.usedDeviceSearch)}" placeholder="Device / IMEI / serial / seller">
+          </div>
+          <div class="used-status-filters" aria-label="Inventory status">
+            ${[
+              ['', 'All'],
+              ['ready_for_sale', 'Ready'],
+              ['inspection', 'Inspection'],
+              ['sold', 'Sold']
+            ].map(([value, label]) => `
+              <button class="used-status-filter ${state.usedDeviceStatus === value ? 'active' : ''}" type="button" data-used-status="${value}">${label}</button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="used-device-list">
+          ${devices.map(device => `
+            <article class="used-device-row" data-used-device-details="${escapeHtml(device.id)}" tabindex="0">
+              <div class="used-device-main">
+                <strong>${escapeHtml(usedDeviceTitle(device))}</strong>
+                <div class="used-device-meta">
+                  <span>${escapeHtml(device.id)}</span>
+                  <span>${escapeHtml(usedDeviceIdentifier(device))}</span>
+                </div>
+              </div>
+              <div class="used-device-value used-device-condition">
+                <span>Condition</span>
+                <strong>${escapeHtml(device.condition_grade || '')}</strong>
+              </div>
+              <div class="used-device-value used-device-cost">
+                <span>Cost</span>
+                <strong>${money(device.purchase_cost)}</strong>
+              </div>
+              <div class="used-device-value">
+                <span>Sale price</span>
+                <strong>${money(device.sale_price)}</strong>
+                <span class="used-status ${escapeHtml(device.status)}">${escapeHtml(usedDeviceStatusLabel(device.status))}</span>
+              </div>
+              <button class="used-sell-button" type="button" data-used-sell="${escapeHtml(device.id)}" title="Sell this device" ${device.status === 'ready_for_sale' ? '' : 'disabled'}>
+                <i class="bi bi-cart-plus"></i> Sell
+              </button>
+            </article>
+          `).join('') || `
+            <div class="empty-state"><div><div class="cart-empty-icon"><i class="bi bi-phone"></i></div><strong>No used devices found</strong></div></div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderUsedDeviceBuyForm() {
+      return `
+        <form id="usedDeviceBuyForm" class="used-form">
+          <section class="used-form-section">
+            <h2>Seller</h2>
+            <div class="used-form-grid">
+              <label class="used-field">Full name *<input name="seller_name" type="text" autocomplete="name" required></label>
+              <label class="used-field">Phone *<input name="seller_phone" type="tel" autocomplete="tel" required></label>
+              <label class="used-field">Email<input name="seller_email" type="email" autocomplete="email"></label>
+              <label class="used-field span-3">Residential address *<textarea name="seller_address" autocomplete="street-address" required></textarea></label>
+              <label class="used-field">ID type *
+                <select name="seller_id_type" required>
+                  <option value="">Select ID</option>
+                  <option>Driver Licence</option>
+                  <option>Passport</option>
+                  <option>Proof of Age Card</option>
+                  <option>Other Government ID</option>
+                </select>
+              </label>
+              <label class="used-field">ID reference *<input name="seller_id_reference" type="text" required></label>
+              <label class="used-field">Is the seller the owner? *
+                <select id="usedSellerIsOwner" name="seller_is_owner" required><option value="true">Yes</option><option value="false">No</option></select>
+              </label>
+              <label class="used-field" data-used-owner-field hidden>Owner name *<input name="owner_name" type="text"></label>
+              <label class="used-field span-2" data-used-owner-field hidden>Owner address *<input name="owner_address" type="text"></label>
+              <label class="used-field span-3">How the seller obtained the device *<textarea name="acquisition_statement" required></textarea></label>
+            </div>
+          </section>
+
+          <section class="used-form-section">
+            <h2>Device</h2>
+            <div class="used-form-grid">
+              <label class="used-field">Category *
+                <select name="category" required><option>Phone</option><option>Tablet</option><option>Laptop</option><option>Watch</option><option>Game Console</option><option>Other</option></select>
+              </label>
+              <label class="used-field">Brand *<input name="brand" type="text" required></label>
+              <label class="used-field">Model *<input name="model" type="text" required></label>
+              <label class="used-field">Variant<input name="variant" type="text" placeholder="Example: Pro Max"></label>
+              <label class="used-field">Storage<input name="storage" type="text" placeholder="Example: 256GB"></label>
+              <label class="used-field">Color<input name="color" type="text"></label>
+              <label class="used-field">IMEI<input name="imei" type="text" inputmode="numeric" maxlength="20"></label>
+              <label class="used-field">Serial number<input name="serial_number" type="text"></label>
+              <label class="used-field">Condition *
+                <select name="condition_grade" required><option>As New</option><option>Good</option><option>Fair</option><option>Poor</option><option>Faulty</option></select>
+              </label>
+              <label class="used-field">Battery health %<input name="battery_health" type="number" min="0" max="100" inputmode="numeric"></label>
+              <label class="used-field span-2">Notes<textarea name="notes"></textarea></label>
+            </div>
+          </section>
+
+          <section class="used-form-section">
+            <h2>Inspection</h2>
+            <div class="used-inspection-grid">${usedDeviceInspectionFields({}, 'buy')}</div>
+          </section>
+
+          <section class="used-form-section">
+            <h2>Compliance and Pricing</h2>
+            <div class="used-form-grid">
+              <label class="used-field">IMEI / lost-stolen check *
+                <select name="clean_check_status" required><option value="Pending">Pending</option><option value="Clean">Clean</option><option value="Blocked">Blocked</option><option value="Not Applicable">Not Applicable</option></select>
+              </label>
+              <label class="used-field">Check reference<input name="clean_check_reference" type="text"></label>
+              <label class="used-field">Inventory status *
+                <select name="status" required><option value="inspection">Inspection</option><option value="ready_for_sale">Ready for sale</option></select>
+              </label>
+              <label class="used-field">Purchase price *<input name="purchase_cost" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
+              <label class="used-field">Sale price *<input name="sale_price" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
+              <label class="used-field">Payout method *<select name="payout_method" required><option>Cash</option><option>Bank Transfer</option></select></label>
+            </div>
+            <div class="used-declaration-grid">
+              <label class="used-check"><input name="activation_lock_removed" type="checkbox" required><span>Apple, Google, Samsung, PIN, and other activation locks are removed.</span></label>
+              <label class="used-check"><input name="data_erased_confirmed" type="checkbox" required><span>Customer data is erased and SIM / memory cards are removed.</span></label>
+              <label class="used-check"><input name="seller_age_confirmed" type="checkbox" required><span>Seller identity has been viewed and the seller is 18 years or older.</span></label>
+              <label class="used-check"><input name="ownership_declaration" type="checkbox" required><span>Seller confirms the legal right to sell this device and that it is not financed, leased, lost, stolen, or blocked.</span></label>
+              <a class="repair-action" href="https://amta.org.au/consumer-advice/check-the-status-of-your-handset/" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Open AMTA IMEI Check</a>
+            </div>
+          </section>
+
+          <div class="used-form-footer">
+            <div id="usedDeviceBuyError" class="used-form-error" role="alert"></div>
+            <button class="repair-action" type="button" data-used-tab-action="inventory">Cancel</button>
+            <button id="usedDeviceBuySubmit" class="repair-action primary" type="submit"><i class="bi bi-check2-circle"></i> Complete Purchase</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function renderUsedDeviceTransactions() {
+      return `
+        <div class="used-device-toolbar">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input id="usedDeviceTransactionSearch" class="search-input" type="search" value="${escapeHtml(state.usedDeviceSearch)}" placeholder="Device / invoice / seller / buyer">
+          </div>
+          <div class="invoice-result-count">${state.usedDeviceTransactions.length} records</div>
+        </div>
+        <div class="used-transaction-list">
+          ${state.usedDeviceTransactions.map(row => `
+            <div class="used-transaction-row">
+              <div>
+                <div class="used-transaction-type">${escapeHtml(usedDeviceTransactionLabel(row.type))}</div>
+                <div class="used-transaction-meta">${escapeHtml(row.device_code)}</div>
+              </div>
+              <div class="used-device-main">
+                <strong>${escapeHtml([row.brand, row.model].filter(Boolean).join(' '))}</strong>
+                <div class="used-device-meta"><span>${escapeHtml(row.counterparty_name || '')}</span><span>${escapeHtml(row.invoice_number ? `Invoice #${row.invoice_number}` : '')}</span></div>
+              </div>
+              <div class="used-device-value"><span>Amount</span><strong>${money(row.amount)}</strong></div>
+              <div class="used-device-value used-transaction-staff"><span>Staff</span><strong>${escapeHtml(row.staff_name || '')}</strong></div>
+              <div class="used-device-value used-transaction-date"><span>Date</span><strong>${escapeHtml(row.created_at ? new Date(row.created_at).toLocaleString('en-AU') : '')}</strong></div>
+            </div>
+          `).join('') || '<div class="empty-state"><div><strong>No transactions found</strong></div></div>'}
+        </div>
+      `;
+    }
+
+    function renderUsedDeviceView() {
+      if (!els.usedDeviceContent) return;
+      const store = storeById(state.storeId);
+      els.usedDeviceSubtitle.textContent = `${store.name} - unique device inventory and transaction register.`;
+      els.usedDeviceTabs.querySelectorAll('[data-used-tab]').forEach(button => {
+        const active = button.dataset.usedTab === state.usedDeviceTab;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-selected', String(active));
+      });
+
+      if (state.usedDeviceLoading && state.usedDeviceTab !== 'buy') {
+        els.usedDeviceContent.innerHTML = '<div class="empty-state"><div><strong>Loading used devices...</strong></div></div>';
+        return;
+      }
+      if (state.usedDeviceTab === 'buy') {
+        els.usedDeviceContent.innerHTML = renderUsedDeviceBuyForm();
+      } else if (state.usedDeviceTab === 'transactions') {
+        els.usedDeviceContent.innerHTML = renderUsedDeviceTransactions();
+      } else {
+        els.usedDeviceContent.innerHTML = renderUsedDeviceInventory();
+      }
+    }
+
+    function setUsedDeviceTab(tab) {
+      state.usedDeviceTab = ['inventory', 'buy', 'transactions'].includes(tab) ? tab : 'inventory';
+      state.usedDeviceSearch = '';
+      renderUsedDeviceView();
+      if (state.usedDeviceTab === 'inventory') loadUsedDevices();
+      if (state.usedDeviceTab === 'transactions') loadUsedDeviceTransactions();
+    }
+
+    async function submitUsedDevicePurchase(form) {
+      const error = form.querySelector('#usedDeviceBuyError');
+      const submit = form.querySelector('#usedDeviceBuySubmit');
+      const data = new FormData(form);
+      const inspection = collectUsedDeviceInspection(form, 'buy');
+      const requestedStatus = String(data.get('status') || 'inspection');
+      if (requestedStatus === 'ready_for_sale' && !inspectionReadyForSale(inspection)) {
+        error.textContent = 'Every inspection item must be Pass or N/A before the device can be ready for sale.';
+        return;
+      }
+      if (data.get('category') === 'Phone' && String(data.get('imei') || '').replace(/\D/g, '').length !== 15) {
+        error.textContent = 'Phones require a valid 15-digit IMEI.';
+        return;
+      }
+      if (data.get('clean_check_status') === 'Clean' && !String(data.get('clean_check_reference') || '').trim()) {
+        error.textContent = 'Enter the AMTA check reference or result note for a clean IMEI.';
+        return;
+      }
+      if (data.get('seller_is_owner') === 'false' && (!String(data.get('owner_name') || '').trim() || !String(data.get('owner_address') || '').trim())) {
+        error.textContent = 'Owner name and address are required when the seller is not the owner.';
+        return;
+      }
+
+      error.textContent = '';
+      submit.disabled = true;
+      submit.textContent = 'Saving Purchase...';
+      try {
+        const activeShift = await syncCurrentShiftWithDatabase();
+        if (!activeShift || activeShift.status !== 'open') {
+          throw new Error('Open the store shift before buying a used device.');
+        }
+        await usedDeviceApiPost('acquire', {
+          store_code: repairTicketStoreCode(),
+          staff_name: state.selectedStaffName,
+          shift_id: activeShift.id,
+          seller_name: String(data.get('seller_name') || '').trim(),
+          seller_phone: String(data.get('seller_phone') || '').trim(),
+          seller_email: String(data.get('seller_email') || '').trim(),
+          seller_address: String(data.get('seller_address') || '').trim(),
+          seller_id_type: String(data.get('seller_id_type') || ''),
+          seller_id_reference: String(data.get('seller_id_reference') || '').trim(),
+          seller_age_confirmed: data.get('seller_age_confirmed') === 'on',
+          seller_is_owner: data.get('seller_is_owner') === 'true',
+          owner_name: String(data.get('owner_name') || '').trim(),
+          owner_address: String(data.get('owner_address') || '').trim(),
+          acquisition_statement: String(data.get('acquisition_statement') || '').trim(),
+          ownership_declaration: data.get('ownership_declaration') === 'on',
+          category: String(data.get('category') || ''),
+          brand: String(data.get('brand') || '').trim(),
+          model: String(data.get('model') || '').trim(),
+          variant: String(data.get('variant') || '').trim(),
+          storage: String(data.get('storage') || '').trim(),
+          color: String(data.get('color') || '').trim(),
+          imei: String(data.get('imei') || '').trim(),
+          serial_number: String(data.get('serial_number') || '').trim(),
+          condition_grade: String(data.get('condition_grade') || ''),
+          battery_health: String(data.get('battery_health') || ''),
+          inspection,
+          clean_check_status: String(data.get('clean_check_status') || ''),
+          clean_check_reference: String(data.get('clean_check_reference') || '').trim(),
+          activation_lock_removed: data.get('activation_lock_removed') === 'on',
+          data_erased_confirmed: data.get('data_erased_confirmed') === 'on',
+          purchase_cost: Number(data.get('purchase_cost')),
+          sale_price: Number(data.get('sale_price')),
+          payout_method: String(data.get('payout_method') || ''),
+          status: requestedStatus,
+          notes: String(data.get('notes') || '').trim()
+        });
+        state.shiftPaymentTotals = null;
+        state.usedDeviceTab = 'inventory';
+        state.usedDeviceSearch = '';
+        await loadUsedDevices();
+        showToast('Device purchase saved and added to this store inventory.');
+      } catch (requestError) {
+        console.error(requestError);
+        error.textContent = requestError.message || 'Device purchase could not be saved.';
+      } finally {
+        submit.disabled = false;
+        submit.innerHTML = '<i class="bi bi-check2-circle"></i> Complete Purchase';
+      }
+    }
+
+    function selectedUsedDevice() {
+      return state.usedDevices.find(device => device.id === state.selectedUsedDeviceId) || null;
+    }
+
+    function renderUsedDeviceDetail(device, focusSell = false) {
+      if (!device) return;
+      const editable = !['sold', 'returned_to_seller', 'disposed'].includes(device.status);
+      const seller = device.seller || {};
+      els.usedDeviceDetailTitle.textContent = usedDeviceTitle(device);
+      els.usedDeviceDetailSubtitle.textContent = `${device.id} - ${usedDeviceIdentifier(device)}`;
+      els.usedDeviceDetailBody.innerHTML = `
+        <div class="used-detail-summary">
+          <div><span>Status</span><strong>${escapeHtml(usedDeviceStatusLabel(device.status))}</strong></div>
+          <div><span>Condition</span><strong>${escapeHtml(device.condition_grade || '')}</strong></div>
+          <div><span>Cost</span><strong>${money(device.purchase_cost)}</strong></div>
+          <div><span>Sale price</span><strong>${money(device.sale_price)}</strong></div>
+          <div><span>Seller</span><strong>${escapeHtml(seller.name || '')}</strong></div>
+          <div><span>Seller phone</span><strong>${escapeHtml(seller.phone || '')}</strong></div>
+          <div><span>ID viewed</span><strong>${escapeHtml([seller.id_type, seller.id_reference].filter(Boolean).join(' - '))}</strong></div>
+          <div><span>Acquired by</span><strong>${escapeHtml(device.acquired_by || '')}</strong></div>
+        </div>
+        ${editable ? `
+          <form id="usedDeviceUpdateForm" class="used-form-section">
+            <h2>Inventory and Inspection</h2>
+            <div class="used-form-grid">
+              <label class="used-field">Status
+                <select name="status"><option value="inspection" ${device.status === 'inspection' ? 'selected' : ''}>Inspection</option><option value="ready_for_sale" ${device.status === 'ready_for_sale' ? 'selected' : ''}>Ready for sale</option><option value="returned_to_seller">Returned to seller</option><option value="disposed">Disposed</option></select>
+              </label>
+              <label class="used-field">Sale price<input name="sale_price" type="number" min="0.01" step="0.01" value="${numberValue(device.sale_price).toFixed(2)}" required></label>
+              <label class="used-field">IMEI / lost-stolen check
+                <select name="clean_check_status"><option ${device.clean_check_status === 'Pending' ? 'selected' : ''}>Pending</option><option ${device.clean_check_status === 'Clean' ? 'selected' : ''}>Clean</option><option ${device.clean_check_status === 'Blocked' ? 'selected' : ''}>Blocked</option><option ${device.clean_check_status === 'Not Applicable' ? 'selected' : ''}>Not Applicable</option></select>
+              </label>
+              <label class="used-field span-2">Check reference<input name="clean_check_reference" type="text" value="${escapeHtml(device.clean_check_reference || '')}"></label>
+              <label class="used-field">Notes<input name="notes" type="text" value="${escapeHtml(device.notes || '')}"></label>
+            </div>
+            <div class="used-inspection-grid" style="margin-top:12px;">${usedDeviceInspectionFields(device.inspection || {}, 'detail')}</div>
+            <div class="used-declaration-grid">
+              <label class="used-check"><input name="activation_lock_removed" type="checkbox" ${device.activation_lock_removed ? 'checked' : ''}><span>Activation and account locks removed</span></label>
+              <label class="used-check"><input name="data_erased_confirmed" type="checkbox" ${device.data_erased_confirmed ? 'checked' : ''}><span>Customer data erased</span></label>
+            </div>
+            <div id="usedDeviceUpdateError" class="used-form-error" role="alert"></div>
+            <div class="used-detail-actions"><button class="repair-action primary" type="submit"><i class="bi bi-check2"></i> Save Device</button></div>
+          </form>
+        ` : ''}
+        ${device.status === 'ready_for_sale' ? `
+          <form id="usedDeviceSellForm" class="used-form-section">
+            <h2>Sell Device</h2>
+            <div class="used-form-grid">
+              <label class="used-field">Buyer name *<input name="buyer_name" type="text" value="${escapeHtml(els.customerInput.value.trim())}" required></label>
+              <label class="used-field">Buyer phone *<input name="buyer_phone" type="tel" required></label>
+              <label class="used-field span-3">Buyer address *<textarea name="buyer_address" required></textarea></label>
+            </div>
+            <div id="usedDeviceSellError" class="used-form-error" role="alert"></div>
+            <div class="used-detail-actions"><button class="used-sell-button" type="submit"><i class="bi bi-cart-plus"></i> Add to Checkout</button></div>
+          </form>
+        ` : ''}
+        ${device.status === 'sold' && device.sold_order_id ? `
+          <div class="used-detail-actions"><button class="repair-action primary" type="button" data-used-view-invoice="${escapeHtml(device.sold_order_id)}"><i class="bi bi-eye"></i> View Invoice #${escapeHtml(device.sold_invoice_number)}</button></div>
+        ` : ''}
+      `;
+      if (focusSell) setTimeout(() => els.usedDeviceDetailBody.querySelector('[name="buyer_name"]')?.focus(), 0);
+    }
+
+    function openUsedDeviceDetail(deviceId, focusSell = false) {
+      const device = state.usedDevices.find(item => item.id === deviceId);
+      if (!device) return;
+      state.selectedUsedDeviceId = deviceId;
+      renderUsedDeviceDetail(device, focusSell);
+      els.usedDeviceDetailModal.classList.add('show');
+      els.usedDeviceDetailModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeUsedDeviceDetail() {
+      els.usedDeviceDetailModal.classList.remove('show');
+      els.usedDeviceDetailModal.setAttribute('aria-hidden', 'true');
+      state.selectedUsedDeviceId = '';
+    }
+
+    async function updateUsedDevice(form) {
+      const device = selectedUsedDevice();
+      if (!device) return;
+      const data = new FormData(form);
+      const inspection = collectUsedDeviceInspection(form, 'detail');
+      const status = String(data.get('status') || device.status);
+      const error = form.querySelector('#usedDeviceUpdateError');
+      if (status === 'ready_for_sale' && !inspectionReadyForSale(inspection)) {
+        error.textContent = 'Every inspection item must be Pass or N/A before the device can be ready for sale.';
+        return;
+      }
+      if (data.get('clean_check_status') === 'Clean' && !String(data.get('clean_check_reference') || '').trim()) {
+        error.textContent = 'Enter the AMTA check reference or result note for a clean IMEI.';
+        return;
+      }
+      const submit = form.querySelector('button[type="submit"]');
+      error.textContent = '';
+      submit.disabled = true;
+      try {
+        const payload = await usedDeviceApiPost('update', {
+          store_code: repairTicketStoreCode(),
+          staff_name: state.selectedStaffName,
+          device_code: device.id,
+          status,
+          sale_price: Number(data.get('sale_price')),
+          clean_check_status: String(data.get('clean_check_status') || ''),
+          clean_check_reference: String(data.get('clean_check_reference') || '').trim(),
+          activation_lock_removed: data.get('activation_lock_removed') === 'on',
+          data_erased_confirmed: data.get('data_erased_confirmed') === 'on',
+          inspection,
+          notes: String(data.get('notes') || '').trim()
+        });
+        if (payload.device) {
+          const index = state.usedDevices.findIndex(item => item.id === device.id);
+          if (index >= 0) state.usedDevices[index] = payload.device;
+        }
+        closeUsedDeviceDetail();
+        await loadUsedDevices();
+        showToast('Used-device inventory updated.');
+      } catch (requestError) {
+        console.error(requestError);
+        error.textContent = requestError.message || 'Device could not be updated.';
+      } finally {
+        submit.disabled = false;
+      }
+    }
+
+    function addUsedDeviceToCart(form) {
+      const device = selectedUsedDevice();
+      if (!device || device.status !== 'ready_for_sale') return;
+      const data = new FormData(form);
+      const buyerName = String(data.get('buyer_name') || '').trim();
+      const buyerPhone = String(data.get('buyer_phone') || '').trim();
+      const buyerAddress = String(data.get('buyer_address') || '').trim();
+      const error = form.querySelector('#usedDeviceSellError');
+      if (!buyerName || !buyerPhone || !buyerAddress) {
+        error.textContent = 'Buyer name, phone, and address are required.';
+        return;
+      }
+      if (state.cart.some(item => item.used_device_id === device.id)) {
+        error.textContent = 'This device is already in the cart.';
+        return;
+      }
+      const existingUsedItem = state.cart.find(item => item.is_used_device);
+      if (existingUsedItem && (
+        existingUsedItem.buyer_name.toLowerCase() !== buyerName.toLowerCase()
+        || existingUsedItem.buyer_phone.replace(/\D/g, '') !== buyerPhone.replace(/\D/g, '')
+      )) {
+        error.textContent = 'Used devices for different buyers must be checked out separately.';
+        return;
+      }
+
+      state.cart.push({
+        id: `used-${device.id}`,
+        sku: device.id,
+        name: usedDeviceTitle(device),
+        category: 'Used Devices',
+        cost_price: numberValue(device.purchase_cost),
+        sale_price: numberValue(device.sale_price),
+        barcode: device.imei || device.serial_number || '',
+        image_url: '',
+        qty: 1,
+        is_used_device: true,
+        used_device_id: device.id,
+        buyer_name: buyerName,
+        buyer_phone: buyerPhone,
+        buyer_address: buyerAddress
+      });
+      els.customerInput.value = buyerName;
+      closeUsedDeviceDetail();
+      renderCart();
+      showToast('Used device added to checkout.');
+    }
+
     function renderCart() {
       if (!state.cart.length) {
         els.cartArea.innerHTML = `
@@ -7724,11 +8911,15 @@
                 <div>
                   <h3 class="cart-name">${escapeHtml(item.name)}</h3>
                   <div class="cart-small">${escapeHtml(item.sku || 'No SKU')} · ${money(item.sale_price)} each</div>
-                  <div class="qty-control">
-                    <button type="button" data-qty="${item.id}" data-dir="-1">-</button>
-                    <span>${item.qty}</span>
-                    <button type="button" data-qty="${item.id}" data-dir="1">+</button>
-                  </div>
+                  ${item.is_used_device || item.is_repair ? `
+                    <div class="qty-control"><span>1 unique item</span></div>
+                  ` : `
+                    <div class="qty-control">
+                      <button type="button" data-qty="${item.id}" data-dir="-1">-</button>
+                      <span>${item.qty}</span>
+                      <button type="button" data-qty="${item.id}" data-dir="1">+</button>
+                    </div>
+                  `}
                 </div>
                 <div class="cart-side">
                   <div class="cart-line-total">${money(item.sale_price * item.qty)}</div>
@@ -7982,6 +9173,7 @@
     function changeQty(productId, dir) {
       const item = state.cart.find(cartItem => cartItem.id === productId);
       if (!item) return;
+      if (item.is_used_device || item.is_repair) return;
       const nextQty = item.qty + Number(dir);
       if (nextQty <= 0) {
         state.cart = state.cart.filter(cartItem => cartItem.id !== productId);
@@ -8331,6 +9523,7 @@
     function saleTypeLabel(value) {
       if (value === 'repair') return 'Repairs';
       if (value === 'special') return 'Special products';
+      if (value === 'used_device') return 'Used devices';
       return 'Retail products';
     }
 
@@ -9210,13 +10403,34 @@
         }
       }
 
+      const usedDeviceItems = state.cart.filter(item => item.is_used_device && item.used_device_id);
+      if (usedDeviceItems.some(item => !item.buyer_name || !item.buyer_phone || !item.buyer_address)) {
+        showToast('Buyer name, phone, and address are required for used-device sales.');
+        return;
+      }
+      if (usedDeviceItems.length > 1) {
+        const firstBuyerName = usedDeviceItems[0].buyer_name.toLowerCase();
+        const firstBuyerPhone = usedDeviceItems[0].buyer_phone.replace(/\D/g, '');
+        if (usedDeviceItems.some(item => item.buyer_name.toLowerCase() !== firstBuyerName || item.buyer_phone.replace(/\D/g, '') !== firstBuyerPhone)) {
+          showToast('Used devices for different buyers must be checked out separately.');
+          return;
+        }
+      }
+      if (repairTickets.length && usedDeviceItems.length && (
+        repairTickets[0].customerName.toLowerCase() !== usedDeviceItems[0].buyer_name.toLowerCase()
+        || repairTickets[0].customerPhone.replace(/\D/g, '') !== usedDeviceItems[0].buyer_phone.replace(/\D/g, '')
+      )) {
+        showToast('Repair and used-device items for different customers must be checked out separately.');
+        return;
+      }
+
       const customerName = repairTickets.length
         ? repairTickets[0].customerName
-        : (els.customerInput.value.trim() || 'Walk-in Customer');
+        : (usedDeviceItems.length ? usedDeviceItems[0].buyer_name : (els.customerInput.value.trim() || 'Walk-in Customer'));
       const customer = customerDetailsForOrder(customerName);
       const customerPhone = repairTickets.length
         ? repairTickets[0].customerPhone
-        : (customer ? (customer.phone || customer.phone_number || '') : '');
+        : (usedDeviceItems.length ? usedDeviceItems[0].buyer_phone : (customer ? (customer.phone || customer.phone_number || '') : ''));
       const order = {
         id: 'POS-' + Date.now(),
         store_id: state.storeId,
@@ -9228,6 +10442,7 @@
         shift_started_at: activeShift && activeShift.startedAt,
         customer_name: customerName,
         customer_phone: customerPhone,
+        customer_address: usedDeviceItems.length ? usedDeviceItems[0].buyer_address : '',
         customer_email: customer ? (customer.email || '') : '',
         payment_method: paymentSummary,
         payments: normalizedPayments,
@@ -9239,6 +10454,11 @@
           category: item.category || '',
           is_repair: Boolean(item.is_repair),
           is_special: Boolean(item.is_special),
+          is_used_device: Boolean(item.is_used_device),
+          used_device_id: item.used_device_id || '',
+          buyer_name: item.buyer_name || '',
+          buyer_phone: item.buyer_phone || '',
+          buyer_address: item.buyer_address || '',
           ticket_id: item.ticket_id || '',
           qty: item.qty,
           unit_price: item.sale_price,
@@ -9295,6 +10515,7 @@
       state.cart = [];
       els.customerInput.value = '';
       await loadRepairTickets();
+      if (usedDeviceItems.length) await loadUsedDevices();
       renderProducts();
       renderRepairWorkspace();
       renderTargetDashboard();
@@ -9481,6 +10702,7 @@
     els.targetNavBtn.addEventListener('click', () => setActiveView('target'));
     els.productNavBtn.addEventListener('click', () => setActiveView('products'));
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
+    els.usedDeviceNavBtn.addEventListener('click', () => setActiveView('used-devices'));
     els.ordersNavBtn.addEventListener('click', () => setActiveView('orders'));
     els.reportNavBtn.addEventListener('click', () => setActiveView('report'));
     els.reportReloadBtn.addEventListener('click', loadPosReport);
@@ -9509,6 +10731,81 @@
     els.reportStaffFilter.addEventListener('change', event => {
       state.reportStaffName = event.target.value;
       loadPosReport();
+    });
+    els.usedDeviceTabs.addEventListener('click', event => {
+      const button = event.target.closest('[data-used-tab]');
+      if (button) setUsedDeviceTab(button.dataset.usedTab);
+    });
+    els.newUsedDeviceBtn.addEventListener('click', () => setUsedDeviceTab('buy'));
+    els.usedDeviceReloadBtn.addEventListener('click', () => {
+      if (state.usedDeviceTab === 'transactions') loadUsedDeviceTransactions();
+      else if (state.usedDeviceTab === 'buy') renderUsedDeviceView();
+      else loadUsedDevices();
+    });
+    els.usedDeviceContent.addEventListener('click', event => {
+      const statusButton = event.target.closest('[data-used-status]');
+      const sellButton = event.target.closest('[data-used-sell]');
+      const tabButton = event.target.closest('[data-used-tab-action]');
+      const deviceRow = event.target.closest('[data-used-device-details]');
+      if (statusButton) {
+        state.usedDeviceStatus = statusButton.dataset.usedStatus;
+        loadUsedDevices();
+        return;
+      }
+      if (sellButton && !sellButton.disabled) {
+        event.stopPropagation();
+        openUsedDeviceDetail(sellButton.dataset.usedSell, true);
+        return;
+      }
+      if (tabButton) {
+        setUsedDeviceTab(tabButton.dataset.usedTabAction);
+        return;
+      }
+      if (deviceRow) openUsedDeviceDetail(deviceRow.dataset.usedDeviceDetails);
+    });
+    els.usedDeviceContent.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const deviceRow = event.target.closest('[data-used-device-details]');
+      if (!deviceRow || event.target.closest('button')) return;
+      event.preventDefault();
+      openUsedDeviceDetail(deviceRow.dataset.usedDeviceDetails);
+    });
+    els.usedDeviceContent.addEventListener('input', event => {
+      if (!['usedDeviceSearch', 'usedDeviceTransactionSearch'].includes(event.target.id)) return;
+      state.usedDeviceSearch = event.target.value;
+      clearTimeout(loadUsedDevices.searchTimer);
+      loadUsedDevices.searchTimer = setTimeout(() => {
+        if (state.usedDeviceTab === 'transactions') loadUsedDeviceTransactions();
+        else loadUsedDevices();
+      }, 300);
+    });
+    els.usedDeviceContent.addEventListener('change', event => {
+      if (event.target.id !== 'usedSellerIsOwner') return;
+      const showOwner = event.target.value === 'false';
+      els.usedDeviceContent.querySelectorAll('[data-used-owner-field]').forEach(field => {
+        field.hidden = !showOwner;
+        field.querySelectorAll('input').forEach(input => { input.required = showOwner; });
+      });
+    });
+    els.usedDeviceContent.addEventListener('submit', event => {
+      if (event.target.id !== 'usedDeviceBuyForm') return;
+      event.preventDefault();
+      submitUsedDevicePurchase(event.target);
+    });
+    els.usedDeviceDetailClose.addEventListener('click', closeUsedDeviceDetail);
+    els.usedDeviceDetailModal.addEventListener('click', event => {
+      if (event.target === els.usedDeviceDetailModal) closeUsedDeviceDetail();
+    });
+    els.usedDeviceDetailBody.addEventListener('submit', event => {
+      event.preventDefault();
+      if (event.target.id === 'usedDeviceUpdateForm') updateUsedDevice(event.target);
+      if (event.target.id === 'usedDeviceSellForm') addUsedDeviceToCart(event.target);
+    });
+    els.usedDeviceDetailBody.addEventListener('click', event => {
+      const invoiceButton = event.target.closest('[data-used-view-invoice]');
+      if (!invoiceButton) return;
+      closeUsedDeviceDetail();
+      viewInvoiceById(invoiceButton.dataset.usedViewInvoice);
     });
     els.invoiceReloadBtn.addEventListener('click', loadInvoiceHistory);
     els.invoiceSearchInput.addEventListener('input', event => {
@@ -10020,6 +11317,9 @@
       }
       if (event.key === 'Escape' && els.customerModal.classList.contains('show')) {
         closeCustomerModal();
+      }
+      if (event.key === 'Escape' && els.usedDeviceDetailModal.classList.contains('show')) {
+        closeUsedDeviceDetail();
       }
       if (event.key === 'Escape' && els.emailReceiptModal.classList.contains('show')) {
         closeEmailReceiptModal();
