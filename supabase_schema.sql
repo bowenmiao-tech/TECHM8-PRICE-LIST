@@ -1481,6 +1481,35 @@ set
   active = excluded.active,
   updated_at = now();
 
+insert into public.lcd_inventory_items (store_id, model_name, variant_name, category_key, current_qty, active)
+select
+  stores.id,
+  pixel_seed.model_name,
+  pixel_seed.variant_name,
+  'pixel',
+  0,
+  true
+from public.store_locations stores
+cross join (
+  values
+    ('Pixel 10', 'LCD'),
+    ('Pixel 10', 'Battery'),
+    ('Pixel 10 Pro', 'LCD'),
+    ('Pixel 10 Pro', 'Battery'),
+    ('Pixel 10A', 'LCD'),
+    ('Pixel 10A', 'Battery'),
+    ('Pixel 11', 'LCD'),
+    ('Pixel 11', 'Battery'),
+    ('Pixel 11 Pro', 'LCD'),
+    ('Pixel 11 Pro', 'Battery')
+) as pixel_seed(model_name, variant_name)
+where stores.active = true
+on conflict (store_id, model_name, variant_name) do update
+set
+  category_key = excluded.category_key,
+  active = excluded.active,
+  updated_at = now();
+
 create or replace function public.get_daily_report_setup(session_token text, target_store_code text default null)
 returns jsonb
 language plpgsql
