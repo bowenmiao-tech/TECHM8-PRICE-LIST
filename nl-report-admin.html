@@ -69,7 +69,7 @@
           <div class="summary"><div class="summary-label">Reports</div><div class="summary-value">{{ reports.length }}</div></div>
           <div class="summary"><div class="summary-label">NL Sales Inc GST</div><div class="summary-value">{{ money(salesTotal) }}</div></div>
           <div class="summary"><div class="summary-label">Payable To TECHM8 Inc GST</div><div class="summary-value">{{ money(payableTotal) }}</div></div>
-          <div class="summary"><div class="summary-label">Confirmed Outstanding</div><div class="summary-value">{{ money(outstandingTotal) }}</div></div>
+          <div class="summary"><div class="summary-label">Uploaded Payable</div><div class="summary-value">{{ money(uploadedTotal) }}</div></div>
           <div class="summary"><div class="summary-label">Pending Cost Items</div><div class="summary-value">{{ pendingCount }}</div></div>
         </div>
       </section>
@@ -103,9 +103,8 @@
               <span>NL payable inc GST: <strong>{{ money(report.payable_total_inc_gst) }}</strong></span>
               <span v-if="report.pending_cost_count" class="pending">{{ report.pending_cost_count }} cost(s) pending</span>
               <div class="actions" style="margin-left:auto">
-                <el-button type="warning" @click="saveCosts(report)" :loading="savingId===report.id" v-if="canEditCosts(report)">Save Costs</el-button>
-                <el-button type="primary" @click="changeStatus(report,'confirmed')" v-if="report.status==='priced'">Confirm Amount</el-button>
-                <el-button type="success" @click="changeStatus(report,'settled')" v-if="report.status==='confirmed'">Mark Settled</el-button>
+                <el-button type="warning" @click="saveCosts(report)" :loading="savingId===report.id" v-if="canEditCosts(report)">Save Temporarily</el-button>
+                <el-button type="primary" @click="uploadReport(report)" :loading="uploadingId===report.id" v-if="canEditCosts(report)">Upload</el-button>
               </div>
             </div>
           </div>
@@ -117,16 +116,16 @@
   <script>
     window.Techm8StaffAuth.init({
       rootSelector:'[data-auth-protected]', title:'NL Report Admin Login',
-      subtitle:'Sign in with the admin account to manage North Lakes product costs and settlements.',
+      subtitle:'Sign in with the admin account to manage and upload North Lakes product costs.',
       requireLoginEmail:true, loginInputType:'text', loginPlaceholder:'Admin account',
       sessionKey:'techm8_admin_session_token', createRpc:'create_admin_session', verifyRpc:'verify_admin_session', revokeRpc:'revoke_admin_session'
     }).then(()=>new Vue({
       el:'#app',
-      data(){ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Brisbane'}); return {today,dateRange:[today.slice(0,8)+'01',today],reports:[],loading:false,savingId:null}; },
+      data(){ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Brisbane'}); return {today,dateRange:[today.slice(0,8)+'01',today],reports:[],loading:false,savingId:null,uploadingId:null}; },
       computed:{
         salesTotal(){return this.reports.reduce((sum,row)=>sum+Number(row.sales_total_inc_gst||0),0);},
         payableTotal(){return this.reports.reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0);},
-        outstandingTotal(){return this.reports.filter(row=>row.status==='confirmed').reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0);},
+        uploadedTotal(){return this.reports.filter(row=>['confirmed','settled'].includes(row.status)).reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0);},
         pendingCount(){return this.reports.reduce((sum,row)=>sum+Number(row.pending_cost_count||0),0);}
       },
       mounted(){this.loadReports();},
@@ -134,15 +133,15 @@
         token(){return window.Techm8StaffAuth.getToken();},
         money(value){return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});},
         formatDate(value){return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});},
-        statusLabel(value){return String(value||'').replace(/_/g,' ');},
+        statusLabel(value){const labels={draft:'NL draft',submitted:'cost draft',pricing_pending:'cost draft',priced:'ready to upload',confirmed:'uploaded',settled:'uploaded'};return labels[value]||String(value||'').replace(/_/g,' ');},
         isBlank(value){return value===null||value===undefined||String(value).trim()==='';},
         costIncGst(item){return Math.round((Number(item.cost_unit_price_ex_gst||0)*1.1+Number.EPSILON)*100)/100;},
         canEditCosts(report){return ['submitted','pricing_pending','priced'].includes(report.status);},
         setThisMonth(){this.dateRange=[this.today.slice(0,8)+'01',this.today];this.loadReports();},
         async loadReports(){if(!this.dateRange||this.dateRange.length!==2)return this.$message.error('Choose a date range.');this.loading=true;try{const result=await window.Techm8StaffAuth.callRpc('get_nl_sales_reports_admin',{session_token:this.token(),date_from:this.dateRange[0],date_to:this.dateRange[1]});this.reports=(result.reports||[]).map(row=>Object.assign({},row,{items:(row.items||[]).map(item=>Object.assign({},item))}));}catch(error){this.$message.error(error.message||'Could not load NL reports.');}finally{this.loading=false;}},
         replaceReport(updated){const index=this.reports.findIndex(row=>row.id===updated.id);if(index>=0)this.$set(this.reports,index,Object.assign({},updated,{items:(updated.items||[]).map(item=>Object.assign({},item))}));},
-        async saveCosts(report){for(const item of report.items){if(!this.isBlank(item.cost_unit_price_ex_gst)&&Number(item.cost_unit_price_ex_gst)<0)return this.$message.error('Cost cannot be negative.');}this.savingId=report.id;try{const result=await window.Techm8StaffAuth.callRpc('save_nl_report_costs',{session_token:this.token(),target_report_id:report.id,costs:report.items.map(item=>({item_id:item.id,cost_unit_price_ex_gst:this.isBlank(item.cost_unit_price_ex_gst)?null:item.cost_unit_price_ex_gst,cost_notes:item.cost_notes||''}))});this.replaceReport(result.report);this.$message.success('Costs saved. GST-inclusive payable totals have been updated.');}catch(error){this.$message.error(error.message||'Could not save costs.');}finally{this.savingId=null;}},
-        async changeStatus(report,status){const label=status==='confirmed'?'confirm this payable amount':'mark this report as settled';try{await this.$confirm('Are you sure you want to '+label+'?','NL Report',{type:'warning'});}catch(_){return;}try{const result=await window.Techm8StaffAuth.callRpc('update_nl_report_status',{session_token:this.token(),target_report_id:report.id,target_status:status});this.replaceReport(result.report);this.$message.success(status==='confirmed'?'Amount confirmed.':'Report marked as settled.');}catch(error){this.$message.error(error.message||'Could not update status.');}},
+        async saveCosts(report){for(const item of report.items){if(!this.isBlank(item.cost_unit_price_ex_gst)&&Number(item.cost_unit_price_ex_gst)<0)return this.$message.error('Cost cannot be negative.');}this.savingId=report.id;try{const result=await window.Techm8StaffAuth.callRpc('save_nl_report_costs',{session_token:this.token(),target_report_id:report.id,costs:report.items.map(item=>({item_id:item.id,cost_unit_price_ex_gst:this.isBlank(item.cost_unit_price_ex_gst)?null:item.cost_unit_price_ex_gst,cost_notes:item.cost_notes||''}))});this.replaceReport(result.report);this.$message.success('Temporarily saved. You can continue editing before upload.');return result.report;}catch(error){this.$message.error(error.message||'Could not save costs.');return null;}finally{this.savingId=null;}},
+        async uploadReport(report){const missing=report.items.filter(item=>this.isBlank(item.cost_unit_price_ex_gst));if(missing.length)return this.$message.error('Enter the cost excluding GST for every product before upload.');for(const item of report.items){if(Number(item.cost_unit_price_ex_gst)<0)return this.$message.error('Cost cannot be negative.');}try{await this.$confirm('Upload these costs as the final payable amount?','Upload NL Costs',{confirmButtonText:'Upload',cancelButtonText:'Cancel',type:'warning'});}catch(_){return;}this.uploadingId=report.id;try{await window.Techm8StaffAuth.callRpc('save_nl_report_costs',{session_token:this.token(),target_report_id:report.id,costs:report.items.map(item=>({item_id:item.id,cost_unit_price_ex_gst:item.cost_unit_price_ex_gst,cost_notes:item.cost_notes||''}))});const result=await window.Techm8StaffAuth.callRpc('update_nl_report_status',{session_token:this.token(),target_report_id:report.id,target_status:'confirmed'});this.replaceReport(result.report);this.$message.success('Costs uploaded successfully.');}catch(error){this.$message.error(error.message||'Could not upload costs.');}finally{this.uploadingId=null;}},
         async changePassword(){let answer;try{answer=await this.$prompt('Enter a new NL report password. This will sign out existing NL sessions.','Change NL Password',{confirmButtonText:'Change Password',cancelButtonText:'Cancel',inputType:'password',inputPattern:/.{4,}/,inputErrorMessage:'Use at least 4 characters.'});}catch(_){return;}try{await window.Techm8StaffAuth.callRpc('change_nl_report_password',{session_token:this.token(),new_password:answer.value});this.$message.success('NL password changed.');}catch(error){this.$message.error(error.message||'Could not change NL password.');}},
         goAdmin(){window.location.href='./admin.html';}
       }

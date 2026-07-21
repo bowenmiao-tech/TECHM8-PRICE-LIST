@@ -104,7 +104,7 @@
           </div>
           <div class="empty" v-if="!items.length">No products added. You can also save and submit an empty report when there were no product sales.</div>
           <div class="section-head" style="margin-top:18px">
-            <div class="sub" v-if="readOnly">This report has been submitted. Cost and payment progress will appear in Report History.</div>
+            <div class="sub" v-if="readOnly">This report has been submitted. The uploaded payable amount will appear in Report History.</div>
             <div class="sub" v-else>Saving keeps the report editable. Submit only after the day's entries are complete.</div>
             <div class="actions"><el-button @click="loadToday" :loading="loading">Refresh</el-button><el-button type="warning" @click="saveReport" :loading="saving" :disabled="readOnly">Save Draft</el-button><el-button type="primary" @click="submitReport" :loading="submitting" :disabled="readOnly">Submit Report</el-button></div>
           </div>
@@ -113,7 +113,7 @@
 
       <template v-else>
         <section class="panel">
-          <div class="section-head"><div><h2>Report History</h2><div class="sub">Review previous dates, sales totals, payable amounts and settlement status.</div></div></div>
+          <div class="section-head"><div><h2>Report History</h2><div class="sub">Review previous dates, sales totals, payable amounts and upload status.</div></div></div>
           <div class="filter-row" style="margin-top:15px">
             <el-date-picker v-model="historyRange" type="daterange" value-format="yyyy-MM-dd" range-separator="to" start-placeholder="From date" end-placeholder="To date"></el-date-picker>
             <el-button type="primary" @click="loadHistory" :loading="historyLoading">Load Reports</el-button>
@@ -161,7 +161,7 @@
         lineTotal(item){ return Math.round((Number(item.sale_unit_price_inc_gst||0)*Number(item.quantity||0)+Number.EPSILON)*100)/100; },
         money(value){ return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}); },
         formatDate(value){ if(!value)return ''; return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}); },
-        statusLabel(value){ return String(value||'draft').replace(/_/g,' '); },
+        statusLabel(value){ const labels={draft:'draft',submitted:'awaiting cost upload',pricing_pending:'awaiting cost upload',priced:'awaiting cost upload',confirmed:'uploaded',settled:'uploaded'}; return labels[value]||String(value||'draft').replace(/_/g,' '); },
         validate(){ for(let i=0;i<this.items.length;i++){ const item=this.items[i]; if(!String(item.product_name||'').trim()) throw new Error('Product name is required on line '+(i+1)+'.'); if(Number(item.quantity||0)<=0) throw new Error('Quantity must be greater than zero on line '+(i+1)+'.'); if(item.sale_unit_price_inc_gst===''||Number(item.sale_unit_price_inc_gst)<0) throw new Error('Sale price is required on line '+(i+1)+'.'); } },
         async loadToday(){ this.loading=true; try{ const result=await window.Techm8StaffAuth.callRpc('get_nl_sales_report',{session_token:this.token(),target_date:this.todayIso}); this.staffName=result.staff_name||''; this.report=result.report||{status:'draft',items:[]}; this.items=(this.report.items||[]).map(item=>Object.assign({},item)); } catch(error){ this.$message.error(error.message||'Could not load today report.'); } finally{ this.loading=false; } },
         async saveReport(showMessage=true){ this.validate(); this.saving=true; try{ const result=await window.Techm8StaffAuth.callRpc('save_nl_sales_report',{session_token:this.token(),payload:{report_date:this.todayIso,items:this.items}}); this.report=result.report; this.items=(result.report.items||[]).map(item=>Object.assign({},item)); if(showMessage)this.$message.success('NL report draft saved.'); return true; } catch(error){ this.$message.error(error.message||'Could not save NL report.'); return false; } finally{ this.saving=false; } },

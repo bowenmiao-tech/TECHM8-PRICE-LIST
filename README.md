@@ -24,7 +24,7 @@ Admin pages:
 - `admin.html` - admin portal entry page; admin login required here first
 - `price-admin.html` - price admin
 - `daily-report-admin.html` - report review page
-- `nl-report-admin.html` - North Lakes product cost, payable, confirmation, and settlement admin
+- `nl-report-admin.html` - North Lakes product cost, payable, temporary save, and upload admin
 - `lcd-inventory-admin.html` - LCD inventory admin
 
 Database / auth:
@@ -294,7 +294,9 @@ NL sales rules:
 - The system adds 10% GST to the admin cost and uses the GST-inclusive result for the NL payable total.
 - Historical lines retain their saved cost and sale price values.
 - NL can save a daily draft and submit it; submitted sales lines are read-only.
-- Admin can price submitted rows, confirm a fully priced report, and mark a confirmed report settled.
+- Admin has two cost actions: `Save Temporarily` keeps entered ex-GST costs editable, while `Upload`
+  requires every product cost and publishes the final GST-inclusive payable amount.
+- Temporarily saved costs stay private to admin; NL sees payable costs only after `Upload`.
 
 Display rules:
 - Hide empty sections.

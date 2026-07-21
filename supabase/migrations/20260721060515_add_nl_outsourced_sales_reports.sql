@@ -182,6 +182,43 @@ returns jsonb language sql security definer set search_path = public as $$
   ) from public.nl_sales_reports report where report.id = target_report_id;
 $$;
 
+create or replace function public.get_nl_sales_report_partner_json(target_report_id bigint)
+returns jsonb language sql security definer set search_path = public as $$
+  with base as (
+    select public.get_nl_sales_report_json(target_report_id) as payload
+  ), redacted_items as (
+    select coalesce(jsonb_agg(
+      (item.value
+        - 'cost_unit_price_ex_gst'
+        - 'cost_unit_price_inc_gst'
+        - 'cost_total_inc_gst'
+        - 'cost_notes'
+        - 'cost_updated_at')
+      || jsonb_build_object(
+        'cost_unit_price_ex_gst', null,
+        'cost_unit_price_inc_gst', null,
+        'cost_total_inc_gst', null,
+        'cost_notes', '',
+        'cost_updated_at', null
+      )
+      order by (item.value->>'line_order')::integer
+    ), '[]'::jsonb) as payload
+    from base
+    cross join lateral jsonb_array_elements(coalesce(base.payload->'items', '[]'::jsonb)) item
+  )
+  select case
+    when base.payload->>'status' in ('confirmed', 'settled') then base.payload
+    else base.payload || jsonb_build_object(
+      'payable_total_inc_gst', 0,
+      'payable_cost_ex_gst', 0,
+      'payable_gst', 0,
+      'pending_cost_count', jsonb_array_length(coalesce(base.payload->'items', '[]'::jsonb)),
+      'items', redacted_items.payload
+    )
+  end
+  from base cross join redacted_items;
+$$;
+
 create or replace function public.get_nl_sales_report(session_token text, target_date text default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
@@ -196,7 +233,7 @@ begin
   select id into selected_report_id from public.nl_sales_reports
   where store_id = session_row.store_id and report_date = target_date_value;
   return jsonb_build_object('ok', true, 'staff_name', session_row.staff_name, 'report_date', target_date_value,
-    'report', case when selected_report_id is null then null else public.get_nl_sales_report_json(selected_report_id) end);
+    'report', case when selected_report_id is null then null else public.get_nl_sales_report_partner_json(selected_report_id) end);
 end;
 $$;
 
@@ -291,7 +328,7 @@ begin
   from_date_value := coalesce(nullif(date_from, '')::date, date_trunc('month', to_date_value)::date);
   if from_date_value > to_date_value then raise exception 'From date cannot be after to date'; end if;
   if to_date_value - from_date_value > 366 then raise exception 'Date range cannot exceed 366 days'; end if;
-  select coalesce(jsonb_agg(public.get_nl_sales_report_json(report.id) order by report.report_date desc, report.id desc), '[]'::jsonb)
+  select coalesce(jsonb_agg(public.get_nl_sales_report_partner_json(report.id) order by report.report_date desc, report.id desc), '[]'::jsonb)
   into reports_json from public.nl_sales_reports report
   where report.store_id = session_row.store_id and report.report_date between from_date_value and to_date_value;
   return jsonb_build_object('ok', true, 'reports', reports_json);
@@ -391,6 +428,8 @@ revoke all on function public.verify_nl_report_session(text) from public;
 revoke all on function public.revoke_nl_report_session(text) from public;
 revoke all on function public.get_nl_sales_report_json(bigint) from public;
 revoke all on function public.get_nl_sales_report_json(bigint) from anon, authenticated;
+revoke all on function public.get_nl_sales_report_partner_json(bigint) from public;
+revoke all on function public.get_nl_sales_report_partner_json(bigint) from anon, authenticated;
 revoke all on function public.get_nl_sales_report(text, text) from public;
 revoke all on function public.save_nl_sales_report(text, jsonb) from public;
 revoke all on function public.submit_nl_sales_report(text, text) from public;
