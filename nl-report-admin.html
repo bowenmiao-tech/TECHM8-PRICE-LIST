@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECHM8 NL Report Admin</title>
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    :root { --dark:#163129; --dark2:#24463b; --orange:#f57c00; --bg:#f3f7f8; --border:#d9e4e7; --muted:#667781; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:linear-gradient(180deg,#edf3f5,#f8fafb); color:#14252d; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    [v-cloak] { display:none; }
+    .shell { width:min(1540px,calc(100% - 32px)); margin:14px auto 50px; }
+    .hero { padding:30px; border-radius:28px; color:#fff; background:linear-gradient(135deg,var(--dark),var(--dark2)); box-shadow:0 22px 48px rgba(15,26,34,.14); }
+    .hero-row,.section-head,.actions,.filters { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    h1 { margin:0 0 8px; font-size:clamp(30px,4vw,46px); }
+    .hero p { margin:0; color:#d9e9e3; line-height:1.7; }
+    .panel { margin-top:18px; padding:22px; background:#fff; border:1px solid var(--border); border-radius:24px; box-shadow:0 14px 34px rgba(22,49,41,.06); }
+    h2 { margin:0 0 6px; font-size:23px; }
+    .sub { color:var(--muted); font-size:13px; line-height:1.6; }
+    .summary-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-top:18px; }
+    .summary { padding:17px; border-radius:18px; background:#f6f9fa; border:1px solid #e3ebee; }
+    .summary-label { color:var(--muted); font-size:12px; font-weight:700; }
+    .summary-value { margin-top:8px; font-size:24px; font-weight:900; }
+    .report-card { margin-top:16px; border:1px solid var(--border); border-radius:22px; overflow:hidden; }
+    .report-head { padding:17px 19px; background:#f7fafb; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .report-body { padding:18px; overflow:auto; }
+    .status { display:inline-flex; padding:7px 11px; border-radius:999px; background:#eef3f4; color:#40535c; font-size:12px; font-weight:800; text-transform:capitalize; }
+    .status.draft { background:#fff3cd; color:#7a5710; }
+    .status.pricing_pending,.status.submitted { background:#ffe8d4; color:#a34b0b; }
+    .status.priced { background:#dff5e5; color:#176b30; }
+    .status.confirmed { background:#dcecff; color:#245b96; }
+    .status.settled { background:#d8f3dc; color:#156b2b; }
+    table { width:100%; min-width:1180px; border-collapse:collapse; }
+    th,td { padding:10px; border-bottom:1px solid #e7edef; text-align:left; font-size:13px; vertical-align:middle; }
+    th { color:#52656e; font-size:11px; text-transform:uppercase; }
+    .cost-cell { width:150px; }
+    .calc { font-weight:900; white-space:nowrap; }
+    .pending { color:#b65408; font-weight:800; }
+    .report-totals { display:flex; gap:18px; align-items:center; flex-wrap:wrap; margin-top:15px; padding:14px 16px; border-radius:16px; background:#f7fafb; }
+    .report-totals strong { font-size:16px; }
+    .empty { padding:28px; border:1px dashed #cbd9de; border-radius:18px; color:var(--muted); text-align:center; margin-top:16px; }
+    @media(max-width:1050px){ .summary-grid{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:600px){ .shell{width:calc(100% - 16px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div id="app" data-auth-protected v-cloak>
+    <div class="shell">
+      <section class="hero">
+        <div class="hero-row">
+          <div><h1>North Lakes Report Admin</h1><p>Enter product costs excluding GST. The system adds 10% GST and calculates the amount North Lakes owes TECHM8.</p></div>
+          <div class="actions"><el-button plain @click="changePassword">Change NL Password</el-button><el-button plain @click="goAdmin">Back To Admin Portal</el-button></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head"><div><h2>Date Range</h2><div class="sub">The default range is the current month. All figures below use GST-inclusive sales and payable totals.</div></div></div>
+        <div class="filters" style="justify-content:flex-start;margin-top:15px">
+          <el-date-picker v-model="dateRange" type="daterange" value-format="yyyy-MM-dd" range-separator="to" start-placeholder="From date" end-placeholder="To date"></el-date-picker>
+          <el-button type="primary" @click="loadReports" :loading="loading">Load Reports</el-button>
+          <el-button plain @click="setThisMonth">This Month</el-button>
+        </div>
+        <div class="summary-grid">
+          <div class="summary"><div class="summary-label">Reports</div><div class="summary-value">{{ reports.length }}</div></div>
+          <div class="summary"><div class="summary-label">NL Sales Inc GST</div><div class="summary-value">{{ money(salesTotal) }}</div></div>
+          <div class="summary"><div class="summary-label">Payable To TECHM8 Inc GST</div><div class="summary-value">{{ money(payableTotal) }}</div></div>
+          <div class="summary"><div class="summary-label">Confirmed Outstanding</div><div class="summary-value">{{ money(outstandingTotal) }}</div></div>
+          <div class="summary"><div class="summary-label">Pending Cost Items</div><div class="summary-value">{{ pendingCount }}</div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head"><div><h2>NL Daily Reports</h2><div class="sub">Cost entered here is ex GST. The GST-inclusive unit cost and total payable are calculated automatically.</div></div></div>
+        <div class="report-card" v-for="report in reports" :key="report.id">
+          <div class="report-head">
+            <div><strong>{{ formatDate(report.report_date) }}</strong><div class="sub">Started by {{ report.started_by_staff_name }}<span v-if="report.submitted_by_staff_name"> · Submitted by {{ report.submitted_by_staff_name }}</span></div></div>
+            <div class="actions"><span class="status" :class="report.status">{{ statusLabel(report.status) }}</span><strong>{{ money(report.sales_total_inc_gst) }} sales</strong><strong>{{ money(report.payable_total_inc_gst) }} payable</strong></div>
+          </div>
+          <div class="report-body">
+            <table>
+              <thead><tr><th>Product</th><th>Qty</th><th>Invoice</th><th>Sale Unit Inc GST</th><th>Sale Total Inc GST</th><th>Cost Unit Ex GST</th><th>Cost Unit Inc GST</th><th>Payable Inc GST</th><th>Cost Notes</th></tr></thead>
+              <tbody>
+                <tr v-for="item in report.items" :key="item.id">
+                  <td><strong>{{ item.product_name }}</strong><div class="sub" v-if="item.sale_notes">{{ item.sale_notes }}</div></td>
+                  <td>{{ item.quantity }}</td><td>{{ item.invoice_number || '—' }}</td><td>{{ money(item.sale_unit_price_inc_gst) }}</td><td class="calc">{{ money(item.sale_total_inc_gst) }}</td>
+                  <td class="cost-cell"><el-input v-model="item.cost_unit_price_ex_gst" placeholder="Pending" :disabled="!canEditCosts(report)"><template slot="prepend">$</template></el-input></td>
+                  <td class="calc" :class="{pending:isBlank(item.cost_unit_price_ex_gst)}">{{ isBlank(item.cost_unit_price_ex_gst) ? 'Pending' : money(costIncGst(item)) }}</td>
+                  <td class="calc">{{ isBlank(item.cost_unit_price_ex_gst) ? '—' : money(costIncGst(item)*Number(item.quantity||0)) }}</td>
+                  <td><el-input v-model="item.cost_notes" placeholder="Optional" :disabled="!canEditCosts(report)"></el-input></td>
+                </tr>
+                <tr v-if="!report.items.length"><td colspan="9">No product sales were reported.</td></tr>
+              </tbody>
+            </table>
+            <div class="report-totals">
+              <span>Sales inc GST: <strong>{{ money(report.sales_total_inc_gst) }}</strong></span>
+              <span>Cost ex GST: <strong>{{ money(report.payable_cost_ex_gst) }}</strong></span>
+              <span>GST added: <strong>{{ money(report.payable_gst) }}</strong></span>
+              <span>NL payable inc GST: <strong>{{ money(report.payable_total_inc_gst) }}</strong></span>
+              <span v-if="report.pending_cost_count" class="pending">{{ report.pending_cost_count }} cost(s) pending</span>
+              <div class="actions" style="margin-left:auto">
+                <el-button type="warning" @click="saveCosts(report)" :loading="savingId===report.id" v-if="canEditCosts(report)">Save Costs</el-button>
+                <el-button type="primary" @click="changeStatus(report,'confirmed')" v-if="report.status==='priced'">Confirm Amount</el-button>
+                <el-button type="success" @click="changeStatus(report,'settled')" v-if="report.status==='confirmed'">Mark Settled</el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="empty" v-if="!reports.length && !loading">No North Lakes reports found for this date range.</div>
+      </section>
+    </div>
+  </div>
+  <script>
+    window.Techm8StaffAuth.init({
+      rootSelector:'[data-auth-protected]', title:'NL Report Admin Login',
+      subtitle:'Sign in with the admin account to manage North Lakes product costs and settlements.',
+      requireLoginEmail:true, loginInputType:'text', loginPlaceholder:'Admin account',
+      sessionKey:'techm8_admin_session_token', createRpc:'create_admin_session', verifyRpc:'verify_admin_session', revokeRpc:'revoke_admin_session'
+    }).then(()=>new Vue({
+      el:'#app',
+      data(){ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Brisbane'}); return {today,dateRange:[today.slice(0,8)+'01',today],reports:[],loading:false,savingId:null}; },
+      computed:{
+        salesTotal(){return this.reports.reduce((sum,row)=>sum+Number(row.sales_total_inc_gst||0),0);},
+        payableTotal(){return this.reports.reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0);},
+        outstandingTotal(){return this.reports.filter(row=>row.status==='confirmed').reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0);},
+        pendingCount(){return this.reports.reduce((sum,row)=>sum+Number(row.pending_cost_count||0),0);}
+      },
+      mounted(){this.loadReports();},
+      methods:{
+        token(){return window.Techm8StaffAuth.getToken();},
+        money(value){return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});},
+        formatDate(value){return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});},
+        statusLabel(value){return String(value||'').replace(/_/g,' ');},
+        isBlank(value){return value===null||value===undefined||String(value).trim()==='';},
+        costIncGst(item){return Math.round((Number(item.cost_unit_price_ex_gst||0)*1.1+Number.EPSILON)*100)/100;},
+        canEditCosts(report){return ['submitted','pricing_pending','priced'].includes(report.status);},
+        setThisMonth(){this.dateRange=[this.today.slice(0,8)+'01',this.today];this.loadReports();},
+        async loadReports(){if(!this.dateRange||this.dateRange.length!==2)return this.$message.error('Choose a date range.');this.loading=true;try{const result=await window.Techm8StaffAuth.callRpc('get_nl_sales_reports_admin',{session_token:this.token(),date_from:this.dateRange[0],date_to:this.dateRange[1]});this.reports=(result.reports||[]).map(row=>Object.assign({},row,{items:(row.items||[]).map(item=>Object.assign({},item))}));}catch(error){this.$message.error(error.message||'Could not load NL reports.');}finally{this.loading=false;}},
+        replaceReport(updated){const index=this.reports.findIndex(row=>row.id===updated.id);if(index>=0)this.$set(this.reports,index,Object.assign({},updated,{items:(updated.items||[]).map(item=>Object.assign({},item))}));},
+        async saveCosts(report){for(const item of report.items){if(!this.isBlank(item.cost_unit_price_ex_gst)&&Number(item.cost_unit_price_ex_gst)<0)return this.$message.error('Cost cannot be negative.');}this.savingId=report.id;try{const result=await window.Techm8StaffAuth.callRpc('save_nl_report_costs',{session_token:this.token(),target_report_id:report.id,costs:report.items.map(item=>({item_id:item.id,cost_unit_price_ex_gst:this.isBlank(item.cost_unit_price_ex_gst)?null:item.cost_unit_price_ex_gst,cost_notes:item.cost_notes||''}))});this.replaceReport(result.report);this.$message.success('Costs saved. GST-inclusive payable totals have been updated.');}catch(error){this.$message.error(error.message||'Could not save costs.');}finally{this.savingId=null;}},
+        async changeStatus(report,status){const label=status==='confirmed'?'confirm this payable amount':'mark this report as settled';try{await this.$confirm('Are you sure you want to '+label+'?','NL Report',{type:'warning'});}catch(_){return;}try{const result=await window.Techm8StaffAuth.callRpc('update_nl_report_status',{session_token:this.token(),target_report_id:report.id,target_status:status});this.replaceReport(result.report);this.$message.success(status==='confirmed'?'Amount confirmed.':'Report marked as settled.');}catch(error){this.$message.error(error.message||'Could not update status.');}},
+        async changePassword(){let answer;try{answer=await this.$prompt('Enter a new NL report password. This will sign out existing NL sessions.','Change NL Password',{confirmButtonText:'Change Password',cancelButtonText:'Cancel',inputType:'password',inputPattern:/.{4,}/,inputErrorMessage:'Use at least 4 characters.'});}catch(_){return;}try{await window.Techm8StaffAuth.callRpc('change_nl_report_password',{session_token:this.token(),new_password:answer.value});this.$message.success('NL password changed.');}catch(error){this.$message.error(error.message||'Could not change NL password.');}},
+        goAdmin(){window.location.href='./admin.html';}
+      }
+    }));
+  </script>
+</body>
+</html>

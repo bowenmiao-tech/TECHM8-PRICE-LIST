@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECHM8 North Lakes Sales Report</title>
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    :root { --dark:#163129; --dark2:#24463b; --green:#25a244; --bg:#f3f7f8; --border:#d9e4e7; --muted:#667781; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:linear-gradient(180deg,#edf3f5 0,#f8fafb 100%); color:#14252d; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    [v-cloak] { display:none; }
+    .shell { width:min(1480px,calc(100% - 32px)); margin:14px auto 50px; }
+    .hero { padding:30px; border-radius:28px; color:#fff; background:linear-gradient(135deg,var(--dark),var(--dark2)); box-shadow:0 22px 48px rgba(15,26,34,.14); }
+    .hero-row,.section-head,.actions,.summary-grid,.filter-row { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+    h1 { margin:0 0 8px; font-size:clamp(30px,4vw,48px); }
+    .hero p { margin:0; color:#d9e9e3; line-height:1.7; }
+    .hero-meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+    .tag { padding:9px 14px; border-radius:999px; background:rgba(255,255,255,.11); border:1px solid rgba(255,255,255,.14); font-size:12px; font-weight:800; text-transform:uppercase; }
+    .panel { margin-top:18px; padding:22px; background:#fff; border:1px solid var(--border); border-radius:24px; box-shadow:0 14px 34px rgba(22,49,41,.06); }
+    .tabs { margin-top:18px; display:flex; gap:10px; }
+    .tab { border:1px solid var(--border); background:#fff; color:var(--dark); border-radius:999px; padding:12px 20px; font-weight:800; cursor:pointer; }
+    .tab.active { background:var(--dark); color:#fff; border-color:var(--dark); }
+    h2 { margin:0 0 6px; font-size:23px; }
+    .sub { color:var(--muted); font-size:13px; line-height:1.6; }
+    .status { display:inline-flex; align-items:center; padding:7px 11px; border-radius:999px; background:#eef3f4; color:#40535c; font-size:12px; font-weight:800; text-transform:capitalize; }
+    .status.draft { background:#fff3cd; color:#7a5710; }
+    .status.pricing_pending,.status.submitted { background:#ffe8d4; color:#a34b0b; }
+    .status.priced { background:#dff5e5; color:#176b30; }
+    .status.confirmed { background:#dcecff; color:#245b96; }
+    .status.settled { background:#d8f3dc; color:#156b2b; }
+    .summary-grid { align-items:stretch; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:16px; }
+    .summary { padding:17px; border-radius:18px; background:#f6f9fa; border:1px solid #e3ebee; }
+    .summary-label { color:var(--muted); font-size:12px; font-weight:700; }
+    .summary-value { margin-top:8px; font-size:25px; font-weight:900; }
+    .line { display:grid; grid-template-columns:2fr .55fr 1fr 1fr 1.4fr auto; gap:10px; align-items:end; padding:14px; margin-top:12px; border:1px solid var(--border); border-radius:18px; background:#fbfcfd; }
+    label { display:block; margin-bottom:6px; color:#42545d; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+    .money { font-weight:900; padding:12px 0; white-space:nowrap; }
+    .empty { padding:26px; border:1px dashed #cbd9de; border-radius:18px; color:var(--muted); text-align:center; margin-top:14px; }
+    .report-card { margin-top:14px; border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+    .report-card-head { padding:16px 18px; background:#f7fafb; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .report-card-body { padding:16px 18px; overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:820px; }
+    th,td { padding:10px; border-bottom:1px solid #e7edef; text-align:left; font-size:13px; }
+    th { color:#52656e; font-size:11px; text-transform:uppercase; }
+    .pending { color:#b65408; font-weight:800; }
+    .filter-row { justify-content:flex-start; }
+    @media(max-width:1000px){ .summary-grid{grid-template-columns:repeat(2,1fr)} .line{grid-template-columns:1fr 1fr} }
+    @media(max-width:600px){ .shell{width:min(100% - 16px,1480px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid{grid-template-columns:1fr} .line{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="shell">
+      <section class="hero">
+        <div class="hero-row">
+          <div>
+            <h1>North Lakes Sales Report</h1>
+            <p>Record every product sold. All sale prices entered on this page include GST.</p>
+            <div class="hero-meta"><span class="tag">Westfield North Lakes</span><span class="tag">{{ staffName || 'NL Staff' }}</span><span class="tag">Sales inc GST</span></div>
+          </div>
+          <div class="actions">
+            <el-button plain @click="goBack">Back</el-button>
+            <el-button type="danger" plain @click="logout">Lock NL Report</el-button>
+          </div>
+        </div>
+      </section>
+
+      <div class="tabs">
+        <button class="tab" :class="{active:activeTab==='today'}" @click="activeTab='today'">Today's Entry</button>
+        <button class="tab" :class="{active:activeTab==='history'}" @click="openHistory">Report History</button>
+      </div>
+
+      <template v-if="activeTab==='today'">
+        <section class="panel">
+          <div class="section-head">
+            <div><h2>{{ formatDate(todayIso) }}</h2><div class="sub">One shared North Lakes report for the day. Save as often as needed, then submit when finished.</div></div>
+            <span class="status" :class="report.status" v-if="report.id">{{ statusLabel(report.status) }}</span>
+          </div>
+          <div class="summary-grid">
+            <div class="summary"><div class="summary-label">Products / Units</div><div class="summary-value">{{ items.length }} / {{ unitCount }}</div></div>
+            <div class="summary"><div class="summary-label">Sales Total Inc GST</div><div class="summary-value">{{ money(salesTotal) }}</div></div>
+            <div class="summary"><div class="summary-label">Payable To TECHM8 Inc GST</div><div class="summary-value">{{ money(report.payable_total_inc_gst) }}</div></div>
+            <div class="summary"><div class="summary-label">Pending Cost Prices</div><div class="summary-value">{{ report.pending_cost_count || 0 }}</div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div><h2>Products Sold</h2><div class="sub">Enter the actual customer sale price including GST.</div></div>
+            <el-button type="success" icon="el-icon-plus" @click="addItem" :disabled="readOnly">Add Product</el-button>
+          </div>
+          <div class="line" v-for="(item,index) in items" :key="'line-'+index">
+            <div><label>Product Name</label><el-input v-model="item.product_name" placeholder="e.g. iPhone 15 case" :disabled="readOnly"></el-input></div>
+            <div><label>Qty</label><el-input-number v-model="item.quantity" :min="1" :max="999" controls-position="right" style="width:100%" :disabled="readOnly"></el-input-number></div>
+            <div><label>Unit Sale Inc GST</label><el-input v-model="item.sale_unit_price_inc_gst" placeholder="29.95" :disabled="readOnly"><template slot="prepend">$</template></el-input></div>
+            <div><label>Invoice / Receipt</label><el-input v-model="item.invoice_number" placeholder="Optional" :disabled="readOnly"></el-input></div>
+            <div><label>Notes</label><el-input v-model="item.sale_notes" placeholder="Optional" :disabled="readOnly"></el-input></div>
+            <div class="actions"><div class="money">{{ money(lineTotal(item)) }}</div><el-button type="danger" plain icon="el-icon-delete" @click="removeItem(index)" :disabled="readOnly"></el-button></div>
+          </div>
+          <div class="empty" v-if="!items.length">No products added. You can also save and submit an empty report when there were no product sales.</div>
+          <div class="section-head" style="margin-top:18px">
+            <div class="sub" v-if="readOnly">This report has been submitted. Cost and payment progress will appear in Report History.</div>
+            <div class="sub" v-else>Saving keeps the report editable. Submit only after the day's entries are complete.</div>
+            <div class="actions"><el-button @click="loadToday" :loading="loading">Refresh</el-button><el-button type="warning" @click="saveReport" :loading="saving" :disabled="readOnly">Save Draft</el-button><el-button type="primary" @click="submitReport" :loading="submitting" :disabled="readOnly">Submit Report</el-button></div>
+          </div>
+        </section>
+      </template>
+
+      <template v-else>
+        <section class="panel">
+          <div class="section-head"><div><h2>Report History</h2><div class="sub">Review previous dates, sales totals, payable amounts and settlement status.</div></div></div>
+          <div class="filter-row" style="margin-top:15px">
+            <el-date-picker v-model="historyRange" type="daterange" value-format="yyyy-MM-dd" range-separator="to" start-placeholder="From date" end-placeholder="To date"></el-date-picker>
+            <el-button type="primary" @click="loadHistory" :loading="historyLoading">Load Reports</el-button>
+            <el-button plain @click="setThisMonth">This Month</el-button>
+          </div>
+          <div class="summary-grid">
+            <div class="summary"><div class="summary-label">Reports</div><div class="summary-value">{{ historyReports.length }}</div></div>
+            <div class="summary"><div class="summary-label">Sales Total Inc GST</div><div class="summary-value">{{ money(historySalesTotal) }}</div></div>
+            <div class="summary"><div class="summary-label">Payable Inc GST</div><div class="summary-value">{{ money(historyPayableTotal) }}</div></div>
+            <div class="summary"><div class="summary-label">Pending Cost Items</div><div class="summary-value">{{ historyPendingCount }}</div></div>
+          </div>
+          <div class="report-card" v-for="row in historyReports" :key="row.id">
+            <div class="report-card-head"><div><strong>{{ formatDate(row.report_date) }}</strong><div class="sub">Entered by {{ row.started_by_staff_name }}</div></div><div class="actions"><span class="status" :class="row.status">{{ statusLabel(row.status) }}</span><strong>{{ money(row.sales_total_inc_gst) }} sales</strong><strong>{{ money(row.payable_total_inc_gst) }} payable</strong></div></div>
+            <div class="report-card-body"><table><thead><tr><th>Product</th><th>Qty</th><th>Sale Unit Inc GST</th><th>Sale Total</th><th>Cost Unit Ex GST</th><th>Cost Unit Inc GST</th><th>Payable Inc GST</th></tr></thead><tbody><tr v-for="item in row.items" :key="item.id"><td>{{ item.product_name }}</td><td>{{ item.quantity }}</td><td>{{ money(item.sale_unit_price_inc_gst) }}</td><td>{{ money(item.sale_total_inc_gst) }}</td><td :class="{pending:item.cost_unit_price_ex_gst===null}">{{ item.cost_unit_price_ex_gst===null ? 'Pending' : money(item.cost_unit_price_ex_gst) }}</td><td>{{ item.cost_unit_price_inc_gst===null ? '—' : money(item.cost_unit_price_inc_gst) }}</td><td>{{ item.cost_total_inc_gst===null ? '—' : money(item.cost_total_inc_gst) }}</td></tr><tr v-if="!row.items.length"><td colspan="7">No product sales.</td></tr></tbody></table></div>
+          </div>
+          <div class="empty" v-if="!historyReports.length && !historyLoading">No reports found for this date range.</div>
+        </section>
+      </template>
+    </div>
+  </div>
+  <script>
+    const NL_SESSION_KEY = 'techm8_nl_report_session_token';
+    new Vue({
+      el:'#app',
+      data(){ return { activeTab:'today', staffName:'', todayIso:new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Brisbane'}), report:{status:'draft',items:[]}, items:[], loading:false, saving:false, submitting:false, historyLoading:false, historyRange:[], historyReports:[] }; },
+      computed:{
+        readOnly(){ return Boolean(this.report.id && this.report.status !== 'draft'); },
+        unitCount(){ return this.items.reduce((sum,item)=>sum+Number(item.quantity||0),0); },
+        salesTotal(){ return this.items.reduce((sum,item)=>sum+this.lineTotal(item),0); },
+        historySalesTotal(){ return this.historyReports.reduce((sum,row)=>sum+Number(row.sales_total_inc_gst||0),0); },
+        historyPayableTotal(){ return this.historyReports.reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0); },
+        historyPendingCount(){ return this.historyReports.reduce((sum,row)=>sum+Number(row.pending_cost_count||0),0); }
+      },
+      async mounted(){
+        const token=sessionStorage.getItem(NL_SESSION_KEY)||'';
+        if(!token){ return this.goBack(); }
+        try{ const result=await window.Techm8StaffAuth.callRpc('verify_nl_report_session',{session_token:token}); if(!result||!result.ok) return this.goBack(); await this.loadToday(); }
+        catch(error){ this.$message.error(error.message||'NL session expired.'); this.goBack(); }
+      },
+      methods:{
+        token(){ return sessionStorage.getItem(NL_SESSION_KEY)||''; },
+        makeItem(){ return {product_name:'',quantity:1,sale_unit_price_inc_gst:'',invoice_number:'',sale_notes:''}; },
+        addItem(){ this.items.push(this.makeItem()); },
+        removeItem(index){ this.items.splice(index,1); },
+        lineTotal(item){ return Math.round((Number(item.sale_unit_price_inc_gst||0)*Number(item.quantity||0)+Number.EPSILON)*100)/100; },
+        money(value){ return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}); },
+        formatDate(value){ if(!value)return ''; return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}); },
+        statusLabel(value){ return String(value||'draft').replace(/_/g,' '); },
+        validate(){ for(let i=0;i<this.items.length;i++){ const item=this.items[i]; if(!String(item.product_name||'').trim()) throw new Error('Product name is required on line '+(i+1)+'.'); if(Number(item.quantity||0)<=0) throw new Error('Quantity must be greater than zero on line '+(i+1)+'.'); if(item.sale_unit_price_inc_gst===''||Number(item.sale_unit_price_inc_gst)<0) throw new Error('Sale price is required on line '+(i+1)+'.'); } },
+        async loadToday(){ this.loading=true; try{ const result=await window.Techm8StaffAuth.callRpc('get_nl_sales_report',{session_token:this.token(),target_date:this.todayIso}); this.staffName=result.staff_name||''; this.report=result.report||{status:'draft',items:[]}; this.items=(this.report.items||[]).map(item=>Object.assign({},item)); } catch(error){ this.$message.error(error.message||'Could not load today report.'); } finally{ this.loading=false; } },
+        async saveReport(showMessage=true){ this.validate(); this.saving=true; try{ const result=await window.Techm8StaffAuth.callRpc('save_nl_sales_report',{session_token:this.token(),payload:{report_date:this.todayIso,items:this.items}}); this.report=result.report; this.items=(result.report.items||[]).map(item=>Object.assign({},item)); if(showMessage)this.$message.success('NL report draft saved.'); return true; } catch(error){ this.$message.error(error.message||'Could not save NL report.'); return false; } finally{ this.saving=false; } },
+        async submitReport(){ try{ await this.$confirm('Submit today’s NL report? Sales entries will become read-only after submission.','Submit NL Report',{confirmButtonText:'Submit',cancelButtonText:'Cancel',type:'warning'}); }catch(_){return;} if(!await this.saveReport(false))return; this.submitting=true; try{ const result=await window.Techm8StaffAuth.callRpc('submit_nl_sales_report',{session_token:this.token(),target_date:this.todayIso}); this.report=result.report; this.items=(result.report.items||[]).map(item=>Object.assign({},item)); this.$message.success('NL report submitted.'); }catch(error){this.$message.error(error.message||'Could not submit NL report.');}finally{this.submitting=false;} },
+        setThisMonth(){ const today=this.todayIso; this.historyRange=[today.slice(0,8)+'01',today]; this.loadHistory(); },
+        openHistory(){ this.activeTab='history'; if(!this.historyRange.length)this.setThisMonth(); else this.loadHistory(); },
+        async loadHistory(){ if(!this.historyRange||this.historyRange.length!==2)return this.$message.error('Choose a date range.'); this.historyLoading=true; try{ const result=await window.Techm8StaffAuth.callRpc('list_nl_sales_reports',{session_token:this.token(),date_from:this.historyRange[0],date_to:this.historyRange[1]}); this.historyReports=Array.isArray(result.reports)?result.reports:[]; }catch(error){this.$message.error(error.message||'Could not load report history.');}finally{this.historyLoading=false;} },
+        goBack(){ window.location.href='./daily-report.html'; },
+        async logout(){ const token=this.token(); try{ if(token)await window.Techm8StaffAuth.callRpc('revoke_nl_report_session',{session_token:token}); }catch(_){} sessionStorage.removeItem(NL_SESSION_KEY); this.goBack(); }
+      }
+    });
+  </script>
+</body>
+</html>

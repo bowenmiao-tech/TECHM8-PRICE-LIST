@@ -1687,6 +1687,7 @@
             ) || null;
           },
           reportEntryButtonLabel() {
+            if (this.selectedStoreCode === 'northlakes') return 'Start NL Report';
             return this.selectedDraftForStaff ? 'Continue Report' : 'Start Report';
           },
           inventoryCountSections() {
@@ -1969,6 +1970,46 @@
           async enterReport() {
             if (!this.selectedStoreCode) return this.$message.error('Please choose a store.');
             if (!this.selectedStaffName) return this.$message.error('Please choose your name.');
+
+            if (this.selectedStoreCode === 'northlakes') {
+              let passwordResult;
+              try {
+                passwordResult = await this.$prompt(
+                  'Enter the North Lakes report password to continue.',
+                  'North Lakes Report Access',
+                  {
+                    confirmButtonText: 'Open NL Report',
+                    cancelButtonText: 'Cancel',
+                    inputType: 'password',
+                    inputPlaceholder: 'Password',
+                    inputPattern: /.+/,
+                    inputErrorMessage: 'Password is required.'
+                  }
+                );
+              } catch (error) {
+                return;
+              }
+
+              this.setupLoading = true;
+              try {
+                const result = await window.Techm8StaffAuth.callRpc('create_nl_report_session', {
+                  staff_session_token: window.Techm8StaffAuth.getToken(),
+                  input_password: passwordResult.value,
+                  target_staff_name: this.selectedStaffName
+                });
+                if (!result || !result.ok || !result.session_token) {
+                  throw new Error('Could not open the North Lakes report.');
+                }
+                sessionStorage.setItem('techm8_nl_report_session_token', result.session_token);
+                window.location.href = './nl-report.html';
+              } catch (error) {
+                this.$message.error(error.message || 'Incorrect North Lakes report password.');
+              } finally {
+                this.setupLoading = false;
+              }
+              return;
+            }
+
             await this.loadSetup(this.selectedStoreCode);
             this.stage = 'report';
             if (!this.repairLines.length) this.addRepairLine();

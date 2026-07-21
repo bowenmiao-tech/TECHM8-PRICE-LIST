@@ -15,6 +15,7 @@ Front-end staff pages:
 - `quote.html` - repair quote lookup
 - `repair_workflow.html` - intake / workflow page
 - `daily-report.html` - daily report + weekly LCD count
+- `nl-report.html` - password-protected North Lakes outsourced product sales entry and history
 - `staff-documents.html` - staff document templates and report examples
 - `problem-solving.html` - internal guide library
 - `backup_price_lookup.html` - backup quote page
@@ -23,6 +24,7 @@ Admin pages:
 - `admin.html` - admin portal entry page; admin login required here first
 - `price-admin.html` - price admin
 - `daily-report-admin.html` - report review page
+- `nl-report-admin.html` - North Lakes product cost, payable, confirmation, and settlement admin
 - `lcd-inventory-admin.html` - LCD inventory admin
 
 Database / auth:
@@ -281,6 +283,18 @@ Staff currently seeded in `staff_directory`:
 ## Daily Report Admin Rules
 
 `daily-report-admin.html` is for review, not staff entry.
+
+North Lakes uses a dedicated outsourced sales flow. Selecting North Lakes and a staff member on
+`daily-report.html`, then pressing `Start NL Report`, requires the NL password and opens `nl-report.html`.
+The default NL password is `4509`; administrators can change it from `nl-report-admin.html`.
+
+NL sales rules:
+- NL sale prices are entered and stored including GST.
+- Admin costs are entered excluding GST.
+- The system adds 10% GST to the admin cost and uses the GST-inclusive result for the NL payable total.
+- Historical lines retain their saved cost and sale price values.
+- NL can save a daily draft and submit it; submitted sales lines are read-only.
+- Admin can price submitted rows, confirm a fully priced report, and mark a confirmed report settled.
 
 Display rules:
 - Hide empty sections.

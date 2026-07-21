@@ -199,6 +199,13 @@
       cursor: pointer;
     }
 
+    .card-button-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
     .top-actions {
       display: flex;
       justify-content: flex-end;
@@ -299,7 +306,10 @@
               <li>Repair and sales summary view</li>
               <li>Parts reduction audit</li>
             </ul>
-            <a class="card-button" href="./daily-report-admin.html">Open Report Admin</a>
+            <div class="card-button-row">
+              <a class="card-button" href="./daily-report-admin.html">Open Report Admin</a>
+              <a class="card-button" href="./nl-report-admin.html">Open NL Admin</a>
+            </div>
           </section>
 
           <section class="admin-card">
