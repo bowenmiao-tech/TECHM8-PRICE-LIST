@@ -44,13 +44,17 @@
     .report-card { margin-top:14px; border:1px solid var(--border); border-radius:20px; overflow:hidden; }
     .report-card-head { padding:16px 18px; background:#f7fafb; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
     .report-card-body { padding:16px 18px; overflow:auto; }
-    table { width:100%; border-collapse:collapse; min-width:820px; }
-    th,td { padding:10px; border-bottom:1px solid #e7edef; text-align:left; font-size:13px; }
-    th { color:#52656e; font-size:11px; text-transform:uppercase; }
+    .report-card-body > table { width:100%; border-collapse:collapse; min-width:820px; }
+    .report-card-body > table th,.report-card-body > table td { padding:10px; border-bottom:1px solid #e7edef; text-align:left; font-size:13px; }
+    .report-card-body > table th { color:#52656e; font-size:11px; text-transform:uppercase; }
+    .monthly-detail-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+    .monthly-detail { padding:13px; border-radius:14px; background:#f7fafb; border:1px solid #e7edef; }
+    .monthly-detail span { display:block; color:var(--muted); font-size:11px; font-weight:700; }
+    .monthly-detail strong { display:block; margin-top:7px; font-size:17px; }
     .pending { color:#b65408; font-weight:800; }
     .filter-row { justify-content:flex-start; }
-    @media(max-width:1000px){ .summary-grid{grid-template-columns:repeat(2,1fr)} .line{grid-template-columns:1fr 1fr} }
-    @media(max-width:600px){ .shell{width:min(100% - 16px,1480px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid{grid-template-columns:1fr} .line{grid-template-columns:1fr} }
+    @media(max-width:1000px){ .summary-grid,.monthly-detail-grid{grid-template-columns:repeat(2,1fr)} .line{grid-template-columns:1fr 1fr} }
+    @media(max-width:600px){ .shell{width:min(100% - 16px,1480px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid,.monthly-detail-grid{grid-template-columns:1fr} .line{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -130,14 +134,32 @@
           <div class="summary-grid">
             <div class="summary"><div class="summary-label">Reports</div><div class="summary-value">{{ historyReports.length }}</div></div>
             <div class="summary"><div class="summary-label">Sales Total Inc GST</div><div class="summary-value">{{ money(historySalesTotal) }}</div></div>
-            <div class="summary"><div class="summary-label">Payable Inc GST</div><div class="summary-value">{{ money(historyPayableTotal) }}</div></div>
+            <div class="summary"><div class="summary-label">Product Payable Inc GST</div><div class="summary-value">{{ money(historyPayableTotal) }}</div></div>
+            <div class="summary"><div class="summary-label">Monthly Charges Inc GST</div><div class="summary-value">{{ money(historyMonthlyChargeTotal) }}</div></div>
+            <div class="summary"><div class="summary-label">Total Payable Inc GST</div><div class="summary-value">{{ money(historyGrandPayableTotal) }}</div></div>
             <div class="summary"><div class="summary-label">Pending Cost Items</div><div class="summary-value">{{ historyPendingCount }}</div></div>
+          </div>
+          <div class="report-card" v-for="charge in monthlyCharges" :key="'monthly-'+charge.id">
+            <div class="report-card-head">
+              <div><strong>{{ formatMonth(charge.charge_month) }} Monthly Charges</strong><div class="sub">All amounts include GST.</div></div>
+              <div class="actions"><span class="status confirmed">Uploaded</span><strong>{{ money(charge.monthly_charge_total_inc_gst) }} charges</strong><strong>{{ money(charge.grand_payable_total_inc_gst) }} total payable</strong></div>
+            </div>
+            <div class="report-card-body">
+              <div class="monthly-detail-grid">
+                <div class="monthly-detail"><span>Rent (including utilities, outgoings & promotion)</span><strong>{{ money(charge.rent_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Internet</span><strong>{{ money(charge.internet_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Mobile Phone</span><strong>{{ money(charge.mobile_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>POS Fee</span><strong>{{ money(charge.pos_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Franchise Fee</span><strong>{{ money(charge.franchise_fee_inc_gst) }}</strong></div>
+              </div>
+              <div class="sub" style="margin-top:12px" v-if="charge.notes">{{ charge.notes }}</div>
+            </div>
           </div>
           <div class="report-card" v-for="row in historyReports" :key="row.id">
             <div class="report-card-head"><div><strong>{{ formatDate(row.report_date) }}</strong><div class="sub">Entered by {{ row.started_by_staff_name }}</div></div><div class="actions"><span class="status" :class="row.status">{{ statusLabel(row.status) }}</span><strong>{{ money(row.sales_total_inc_gst) }} sales</strong><strong>{{ money(row.payable_total_inc_gst) }} payable</strong></div></div>
             <div class="report-card-body"><table><thead><tr><th>Product</th><th>Qty</th><th>Sale Unit Inc GST</th><th>Sale Total</th><th>Cost Unit Ex GST</th><th>Cost Unit Inc GST</th><th>Payable Inc GST</th></tr></thead><tbody><tr v-for="item in row.items" :key="item.id"><td>{{ item.product_name }}</td><td>{{ item.quantity }}</td><td>{{ money(item.sale_unit_price_inc_gst) }}</td><td>{{ money(item.sale_total_inc_gst) }}</td><td :class="{pending:item.cost_unit_price_ex_gst===null}">{{ item.cost_unit_price_ex_gst===null ? 'Pending' : money(item.cost_unit_price_ex_gst) }}</td><td>{{ item.cost_unit_price_inc_gst===null ? '—' : money(item.cost_unit_price_inc_gst) }}</td><td>{{ item.cost_total_inc_gst===null ? '—' : money(item.cost_total_inc_gst) }}</td></tr><tr v-if="!row.items.length"><td colspan="7">No product sales.</td></tr></tbody></table></div>
           </div>
-          <div class="empty" v-if="!historyReports.length && !historyLoading">No reports found for this date range.</div>
+          <div class="empty" v-if="!historyReports.length && !monthlyCharges.length && !historyLoading">No reports or uploaded monthly charges found for this date range.</div>
         </section>
       </template>
     </div>
@@ -146,7 +168,7 @@
     const NL_SESSION_KEY = 'techm8_nl_report_session_token';
     new Vue({
       el:'#app',
-      data(){ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Brisbane'}); return { activeTab:'today', staffName:'', todayIso:today, selectedReportDate:today, backfillDateFrom:'', backfillDateTo:'', report:{status:'draft',items:[]}, items:[], loading:false, saving:false, submitting:false, historyLoading:false, historyRange:[], historyReports:[] }; },
+      data(){ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Brisbane'}); return { activeTab:'today', staffName:'', todayIso:today, selectedReportDate:today, backfillDateFrom:'', backfillDateTo:'', report:{status:'draft',items:[]}, items:[], loading:false, saving:false, submitting:false, historyLoading:false, historyRange:[], historyReports:[], monthlyCharges:[] }; },
       computed:{
         readOnly(){ return Boolean(this.report.id && this.report.status !== 'draft'); },
         entryDateOptions(){
@@ -162,6 +184,8 @@
         salesTotal(){ return this.items.reduce((sum,item)=>sum+this.lineTotal(item),0); },
         historySalesTotal(){ return this.historyReports.reduce((sum,row)=>sum+Number(row.sales_total_inc_gst||0),0); },
         historyPayableTotal(){ return this.historyReports.reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0); },
+        historyMonthlyChargeTotal(){ return this.monthlyCharges.reduce((sum,row)=>sum+Number(row.monthly_charge_total_inc_gst||0),0); },
+        historyGrandPayableTotal(){ return this.historyPayableTotal+this.historyMonthlyChargeTotal; },
         historyPendingCount(){ return this.historyReports.reduce((sum,row)=>sum+Number(row.pending_cost_count||0),0); }
       },
       async mounted(){
@@ -178,6 +202,7 @@
         lineTotal(item){ return Math.round((Number(item.sale_unit_price_inc_gst||0)*Number(item.quantity||0)+Number.EPSILON)*100)/100; },
         money(value){ return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}); },
         formatDate(value){ if(!value)return ''; return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}); },
+        formatMonth(value){ if(!value)return ''; return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{month:'long',year:'numeric'}); },
         statusLabel(value){ const labels={draft:'draft',submitted:'awaiting cost upload',pricing_pending:'awaiting cost upload',priced:'awaiting cost upload',confirmed:'uploaded',settled:'uploaded'}; return labels[value]||String(value||'draft').replace(/_/g,' '); },
         validate(){ for(let i=0;i<this.items.length;i++){ const item=this.items[i]; if(!String(item.product_name||'').trim()) throw new Error('Product name is required on line '+(i+1)+'.'); if(Number(item.quantity||0)<=0) throw new Error('Quantity must be greater than zero on line '+(i+1)+'.'); if(item.sale_unit_price_inc_gst===''||Number(item.sale_unit_price_inc_gst)<0) throw new Error('Sale price is required on line '+(i+1)+'.'); } },
         async loadEntryConfig(){ const result=await window.Techm8StaffAuth.callRpc('get_nl_report_entry_config',{session_token:this.token()}); this.todayIso=result.today||this.todayIso; this.selectedReportDate=this.todayIso; this.backfillDateFrom=result.backfill_date_from||''; this.backfillDateTo=result.backfill_date_to||''; },
@@ -186,7 +211,7 @@
         async submitReport(){ try{ await this.$confirm('Submit the NL report for '+this.formatDate(this.selectedReportDate)+'? Sales entries will become read-only after submission.','Submit NL Report',{confirmButtonText:'Submit',cancelButtonText:'Cancel',type:'warning'}); }catch(_){return;} if(!await this.saveReport(false))return; this.submitting=true; try{ const result=await window.Techm8StaffAuth.callRpc('submit_nl_sales_report_entry',{session_token:this.token(),target_date:this.selectedReportDate}); this.report=result.report; this.items=(result.report.items||[]).map(item=>Object.assign({},item)); this.$message.success('NL report submitted for '+this.formatDate(this.selectedReportDate)+'.'); }catch(error){this.$message.error(error.message||'Could not submit NL report.');}finally{this.submitting=false;} },
         setThisMonth(){ const today=this.todayIso; this.historyRange=[today.slice(0,8)+'01',today]; this.loadHistory(); },
         openHistory(){ this.activeTab='history'; if(!this.historyRange.length)this.setThisMonth(); else this.loadHistory(); },
-        async loadHistory(){ if(!this.historyRange||this.historyRange.length!==2)return this.$message.error('Choose a date range.'); this.historyLoading=true; try{ const result=await window.Techm8StaffAuth.callRpc('list_nl_sales_reports',{session_token:this.token(),date_from:this.historyRange[0],date_to:this.historyRange[1]}); this.historyReports=Array.isArray(result.reports)?result.reports:[]; }catch(error){this.$message.error(error.message||'Could not load report history.');}finally{this.historyLoading=false;} },
+        async loadHistory(){ if(!this.historyRange||this.historyRange.length!==2)return this.$message.error('Choose a date range.'); this.historyLoading=true; try{ const [reportResult,chargeResult]=await Promise.all([window.Techm8StaffAuth.callRpc('list_nl_sales_reports',{session_token:this.token(),date_from:this.historyRange[0],date_to:this.historyRange[1]}),window.Techm8StaffAuth.callRpc('list_nl_monthly_charges',{session_token:this.token(),date_from:this.historyRange[0],date_to:this.historyRange[1]})]); this.historyReports=Array.isArray(reportResult.reports)?reportResult.reports:[]; this.monthlyCharges=Array.isArray(chargeResult.charges)?chargeResult.charges:[]; }catch(error){this.$message.error(error.message||'Could not load report history.');}finally{this.historyLoading=false;} },
         goBack(){ window.location.href='./daily-report.html'; },
         async logout(){ const token=this.token(); try{ if(token)await window.Techm8StaffAuth.callRpc('revoke_nl_report_session',{session_token:token}); }catch(_){} sessionStorage.removeItem(NL_SESSION_KEY); this.goBack(); }
       }
