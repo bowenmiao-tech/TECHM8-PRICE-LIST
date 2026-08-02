@@ -206,7 +206,7 @@
           <div class="section-head" style="margin-top:22px" v-if="monthlyCharges.length"><div><h2>Uploaded Monthly Settlements</h2><div class="sub">Monthly charges, customer payments and final settlement amounts below include GST.</div></div></div>
           <div class="report-card" v-for="charge in monthlyCharges" :key="'monthly-'+charge.id">
             <div class="report-card-head">
-              <div><strong>{{ formatMonth(charge.charge_month) }} Monthly Settlement</strong><div class="sub">Cash is received and collected directly by NL, so it is not included in the offset.</div></div>
+              <div><strong>{{ formatMonth(charge.charge_month) }} Monthly Settlement</strong><div class="sub">Cash is received directly by NL and is included in the month-end deductions.</div></div>
               <div class="actions"><span class="status confirmed">Uploaded</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
             </div>
             <div class="report-card-body">
@@ -229,7 +229,7 @@
               <div class="settlement-detail-grid">
                 <div class="monthly-detail"><span>Product Payable Inc GST</span><strong>{{ money(charge.product_payable_total_inc_gst) }}</strong></div>
                 <div class="monthly-detail"><span>Monthly Charges Inc GST</span><strong>{{ money(charge.monthly_charge_total_inc_gst) }}</strong></div>
-                <div class="monthly-detail"><span>NL Owes TECHM8 Before Offset Inc GST</span><strong>{{ money(charge.settlement_payable_by_nl_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Total Deductions (Product + Charges + Cash) Inc GST</span><strong>{{ money(charge.settlement_deductions_total_inc_gst) }}</strong></div>
                 <div class="monthly-detail"><span>Received By TECHM8 For NL Inc GST</span><strong>{{ money(charge.techm8_received_total_inc_gst) }}</strong></div>
                 <div class="monthly-detail" :class="charge.settlement_direction"><span>Month-End Settlement Inc GST</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
               </div>
