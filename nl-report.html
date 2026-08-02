@@ -58,13 +58,19 @@
     .report-card-body > table th,.report-card-body > table td { padding:10px; border-bottom:1px solid #e7edef; text-align:left; font-size:13px; }
     .report-card-body > table th { color:#52656e; font-size:11px; text-transform:uppercase; }
     .monthly-detail-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+    .payment-detail-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    .settlement-detail-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
     .monthly-detail { padding:13px; border-radius:14px; background:#f7fafb; border:1px solid #e7edef; }
     .monthly-detail span { display:block; color:var(--muted); font-size:11px; font-weight:700; }
     .monthly-detail strong { display:block; margin-top:7px; font-size:17px; }
+    .monthly-subhead { margin:18px 0 10px; font-size:15px; font-weight:900; }
+    .monthly-detail.nl_pays_techm8 { background:#fff6e8; border-color:#f6d89e; }
+    .monthly-detail.techm8_pays_nl { background:#eaf5ff; border-color:#bfddf5; }
+    .monthly-detail.no_payment_due { background:#edf8f0; border-color:#c8e8d0; }
     .pending { color:#b65408; font-weight:800; }
     .filter-row { justify-content:flex-start; }
-    @media(max-width:1100px){ .summary-grid,.monthly-detail-grid{grid-template-columns:repeat(2,1fr)} .line-main.repair{grid-template-columns:1fr 1fr} .line-detail{grid-template-columns:1fr 1fr} }
-    @media(max-width:600px){ .shell{width:min(100% - 16px,1480px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid,.monthly-detail-grid{grid-template-columns:1fr} .line-main.accessory,.line-main.repair,.line-detail{grid-template-columns:1fr} }
+    @media(max-width:1100px){ .summary-grid,.monthly-detail-grid,.payment-detail-grid,.settlement-detail-grid{grid-template-columns:repeat(2,1fr)} .line-main.repair{grid-template-columns:1fr 1fr} .line-detail{grid-template-columns:1fr 1fr} }
+    @media(max-width:600px){ .shell{width:min(100% - 16px,1480px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid,.monthly-detail-grid,.payment-detail-grid,.settlement-detail-grid{grid-template-columns:1fr} .line-main.accessory,.line-main.repair,.line-detail{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -197,19 +203,35 @@
             <div class="summary"><div class="summary-label">Completed Reports</div><div class="summary-value">{{ historyCompletedCount }}</div></div>
             <div class="summary"><div class="summary-label">Uploaded Total Cost Inc GST</div><div class="summary-value">{{ money(historyUploadedCostTotal) }}</div></div>
           </div>
-          <div class="section-head" style="margin-top:22px" v-if="monthlyCharges.length"><div><h2>Uploaded Monthly Charges</h2><div class="sub">All monthly charge amounts below include GST.</div></div></div>
+          <div class="section-head" style="margin-top:22px" v-if="monthlyCharges.length"><div><h2>Uploaded Monthly Settlements</h2><div class="sub">Monthly charges, customer payments and final settlement amounts below include GST.</div></div></div>
           <div class="report-card" v-for="charge in monthlyCharges" :key="'monthly-'+charge.id">
             <div class="report-card-head">
-              <div><strong>{{ formatMonth(charge.charge_month) }} Monthly Charges</strong><div class="sub">All amounts include GST.</div></div>
-              <div class="actions"><span class="status confirmed">Uploaded</span><strong>{{ money(charge.monthly_charge_total_inc_gst) }} total monthly charges inc GST</strong></div>
+              <div><strong>{{ formatMonth(charge.charge_month) }} Monthly Settlement</strong><div class="sub">Cash stays with NL and is not deducted from the settlement.</div></div>
+              <div class="actions"><span class="status confirmed">Uploaded</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
             </div>
             <div class="report-card-body">
+              <div class="monthly-subhead">Monthly Charges</div>
               <div class="monthly-detail-grid">
                 <div class="monthly-detail"><span>Rent Inc GST (Water/Electricity, Outgoings & Promotion)</span><strong>{{ money(charge.rent_inc_gst) }}</strong></div>
                 <div class="monthly-detail"><span>Internet Inc GST</span><strong>{{ money(charge.internet_inc_gst) }}</strong></div>
                 <div class="monthly-detail"><span>Mobile Phone Inc GST</span><strong>{{ money(charge.mobile_inc_gst) }}</strong></div>
                 <div class="monthly-detail"><span>POS Fee Inc GST</span><strong>{{ money(charge.pos_inc_gst) }}</strong></div>
                 <div class="monthly-detail"><span>Franchise Fee Inc GST</span><strong>{{ money(charge.franchise_fee_inc_gst) }}</strong></div>
+              </div>
+              <div class="monthly-subhead">Customer Payments</div>
+              <div class="payment-detail-grid">
+                <div class="monthly-detail"><span>Tyro Received By TECHM8 Inc GST</span><strong>{{ money(charge.tyro_received_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Bank Transfer Received By TECHM8 Inc GST</span><strong>{{ money(charge.bank_transfer_received_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Afterpay / Zip Received By TECHM8 Inc GST</span><strong>{{ money(charge.after_zip_received_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Cash Retained By NL Inc GST</span><strong>{{ money(charge.cash_retained_inc_gst) }}</strong></div>
+              </div>
+              <div class="monthly-subhead">Final Settlement</div>
+              <div class="settlement-detail-grid">
+                <div class="monthly-detail"><span>Product Payable Inc GST</span><strong>{{ money(charge.product_payable_total_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Monthly Charges Inc GST</span><strong>{{ money(charge.monthly_charge_total_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>NL Owes TECHM8 Before Offset Inc GST</span><strong>{{ money(charge.settlement_payable_by_nl_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Received By TECHM8 For NL Inc GST</span><strong>{{ money(charge.techm8_received_total_inc_gst) }}</strong></div>
+                <div class="monthly-detail" :class="charge.settlement_direction"><span>Month-End Settlement Inc GST</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
               </div>
               <div class="sub" style="margin-top:12px" v-if="charge.notes">{{ charge.notes }}</div>
             </div>
@@ -264,6 +286,8 @@
         money(value){ return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}); },
         formatDate(value){ if(!value)return ''; return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}); },
         formatMonth(value){ if(!value)return ''; return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{month:'long',year:'numeric'}); },
+        settlementAmount(charge){ return Math.abs(Number(charge&&charge.net_settlement_inc_gst||0)); },
+        settlementDirectionLabel(charge){ const direction=charge&&charge.settlement_direction; if(direction==='nl_pays_techm8')return 'NL Pays TECHM8'; if(direction==='techm8_pays_nl')return 'TECHM8 Pays NL'; return 'Nothing To Pay'; },
         statusLabel(value){ const labels={draft:'draft',submitted:'awaiting cost upload',pricing_pending:'awaiting cost upload',priced:'awaiting cost upload',confirmed:'uploaded',settled:'uploaded'}; return labels[value]||String(value||'draft').replace(/_/g,' '); },
         isUploadedReport(report){ return ['confirmed','settled'].includes(report&&report.status); },
         stockActionLabel(value){ const labels={sold:'Sold / Used In Repair',send_to_other:'Send To Other',faulty:'Faulty',broken:'Broken'}; return labels[value]||'Choose action'; },

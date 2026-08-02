@@ -23,7 +23,7 @@
     h2 { margin:0 0 6px; font-size:23px; }
     .sub { color:var(--muted); font-size:13px; line-height:1.6; }
     .summary-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-top:18px; }
-    .monthly-summary { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .monthly-summary { grid-template-columns:repeat(5,minmax(0,1fr)); }
     .summary { padding:17px; border-radius:18px; background:#f6f9fa; border:1px solid #e3ebee; }
     .summary-label { color:var(--muted); font-size:12px; font-weight:700; }
     .summary-value { margin-top:8px; font-size:24px; font-weight:900; }
@@ -51,13 +51,20 @@
     .report-totals { display:flex; gap:18px; align-items:center; flex-wrap:wrap; margin-top:15px; padding:14px 16px; border-radius:16px; background:#f7fafb; }
     .report-totals strong { font-size:16px; }
     .monthly-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-top:18px; }
+    .payment-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:14px; }
     .monthly-field { padding:15px; border:1px solid #e3ebee; border-radius:16px; background:#f8fafb; }
     .monthly-field label { display:block; min-height:34px; margin-bottom:8px; color:#52656e; font-size:12px; font-weight:800; line-height:1.4; }
+    .settlement-section { margin-top:20px; padding-top:18px; border-top:1px solid #e5edef; }
+    .settlement-section h3 { margin:0 0 5px; font-size:18px; }
+    .settlement-direction { display:block; margin-top:6px; font-size:12px; font-weight:800; }
+    .summary.nl-pays { background:#fff6e8; border-color:#f6d89e; }
+    .summary.techm8-pays { background:#eaf5ff; border-color:#bfddf5; }
+    .summary.no-payment { background:#edf8f0; border-color:#c8e8d0; }
     .monthly-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; margin-top:16px; }
     .status.uploaded { background:#dcecff; color:#245b96; }
     .empty { padding:28px; border:1px dashed #cbd9de; border-radius:18px; color:var(--muted); text-align:center; margin-top:16px; }
-    @media(max-width:1050px){ .summary-grid,.monthly-grid{grid-template-columns:repeat(2,1fr)} }
-    @media(max-width:600px){ .shell{width:calc(100% - 16px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid,.monthly-grid{grid-template-columns:1fr} }
+    @media(max-width:1050px){ .summary-grid,.monthly-grid,.payment-grid{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:600px){ .shell{width:calc(100% - 16px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid,.monthly-grid,.payment-grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -88,7 +95,7 @@
 
       <section class="panel">
         <div class="section-head">
-          <div><h2>Monthly Charges</h2><div class="sub">All amounts entered below already include GST. Rent includes water/electricity, outgoings and promotion.</div></div>
+          <div><h2>Monthly Settlement</h2><div class="sub">Enter the monthly charges and customer payments. All amounts below include GST.</div></div>
           <span class="status" :class="monthlyCharge.status">{{ monthlyCharge.status === 'uploaded' ? 'Uploaded' : 'Draft' }}</span>
         </div>
         <div class="filters" style="justify-content:flex-start;margin-top:15px">
@@ -102,11 +109,23 @@
           <div class="monthly-field"><label>POS Fee Inc GST</label><el-input v-model="monthlyCharge.pos_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
           <div class="monthly-field"><label>Franchise Fee Inc GST</label><el-input v-model="monthlyCharge.franchise_fee_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
         </div>
+        <div class="settlement-section">
+          <h3>Customer Payments For The Month</h3>
+          <div class="sub">Tyro, Bank Transfer and Afterpay / Zip enter the TECHM8 account and reduce the amount NL needs to pay. Cash stays with NL and is recorded only.</div>
+          <div class="payment-grid">
+            <div class="monthly-field"><label>Tyro Received By TECHM8 Inc GST</label><el-input v-model="monthlyCharge.tyro_received_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
+            <div class="monthly-field"><label>Bank Transfer Received By TECHM8 Inc GST</label><el-input v-model="monthlyCharge.bank_transfer_received_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
+            <div class="monthly-field"><label>Afterpay / Zip Received By TECHM8 Inc GST</label><el-input v-model="monthlyCharge.after_zip_received_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
+            <div class="monthly-field"><label>Cash Retained By NL Inc GST</label><el-input v-model="monthlyCharge.cash_retained_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
+          </div>
+        </div>
         <div style="margin-top:12px"><el-input v-model="monthlyCharge.notes" type="textarea" :rows="2" placeholder="Monthly notes (optional)" :disabled="monthlyReadOnly"></el-input></div>
         <div class="summary-grid monthly-summary">
           <div class="summary"><div class="summary-label">Product Payable Inc GST</div><div class="summary-value">{{ money(monthlySummary.product_payable_total_inc_gst) }}</div></div>
           <div class="summary"><div class="summary-label">Monthly Charges Inc GST</div><div class="summary-value">{{ money(monthlyChargeTotal) }}</div></div>
-          <div class="summary"><div class="summary-label">Total Payable To TECHM8 Inc GST</div><div class="summary-value">{{ money(monthlyTotalPayable) }}</div></div>
+          <div class="summary"><div class="summary-label">NL Owes TECHM8 Before Offset Inc GST</div><div class="summary-value">{{ money(monthlyTotalPayable) }}</div></div>
+          <div class="summary"><div class="summary-label">Received By TECHM8 For NL Inc GST</div><div class="summary-value">{{ money(monthlyTechm8ReceivedTotal) }}</div></div>
+          <div class="summary" :class="monthlySettlementClass"><div class="summary-label">Month-End Settlement Inc GST</div><div class="summary-value">{{ money(monthlySettlementAmount) }}</div><span class="settlement-direction">{{ monthlySettlementDirection }}</span></div>
         </div>
         <div class="monthly-actions" v-if="!monthlyReadOnly">
           <el-button type="warning" @click="saveMonthlyCharge" :loading="monthlySaving">Save Temporarily</el-button>
@@ -165,7 +184,7 @@
       data(){ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Brisbane'}); return {
         today,dateRange:[today.slice(0,8)+'01',today],reports:[],loading:false,savingId:null,uploadingId:null,
         monthlyChargeMonth:today.slice(0,7),
-        monthlyCharge:{id:null,status:'draft',rent_inc_gst:0,internet_inc_gst:0,mobile_inc_gst:0,pos_inc_gst:0,franchise_fee_inc_gst:0,notes:''},
+        monthlyCharge:{id:null,status:'draft',rent_inc_gst:0,internet_inc_gst:0,mobile_inc_gst:0,pos_inc_gst:0,franchise_fee_inc_gst:0,tyro_received_inc_gst:0,bank_transfer_received_inc_gst:0,after_zip_received_inc_gst:0,cash_retained_inc_gst:0,notes:''},
         monthlySummary:{sales_total_inc_gst:0,product_payable_total_inc_gst:0,uploaded_product_payable_total_inc_gst:0},
         monthlyLoading:false,monthlySaving:false,monthlyUploading:false
       }; },
@@ -176,11 +195,17 @@
         pendingCount(){return this.reports.reduce((sum,row)=>sum+Number(row.pending_cost_count||0),0);},
         monthlyReadOnly(){return this.monthlyCharge.status==='uploaded';},
         monthlyChargeTotal(){return ['rent_inc_gst','internet_inc_gst','mobile_inc_gst','pos_inc_gst','franchise_fee_inc_gst'].reduce((sum,key)=>sum+Number(this.monthlyCharge[key]||0),0);},
-        monthlyTotalPayable(){return Number(this.monthlySummary.product_payable_total_inc_gst||0)+this.monthlyChargeTotal;}
+        monthlyTotalPayable(){return this.roundMoney(Number(this.monthlySummary.product_payable_total_inc_gst||0)+this.monthlyChargeTotal);},
+        monthlyTechm8ReceivedTotal(){return this.roundMoney(['tyro_received_inc_gst','bank_transfer_received_inc_gst','after_zip_received_inc_gst'].reduce((sum,key)=>sum+Number(this.monthlyCharge[key]||0),0));},
+        monthlyNetSettlement(){return this.roundMoney(this.monthlyTotalPayable-this.monthlyTechm8ReceivedTotal);},
+        monthlySettlementAmount(){return Math.abs(this.monthlyNetSettlement);},
+        monthlySettlementDirection(){if(this.monthlyNetSettlement>0)return 'NL Pays TECHM8';if(this.monthlyNetSettlement<0)return 'TECHM8 Pays NL';return 'Nothing To Pay';},
+        monthlySettlementClass(){if(this.monthlyNetSettlement>0)return 'nl-pays';if(this.monthlyNetSettlement<0)return 'techm8-pays';return 'no-payment';}
       },
       mounted(){this.loadReports();this.loadMonthlyCharge();},
       methods:{
         token(){return window.Techm8StaffAuth.getToken();},
+        roundMoney(value){return Math.round((Number(value||0)+Number.EPSILON)*100)/100;},
         money(value){return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});},
         formatDate(value){return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});},
         statusLabel(value){const labels={draft:'NL draft',submitted:'cost draft',pricing_pending:'cost draft',priced:'ready to upload',confirmed:'uploaded',settled:'uploaded'};return labels[value]||String(value||'').replace(/_/g,' ');},
@@ -193,12 +218,12 @@
         prepareReport(row){return Object.assign({},row,{items:(row.items||[]).map(item=>this.prepareItem(item,row.status))});},
         markCostEdited(item){item.cost_suggestion_applied=false;},
         suggestionMatchLabel(suggestion){if(!suggestion)return '';if(suggestion.match_type==='lcd_item')return 'Same LCD Tracker item';if(suggestion.match_type==='exact_name')return 'Exact previous product name';return 'Similar product name · '+Math.round(Number(suggestion.confidence||0)*100)+'% match';},
-        validateMonthlyCharge(){for(const key of ['rent_inc_gst','internet_inc_gst','mobile_inc_gst','pos_inc_gst','franchise_fee_inc_gst']){const value=this.monthlyCharge[key];if(value===''||value===null||value===undefined)this.monthlyCharge[key]=0;if(!Number.isFinite(Number(this.monthlyCharge[key]))||Number(this.monthlyCharge[key])<0)throw new Error('Monthly charges must be valid amounts of zero or more.');}},
+        validateMonthlyCharge(){for(const key of ['rent_inc_gst','internet_inc_gst','mobile_inc_gst','pos_inc_gst','franchise_fee_inc_gst','tyro_received_inc_gst','bank_transfer_received_inc_gst','after_zip_received_inc_gst','cash_retained_inc_gst']){const value=this.monthlyCharge[key];if(value===''||value===null||value===undefined)this.monthlyCharge[key]=0;if(!Number.isFinite(Number(this.monthlyCharge[key]))||Number(this.monthlyCharge[key])<0)throw new Error('Monthly settlement amounts must be valid amounts of zero or more.');}},
         setThisMonth(){this.dateRange=[this.today.slice(0,8)+'01',this.today];this.loadReports();},
         async loadReports(){if(!this.dateRange||this.dateRange.length!==2)return this.$message.error('Choose a date range.');this.loading=true;try{const result=await window.Techm8StaffAuth.callRpc('get_nl_sales_reports_admin',{session_token:this.token(),date_from:this.dateRange[0],date_to:this.dateRange[1]});this.reports=(result.reports||[]).map(row=>this.prepareReport(row));}catch(error){this.$message.error(error.message||'Could not load NL reports.');}finally{this.loading=false;}},
-        async loadMonthlyCharge(){if(!this.monthlyChargeMonth)return;this.monthlyLoading=true;try{const result=await window.Techm8StaffAuth.callRpc('get_nl_monthly_charge_admin',{session_token:this.token(),target_month:this.monthlyChargeMonth+'-01'});this.monthlyCharge=Object.assign({id:null,status:'draft',rent_inc_gst:0,internet_inc_gst:0,mobile_inc_gst:0,pos_inc_gst:0,franchise_fee_inc_gst:0,notes:''},result.charge||{});this.monthlySummary={sales_total_inc_gst:Number(result.sales_total_inc_gst||0),product_payable_total_inc_gst:Number(result.product_payable_total_inc_gst||0),uploaded_product_payable_total_inc_gst:Number(result.uploaded_product_payable_total_inc_gst||0)};}catch(error){this.$message.error(error.message||'Could not load monthly charges.');}finally{this.monthlyLoading=false;}},
-        async saveMonthlyCharge(showMessage=true){try{this.validateMonthlyCharge();}catch(error){this.$message.error(error.message);return false;}this.monthlySaving=true;try{await window.Techm8StaffAuth.callRpc('save_nl_monthly_charge',{session_token:this.token(),payload:{charge_month:this.monthlyChargeMonth+'-01',rent_inc_gst:this.monthlyCharge.rent_inc_gst,internet_inc_gst:this.monthlyCharge.internet_inc_gst,mobile_inc_gst:this.monthlyCharge.mobile_inc_gst,pos_inc_gst:this.monthlyCharge.pos_inc_gst,franchise_fee_inc_gst:this.monthlyCharge.franchise_fee_inc_gst,notes:this.monthlyCharge.notes||''}});await this.loadMonthlyCharge();if(showMessage)this.$message.success('Monthly charges saved temporarily.');return true;}catch(error){this.$message.error(error.message||'Could not save monthly charges.');return false;}finally{this.monthlySaving=false;}},
-        async uploadMonthlyCharge(){try{this.validateMonthlyCharge();await this.$confirm('Upload the monthly charges for '+this.monthlyChargeMonth+'? They will become read-only.','Upload Monthly Charges',{confirmButtonText:'Upload',cancelButtonText:'Cancel',type:'warning'});}catch(error){if(error&&error.message)this.$message.error(error.message);return;}if(!await this.saveMonthlyCharge(false))return;this.monthlyUploading=true;try{await window.Techm8StaffAuth.callRpc('upload_nl_monthly_charge',{session_token:this.token(),target_month:this.monthlyChargeMonth+'-01'});await this.loadMonthlyCharge();this.$message.success('Monthly charges uploaded successfully.');}catch(error){this.$message.error(error.message||'Could not upload monthly charges.');}finally{this.monthlyUploading=false;}},
+        async loadMonthlyCharge(){if(!this.monthlyChargeMonth)return;this.monthlyLoading=true;try{const result=await window.Techm8StaffAuth.callRpc('get_nl_monthly_charge_admin',{session_token:this.token(),target_month:this.monthlyChargeMonth+'-01'});this.monthlyCharge=Object.assign({id:null,status:'draft',rent_inc_gst:0,internet_inc_gst:0,mobile_inc_gst:0,pos_inc_gst:0,franchise_fee_inc_gst:0,tyro_received_inc_gst:0,bank_transfer_received_inc_gst:0,after_zip_received_inc_gst:0,cash_retained_inc_gst:0,notes:''},result.charge||{});this.monthlySummary={sales_total_inc_gst:Number(result.sales_total_inc_gst||0),product_payable_total_inc_gst:Number(result.product_payable_total_inc_gst||0),uploaded_product_payable_total_inc_gst:Number(result.uploaded_product_payable_total_inc_gst||0)};}catch(error){this.$message.error(error.message||'Could not load monthly settlement.');}finally{this.monthlyLoading=false;}},
+        async saveMonthlyCharge(showMessage=true){try{this.validateMonthlyCharge();}catch(error){this.$message.error(error.message);return false;}this.monthlySaving=true;try{await window.Techm8StaffAuth.callRpc('save_nl_monthly_charge',{session_token:this.token(),payload:{charge_month:this.monthlyChargeMonth+'-01',rent_inc_gst:this.monthlyCharge.rent_inc_gst,internet_inc_gst:this.monthlyCharge.internet_inc_gst,mobile_inc_gst:this.monthlyCharge.mobile_inc_gst,pos_inc_gst:this.monthlyCharge.pos_inc_gst,franchise_fee_inc_gst:this.monthlyCharge.franchise_fee_inc_gst,tyro_received_inc_gst:this.monthlyCharge.tyro_received_inc_gst,bank_transfer_received_inc_gst:this.monthlyCharge.bank_transfer_received_inc_gst,after_zip_received_inc_gst:this.monthlyCharge.after_zip_received_inc_gst,cash_retained_inc_gst:this.monthlyCharge.cash_retained_inc_gst,notes:this.monthlyCharge.notes||''}});await this.loadMonthlyCharge();if(showMessage)this.$message.success('Monthly settlement saved temporarily.');return true;}catch(error){this.$message.error(error.message||'Could not save monthly settlement.');return false;}finally{this.monthlySaving=false;}},
+        async uploadMonthlyCharge(){try{this.validateMonthlyCharge();await this.$confirm('Upload the monthly settlement for '+this.monthlyChargeMonth+'? The charges, customer payments and final settlement will become read-only.','Upload Monthly Settlement',{confirmButtonText:'Upload',cancelButtonText:'Cancel',type:'warning'});}catch(error){if(error&&error.message)this.$message.error(error.message);return;}if(!await this.saveMonthlyCharge(false))return;this.monthlyUploading=true;try{await window.Techm8StaffAuth.callRpc('upload_nl_monthly_charge',{session_token:this.token(),target_month:this.monthlyChargeMonth+'-01'});await this.loadMonthlyCharge();this.$message.success('Monthly settlement uploaded successfully.');}catch(error){this.$message.error(error.message||'Could not upload monthly settlement.');}finally{this.monthlyUploading=false;}},
         replaceReport(updated){const index=this.reports.findIndex(row=>row.id===updated.id);if(index>=0)this.$set(this.reports,index,this.prepareReport(updated));},
         async saveCosts(report){const billableItems=report.items.filter(item=>this.isBillable(item));for(const item of billableItems){if(!this.isBlank(item.cost_unit_price_ex_gst)&&Number(item.cost_unit_price_ex_gst)<0)return this.$message.error('Cost cannot be negative.');}this.savingId=report.id;try{const result=await window.Techm8StaffAuth.callRpc('save_nl_report_costs',{session_token:this.token(),target_report_id:report.id,costs:billableItems.map(item=>({item_id:item.id,cost_unit_price_ex_gst:this.isBlank(item.cost_unit_price_ex_gst)?null:item.cost_unit_price_ex_gst,cost_notes:item.cost_notes||''}))});this.replaceReport(result.report);await this.loadMonthlyCharge();this.$message.success('Temporarily saved. You can continue editing before upload.');return result.report;}catch(error){this.$message.error(error.message||'Could not save costs.');return null;}finally{this.savingId=null;}},
         async uploadReport(report){const billableItems=report.items.filter(item=>this.isBillable(item));const missing=billableItems.filter(item=>this.isBlank(item.cost_unit_price_ex_gst));if(missing.length)return this.$message.error('Enter the cost excluding GST for every sold product before upload.');for(const item of billableItems){if(Number(item.cost_unit_price_ex_gst)<0)return this.$message.error('Cost cannot be negative.');}try{await this.$confirm('Upload these costs as the final payable amount? Please review every auto-filled suggestion before continuing.','Upload NL Costs',{confirmButtonText:'Upload',cancelButtonText:'Cancel',type:'warning'});}catch(_){return;}this.uploadingId=report.id;try{await window.Techm8StaffAuth.callRpc('save_nl_report_costs',{session_token:this.token(),target_report_id:report.id,costs:billableItems.map(item=>({item_id:item.id,cost_unit_price_ex_gst:item.cost_unit_price_ex_gst,cost_notes:item.cost_notes||''}))});const result=await window.Techm8StaffAuth.callRpc('update_nl_report_status',{session_token:this.token(),target_report_id:report.id,target_status:'confirmed'});this.replaceReport(result.report);await this.loadMonthlyCharge();this.$message.success('Costs uploaded successfully and are now available for future suggestions.');}catch(error){this.$message.error(error.message||'Could not upload costs.');}finally{this.uploadingId=null;}},
