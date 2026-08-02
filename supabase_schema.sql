@@ -4003,16 +4003,36 @@ begin
     end if;
 
     if source_type_value = 'warehouse' then
-      select *
-      into source_item
-      from public.lcd_inventory_items
-      where id = (line_payload->>'inventory_item_id')::bigint
-        and store_id = warehouse_store.id
-        and active = true
-      for update;
+      source_item := null;
 
-      if not found then
-        raise exception 'Warehouse inventory item not found';
+      if coalesce(trim(line_payload->>'inventory_item_id'), '') <> '' then
+        select *
+        into source_item
+        from public.lcd_inventory_items
+        where id = (line_payload->>'inventory_item_id')::bigint
+          and store_id = warehouse_store.id
+          and active = true
+        for update;
+      end if;
+
+      if source_item.id is null
+        and coalesce(trim(line_payload->>'model_name'), '') <> ''
+        and coalesce(trim(line_payload->>'variant_name'), '') <> ''
+      then
+        select *
+        into source_item
+        from public.lcd_inventory_items
+        where store_id = warehouse_store.id
+          and model_name = trim(line_payload->>'model_name')
+          and variant_name = trim(line_payload->>'variant_name')
+          and active = true
+        for update;
+      end if;
+
+      if source_item.id is null then
+        raise exception 'Warehouse inventory item not found for % / %',
+          coalesce(nullif(trim(line_payload->>'model_name'), ''), 'selected item'),
+          coalesce(nullif(trim(line_payload->>'variant_name'), ''), 'selected part');
       end if;
 
       if source_item.current_qty < line_quantity then
