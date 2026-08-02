@@ -111,12 +111,12 @@
         </div>
         <div class="settlement-section">
           <h3>Customer Payments For The Month</h3>
-          <div class="sub">Tyro, Bank Transfer and Afterpay / Zip enter the TECHM8 account and reduce the amount NL needs to pay. Cash stays with NL and is recorded only.</div>
+          <div class="sub">Tyro, Bank Transfer and Afterpay / Zip enter the TECHM8 account and reduce the amount NL needs to pay. Cash is received and collected directly by NL, so it is recorded but not included in the offset.</div>
           <div class="payment-grid">
             <div class="monthly-field"><label>Tyro Received By TECHM8 Inc GST</label><el-input v-model="monthlyCharge.tyro_received_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
             <div class="monthly-field"><label>Bank Transfer Received By TECHM8 Inc GST</label><el-input v-model="monthlyCharge.bank_transfer_received_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
             <div class="monthly-field"><label>Afterpay / Zip Received By TECHM8 Inc GST</label><el-input v-model="monthlyCharge.after_zip_received_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
-            <div class="monthly-field"><label>Cash Retained By NL Inc GST</label><el-input v-model="monthlyCharge.cash_retained_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
+            <div class="monthly-field"><label>Cash Received Directly By NL Inc GST</label><el-input v-model="monthlyCharge.cash_retained_inc_gst" :disabled="monthlyReadOnly"><template slot="prepend">$</template></el-input></div>
           </div>
         </div>
         <div style="margin-top:12px"><el-input v-model="monthlyCharge.notes" type="textarea" :rows="2" placeholder="Monthly notes (optional)" :disabled="monthlyReadOnly"></el-input></div>

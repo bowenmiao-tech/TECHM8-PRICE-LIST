@@ -206,7 +206,7 @@
           <div class="section-head" style="margin-top:22px" v-if="monthlyCharges.length"><div><h2>Uploaded Monthly Settlements</h2><div class="sub">Monthly charges, customer payments and final settlement amounts below include GST.</div></div></div>
           <div class="report-card" v-for="charge in monthlyCharges" :key="'monthly-'+charge.id">
             <div class="report-card-head">
-              <div><strong>{{ formatMonth(charge.charge_month) }} Monthly Settlement</strong><div class="sub">Cash stays with NL and is not deducted from the settlement.</div></div>
+              <div><strong>{{ formatMonth(charge.charge_month) }} Monthly Settlement</strong><div class="sub">Cash is received and collected directly by NL, so it is not included in the offset.</div></div>
               <div class="actions"><span class="status confirmed">Uploaded</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
             </div>
             <div class="report-card-body">
@@ -223,7 +223,7 @@
                 <div class="monthly-detail"><span>Tyro Received By TECHM8 Inc GST</span><strong>{{ money(charge.tyro_received_inc_gst) }}</strong></div>
                 <div class="monthly-detail"><span>Bank Transfer Received By TECHM8 Inc GST</span><strong>{{ money(charge.bank_transfer_received_inc_gst) }}</strong></div>
                 <div class="monthly-detail"><span>Afterpay / Zip Received By TECHM8 Inc GST</span><strong>{{ money(charge.after_zip_received_inc_gst) }}</strong></div>
-                <div class="monthly-detail"><span>Cash Retained By NL Inc GST</span><strong>{{ money(charge.cash_retained_inc_gst) }}</strong></div>
+                <div class="monthly-detail"><span>Cash Received Directly By NL Inc GST</span><strong>{{ money(charge.cash_retained_inc_gst) }}</strong></div>
               </div>
               <div class="monthly-subhead">Final Settlement</div>
               <div class="settlement-detail-grid">
