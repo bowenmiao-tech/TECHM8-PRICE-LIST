@@ -61,9 +61,12 @@ Password rules:
 
 Completed product-sale flow:
 - Live products load through the browser-safe `pos-products` Edge Function.
-- Product cards show image, name, sale price, and stock for the selected store.
+- Product browsing opens on a category grid; staff can enter a category or switch to `All Products` without losing the fixed checkout panel.
+- Product cards show one main image, name, sale price, and stock for the selected store.
 - Search supports product name, SKU, and barcode.
-- Category tabs come from the product API.
+- Categories come from the product API and category search remains global across all products.
+- A local product snapshot is displayed immediately when available, while the protected live API refreshes in the background.
+- Product images are loaded progressively, and gallery thumbnails are intentionally omitted to keep the POS fast.
 - The entire product card adds the item to the cart.
 - Zero-stock products are intentionally allowed to be sold.
 - Quantity change, cancel, hold, and resume are available.

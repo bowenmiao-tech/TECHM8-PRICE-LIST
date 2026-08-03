@@ -676,7 +676,7 @@
 
     .topbar {
       display: grid;
-      grid-template-columns: minmax(260px, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 12px;
       align-items: center;
     }
@@ -723,7 +723,7 @@
     }
 
     .staff-pill {
-      min-width: 160px;
+      min-width: 166px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -748,27 +748,76 @@
 
     .category-tabs {
       display: flex;
-      gap: 10px;
+      align-items: center;
+      gap: 14px;
       min-width: 0;
-      overflow-x: auto;
-      padding-bottom: 2px;
     }
 
-    .tab-chip {
-      min-height: 44px;
-      padding: 0 18px;
+    .browse-mode-tabs {
+      flex: 0 0 auto;
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(108px, 1fr));
+      padding: 4px;
       border: 1px solid var(--tm-line);
-      border-radius: 999px;
-      color: #405058;
-      background: #fff;
-      font-weight: 800;
+      border-radius: 12px;
+      background: #e8eef0;
+    }
+
+    .browse-mode-button {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 9px;
+      color: #53636a;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 900;
       white-space: nowrap;
     }
 
-    .tab-chip.active {
-      color: #fff;
-      border-color: var(--tm-green);
-      background: var(--tm-green);
+    .browse-mode-button.active {
+      color: var(--tm-green-dark);
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(18, 38, 47, 0.09);
+    }
+
+    .browse-context {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .browse-context strong {
+      min-width: 0;
+      color: var(--tm-ink);
+      font-size: 14px;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .browse-back {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      color: var(--tm-green-dark);
+      background: #fff;
+      font-size: 18px;
+    }
+
+    .browse-back:hover,
+    .browse-back:focus-visible {
+      border-color: rgba(7, 137, 111, 0.42);
+      outline: 3px solid rgba(7, 137, 111, 0.12);
     }
 
     .sync-status {
@@ -790,27 +839,95 @@
       min-height: 0;
       overflow: auto;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
       align-content: start;
-      gap: 16px;
-      padding: 2px 2px 18px;
+      gap: 14px;
+      padding: 2px 4px 18px 2px;
+    }
+
+    .product-grid.category-layout {
+      grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+    }
+
+    .category-card {
+      min-width: 0;
+      height: 154px;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 18px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      color: var(--tm-ink);
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(13, 25, 32, 0.045);
+      text-align: left;
+      overflow: hidden;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .category-card:hover {
+      border-color: rgba(7, 137, 111, 0.38);
+      box-shadow: 0 14px 30px rgba(13, 25, 32, 0.075);
+      transform: translateY(-1px);
+    }
+
+    .category-card:focus-visible {
+      outline: 3px solid rgba(7, 137, 111, 0.2);
+      outline-offset: 2px;
+    }
+
+    .category-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: var(--tm-green-dark);
+      background: #e7f7f3;
+      font-size: 25px;
+    }
+
+    .category-card-copy {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .category-card-name {
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .category-card-count {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .product-grid.product-layout {
+      grid-template-columns: repeat(auto-fill, minmax(min(225px, 100%), 1fr));
     }
 
     .product-card {
       position: relative;
       min-width: 0;
-      height: 176px;
+      height: 260px;
       display: grid;
-      grid-template-columns: 104px minmax(0, 1fr);
-      gap: 16px;
-      align-items: stretch;
-      padding: 16px;
+      grid-template-rows: 136px minmax(0, 1fr);
+      gap: 12px;
+      padding: 12px;
       border: 1px solid var(--tm-line);
-      border-radius: 18px;
+      border-radius: 14px;
       background: #fff;
-      box-shadow: 0 12px 28px rgba(13, 25, 32, 0.05);
+      box-shadow: 0 10px 24px rgba(13, 25, 32, 0.045);
       overflow: hidden;
       cursor: pointer;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 260px;
       transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
 
@@ -826,36 +943,12 @@
     }
 
     .product-image {
-      width: 104px;
-      height: 104px;
-      align-self: center;
+      width: 100%;
+      height: 136px;
       object-fit: contain;
-      border-radius: 14px;
+      border-radius: 10px;
       background: #f6f8f9;
       border: 1px solid #edf2f4;
-    }
-
-    .product-media {
-      align-self: center;
-      display: grid;
-      gap: 7px;
-      width: 104px;
-    }
-
-    .product-gallery-strip {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      min-height: 28px;
-    }
-
-    .product-gallery-thumb {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: contain;
-      border-radius: 8px;
-      border: 1px solid #edf2f4;
-      background: #f8fafb;
     }
 
     .product-info {
@@ -869,7 +962,7 @@
 
     .product-name {
       margin: 0;
-      min-height: 58px;
+      min-height: 54px;
       font-size: 16px;
       line-height: 1.2;
       font-weight: 850;
@@ -909,6 +1002,39 @@
 
     .stock-pill.out {
       color: var(--tm-red);
+    }
+
+    .product-skeleton {
+      height: 260px;
+      padding: 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .product-skeleton::before,
+    .product-skeleton::after {
+      content: '';
+      display: block;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #eef3f4 25%, #f8fafb 42%, #eef3f4 62%);
+      background-size: 300% 100%;
+      animation: product-loading 1.2s ease-in-out infinite;
+    }
+
+    .product-skeleton::before {
+      height: 136px;
+    }
+
+    .product-skeleton::after {
+      width: 76%;
+      height: 54px;
+      margin-top: 14px;
+    }
+
+    @keyframes product-loading {
+      0% { background-position: 100% 0; }
+      100% { background-position: 0 0; }
     }
 
     .empty-state {
@@ -3624,7 +3750,7 @@
       }
 
       .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+        gap: 12px;
       }
 
       .payment-modal-body {
@@ -3659,12 +3785,43 @@
 
     @media (max-width: 900px) {
       .topbar {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) auto;
       }
 
       .topbar .staff-pill {
-        width: 100%;
-        min-width: 0;
+        width: auto;
+        min-width: 150px;
+      }
+
+      .category-tabs {
+        gap: 10px;
+      }
+
+      .browse-mode-tabs {
+        grid-template-columns: repeat(2, minmax(94px, 1fr));
+      }
+
+      .browse-mode-button {
+        padding: 0 9px;
+      }
+
+      .browse-context-copy {
+        display: none;
+      }
+
+      .sync-status {
+        width: 44px;
+        padding: 0;
+        justify-content: center;
+      }
+
+      .sync-status span {
+        display: none;
+      }
+
+      .product-grid.category-layout,
+      .product-grid.product-layout {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .used-device-head,
@@ -3912,7 +4069,85 @@
       }
 
       .product-grid {
-        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .workspace {
+        padding: 12px;
+      }
+
+      .product-view {
+        gap: 12px;
+      }
+
+      .topbar {
+        gap: 8px;
+      }
+
+      .topbar .staff-pill {
+        width: 54px;
+        min-width: 54px;
+        padding: 0;
+        font-size: 18px;
+      }
+
+      .topbar .staff-pill span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+
+      .status-row {
+        gap: 8px;
+      }
+
+      .browse-mode-tabs {
+        width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .category-card {
+        height: 132px;
+        padding: 13px;
+      }
+
+      .category-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 21px;
+      }
+
+      .product-card,
+      .product-skeleton {
+        height: 224px;
+      }
+
+      .product-card {
+        grid-template-rows: 108px minmax(0, 1fr);
+        gap: 9px;
+        padding: 9px;
+        contain-intrinsic-size: auto 224px;
+      }
+
+      .product-image,
+      .product-skeleton::before {
+        height: 108px;
+      }
+
+      .product-name {
+        min-height: 46px;
+        font-size: 14px;
+        -webkit-line-clamp: 3;
+      }
+
+      .sale-price {
+        font-size: 16px;
+      }
+
+      .stock-pill {
+        font-size: 10px;
       }
 
       .footer-actions {
@@ -4663,6 +4898,11 @@
 
     const state = {
       products: [],
+      productBrowseMode: 'categories',
+      productLoading: false,
+      productLoadPromise: null,
+      productRequestId: 0,
+      productsFromCache: false,
       repairQuotes: [],
       repairTickets: [],
       repairSearch: '',
@@ -5014,6 +5254,7 @@
     const POS_ORDERS_KEY = 'techm8_pos_demo_orders';
     const POS_HELD_ORDERS_KEY = 'techm8_pos_held_orders';
     const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
+    const POS_PRODUCTS_CACHE_KEY = 'techm8_pos_products_cache_v2';
     const POS_PAYMENT_METHODS = [
       { key: 'cash', label: 'Cash' },
       { key: 'card', label: 'Card' },
@@ -6564,38 +6805,16 @@
 
     function getProductImageUrl(item) {
       return normalizeImageCandidate([
-        item.thumbnail_url,
         item.image_url,
-        item.thumbnail,
         item.photo_url,
         item.picture_url,
         item.image,
         item.gallery_images,
         item.images,
-        item.media
-      ]);
-    }
-
-    function getProductGalleryImages(item) {
-      const candidates = [
-        item.gallery_images,
-        item.images,
         item.media,
-        item.image_urls,
-        item.product_images,
-        item.image_url,
-        item.thumbnail_url
-      ];
-      const urls = [];
-      candidates.forEach(candidate => {
-        if (!candidate) return;
-        const values = Array.isArray(candidate) ? candidate : [candidate];
-        values.forEach(value => {
-          const normalized = normalizeImageUrl(normalizeImageCandidate(value));
-          if (normalized && !urls.includes(normalized)) urls.push(normalized);
-        });
-      });
-      return urls;
+        item.thumbnail_url,
+        item.thumbnail
+      ]);
     }
 
     function normalizeProducts(payload) {
@@ -6609,11 +6828,11 @@
         sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
         barcode: item.barcode || '',
         image_url: normalizeImageUrl(getProductImageUrl(item)),
-        gallery_images: getProductGalleryImages(item),
         qty_on_hand: item.qty_on_hand == null && item.stock_qty == null && item.stock == null
           ? undefined
           : Number(item.qty_on_hand ?? item.stock_qty ?? item.stock ?? 0),
-        store_inventory: item.store_inventory || null
+        store_inventory: item.store_inventory || null,
+        store_stock: item.store_stock || null
       }));
     }
 
@@ -8059,19 +8278,72 @@
       `;
     }
 
-    async function loadProducts() {
+    function readProductCache() {
+      try {
+        const snapshot = JSON.parse(localStorage.getItem(POS_PRODUCTS_CACHE_KEY) || 'null');
+        if (!snapshot || !Array.isArray(snapshot.products) || !snapshot.products.length) return null;
+        return snapshot;
+      } catch (error) {
+        console.warn('Product cache could not be read.', error);
+        return null;
+      }
+    }
+
+    function writeProductCache(products) {
+      try {
+        localStorage.setItem(POS_PRODUCTS_CACHE_KEY, JSON.stringify({
+          savedAt: new Date().toISOString(),
+          products
+        }));
+      } catch (error) {
+        console.warn('Product cache could not be saved.', error);
+      }
+    }
+
+    function renderProductBrowser() {
+      renderCategories();
+      renderProducts();
+    }
+
+    async function loadProducts(options = {}) {
+      if (state.productLoadPromise) return state.productLoadPromise;
+
+      const force = Boolean(options && options.force);
       const endpoint = window.TECHM8_POS_PRODUCTS_ENDPOINT
         || localStorage.getItem('techm8_pos_products_endpoint')
         || INTERNAL_PRODUCTS_ENDPOINT;
 
       if (!endpoint) {
         state.products = demoProducts;
+        state.productLoading = false;
         setSyncStatus('Demo products loaded', 'bi-database-check');
         renderAll();
         return;
       }
 
-      try {
+      if (!force && !state.products.length) {
+        const cached = readProductCache();
+        if (cached) {
+          state.products = normalizeProducts(cached.products);
+          state.productsFromCache = true;
+          setSyncStatus('Products ready - updating', 'bi-arrow-repeat');
+          renderProductBrowser();
+        }
+      }
+
+      state.productLoading = true;
+      if (!state.products.length) {
+        setSyncStatus('Loading products', 'bi-arrow-repeat');
+        renderProductBrowser();
+      } else if (force) {
+        setSyncStatus('Updating products', 'bi-arrow-repeat');
+      }
+
+      const requestId = ++state.productRequestId;
+      const request = (async () => {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 20000);
+        try {
         const url = new URL(endpoint, window.location.href);
         url.searchParams.set('page', '1');
         url.searchParams.set('limit', '500');
@@ -8093,21 +8365,42 @@
           headers.Authorization = `Bearer ${window.TECHM8_SUPABASE.anonKey}`;
         }
 
-        const response = await fetch(url.toString(), { headers });
+        const response = await fetch(url.toString(), {
+          headers,
+          cache: 'no-store',
+          signal: controller.signal
+        });
         if (!response.ok) {
           const errorPayload = await response.json().catch(() => ({}));
           throw new Error(errorPayload.message || `Product API request failed: ${response.status}`);
         }
         const payload = await response.json();
-        state.products = normalizeProducts(payload);
+        const products = normalizeProducts(payload);
+        if (!products.length) throw new Error('Product API returned no products.');
+        if (requestId !== state.productRequestId) return;
+        state.products = products;
+        state.productsFromCache = false;
+        writeProductCache(products);
         setSyncStatus('Live products loaded', 'bi-cloud-check');
-      } catch (error) {
-        console.error(error);
-        state.products = [];
-        setSyncStatus(error.message || 'Live products unavailable', 'bi-exclamation-circle');
-      }
+        } catch (error) {
+          console.error(error);
+          if (!state.products.length) {
+            setSyncStatus(error.name === 'AbortError' ? 'Product loading timed out' : (error.message || 'Live products unavailable'), 'bi-exclamation-circle');
+          } else {
+            setSyncStatus('Products ready - refresh failed', 'bi-cloud-slash');
+          }
+        } finally {
+          window.clearTimeout(timeoutId);
+          if (requestId === state.productRequestId) {
+            state.productLoading = false;
+            state.productLoadPromise = null;
+            renderProductBrowser();
+          }
+        }
+      })();
 
-      renderAll();
+      state.productLoadPromise = request;
+      return request;
     }
 
     function setSyncStatus(text, icon) {
@@ -8115,28 +8408,85 @@
     }
 
     function categories() {
-      return ['All', ...Array.from(new Set(state.products.map(product => product.category).filter(Boolean))).sort()];
+      return Array.from(new Set(state.products.map(product => product.category).filter(Boolean)))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
     }
 
     function filteredProducts() {
       const query = state.search.trim().toLowerCase();
       return state.products.filter(product => {
-        const inCategory = state.category === 'All' || product.category === state.category;
+        const inCategory = query || state.productBrowseMode !== 'category' || product.category === state.category;
         const searchable = [product.name, product.sku, product.barcode, product.category].join(' ').toLowerCase();
         return inCategory && (!query || searchable.includes(query));
-      }).sort((a, b) => getProductStock(b) - getProductStock(a));
+      }).sort((a, b) => getProductStock(b) - getProductStock(a) || a.name.localeCompare(b.name, undefined, { numeric: true }));
+    }
+
+    function categoryIcon(category) {
+      const value = String(category || '').toLowerCase();
+      if (/cable|adapter|otg/.test(value)) return 'bi-usb-plug';
+      if (/charger|power/.test(value)) return 'bi-lightning-charge';
+      if (/screen|glass|protector/.test(value)) return 'bi-phone';
+      if (/case|cover/.test(value)) return 'bi-phone-flip';
+      if (/headphone|earbud|audio/.test(value)) return 'bi-headphones';
+      if (/speaker/.test(value)) return 'bi-speaker';
+      if (/car|holder|stand|mount/.test(value)) return 'bi-car-front';
+      if (/computer|console|gaming|graphics/.test(value)) return 'bi-controller';
+      if (/watch|band/.test(value)) return 'bi-smartwatch';
+      if (/cooling|fan/.test(value)) return 'bi-fan';
+      return 'bi-box-seam';
     }
 
     function renderCategories() {
-      els.categoryTabs.innerHTML = categories().map(category => `
-        <button class="tab-chip ${category === state.category ? 'active' : ''}" type="button" data-category="${category}">
-          ${category}
-        </button>
-      `).join('');
+      const query = state.search.trim();
+      const categoryModeActive = state.productBrowseMode !== 'all';
+      const context = query
+        ? `<span class="browse-context-copy"><strong>Search results</strong> - ${filteredProducts().length} products</span>`
+        : state.productBrowseMode === 'category'
+          ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> - ${filteredProducts().length} products</span>`
+          : state.productBrowseMode === 'all'
+            ? `<span class="browse-context-copy"><strong>All products</strong> - ${state.products.length} products</span>`
+            : `<span class="browse-context-copy"><strong>Categories</strong> - ${categories().length} groups</span>`;
+
+      els.categoryTabs.innerHTML = `
+        <div class="browse-mode-tabs" role="tablist" aria-label="Product browsing mode">
+          <button class="browse-mode-button ${categoryModeActive ? 'active' : ''}" type="button" role="tab" aria-selected="${categoryModeActive}" data-browse-mode="categories">By Category</button>
+          <button class="browse-mode-button ${state.productBrowseMode === 'all' ? 'active' : ''}" type="button" role="tab" aria-selected="${state.productBrowseMode === 'all'}" data-browse-mode="all">All Products</button>
+        </div>
+        <div class="browse-context">${context}</div>
+      `;
     }
 
     function renderProducts() {
+      if (state.productLoading && !state.products.length) {
+        els.productGrid.className = 'product-grid product-layout';
+        els.productGrid.setAttribute('aria-label', 'Loading products');
+        els.productGrid.innerHTML = Array.from({ length: 8 }, () => '<div class="product-skeleton" aria-hidden="true"></div>').join('');
+        return;
+      }
+
+      const query = state.search.trim();
+      if (!query && state.productBrowseMode === 'categories') {
+        const grouped = categories().map(category => ({
+          category,
+          count: state.products.filter(product => product.category === category).length
+        }));
+        els.productGrid.className = 'product-grid category-layout';
+        els.productGrid.setAttribute('aria-label', 'Product categories');
+        els.productGrid.innerHTML = grouped.map(group => `
+          <button class="category-card" type="button" data-open-category="${escapeHtml(group.category)}">
+            <span class="category-icon"><i class="bi ${categoryIcon(group.category)}"></i></span>
+            <span class="category-card-copy">
+              <span class="category-card-name">${escapeHtml(group.category)}</span>
+              <span class="category-card-count">${group.count} ${group.count === 1 ? 'product' : 'products'}</span>
+            </span>
+          </button>
+        `).join('');
+        return;
+      }
+
       const products = filteredProducts();
+      els.productGrid.className = 'product-grid product-layout';
+      els.productGrid.setAttribute('aria-label', query ? 'Product search results' : (state.productBrowseMode === 'category' ? state.category : 'All products'));
       if (!products.length) {
         els.productGrid.innerHTML = `
           <div class="empty-state">
@@ -8150,21 +8500,12 @@
         return;
       }
 
-      els.productGrid.innerHTML = products.map(product => {
+      els.productGrid.innerHTML = products.map((product, index) => {
         const stock = getProductStock(product);
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
-        const galleryImages = Array.isArray(product.gallery_images) ? product.gallery_images.slice(1, 4) : [];
-        const galleryMarkup = galleryImages.length
-          ? `<div class="product-gallery-strip">${galleryImages.map((imageUrl) => `
-              <img class="product-gallery-thumb" src="${escapeHtml(imageUrl)}" alt="" data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
-            `).join('')}</div>`
-          : '';
         return `
           <article class="product-card" data-add="${product.id}" role="button" tabindex="0" aria-label="Add ${escapeHtml(product.name)} to cart">
-            <div class="product-media">
-              <img class="product-image" src="${escapeHtml(productImage(product))}" alt="" data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
-              ${galleryMarkup}
-            </div>
+            <img class="product-image" src="${escapeHtml(productImage(product))}" alt="${escapeHtml(product.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" ${index < 4 ? 'fetchpriority="high"' : ''} data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
               <div class="product-price">
@@ -10374,13 +10715,30 @@
     }
 
     els.categoryTabs.addEventListener('click', event => {
-      const button = event.target.closest('[data-category]');
-      if (!button) return;
-      state.category = button.dataset.category;
-      renderAll();
+      const modeButton = event.target.closest('[data-browse-mode]');
+      const backButton = event.target.closest('[data-category-back]');
+      if (modeButton) {
+        state.productBrowseMode = modeButton.dataset.browseMode;
+        state.category = 'All';
+      } else if (backButton) {
+        state.productBrowseMode = 'categories';
+        state.category = 'All';
+      } else {
+        return;
+      }
+      els.productGrid.scrollTop = 0;
+      renderProductBrowser();
     });
 
     els.productGrid.addEventListener('click', event => {
+      const categoryCard = event.target.closest('[data-open-category]');
+      if (categoryCard) {
+        state.category = categoryCard.dataset.openCategory;
+        state.productBrowseMode = 'category';
+        els.productGrid.scrollTop = 0;
+        renderProductBrowser();
+        return;
+      }
       const button = event.target.closest('[data-add]');
       if (!button) return;
       addToCart(button.dataset.add);
@@ -10693,7 +11051,8 @@
 
     els.searchInput.addEventListener('input', event => {
       state.search = event.target.value;
-      renderProducts();
+      els.productGrid.scrollTop = 0;
+      renderProductBrowser();
     });
 
     if (els.storeSelect) {
@@ -10702,7 +11061,7 @@
       });
     }
 
-    els.syncStatus.addEventListener('click', loadProducts);
+    els.syncStatus.addEventListener('click', () => loadProducts({ force: true }));
 
     els.targetDashboard.addEventListener('click', event => {
       const refreshButton = event.target.closest('[data-target-refresh]');
@@ -11002,6 +11361,7 @@
       subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
     }).then(async () => {
       await ensureStaffStoreAccess();
+      const productLoad = loadProducts();
       await syncCurrentShiftWithDatabase();
       await ensureOpeningCash();
       await syncPendingPosOrders();
@@ -11010,7 +11370,7 @@
       await loadHeldOrders();
       renderRepairWorkspace();
       await loadTodayProgress();
-      loadProducts();
+      await productLoad;
       loadRepairQuotes();
     });
 
