@@ -274,14 +274,14 @@ Encouragement messages:
 
 Staff currently seeded in `staff_directory`:
 - Andy
+- Anna
 - Bonnie
 - Bowen
 - Fiona
-- Henry Ang
-- JANAPHY
 - Jinny
 - Joanna Chen
-- Steven T
+
+RepairDesk staff details synchronized into `staff_directory` include email, RepairDesk user ID, role, and default store. Henry Ang, JANAPHY, and Steven T remain available in historical records but are inactive and are not shown in new staff selectors.
 
 ## Daily Report Admin Rules
 

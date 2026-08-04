@@ -5307,44 +5307,43 @@
 
     const POS_STAFF_STORE_ASSIGNMENTS = {
       Andy: ['PR', 'NL', 'FF', 'TW'],
+      Anna: ['PR', 'NL', 'FF', 'TW'],
       Bonnie: ['PR', 'NL', 'FF', 'TW'],
       Fiona: ['PR', 'NL', 'FF', 'TW'],
-      'Henry Ang': ['PR', 'NL', 'FF', 'TW'],
-      JANAPHY: ['PR', 'NL', 'FF', 'TW'],
       Jinny: ['PR', 'NL', 'FF', 'TW'],
       'Joanna Chen': ['PR', 'NL', 'FF', 'TW'],
-      'Steven T': ['PR', 'NL', 'FF', 'TW'],
       Bowen: ['PR', 'NL', 'FF', 'TW']
     };
 
     const POS_STAFF_DEFAULT_GENDERS = {
       Andy: 'male',
+      Anna: 'female',
       Bonnie: 'female',
       Fiona: 'female',
-      'Henry Ang': 'male',
-      JANAPHY: 'female',
       Jinny: 'female',
       'Joanna Chen': 'female',
-      'Steven T': 'male',
       Bowen: 'male'
     };
 
     const POS_STAFF_ROLES = {
+      Anna: 'manager',
+      Bonnie: 'manager',
+      Fiona: 'manager',
       'Joanna Chen': 'manager',
       Bowen: 'admin'
     };
 
     const POS_DEFAULT_STAFF_PINS = {
       Andy: '0000',
+      Anna: '0000',
       Bonnie: '0000',
       Fiona: '0000',
-      'Henry Ang': '0000',
-      JANAPHY: '0000',
       Jinny: '0000',
       'Joanna Chen': '0000',
-      'Steven T': '0000',
       Bowen: '0000'
     };
+
+    const POS_INACTIVE_STAFF_NAMES = new Set(['henry ang', 'janaphy', 'steven t']);
 
     let staffAccessResolve = null;
     let openingResolve = null;
@@ -5386,9 +5385,23 @@
     }
 
     function staffRoleFor(staff) {
+      const record = typeof staff === 'object'
+        ? staff
+        : state.staffMembers.find(item => staffIdentityKey(item) === staffIdentityKey(staff));
+      const explicitRole = String(record && (record.job_role || record.role || record.employee_role) || '').trim().toLowerCase();
+      if (explicitRole === 'admin') return 'admin';
+      if (explicitRole.includes('manager')) return 'manager';
       const matchedName = Object.keys(POS_STAFF_ROLES)
         .find(name => staffIdentityKey(name) === staffIdentityKey(staff));
       return matchedName ? POS_STAFF_ROLES[matchedName] : 'staff';
+    }
+
+    function staffDefaultStoreId(staff) {
+      const record = typeof staff === 'object'
+        ? staff
+        : state.staffMembers.find(item => staffIdentityKey(item) === staffIdentityKey(staff));
+      const defaultStore = storeByCode(record && (record.default_store_code || record.defaultStoreCode));
+      return defaultStore ? defaultStore.id : '';
     }
 
     function staffCanSwitchStore(staff) {
@@ -5420,12 +5433,18 @@
     function staffChoiceRecords() {
       const records = new Map();
       const schedule = loadStaffSchedule();
-      const scheduledNames = Object.values(schedule).flatMap(day => Object.keys(day || {}));
+      const scheduledNames = Object.values(schedule).flatMap(day => {
+        if (!day || typeof day !== 'object' || Array.isArray(day)) return [];
+        return Object.entries(day)
+          .filter(([, shift]) => shift && typeof shift === 'object' && !Array.isArray(shift) && shift.storeId)
+          .map(([name]) => name);
+      });
 
       function addStaff(staff) {
         const displayName = staffDisplayName(staff).trim();
         if (!displayName) return;
         const key = staffIdentityKey(displayName);
+        if (POS_INACTIVE_STAFF_NAMES.has(key)) return;
         const existing = records.get(key) || {};
         const data = staff && typeof staff === 'object' ? staff : {};
         records.set(key, { ...existing, ...data, displayName });
@@ -5522,6 +5541,12 @@
       if (activeShift && !staffCanSwitchStore(state.staffGateStaffName)) {
         state.staffGateStoreId = activeShift.storeId;
         renderStaffGateStoreChoices();
+      } else if (!activeShift) {
+        const defaultStoreId = staffDefaultStoreId(state.staffGateStaffName);
+        if (defaultStoreId) {
+          state.staffGateStoreId = defaultStoreId;
+          renderStaffGateStoreChoices();
+        }
       }
       if (els.posStaffError) els.posStaffError.textContent = '';
       renderStaffGateStaffChoices();
