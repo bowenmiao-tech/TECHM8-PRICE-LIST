@@ -62,6 +62,16 @@
     .summary.no-payment { background:#edf8f0; border-color:#c8e8d0; }
     .monthly-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; margin-top:16px; }
     .status.uploaded { background:#dcecff; color:#245b96; }
+    .status.paid { background:#d8f3dc; color:#156b2b; }
+    .payment-proof-panel { margin-top:16px; padding:18px; border:1px solid #cfe0ea; border-radius:18px; background:#f4f9fd; }
+    .payment-proof-panel.paid { border-color:#bfe2c8; background:#eef9f1; }
+    .payment-proof-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .payment-proof-title { margin:0 0 5px; font-size:17px; font-weight:900; }
+    .payment-proof-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .payment-proof-file { color:#42545d; font-size:13px; overflow-wrap:anywhere; }
+    .payment-proof-preview { display:block; width:min(340px,100%); max-height:240px; margin-top:14px; border:1px solid #d5e1e6; border-radius:14px; object-fit:contain; background:#fff; }
+    .payment-proof-link { display:inline-flex; margin-top:12px; color:#245b96; font-weight:800; text-decoration:none; }
+    .visually-hidden { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
     .empty { padding:28px; border:1px dashed #cbd9de; border-radius:18px; color:var(--muted); text-align:center; margin-top:16px; }
     @media(max-width:1050px){ .summary-grid,.monthly-grid,.payment-grid{grid-template-columns:repeat(2,1fr)} }
     @media(max-width:600px){ .shell{width:calc(100% - 16px)} .hero,.panel{padding:18px;border-radius:20px} .summary-grid,.monthly-grid,.payment-grid{grid-template-columns:1fr} }
@@ -131,7 +141,42 @@
           <el-button type="warning" @click="saveMonthlyCharge" :loading="monthlySaving">Save Temporarily</el-button>
           <el-button type="primary" @click="uploadMonthlyCharge" :loading="monthlyUploading">Upload</el-button>
         </div>
-        <div class="sub" style="margin-top:14px" v-else>This month has been uploaded and is read-only.</div>
+        <template v-else>
+          <div class="sub" style="margin-top:14px">This month has been uploaded and is read-only.</div>
+          <div class="payment-proof-panel" :class="{paid:monthlyPaymentConfirmed}" v-if="monthlyPaymentConfirmed || monthlyNetSettlement > 0">
+            <template v-if="monthlyPaymentConfirmed">
+              <div class="payment-proof-head">
+                <div>
+                  <div class="payment-proof-title">Payment Completed</div>
+                  <div class="sub">TECHM8 paid NL {{ money(monthlyCharge.payment_amount_inc_gst) }} on {{ formatTimestamp(monthlyCharge.paid_at) }}.</div>
+                </div>
+                <span class="status paid">Paid</span>
+              </div>
+              <a class="payment-proof-link" :href="paymentProofUrl(monthlyCharge.payment_proof_path)" target="_blank" rel="noopener">View Payment Screenshot</a>
+              <a :href="paymentProofUrl(monthlyCharge.payment_proof_path)" target="_blank" rel="noopener"><img class="payment-proof-preview" :src="paymentProofUrl(monthlyCharge.payment_proof_path)" alt="Payment screenshot"></a>
+            </template>
+            <template v-else>
+              <div class="payment-proof-head">
+                <div>
+                  <div class="payment-proof-title">Confirm Payment To NL</div>
+                  <div class="sub">Upload the payment screenshot, then confirm that TECHM8 has paid {{ money(monthlySettlementAmount) }} to NL. This record will also be visible to NL.</div>
+                </div>
+                <span class="status">Payment Pending</span>
+              </div>
+              <input ref="paymentProofInput" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" @change="selectPaymentProof">
+              <div class="payment-proof-actions">
+                <el-button plain @click="choosePaymentProof">Choose Payment Screenshot</el-button>
+                <span class="payment-proof-file" v-if="paymentProofFile">{{ paymentProofFile.name }}</span>
+                <el-button type="success" @click="confirmMonthlyPayment" :loading="paymentConfirming" :disabled="!paymentProofFile">I Have Paid</el-button>
+              </div>
+              <img class="payment-proof-preview" v-if="paymentProofPreview" :src="paymentProofPreview" alt="Selected payment screenshot preview">
+            </template>
+          </div>
+          <div class="payment-proof-panel" v-else>
+            <div class="payment-proof-title">No TECHM8 Payment To Confirm</div>
+            <div class="sub">The final settlement does not show an amount for TECHM8 to pay NL.</div>
+          </div>
+        </template>
       </section>
 
       <section class="panel">
@@ -184,9 +229,9 @@
       data(){ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Australia/Brisbane'}); return {
         today,dateRange:[today.slice(0,8)+'01',today],reports:[],loading:false,savingId:null,uploadingId:null,
         monthlyChargeMonth:today.slice(0,7),
-        monthlyCharge:{id:null,status:'draft',rent_inc_gst:0,internet_inc_gst:0,mobile_inc_gst:0,pos_inc_gst:0,franchise_fee_inc_gst:0,tyro_received_inc_gst:0,bank_transfer_received_inc_gst:0,after_zip_received_inc_gst:0,cash_retained_inc_gst:0,notes:''},
+        monthlyCharge:{id:null,status:'draft',rent_inc_gst:0,internet_inc_gst:0,mobile_inc_gst:0,pos_inc_gst:0,franchise_fee_inc_gst:0,tyro_received_inc_gst:0,bank_transfer_received_inc_gst:0,after_zip_received_inc_gst:0,cash_retained_inc_gst:0,notes:'',payment_status:'unpaid',payment_amount_inc_gst:null,payment_proof_path:null,paid_at:null},
         monthlySummary:{sales_total_inc_gst:0,product_payable_total_inc_gst:0,uploaded_product_payable_total_inc_gst:0},
-        monthlyLoading:false,monthlySaving:false,monthlyUploading:false
+        monthlyLoading:false,monthlySaving:false,monthlyUploading:false,paymentProofFile:null,paymentProofPreview:'',paymentConfirming:false
       }; },
       computed:{
         salesTotal(){return this.reports.reduce((sum,row)=>sum+Number(row.sales_total_inc_gst||0),0);},
@@ -194,6 +239,7 @@
         uploadedTotal(){return this.reports.filter(row=>['confirmed','settled'].includes(row.status)).reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0);},
         pendingCount(){return this.reports.reduce((sum,row)=>sum+Number(row.pending_cost_count||0),0);},
         monthlyReadOnly(){return this.monthlyCharge.status==='uploaded';},
+        monthlyPaymentConfirmed(){return this.monthlyCharge.payment_status==='paid';},
         monthlyChargeTotal(){return ['rent_inc_gst','internet_inc_gst','mobile_inc_gst','pos_inc_gst','franchise_fee_inc_gst'].reduce((sum,key)=>sum+Number(this.monthlyCharge[key]||0),0);},
         monthlyTotalPayable(){return this.roundMoney(Number(this.monthlySummary.product_payable_total_inc_gst||0)+this.monthlyChargeTotal);},
         monthlySettlementDeductionsTotal(){return this.roundMoney(this.monthlyTotalPayable+Number(this.monthlyCharge.cash_retained_inc_gst||0));},
@@ -204,11 +250,14 @@
         monthlySettlementClass(){if(this.monthlyNetSettlement>0)return 'techm8-pays';if(this.monthlyNetSettlement<0)return 'nl-pays';return 'no-payment';}
       },
       mounted(){this.loadReports();this.loadMonthlyCharge();},
+      beforeDestroy(){this.clearPaymentProof();},
       methods:{
         token(){return window.Techm8StaffAuth.getToken();},
         roundMoney(value){return Math.round((Number(value||0)+Number.EPSILON)*100)/100;},
         money(value){return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});},
         formatDate(value){return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});},
+        formatTimestamp(value){if(!value)return '';return new Date(value).toLocaleString('en-AU',{timeZone:'Australia/Brisbane',day:'2-digit',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'});},
+        paymentProofUrl(path){if(!path||!window.TECHM8_SUPABASE)return '';return window.TECHM8_SUPABASE.url+'/storage/v1/object/public/nl-settlement-payment-proofs/'+path;},
         statusLabel(value){const labels={draft:'NL draft',submitted:'cost draft',pricing_pending:'cost draft',priced:'ready to upload',confirmed:'uploaded',settled:'uploaded'};return labels[value]||String(value||'').replace(/_/g,' ');},
         stockActionLabel(value){const labels={sold:'Sold / Used In Repair',send_to_other:'Send To Other',faulty:'Faulty',broken:'Broken'};return labels[value]||'';},
         isBillable(item){return item.is_billable!==false&&(item.category!=='repair'||item.stock_action==='sold');},
@@ -222,9 +271,14 @@
         validateMonthlyCharge(){for(const key of ['rent_inc_gst','internet_inc_gst','mobile_inc_gst','pos_inc_gst','franchise_fee_inc_gst','tyro_received_inc_gst','bank_transfer_received_inc_gst','after_zip_received_inc_gst','cash_retained_inc_gst']){const value=this.monthlyCharge[key];if(value===''||value===null||value===undefined)this.monthlyCharge[key]=0;if(!Number.isFinite(Number(this.monthlyCharge[key]))||Number(this.monthlyCharge[key])<0)throw new Error('Monthly settlement amounts must be valid amounts of zero or more.');}},
         setThisMonth(){this.dateRange=[this.today.slice(0,8)+'01',this.today];this.loadReports();},
         async loadReports(){if(!this.dateRange||this.dateRange.length!==2)return this.$message.error('Choose a date range.');this.loading=true;try{const result=await window.Techm8StaffAuth.callRpc('get_nl_sales_reports_admin',{session_token:this.token(),date_from:this.dateRange[0],date_to:this.dateRange[1]});this.reports=(result.reports||[]).map(row=>this.prepareReport(row));}catch(error){this.$message.error(error.message||'Could not load NL reports.');}finally{this.loading=false;}},
-        async loadMonthlyCharge(){if(!this.monthlyChargeMonth)return;this.monthlyLoading=true;try{const result=await window.Techm8StaffAuth.callRpc('get_nl_monthly_charge_admin',{session_token:this.token(),target_month:this.monthlyChargeMonth+'-01'});this.monthlyCharge=Object.assign({id:null,status:'draft',rent_inc_gst:0,internet_inc_gst:0,mobile_inc_gst:0,pos_inc_gst:0,franchise_fee_inc_gst:0,tyro_received_inc_gst:0,bank_transfer_received_inc_gst:0,after_zip_received_inc_gst:0,cash_retained_inc_gst:0,notes:''},result.charge||{});this.monthlySummary={sales_total_inc_gst:Number(result.sales_total_inc_gst||0),product_payable_total_inc_gst:Number(result.product_payable_total_inc_gst||0),uploaded_product_payable_total_inc_gst:Number(result.uploaded_product_payable_total_inc_gst||0)};}catch(error){this.$message.error(error.message||'Could not load monthly settlement.');}finally{this.monthlyLoading=false;}},
+        async loadMonthlyCharge(){if(!this.monthlyChargeMonth)return;this.clearPaymentProof();this.monthlyLoading=true;try{const result=await window.Techm8StaffAuth.callRpc('get_nl_monthly_charge_admin',{session_token:this.token(),target_month:this.monthlyChargeMonth+'-01'});this.monthlyCharge=Object.assign({id:null,status:'draft',rent_inc_gst:0,internet_inc_gst:0,mobile_inc_gst:0,pos_inc_gst:0,franchise_fee_inc_gst:0,tyro_received_inc_gst:0,bank_transfer_received_inc_gst:0,after_zip_received_inc_gst:0,cash_retained_inc_gst:0,notes:'',payment_status:'unpaid',payment_amount_inc_gst:null,payment_proof_path:null,paid_at:null},result.charge||{});this.monthlySummary={sales_total_inc_gst:Number(result.sales_total_inc_gst||0),product_payable_total_inc_gst:Number(result.product_payable_total_inc_gst||0),uploaded_product_payable_total_inc_gst:Number(result.uploaded_product_payable_total_inc_gst||0)};}catch(error){this.$message.error(error.message||'Could not load monthly settlement.');}finally{this.monthlyLoading=false;}},
         async saveMonthlyCharge(showMessage=true){try{this.validateMonthlyCharge();}catch(error){this.$message.error(error.message);return false;}this.monthlySaving=true;try{await window.Techm8StaffAuth.callRpc('save_nl_monthly_charge',{session_token:this.token(),payload:{charge_month:this.monthlyChargeMonth+'-01',rent_inc_gst:this.monthlyCharge.rent_inc_gst,internet_inc_gst:this.monthlyCharge.internet_inc_gst,mobile_inc_gst:this.monthlyCharge.mobile_inc_gst,pos_inc_gst:this.monthlyCharge.pos_inc_gst,franchise_fee_inc_gst:this.monthlyCharge.franchise_fee_inc_gst,tyro_received_inc_gst:this.monthlyCharge.tyro_received_inc_gst,bank_transfer_received_inc_gst:this.monthlyCharge.bank_transfer_received_inc_gst,after_zip_received_inc_gst:this.monthlyCharge.after_zip_received_inc_gst,cash_retained_inc_gst:this.monthlyCharge.cash_retained_inc_gst,notes:this.monthlyCharge.notes||''}});await this.loadMonthlyCharge();if(showMessage)this.$message.success('Monthly settlement saved temporarily.');return true;}catch(error){this.$message.error(error.message||'Could not save monthly settlement.');return false;}finally{this.monthlySaving=false;}},
         async uploadMonthlyCharge(){try{this.validateMonthlyCharge();await this.$confirm('Upload the monthly settlement for '+this.monthlyChargeMonth+'? The charges, customer payments and final settlement will become read-only.','Upload Monthly Settlement',{confirmButtonText:'Upload',cancelButtonText:'Cancel',type:'warning'});}catch(error){if(error&&error.message)this.$message.error(error.message);return;}if(!await this.saveMonthlyCharge(false))return;this.monthlyUploading=true;try{await window.Techm8StaffAuth.callRpc('upload_nl_monthly_charge',{session_token:this.token(),target_month:this.monthlyChargeMonth+'-01'});await this.loadMonthlyCharge();this.$message.success('Monthly settlement uploaded successfully.');}catch(error){this.$message.error(error.message||'Could not upload monthly settlement.');}finally{this.monthlyUploading=false;}},
+        choosePaymentProof(){if(this.$refs.paymentProofInput)this.$refs.paymentProofInput.click();},
+        selectPaymentProof(event){const file=event&&event.target&&event.target.files?event.target.files[0]:null;if(!file)return this.clearPaymentProof();if(!['image/jpeg','image/png','image/webp'].includes(file.type)){this.clearPaymentProof();this.$message.error('Choose a JPG, PNG or WebP payment screenshot.');return;}if(file.size>8*1024*1024){this.clearPaymentProof();this.$message.error('Payment screenshot must be 8 MB or smaller.');return;}if(this.paymentProofPreview)URL.revokeObjectURL(this.paymentProofPreview);this.paymentProofFile=file;this.paymentProofPreview=URL.createObjectURL(file);},
+        clearPaymentProof(){if(this.paymentProofPreview)URL.revokeObjectURL(this.paymentProofPreview);this.paymentProofFile=null;this.paymentProofPreview='';if(this.$refs&&this.$refs.paymentProofInput)this.$refs.paymentProofInput.value='';},
+        async uploadPaymentProof(){if(!this.paymentProofFile)throw new Error('Choose a payment screenshot first.');const config=window.TECHM8_SUPABASE;if(!config)throw new Error('Supabase config is missing.');const extension={"image/jpeg":'jpg',"image/png":'png',"image/webp":'webp'}[this.paymentProofFile.type];const uniqueId=(window.crypto&&window.crypto.randomUUID)?window.crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);const path='northlakes/'+this.monthlyChargeMonth+'/'+uniqueId+'.'+extension;const response=await fetch(config.url+'/storage/v1/object/nl-settlement-payment-proofs/'+path,{method:'POST',headers:{apikey:config.anonKey,Authorization:'Bearer '+config.anonKey,'Content-Type':this.paymentProofFile.type,'x-upsert':'false'},body:this.paymentProofFile});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error((result&&result.message)||'Could not upload payment screenshot.');return path;},
+        async confirmMonthlyPayment(){if(!this.paymentProofFile)return this.$message.error('Choose a payment screenshot first.');try{await this.$confirm('Confirm that TECHM8 has paid '+this.money(this.monthlySettlementAmount)+' to NL? This cannot be submitted twice.','Confirm Payment',{confirmButtonText:'I Have Paid',cancelButtonText:'Cancel',type:'warning'});}catch(_){return;}this.paymentConfirming=true;try{const proofPath=await this.uploadPaymentProof();await window.Techm8StaffAuth.callRpc('confirm_nl_monthly_settlement_paid',{session_token:this.token(),target_month:this.monthlyChargeMonth+'-01',target_payment_proof_path:proofPath});await this.loadMonthlyCharge();this.$message.success('Payment confirmed. The screenshot is now available in the monthly settlement history.');}catch(error){this.$message.error(error.message||'Could not confirm payment.');}finally{this.paymentConfirming=false;}},
         replaceReport(updated){const index=this.reports.findIndex(row=>row.id===updated.id);if(index>=0)this.$set(this.reports,index,this.prepareReport(updated));},
         async saveCosts(report){const billableItems=report.items.filter(item=>this.isBillable(item));for(const item of billableItems){if(!this.isBlank(item.cost_unit_price_ex_gst)&&Number(item.cost_unit_price_ex_gst)<0)return this.$message.error('Cost cannot be negative.');}this.savingId=report.id;try{const result=await window.Techm8StaffAuth.callRpc('save_nl_report_costs',{session_token:this.token(),target_report_id:report.id,costs:billableItems.map(item=>({item_id:item.id,cost_unit_price_ex_gst:this.isBlank(item.cost_unit_price_ex_gst)?null:item.cost_unit_price_ex_gst,cost_notes:item.cost_notes||''}))});this.replaceReport(result.report);await this.loadMonthlyCharge();this.$message.success('Temporarily saved. You can continue editing before upload.');return result.report;}catch(error){this.$message.error(error.message||'Could not save costs.');return null;}finally{this.savingId=null;}},
         async uploadReport(report){const billableItems=report.items.filter(item=>this.isBillable(item));const missing=billableItems.filter(item=>this.isBlank(item.cost_unit_price_ex_gst));if(missing.length)return this.$message.error('Enter the cost excluding GST for every sold product before upload.');for(const item of billableItems){if(Number(item.cost_unit_price_ex_gst)<0)return this.$message.error('Cost cannot be negative.');}try{await this.$confirm('Upload these costs as the final payable amount? Please review every auto-filled suggestion before continuing.','Upload NL Costs',{confirmButtonText:'Upload',cancelButtonText:'Cancel',type:'warning'});}catch(_){return;}this.uploadingId=report.id;try{await window.Techm8StaffAuth.callRpc('save_nl_report_costs',{session_token:this.token(),target_report_id:report.id,costs:billableItems.map(item=>({item_id:item.id,cost_unit_price_ex_gst:item.cost_unit_price_ex_gst,cost_notes:item.cost_notes||''}))});const result=await window.Techm8StaffAuth.callRpc('update_nl_report_status',{session_token:this.token(),target_report_id:report.id,target_status:'confirmed'});this.replaceReport(result.report);await this.loadMonthlyCharge();this.$message.success('Costs uploaded successfully and are now available for future suggestions.');}catch(error){this.$message.error(error.message||'Could not upload costs.');}finally{this.uploadingId=null;}},

@@ -33,6 +33,8 @@
     .status.priced { background:#dff5e5; color:#176b30; }
     .status.confirmed { background:#dcecff; color:#245b96; }
     .status.settled { background:#d8f3dc; color:#156b2b; }
+    .status.paid { background:#d8f3dc; color:#156b2b; }
+    .status.payment-pending { background:#fff3cd; color:#7a5710; }
     .summary-grid { align-items:stretch; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:16px; }
     .history-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .summary { padding:17px; border-radius:18px; background:#f6f9fa; border:1px solid #e3ebee; }
@@ -67,6 +69,12 @@
     .monthly-detail.nl_pays_techm8 { background:#fff6e8; border-color:#f6d89e; }
     .monthly-detail.techm8_pays_nl { background:#eaf5ff; border-color:#bfddf5; }
     .monthly-detail.no_payment_due { background:#edf8f0; border-color:#c8e8d0; }
+    .payment-record { margin-top:14px; padding:15px; border:1px solid #dbe5e8; border-radius:16px; background:#f7fafb; }
+    .payment-record.paid { border-color:#bfe2c8; background:#eef9f1; }
+    .payment-record-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .payment-record-title { margin-bottom:5px; font-size:15px; font-weight:900; }
+    .payment-proof-link { display:inline-flex; margin-top:10px; color:#245b96; font-weight:800; text-decoration:none; }
+    .payment-proof-preview { display:block; width:min(320px,100%); max-height:220px; margin-top:12px; border:1px solid #d5e1e6; border-radius:14px; object-fit:contain; background:#fff; }
     .pending { color:#b65408; font-weight:800; }
     .filter-row { justify-content:flex-start; }
     @media(max-width:1100px){ .summary-grid,.monthly-detail-grid,.payment-detail-grid,.settlement-detail-grid{grid-template-columns:repeat(2,1fr)} .line-main.repair{grid-template-columns:1fr 1fr} .line-detail{grid-template-columns:1fr 1fr} }
@@ -233,6 +241,17 @@
                 <div class="monthly-detail"><span>Received By TECHM8 For NL Inc GST</span><strong>{{ money(charge.techm8_received_total_inc_gst) }}</strong></div>
                 <div class="monthly-detail" :class="charge.settlement_direction"><span>Month-End Settlement Inc GST</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
               </div>
+              <div class="payment-record paid" v-if="charge.payment_status==='paid'">
+                <div class="payment-record-head">
+                  <div><div class="payment-record-title">Payment Completed</div><div class="sub">TECHM8 paid NL {{ money(charge.payment_amount_inc_gst) }} on {{ formatTimestamp(charge.paid_at) }}.</div></div>
+                  <span class="status paid">Paid</span>
+                </div>
+                <a class="payment-proof-link" :href="paymentProofUrl(charge.payment_proof_path)" target="_blank" rel="noopener">View Payment Screenshot</a>
+                <a :href="paymentProofUrl(charge.payment_proof_path)" target="_blank" rel="noopener"><img class="payment-proof-preview" :src="paymentProofUrl(charge.payment_proof_path)" alt="Payment screenshot"></a>
+              </div>
+              <div class="payment-record" v-else-if="charge.settlement_direction==='techm8_pays_nl'">
+                <div class="payment-record-head"><div><div class="payment-record-title">Payment Pending</div><div class="sub">TECHM8 has not yet marked this settlement as paid.</div></div><span class="status payment-pending">Pending</span></div>
+              </div>
               <div class="sub" style="margin-top:12px" v-if="charge.notes">{{ charge.notes }}</div>
             </div>
           </div>
@@ -286,6 +305,8 @@
         money(value){ return '$'+Number(value||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}); },
         formatDate(value){ if(!value)return ''; return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}); },
         formatMonth(value){ if(!value)return ''; return new Date(value+'T00:00:00').toLocaleDateString('en-AU',{month:'long',year:'numeric'}); },
+        formatTimestamp(value){ if(!value)return ''; return new Date(value).toLocaleString('en-AU',{timeZone:'Australia/Brisbane',day:'2-digit',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}); },
+        paymentProofUrl(path){ if(!path||!window.TECHM8_SUPABASE)return ''; return window.TECHM8_SUPABASE.url+'/storage/v1/object/public/nl-settlement-payment-proofs/'+path; },
         settlementAmount(charge){ return Math.abs(Number(charge&&charge.net_settlement_inc_gst||0)); },
         settlementDirectionLabel(charge){ const direction=charge&&charge.settlement_direction; if(direction==='nl_pays_techm8')return 'NL Pays TECHM8'; if(direction==='techm8_pays_nl')return 'TECHM8 Pays NL'; return 'Nothing To Pay'; },
         statusLabel(value){ const labels={draft:'draft',submitted:'awaiting cost upload',pricing_pending:'awaiting cost upload',priced:'awaiting cost upload',confirmed:'uploaded',settled:'uploaded'}; return labels[value]||String(value||'draft').replace(/_/g,' '); },
