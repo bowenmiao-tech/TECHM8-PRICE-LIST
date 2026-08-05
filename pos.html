@@ -1004,6 +1004,23 @@
       color: var(--tm-red);
     }
 
+    .product-group-count {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      min-width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      padding: 0 8px;
+      border: 1px solid #cfe3de;
+      border-radius: 999px;
+      color: var(--tm-green-dark);
+      background: rgba(255, 255, 255, 0.94);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
     .product-skeleton {
       height: 260px;
       padding: 12px;
@@ -1352,6 +1369,108 @@
       margin: 0;
       font-size: 22px;
       line-height: 1.2;
+    }
+
+    .product-variant-modal {
+      width: min(680px, 100%);
+      max-height: min(760px, calc(100vh - 36px));
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .product-variant-header {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr) 40px;
+      gap: 16px;
+      align-items: center;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--tm-line);
+    }
+
+    .product-variant-image {
+      width: 92px;
+      height: 92px;
+      object-fit: contain;
+      border: 1px solid #e6edef;
+      border-radius: 10px;
+      background: #f7f9fa;
+    }
+
+    .product-variant-heading {
+      min-width: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .product-variant-heading h2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-variant-fit {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+
+    .product-variant-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 16px 20px 20px;
+      overflow: auto;
+    }
+
+    .product-variant-option {
+      min-width: 0;
+      min-height: 82px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px 12px;
+      align-items: center;
+      padding: 13px 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      color: var(--tm-ink);
+      background: #fff;
+      text-align: left;
+    }
+
+    .product-variant-option:hover,
+    .product-variant-option:focus-visible {
+      border-color: rgba(7, 137, 111, 0.48);
+      background: #f4fbf9;
+      outline: none;
+    }
+
+    .product-variant-option strong {
+      min-width: 0;
+      font-size: 15px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .product-variant-option-price {
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .product-variant-option-meta {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 750;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .product-variant-option .stock-pill {
+      align-self: end;
     }
 
     .payment-modal {
@@ -4072,6 +4191,10 @@
         gap: 10px;
       }
 
+      .product-variant-list {
+        grid-template-columns: 1fr;
+      }
+
       .workspace {
         padding: 12px;
       }
@@ -4545,6 +4668,20 @@
     </div>
   </div>
 
+  <div id="productVariantModal" class="modal-backdrop" aria-hidden="true">
+    <section class="special-modal product-variant-modal" role="dialog" aria-modal="true" aria-labelledby="productVariantTitle">
+      <div class="product-variant-header">
+        <img id="productVariantImage" class="product-variant-image" alt="">
+        <div class="product-variant-heading">
+          <h2 id="productVariantTitle">Choose an option</h2>
+          <div id="productVariantFit" class="product-variant-fit"></div>
+        </div>
+        <button id="productVariantClose" class="modal-close" type="button" aria-label="Close product options"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="productVariantList" class="product-variant-list"></div>
+    </section>
+  </div>
+
   <div id="refundModal" class="modal-backdrop" aria-hidden="true">
     <form id="refundForm" class="special-modal refund-modal" role="dialog" aria-modal="true" aria-labelledby="refundModalTitle">
       <div class="customer-modal-header">
@@ -4903,6 +5040,7 @@
       productLoadPromise: null,
       productRequestId: 0,
       productsFromCache: false,
+      activeProductGroupCode: '',
       repairQuotes: [],
       repairTickets: [],
       repairSearch: '',
@@ -5101,6 +5239,12 @@
       specialProductPrice: document.getElementById('specialProductPrice'),
       specialProductCancel: document.getElementById('specialProductCancel'),
       specialProductError: document.getElementById('specialProductError'),
+      productVariantModal: document.getElementById('productVariantModal'),
+      productVariantImage: document.getElementById('productVariantImage'),
+      productVariantTitle: document.getElementById('productVariantTitle'),
+      productVariantFit: document.getElementById('productVariantFit'),
+      productVariantList: document.getElementById('productVariantList'),
+      productVariantClose: document.getElementById('productVariantClose'),
       specialRepairModal: document.getElementById('specialRepairModal'),
       specialRepairForm: document.getElementById('specialRepairForm'),
       specialRepairName: document.getElementById('specialRepairName'),
@@ -5170,6 +5314,19 @@
       endShiftCancel: document.getElementById('endShiftCancel'),
       toast: document.getElementById('toast')
     };
+
+    if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+      window.Techm8PosTest = {
+        normalizeProducts,
+        productTiles,
+        renderProductBrowser,
+        openProductVariantModal,
+        closeProductVariantModal,
+        addToCart,
+        state,
+        els
+      };
+    }
 
     const mobileRepairTestItems = [
       'Touch glass intact',
@@ -5254,7 +5411,7 @@
     const POS_ORDERS_KEY = 'techm8_pos_demo_orders';
     const POS_HELD_ORDERS_KEY = 'techm8_pos_held_orders';
     const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
-    const POS_PRODUCTS_CACHE_KEY = 'techm8_pos_products_cache_v2';
+    const POS_PRODUCTS_CACHE_KEY = 'techm8_pos_products_cache_v3';
     const POS_PAYMENT_METHODS = [
       { key: 'cash', label: 'Cash' },
       { key: 'card', label: 'Card' },
@@ -6844,21 +7001,45 @@
 
     function normalizeProducts(payload) {
       const list = Array.isArray(payload) ? payload : (payload.products || payload.rows || payload.data || []);
-      return list.map(item => ({
-        id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
-        sku: item.sku || '',
-        name: item.name || item.product_name || 'Unnamed product',
-        category: getProductCategory(item),
-        cost_price: Number(item.cost_price || item.cost || 0),
-        sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
-        barcode: item.barcode || '',
-        image_url: normalizeImageUrl(getProductImageUrl(item)),
-        qty_on_hand: item.qty_on_hand == null && item.stock_qty == null && item.stock == null
-          ? undefined
-          : Number(item.qty_on_hand ?? item.stock_qty ?? item.stock ?? 0),
-        store_inventory: item.store_inventory || null,
-        store_stock: item.store_stock || null
-      }));
+      return list.map(item => {
+        const productGroup = item.product_group && typeof item.product_group === 'object'
+          ? item.product_group
+          : {};
+        const fitProfile = item.fit_profile && typeof item.fit_profile === 'object'
+          ? item.fit_profile
+          : {};
+        const compatibleDevices = Array.isArray(fitProfile.compatible_devices)
+          ? fitProfile.compatible_devices.map(device => ({
+              code: String((device && device.code) || ''),
+              name: String((device && (device.display_name || device.name)) || '')
+            })).filter(device => device.name)
+          : [];
+
+        return {
+          id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
+          sku: item.sku || '',
+          name: item.name || item.product_name || 'Unnamed product',
+          category: getProductCategory(item),
+          cost_price: Number(item.cost_price || item.cost || 0),
+          sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
+          barcode: item.barcode || '',
+          image_url: normalizeImageUrl(getProductImageUrl(item)),
+          product_group_code: String(item.product_group_code || productGroup.code || ''),
+          product_group_name: String(item.product_group_name || productGroup.name || ''),
+          product_group_image_url: normalizeImageUrl(item.product_group_image_url || productGroup.image_url || ''),
+          product_family: String(item.product_family || productGroup.product_family || ''),
+          variant_name: String(item.variant_name || ''),
+          variant_color: String(item.variant_color || ''),
+          fit_profile_code: String(fitProfile.code || ''),
+          fit_profile_name: String(fitProfile.display_name || ''),
+          compatible_devices: compatibleDevices,
+          qty_on_hand: item.qty_on_hand == null && item.stock_qty == null && item.stock == null
+            ? undefined
+            : Number(item.qty_on_hand ?? item.stock_qty ?? item.stock ?? 0),
+          store_inventory: item.store_inventory || null,
+          store_stock: item.store_stock || null
+        };
+      });
     }
 
     function getProductCategory(item) {
@@ -8441,9 +8622,81 @@
       const query = state.search.trim().toLowerCase();
       return state.products.filter(product => {
         const inCategory = query || state.productBrowseMode !== 'category' || product.category === state.category;
-        const searchable = [product.name, product.sku, product.barcode, product.category].join(' ').toLowerCase();
+        const searchable = [
+          product.name,
+          product.sku,
+          product.barcode,
+          product.category,
+          product.product_group_name,
+          product.product_family,
+          product.variant_name,
+          product.variant_color,
+          product.fit_profile_name,
+          ...(product.compatible_devices || []).map(device => device.name)
+        ].join(' ').toLowerCase();
         return inCategory && (!query || searchable.includes(query));
       }).sort((a, b) => getProductStock(b) - getProductStock(a) || a.name.localeCompare(b.name, undefined, { numeric: true }));
+    }
+
+    function productTiles(products, exactQuery = '') {
+      const normalizedExactQuery = String(exactQuery || '').trim().toLowerCase();
+      if (normalizedExactQuery) {
+        const exactProduct = products.find(product => {
+          return [product.sku, product.barcode]
+            .map(value => String(value || '').trim().toLowerCase())
+            .includes(normalizedExactQuery);
+        });
+        if (exactProduct) return [exactProduct];
+      }
+
+      const tiles = [];
+      const grouped = new Map();
+      products.forEach(product => {
+        if (!product.product_group_code) {
+          tiles.push(product);
+          return;
+        }
+        if (!grouped.has(product.product_group_code)) grouped.set(product.product_group_code, []);
+        grouped.get(product.product_group_code).push(product);
+      });
+
+      grouped.forEach((variants, groupCode) => {
+        if (variants.length === 1) {
+          tiles.push({
+            ...variants[0],
+            name: variants[0].product_group_name || variants[0].name,
+            image_url: variants[0].product_group_image_url || variants[0].image_url
+          });
+          return;
+        }
+
+        const first = variants[0];
+        const prices = variants.map(variant => Number(variant.sale_price) || 0);
+        tiles.push({
+          ...first,
+          id: `group:${groupCode}`,
+          name: first.product_group_name || first.name,
+          image_url: first.product_group_image_url || first.image_url,
+          is_product_group: true,
+          variant_count: variants.length,
+          group_stock: variants.reduce((total, variant) => total + getProductStock(variant), 0),
+          sale_price: Math.min(...prices),
+          max_sale_price: Math.max(...prices)
+        });
+      });
+
+      return tiles.sort((a, b) => {
+        return displayProductStock(b) - displayProductStock(a)
+          || a.name.localeCompare(b.name, undefined, { numeric: true });
+      });
+    }
+
+    function displayedProducts() {
+      return productTiles(filteredProducts(), state.search);
+    }
+
+    function displayProductStock(product) {
+      return product.is_product_group ? Number(product.group_stock || 0) : getProductStock(product);
     }
 
     function categoryIcon(category) {
@@ -8465,11 +8718,11 @@
       const query = state.search.trim();
       const categoryModeActive = state.productBrowseMode !== 'all';
       const context = query
-        ? `<span class="browse-context-copy"><strong>Search results</strong> - ${filteredProducts().length} products</span>`
+        ? `<span class="browse-context-copy"><strong>Search results</strong> - ${displayedProducts().length} products</span>`
         : state.productBrowseMode === 'category'
-          ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> - ${filteredProducts().length} products</span>`
+          ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> - ${displayedProducts().length} products</span>`
           : state.productBrowseMode === 'all'
-            ? `<span class="browse-context-copy"><strong>All products</strong> - ${state.products.length} products</span>`
+            ? `<span class="browse-context-copy"><strong>All products</strong> - ${productTiles(state.products).length} products</span>`
             : `<span class="browse-context-copy"><strong>Categories</strong> - ${categories().length} groups</span>`;
 
       els.categoryTabs.innerHTML = `
@@ -8493,7 +8746,7 @@
       if (!query && state.productBrowseMode === 'categories') {
         const grouped = categories().map(category => ({
           category,
-          count: state.products.filter(product => product.category === category).length
+          count: productTiles(state.products.filter(product => product.category === category)).length
         }));
         els.productGrid.className = 'product-grid category-layout';
         els.productGrid.setAttribute('aria-label', 'Product categories');
@@ -8509,7 +8762,7 @@
         return;
       }
 
-      const products = filteredProducts();
+      const products = displayedProducts();
       els.productGrid.className = 'product-grid product-layout';
       els.productGrid.setAttribute('aria-label', query ? 'Product search results' : (state.productBrowseMode === 'category' ? state.category : 'All products'));
       if (!products.length) {
@@ -8526,15 +8779,23 @@
       }
 
       els.productGrid.innerHTML = products.map((product, index) => {
-        const stock = getProductStock(product);
+        const stock = displayProductStock(product);
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
+        const actionAttribute = product.is_product_group
+          ? `data-open-product-group="${escapeHtml(product.product_group_code)}"`
+          : `data-add="${escapeHtml(product.id)}"`;
+        const actionLabel = product.is_product_group ? 'Choose an option for' : 'Add';
+        const priceLabel = product.is_product_group && product.max_sale_price > product.sale_price
+          ? `From ${money(product.sale_price)}`
+          : money(product.sale_price);
         return `
-          <article class="product-card" data-add="${product.id}" role="button" tabindex="0" aria-label="Add ${escapeHtml(product.name)} to cart">
+          <article class="product-card" ${actionAttribute} role="button" tabindex="0" aria-label="${actionLabel} ${escapeHtml(product.name)}">
             <img class="product-image" src="${escapeHtml(productImage(product))}" alt="${escapeHtml(product.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" ${index < 4 ? 'fetchpriority="high"' : ''} data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
+            ${product.is_product_group ? `<span class="product-group-count" title="${product.variant_count} colour options">${product.variant_count}</span>` : ''}
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
               <div class="product-price">
-                <span class="sale-price">${money(product.sale_price)}</span>
+                <span class="sale-price">${priceLabel}</span>
                 <span class="stock-pill ${stockClass}">${stock} in stock</span>
               </div>
             </div>
@@ -9284,6 +9545,149 @@
         state.cart.push({ ...product, qty: 1 });
       }
       renderCart();
+    }
+
+    function productVariantsForGroup(groupCode) {
+      return state.products
+        .filter(product => product.product_group_code === groupCode)
+        .sort((a, b) => {
+          return getProductStock(b) - getProductStock(a)
+            || String(a.variant_color || a.variant_name || a.name).localeCompare(
+              String(b.variant_color || b.variant_name || b.name),
+              undefined,
+              { numeric: true }
+            );
+        });
+    }
+
+    function openProductVariantModal(groupCode) {
+      const variants = productVariantsForGroup(groupCode);
+      if (!variants.length) return;
+      if (variants.length === 1) {
+        addToCart(variants[0].id);
+        return;
+      }
+
+      const first = variants[0];
+      const imageProduct = {
+        ...first,
+        name: first.product_group_name || first.name,
+        image_url: first.product_group_image_url || first.image_url
+      };
+      const compatibleDevices = (first.compatible_devices || []).map(device => device.name).filter(Boolean);
+      const fitCopy = compatibleDevices.length
+        ? `Fits ${compatibleDevices.join(', ')}`
+        : (first.fit_profile_name ? `Fit profile: ${first.fit_profile_name}` : 'Choose the colour to add');
+
+      state.activeProductGroupCode = groupCode;
+      els.productVariantTitle.textContent = first.product_group_name || first.name;
+      els.productVariantFit.textContent = fitCopy;
+      els.productVariantImage.src = productImage(imageProduct);
+      els.productVariantImage.alt = first.product_group_name || first.name;
+      els.productVariantImage.onerror = () => {
+        els.productVariantImage.onerror = null;
+        els.productVariantImage.src = productPlaceholderImage(imageProduct);
+      };
+      els.productVariantList.innerHTML = variants.map(variant => {
+        const stock = getProductStock(variant);
+        const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
+        const optionName = variant.variant_color || variant.variant_name || variant.name;
+        return `
+          <button class="product-variant-option" type="button" data-add-variant="${escapeHtml(variant.id)}">
+            <strong>${escapeHtml(optionName)}</strong>
+            <span class="product-variant-option-price">${money(variant.sale_price)}</span>
+            <span class="product-variant-option-meta">${escapeHtml(variant.sku || 'No SKU')}</span>
+            <span class="stock-pill ${stockClass}">${stock} in stock</span>
+          </button>
+        `;
+      }).join('');
+      els.productVariantModal.classList.add('show');
+      els.productVariantModal.setAttribute('aria-hidden', 'false');
+      const firstOption = els.productVariantList.querySelector('[data-add-variant]');
+      if (firstOption) firstOption.focus();
+    }
+
+    function closeProductVariantModal() {
+      state.activeProductGroupCode = '';
+      els.productVariantModal.classList.remove('show');
+      els.productVariantModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function runProductCatalogSelfTest() {
+      const products = normalizeProducts({ rows: [
+        {
+          id: 1001,
+          sku: 'TM8-TAB-1001',
+          name: 'Hard Case iPad 10th Gen Blue',
+          category_name: 'iPad & Tablet Cases',
+          cost_price: 15,
+          sale_price: 49.95,
+          barcode: '2999000010017',
+          variant_color: 'Blue',
+          product_group_code: 'TM8-GRP-IPAD10-HDC',
+          product_group_name: 'Hard Case for iPad 10th Gen',
+          fit_profile: {
+            code: 'IPAD-10-GEN10',
+            display_name: 'iPad 10th Gen 10.9-inch',
+            compatible_devices: [{ code: 'IPAD-10', display_name: 'iPad 10th Gen 10.9' }]
+          },
+          store_inventory: [{ store_slug: 'park-ridge', quantity: 0 }]
+        },
+        {
+          id: 1002,
+          sku: 'TM8-TAB-1002',
+          name: 'Hard Case iPad 10th Gen Red',
+          category_name: 'iPad & Tablet Cases',
+          cost_price: 15,
+          sale_price: 49.95,
+          barcode: '2999000010024',
+          variant_color: 'Red',
+          product_group_code: 'TM8-GRP-IPAD10-HDC',
+          product_group_name: 'Hard Case for iPad 10th Gen',
+          fit_profile: {
+            code: 'IPAD-10-GEN10',
+            display_name: 'iPad 10th Gen 10.9-inch',
+            compatible_devices: [{ code: 'IPAD-10', display_name: 'iPad 10th Gen 10.9' }]
+          },
+          store_inventory: [{ store_slug: 'park-ridge', quantity: 2 }]
+        }
+      ] });
+
+      state.products = products;
+      state.cart = [];
+      state.storeId = 'park-ridge';
+      state.productBrowseMode = 'all';
+      state.search = '';
+      renderProductBrowser();
+      const grouped = productTiles(state.products);
+      const groupCardRendered = Boolean(document.querySelector('[data-open-product-group="TM8-GRP-IPAD10-HDC"]'));
+      openProductVariantModal('TM8-GRP-IPAD10-HDC');
+      const modalOptionCount = els.productVariantList.querySelectorAll('[data-add-variant]').length;
+      addToCart('1001');
+      const zeroStockAdded = state.cart.length === 1 && state.cart[0].sku === 'TM8-TAB-1001';
+      closeProductVariantModal();
+      state.search = '2999000010024';
+      renderProductBrowser();
+      const exactBarcodeDirectCard = Boolean(document.querySelector('[data-add="1002"]'));
+
+      document.body.dataset.catalogTestResult = JSON.stringify({
+        normalized: products.length,
+        tileCount: grouped.length,
+        variantCount: grouped[0]?.variant_count || 0,
+        groupStock: grouped[0]?.group_stock || 0,
+        groupCardRendered,
+        modalOptionCount,
+        zeroStockAdded,
+        modalClosedAfterAdd: !els.productVariantModal.classList.contains('show'),
+        exactBarcodeDirectCard,
+        exactSearchCards: els.productGrid.querySelectorAll('.product-card').length
+      });
+
+      if (new URLSearchParams(window.location.search).has('catalog-modal')) {
+        state.search = '';
+        renderProductBrowser();
+        openProductVariantModal('TM8-GRP-IPAD10-HDC');
+      }
     }
 
     async function addCurrentRepairToCart() {
@@ -10764,6 +11168,11 @@
         renderProductBrowser();
         return;
       }
+      const productGroupCard = event.target.closest('[data-open-product-group]');
+      if (productGroupCard) {
+        openProductVariantModal(productGroupCard.dataset.openProductGroup);
+        return;
+      }
       const button = event.target.closest('[data-add]');
       if (!button) return;
       addToCart(button.dataset.add);
@@ -10771,10 +11180,14 @@
 
     els.productGrid.addEventListener('keydown', event => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
-      const card = event.target.closest('[data-add]');
+      const card = event.target.closest('[data-add], [data-open-product-group]');
       if (!card) return;
       event.preventDefault();
-      addToCart(card.dataset.add);
+      if (card.dataset.openProductGroup) {
+        openProductVariantModal(card.dataset.openProductGroup);
+      } else {
+        addToCart(card.dataset.add);
+      }
     });
 
     els.targetNavBtn.addEventListener('click', () => setActiveView('target'));
@@ -11161,6 +11574,16 @@
       event.preventDefault();
       addSpecialProduct();
     });
+    els.productVariantClose.addEventListener('click', closeProductVariantModal);
+    els.productVariantModal.addEventListener('click', event => {
+      if (event.target === els.productVariantModal) closeProductVariantModal();
+    });
+    els.productVariantList.addEventListener('click', event => {
+      const button = event.target.closest('[data-add-variant]');
+      if (!button) return;
+      addToCart(button.dataset.addVariant);
+      closeProductVariantModal();
+    });
     els.specialRepairCancel.addEventListener('click', closeSpecialRepairModal);
     els.specialRepairModal.addEventListener('click', event => {
       if (event.target === els.specialRepairModal) closeSpecialRepairModal();
@@ -11380,24 +11803,31 @@
       }
     });
 
-    window.Techm8StaffAuth.init({
-      rootSelector: '[data-auth-protected]',
-      title: 'POS Access',
-      subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
-    }).then(async () => {
-      await ensureStaffStoreAccess();
-      const productLoad = loadProducts();
-      await syncCurrentShiftWithDatabase();
-      await ensureOpeningCash();
-      await syncPendingPosOrders();
-      await loadRepairTickets();
-      await loadCustomers();
-      await loadHeldOrders();
-      renderRepairWorkspace();
-      await loadTodayProgress();
-      await productLoad;
-      loadRepairQuotes();
-    });
+    const localCatalogTestMode = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      && new URLSearchParams(window.location.search).has('catalog-test');
+
+    if (localCatalogTestMode) {
+      runProductCatalogSelfTest();
+    } else {
+      window.Techm8StaffAuth.init({
+        rootSelector: '[data-auth-protected]',
+        title: 'POS Access',
+        subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
+      }).then(async () => {
+        await ensureStaffStoreAccess();
+        const productLoad = loadProducts();
+        await syncCurrentShiftWithDatabase();
+        await ensureOpeningCash();
+        await syncPendingPosOrders();
+        await loadRepairTickets();
+        await loadCustomers();
+        await loadHeldOrders();
+        renderRepairWorkspace();
+        await loadTodayProgress();
+        await productLoad;
+        loadRepairQuotes();
+      });
+    }
 
     window.setInterval(() => {
       if (state.activeView === 'target' && document.visibilityState === 'visible') {

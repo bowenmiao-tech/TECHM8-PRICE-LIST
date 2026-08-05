@@ -69,6 +69,9 @@ Completed product-sale flow:
 - Product images are loaded progressively, and gallery thumbnails are intentionally omitted to keep the POS fast.
 - The entire product card adds the item to the cart.
 - Zero-stock products are intentionally allowed to be sold.
+- Grouped products use one POS/website card and one main image. Sellable colours remain separate product rows with their own SKU, barcode, cost, price, and store stock.
+- Clicking a multi-colour product group opens a compact colour selector; a one-variant group and legacy products still add directly.
+- An exact SKU or barcode search bypasses grouping and returns the precise sellable variant.
 - Quantity change, cancel, hold, and resume are available.
 - Held carts are stored per store and shared between POS terminals.
 - Restoring a held cart is atomic, so another terminal cannot restore the same cart again.
@@ -166,6 +169,7 @@ Repair rules:
 
 Database-backed and shared between terminals:
 - live product snapshot returned by `pos-products`
+- product groups, colour variants, fit profiles, and directional device compatibility in the website product database
 - repair tickets and activity
 - invoices / sales orders
 - invoice lines and split payments
@@ -191,6 +195,7 @@ Do not use browser-local values as the source of truth for accounting or managem
 - Edge Function project: `fwlronvmgqzkleofriis`.
 - Staff/POS database project: `abkjbhmifswfexpjkval`.
 - `pos-products` proxies the protected internal product API without exposing its API key.
+- `internal-products` version 19 returns optional product-group, colour, fit-profile, and compatible-device fields while preserving the legacy product response.
 - `pos-repair-tickets`, `pos-sales-orders`, `pos-shared-state`, `pos-used-devices`, and `send-pos-receipt-email` validate `x-staff-session` and call staff/POS database RPCs.
 - Full endpoint and migration deployment notes are in `supabase/README.md`.
 
@@ -209,6 +214,20 @@ Required POS migrations, in order:
 12. `20260719013856_index_pos_daily_target_results_shift_code.sql`
 
 ### Current Limitations And Roadmap
+
+Tablet-case catalogue rollout:
+- 287 source variants are active in POS under 67 product groups. Online visibility remains off until the matching storefront grouping code is deployed.
+- New SKUs use `TM8-TAB-<source item id>` and new internal EAN-13 barcodes use the reserved `2999` prefix; both ranges were checked against the existing catalogue before import.
+- Every store and the online store start at zero stock. Zero stock is informational and does not block POS checkout or online ordering.
+- All 287 imported variants now have confirmed costs, unique SKUs, unique barcodes, and a usable variant or group image.
+- Product and online inventory are intentionally zero and no imported variant is assigned to a store.
+- `Hard Case` and `Bubble Hard Case` cost $15; every `Twist Leather Case` costs $5; every `Z-Fold Case` and `Z-Flip Case` costs $4.
+- The 16 owner-confirmed exception costs are stored in `outputs/product-catalog-rebuild/TECHM8_Tablet_Case_Cost_Overrides.json` so future rebuilds retain them. No product remains blocked by missing cost.
+- Compatibility is directional from a case fit profile to supported device models. Reverse compatibility is never inferred.
+- The confirmed legacy profiles include iPad 9.7-inch Gen 5/6 and Air 1/2, iPad Pro 12.9-inch 2018-2022, and iPad Air 4/5 plus iPad Pro 11-inch 2018-2022.
+- `TM8-TAB-10064` and its empty Samsung Tab S9 FE product group were removed because no usable product or group image exists.
+- Review workbook and draft import files are under `outputs/product-catalog-rebuild/`.
+- POS and public storefront code both understand product groups and colour variants. Keep online visibility off until the storefront change has been deployed, then activate approved groups and variants together. Inventory remains zero until manually adjusted per store or online.
 
 Second-hand device follow-ups:
 - add Supabase Storage photo capture for seller ID and device-condition evidence

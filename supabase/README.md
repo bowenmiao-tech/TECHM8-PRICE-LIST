@@ -4,6 +4,16 @@
 
 `pos-products` is the browser-safe POS product endpoint.
 
+The upstream `internal-products` response also supports grouped catalogue fields:
+
+```text
+product_group_code / product_group_name / product_group_image_url
+variant_name / variant_color
+fit_profile.code / fit_profile.display_name / fit_profile.compatible_devices
+```
+
+Legacy products return these fields as empty values and continue to work unchanged. POS groups colour variants only when `product_group_code` is present.
+
 The public POS page calls:
 
 ```text
@@ -36,6 +46,17 @@ supabase functions deploy pos-products --no-verify-jwt
 ```
 
 `--no-verify-jwt` is intentional here because the function verifies the existing staff session token with `verify_staff_session`.
+
+Grouped product catalogue setup belongs to the website/product project `fwlronvmgqzkleofriis`:
+
+```text
+supabase/website-migrations/20260805023000_add_grouped_product_catalog.sql
+supabase/website-migrations/20260805024500_index_grouped_product_compatibility.sql
+```
+
+The migrations add product groups, fit profiles, directional device compatibility, and variant/source fields without changing existing product visibility. New imported catalogue rows must begin hidden with zero product stock and no store-inventory rows. Zero stock is informational and does not block POS checkout or online ordering.
+
+The current tablet-case catalogue contains 287 products under 67 groups. All are active and visible in POS; online visibility remains off until the matching public-storefront grouping change is deployed. `TM8-TAB-10064` was deliberately removed because neither the variant nor its product group had a usable image. All Twist Leather Cases cost $5, all Z-Fold and Z-Flip Cases cost $4, Hard and Bubble Hard Cases cost $15, and the 16 owner-confirmed exception costs are persisted in `outputs/product-catalog-rebuild/TECHM8_Tablet_Case_Cost_Overrides.json`. No imported product remains blocked by missing cost.
 
 ## POS Repair Tickets
 
