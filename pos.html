@@ -915,7 +915,7 @@
     .product-card {
       position: relative;
       min-width: 0;
-      height: 260px;
+      height: 286px;
       display: grid;
       grid-template-rows: 136px minmax(0, 1fr);
       gap: 12px;
@@ -927,7 +927,7 @@
       overflow: hidden;
       cursor: pointer;
       content-visibility: auto;
-      contain-intrinsic-size: auto 260px;
+      contain-intrinsic-size: auto 286px;
       transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
 
@@ -957,7 +957,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
     }
 
     .product-name {
@@ -1004,25 +1004,8 @@
       color: var(--tm-red);
     }
 
-    .product-group-count {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      min-width: 28px;
-      height: 28px;
-      display: grid;
-      place-items: center;
-      padding: 0 8px;
-      border: 1px solid #cfe3de;
-      border-radius: 999px;
-      color: var(--tm-green-dark);
-      background: rgba(255, 255, 255, 0.94);
-      font-size: 11px;
-      font-weight: 900;
-    }
-
     .product-skeleton {
-      height: 260px;
+      height: 286px;
       padding: 12px;
       border: 1px solid var(--tm-line);
       border-radius: 14px;
@@ -1372,8 +1355,9 @@
     }
 
     .product-variant-modal {
-      width: min(680px, 100%);
+      width: min(940px, 100%);
       max-height: min(760px, calc(100vh - 36px));
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 0;
       padding: 0;
       overflow: hidden;
@@ -1410,6 +1394,32 @@
       overflow: hidden;
     }
 
+    .product-colour-swatches {
+      min-height: 18px;
+      display: flex;
+      align-items: center;
+      align-content: flex-start;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .product-colour-swatch {
+      width: 14px;
+      height: 14px;
+      flex: 0 0 14px;
+      display: inline-block;
+      border: 1px solid rgba(30, 47, 55, 0.28);
+      border-radius: 4px;
+      background: var(--product-colour, #d9e0e3);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+    }
+
+    .product-colour-swatch.unspecified {
+      background:
+        linear-gradient(135deg, transparent 42%, #8c9a9f 43%, #8c9a9f 57%, transparent 58%),
+        #edf1f2;
+    }
+
     .product-variant-fit {
       color: var(--tm-muted);
       font-size: 12px;
@@ -1418,21 +1428,21 @@
     }
 
     .product-variant-list {
+      min-height: 0;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
       padding: 16px 20px 20px;
       overflow: auto;
     }
 
     .product-variant-option {
       min-width: 0;
-      min-height: 82px;
+      min-height: 244px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 8px 12px;
-      align-items: center;
-      padding: 13px 14px;
+      grid-template-rows: 124px minmax(0, 1fr);
+      gap: 11px;
+      padding: 10px;
       border: 1px solid var(--tm-line);
       border-radius: 10px;
       color: var(--tm-ink);
@@ -1447,30 +1457,62 @@
       outline: none;
     }
 
-    .product-variant-option strong {
+    .product-variant-option-image {
+      width: 100%;
+      height: 124px;
+      object-fit: contain;
+      border: 1px solid #edf2f4;
+      border-radius: 8px;
+      background: #f7f9fa;
+    }
+
+    .product-variant-option-body {
       min-width: 0;
-      font-size: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .product-variant-colour {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 14px;
+      font-weight: 900;
       line-height: 1.2;
-      overflow-wrap: anywhere;
+    }
+
+    .product-variant-colour .product-colour-swatch {
+      width: 20px;
+      height: 20px;
+      flex-basis: 20px;
+    }
+
+    .product-variant-option-name {
+      min-height: 34px;
+      color: #3d4e55;
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-variant-option-footer {
+      margin-top: auto;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 8px;
     }
 
     .product-variant-option-price {
       font-size: 16px;
       font-weight: 900;
       white-space: nowrap;
-    }
-
-    .product-variant-option-meta {
-      color: var(--tm-muted);
-      font-size: 11px;
-      font-weight: 750;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .product-variant-option .stock-pill {
-      align-self: end;
     }
 
     .payment-modal {
@@ -4244,14 +4286,14 @@
 
       .product-card,
       .product-skeleton {
-        height: 224px;
+        height: 250px;
       }
 
       .product-card {
         grid-template-rows: 108px minmax(0, 1fr);
         gap: 9px;
         padding: 9px;
-        contain-intrinsic-size: auto 224px;
+        contain-intrinsic-size: auto 250px;
       }
 
       .product-image,
@@ -8638,6 +8680,72 @@
       }).sort((a, b) => getProductStock(b) - getProductStock(a) || a.name.localeCompare(b.name, undefined, { numeric: true }));
     }
 
+    const productColourPalette = [
+      ['rose gold', 'linear-gradient(135deg, #c98f89 0 50%, #f0c5bb 50% 100%)'],
+      ['navy blue', '#263c67'],
+      ['sky blue', '#77c7eb'],
+      ['light blue', '#a7d9ef'],
+      ['dark green', '#28533f'],
+      ['light green', '#a7d5a7'],
+      ['rainbow', 'linear-gradient(135deg, #e25858 0 20%, #f1c84c 20% 40%, #5db47a 40% 60%, #5b9bd5 60% 80%, #9a6bc4 80% 100%)'],
+      ['assorted', 'linear-gradient(135deg, #e25858 0 20%, #f1c84c 20% 40%, #5db47a 40% 60%, #5b9bd5 60% 80%, #9a6bc4 80% 100%)'],
+      ['purple', '#8057aa'],
+      ['yellow', '#f1cf45'],
+      ['orange', '#e58a3b'],
+      ['brown', '#79513b'],
+      ['black', '#1d2328'],
+      ['white', '#ffffff'],
+      ['green', '#4e966a'],
+      ['pink', '#e99ab8'],
+      ['grey', '#929da3'],
+      ['gray', '#929da3'],
+      ['silver', 'linear-gradient(135deg, #eef1f2 0 50%, #aab4b9 50% 100%)'],
+      ['blue', '#397fc5'],
+      ['gold', '#d4ad52'],
+      ['mint', '#8ed2bd'],
+      ['red', '#d84b4b'],
+      ['clear', 'linear-gradient(135deg, #ffffff 0 45%, #cbd7dc 45% 55%, #ffffff 55% 100%)'],
+      ['transparent', 'linear-gradient(135deg, #ffffff 0 45%, #cbd7dc 45% 55%, #ffffff 55% 100%)']
+    ];
+
+    function productVariantColourName(product) {
+      return String(product?.variant_color || product?.variant_name || '').trim();
+    }
+
+    function productColourVisual(colour) {
+      const normalized = String(colour || '').trim().toLowerCase();
+      const match = productColourPalette.find(([name]) => normalized.includes(name));
+      return match ? { fill: match[1], unspecified: false } : { fill: '#d9e0e3', unspecified: true };
+    }
+
+    function productColourSwatch(colour) {
+      const label = String(colour || 'Unspecified').trim() || 'Unspecified';
+      const visual = productColourVisual(label);
+      return `<span class="product-colour-swatch ${visual.unspecified ? 'unspecified' : ''}" style="--product-colour:${escapeHtml(visual.fill)}" title="${escapeHtml(label)}" aria-hidden="true"></span>`;
+    }
+
+    function productColours(product) {
+      const variants = Array.isArray(product.variant_options) ? product.variant_options : [product];
+      const unique = new Map();
+      variants.forEach(variant => {
+        const colour = productVariantColourName(variant);
+        if (!colour) return;
+        const key = colour.toLowerCase();
+        if (!unique.has(key)) unique.set(key, colour);
+      });
+      return Array.from(unique.values());
+    }
+
+    function productColourSwatches(product) {
+      const colours = productColours(product);
+      if (!colours.length) return '';
+      return `
+        <div class="product-colour-swatches" role="img" aria-label="Available colours: ${escapeHtml(colours.join(', '))}">
+          ${colours.map(productColourSwatch).join('')}
+        </div>
+      `;
+    }
+
     function productTiles(products, exactQuery = '') {
       const normalizedExactQuery = String(exactQuery || '').trim().toLowerCase();
       if (normalizedExactQuery) {
@@ -8665,7 +8773,8 @@
           tiles.push({
             ...variants[0],
             name: variants[0].product_group_name || variants[0].name,
-            image_url: variants[0].product_group_image_url || variants[0].image_url
+            image_url: variants[0].product_group_image_url || variants[0].image_url,
+            variant_options: variants
           });
           return;
         }
@@ -8679,6 +8788,7 @@
           image_url: first.product_group_image_url || first.image_url,
           is_product_group: true,
           variant_count: variants.length,
+          variant_options: variants,
           group_stock: variants.reduce((total, variant) => total + getProductStock(variant), 0),
           sale_price: Math.min(...prices),
           max_sale_price: Math.max(...prices)
@@ -8788,12 +8898,14 @@
         const priceLabel = product.is_product_group && product.max_sale_price > product.sale_price
           ? `From ${money(product.sale_price)}`
           : money(product.sale_price);
+        const colours = productColours(product);
+        const colourLabel = colours.length ? `. Available colours: ${colours.join(', ')}` : '';
         return `
-          <article class="product-card" ${actionAttribute} role="button" tabindex="0" aria-label="${actionLabel} ${escapeHtml(product.name)}">
+          <article class="product-card" ${actionAttribute} role="button" tabindex="0" aria-label="${actionLabel} ${escapeHtml(product.name)}${escapeHtml(colourLabel)}">
             <img class="product-image" src="${escapeHtml(productImage(product))}" alt="${escapeHtml(product.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" ${index < 4 ? 'fetchpriority="high"' : ''} data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
-            ${product.is_product_group ? `<span class="product-group-count" title="${product.variant_count} colour options">${product.variant_count}</span>` : ''}
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
+              ${productColourSwatches(product)}
               <div class="product-price">
                 <span class="sale-price">${priceLabel}</span>
                 <span class="stock-pill ${stockClass}">${stock} in stock</span>
@@ -9588,16 +9700,21 @@
         els.productVariantImage.onerror = null;
         els.productVariantImage.src = productPlaceholderImage(imageProduct);
       };
-      els.productVariantList.innerHTML = variants.map(variant => {
+      els.productVariantList.innerHTML = variants.map((variant, index) => {
         const stock = getProductStock(variant);
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
         const optionName = variant.variant_color || variant.variant_name || variant.name;
         return `
-          <button class="product-variant-option" type="button" data-add-variant="${escapeHtml(variant.id)}">
-            <strong>${escapeHtml(optionName)}</strong>
-            <span class="product-variant-option-price">${money(variant.sale_price)}</span>
-            <span class="product-variant-option-meta">${escapeHtml(variant.sku || 'No SKU')}</span>
-            <span class="stock-pill ${stockClass}">${stock} in stock</span>
+          <button class="product-variant-option" type="button" data-add-variant="${escapeHtml(variant.id)}" aria-label="Add ${escapeHtml(variant.name)}, ${stock} in stock">
+            <img class="product-variant-option-image" src="${escapeHtml(productImage(variant))}" alt="${escapeHtml(variant.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" data-fallback="${escapeHtml(productPlaceholderImage(variant))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
+            <span class="product-variant-option-body">
+              <span class="product-variant-colour">${productColourSwatch(optionName)}<span>${escapeHtml(optionName)}</span></span>
+              <span class="product-variant-option-name">${escapeHtml(variant.name)}</span>
+              <span class="product-variant-option-footer">
+                <span class="product-variant-option-price">${money(variant.sale_price)}</span>
+                <span class="stock-pill ${stockClass}">${stock} in stock</span>
+              </span>
+            </span>
           </button>
         `;
       }).join('');
@@ -9660,9 +9777,16 @@
       state.search = '';
       renderProductBrowser();
       const grouped = productTiles(state.products);
-      const groupCardRendered = Boolean(document.querySelector('[data-open-product-group="TM8-GRP-IPAD10-HDC"]'));
+      const groupCard = document.querySelector('[data-open-product-group="TM8-GRP-IPAD10-HDC"]');
+      const groupCardRendered = Boolean(groupCard);
+      const groupCardSwatchCount = groupCard?.querySelectorAll('.product-colour-swatch').length || 0;
       openProductVariantModal('TM8-GRP-IPAD10-HDC');
       const modalOptionCount = els.productVariantList.querySelectorAll('[data-add-variant]').length;
+      const modalImageCount = els.productVariantList.querySelectorAll('.product-variant-option-image').length;
+      const modalVariantTitles = Array.from(els.productVariantList.querySelectorAll('.product-variant-option-name'))
+        .map(element => element.textContent.trim());
+      const modalColours = Array.from(els.productVariantList.querySelectorAll('.product-variant-colour'))
+        .map(element => element.textContent.trim());
       addToCart('1001');
       const zeroStockAdded = state.cart.length === 1 && state.cart[0].sku === 'TM8-TAB-1001';
       closeProductVariantModal();
@@ -9676,7 +9800,11 @@
         variantCount: grouped[0]?.variant_count || 0,
         groupStock: grouped[0]?.group_stock || 0,
         groupCardRendered,
+        groupCardSwatchCount,
         modalOptionCount,
+        modalImageCount,
+        modalVariantTitles,
+        modalColours,
         zeroStockAdded,
         modalClosedAfterAdd: !els.productVariantModal.classList.contains('show'),
         exactBarcodeDirectCard,
