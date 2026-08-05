@@ -8746,6 +8746,90 @@
       `;
     }
 
+    const tabletCaseDeviceOrder = new Map([
+      ['IPAD-97-LEGACY', 20130],
+      ['IPAD-MINI45', 20150],
+      ['IPAD-129-LEGACY', 20180],
+      ['IPAD-AIR45-PRO11', 20181],
+      ['IPAD-109-PRO11-LEGACY', 20181],
+      ['IPAD-102-GEN789', 20190],
+      ['IPAD-MINI6', 20210],
+      ['IPAD-10-GEN10', 20220],
+      ['IPAD-AIR11-2024', 20240],
+      ['IPAD-AIR13-2024', 20241],
+      ['IPAD-PRO11-2024', 20242],
+      ['IPAD-PRO13-2024', 20243],
+      ['SAMSUNG-A7', 20200],
+      ['SAMSUNG-S7-PLUS-FE', 20201],
+      ['SAMSUNG-S7-S8', 20202],
+      ['SAMSUNG-A8', 20210],
+      ['SAMSUNG-S8-PLUS', 20220],
+      ['SAMSUNG-S8-ULTRA', 20221],
+      ['SAMSUNG-A9-PLUS', 20230],
+      ['SAMSUNG-S9', 20231],
+      ['SAMSUNG-S9-PLUS', 20232],
+      ['SAMSUNG-S9-ULTRA', 20233],
+      ['SAMSUNG-S10', 20240],
+      ['SAMSUNG-S10-PLUS', 20241],
+      ['SAMSUNG-S10-ULTRA', 20242],
+      ['SAMSUNG-A11-PLUS', 20250],
+      ['UNIVERSAL-7', 30000],
+      ['UNIVERSAL-8', 30001],
+      ['UNIVERSAL-10', 30002]
+    ]);
+
+    const tabletCaseFamilyOrder = new Map([
+      ['hard case', 0],
+      ['twist leather case', 1],
+      ['z-flip case', 2],
+      ['z-fold case', 3],
+      ['flip case', 4],
+      ['bubble hard case', 5],
+      ['survivor case', 6],
+      ['tablet case', 7],
+      ['unclassified case', 8]
+    ]);
+
+    function isTabletCaseProduct(product) {
+      const category = String(product?.category || '').toLowerCase();
+      const fitCode = String(product?.fit_profile_code || '').toUpperCase();
+      return category.includes('tablet') && category.includes('case')
+        || fitCode.startsWith('IPAD-')
+        || fitCode.startsWith('SAMSUNG-')
+        || fitCode.startsWith('UNIVERSAL-');
+    }
+
+    function tabletCaseBrandRank(product) {
+      const fitCode = String(product?.fit_profile_code || '').toUpperCase();
+      const name = String(product?.name || '').toLowerCase();
+      if (fitCode.startsWith('IPAD-') || name.includes('ipad')) return 0;
+      if (fitCode.startsWith('SAMSUNG-') || name.includes('samsung')) return 1;
+      return 2;
+    }
+
+    function tabletCaseDeviceRank(product) {
+      const fitCode = String(product?.fit_profile_code || '').toUpperCase();
+      if (tabletCaseDeviceOrder.has(fitCode)) return tabletCaseDeviceOrder.get(fitCode);
+      const year = String(product?.fit_profile_name || product?.name || '').match(/\b(20\d{2})\b/);
+      return year ? Number(year[1]) * 10 + 9 : 99999;
+    }
+
+    function tabletCaseFamilyRank(product) {
+      const family = String(product?.product_family || '').trim().toLowerCase();
+      if (tabletCaseFamilyOrder.has(family)) return tabletCaseFamilyOrder.get(family);
+      const name = String(product?.name || '').toLowerCase();
+      const inferred = Array.from(tabletCaseFamilyOrder.keys()).find(label => name.startsWith(label));
+      return inferred == null ? 99 : tabletCaseFamilyOrder.get(inferred);
+    }
+
+    function compareTabletCaseProducts(a, b) {
+      return tabletCaseBrandRank(a) - tabletCaseBrandRank(b)
+        || tabletCaseDeviceRank(a) - tabletCaseDeviceRank(b)
+        || tabletCaseFamilyRank(a) - tabletCaseFamilyRank(b)
+        || String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
+        || String(a.product_group_code || a.sku || '').localeCompare(String(b.product_group_code || b.sku || ''), undefined, { numeric: true, sensitivity: 'base' });
+    }
+
     function productTiles(products, exactQuery = '') {
       const normalizedExactQuery = String(exactQuery || '').trim().toLowerCase();
       if (normalizedExactQuery) {
@@ -8795,7 +8879,9 @@
         });
       });
 
+      const tabletCasesOnly = tiles.length > 0 && tiles.every(isTabletCaseProduct);
       return tiles.sort((a, b) => {
+        if (tabletCasesOnly) return compareTabletCaseProducts(a, b);
         return displayProductStock(b) - displayProductStock(a)
           || a.name.localeCompare(b.name, undefined, { numeric: true });
       });
