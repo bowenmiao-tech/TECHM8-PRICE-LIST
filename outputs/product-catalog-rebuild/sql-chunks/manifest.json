@@ -2,7 +2,7 @@
   "setup_chunks": [
     {
       "fileName": "000-01-catalog-setup.sql",
-      "bytes": 8101
+      "bytes": 8008
     },
     {
       "fileName": "000-02-catalog-setup.sql",
@@ -18,84 +18,84 @@
     },
     {
       "fileName": "000-05-catalog-setup.sql",
-      "bytes": 26083
+      "bytes": 25295
     }
   ],
   "product_chunks": [
     {
       "fileName": "001-products-1-20.sql",
-      "bytes": 28402,
+      "bytes": 28060,
       "rows": 20
     },
     {
       "fileName": "002-products-21-40.sql",
-      "bytes": 27906,
+      "bytes": 27700,
       "rows": 20
     },
     {
       "fileName": "003-products-41-60.sql",
-      "bytes": 27444,
+      "bytes": 27519,
       "rows": 20
     },
     {
       "fileName": "004-products-61-80.sql",
-      "bytes": 27586,
+      "bytes": 27536,
       "rows": 20
     },
     {
       "fileName": "005-products-81-100.sql",
-      "bytes": 26913,
+      "bytes": 26671,
       "rows": 20
     },
     {
       "fileName": "006-products-101-120.sql",
-      "bytes": 27077,
+      "bytes": 27115,
       "rows": 20
     },
     {
       "fileName": "007-products-121-140.sql",
-      "bytes": 27372,
+      "bytes": 27365,
       "rows": 20
     },
     {
       "fileName": "008-products-141-160.sql",
-      "bytes": 27566,
+      "bytes": 27655,
       "rows": 20
     },
     {
       "fileName": "009-products-161-180.sql",
-      "bytes": 27788,
+      "bytes": 27949,
       "rows": 20
     },
     {
       "fileName": "010-products-181-200.sql",
-      "bytes": 28091,
+      "bytes": 27671,
       "rows": 20
     },
     {
       "fileName": "011-products-201-220.sql",
-      "bytes": 26265,
+      "bytes": 26155,
       "rows": 20
     },
     {
       "fileName": "012-products-221-240.sql",
-      "bytes": 28153,
+      "bytes": 28119,
       "rows": 20
     },
     {
       "fileName": "013-products-241-260.sql",
-      "bytes": 26714,
+      "bytes": 26536,
       "rows": 20
     },
     {
       "fileName": "014-products-261-280.sql",
-      "bytes": 27831,
+      "bytes": 28029,
       "rows": 20
     },
     {
-      "fileName": "015-products-281-287.sql",
-      "bytes": 11436,
-      "rows": 7
+      "fileName": "015-products-281-283.sql",
+      "bytes": 6520,
+      "rows": 3
     }
   ]
 }

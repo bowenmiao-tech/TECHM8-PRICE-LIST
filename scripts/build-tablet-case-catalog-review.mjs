@@ -64,7 +64,8 @@ function colorFromName(name) {
 
 function familyFromName(name) {
   const value = String(name ?? '');
-  if (/z[- ]?flip/i.test(value)) return 'Z-Flip Case';
+  // RepairDesk used "Z-Flip" for the same folding case sold as Z-Fold.
+  if (/z[- ]?flip/i.test(value)) return 'Z-Fold Case';
   if (/z[- ]?fold/i.test(value)) return 'Z-Fold Case';
   if (/twist\s+leather/i.test(value)) return 'Twist Leather Case';
   if (/hard\s+case/i.test(value) && /bubble/i.test(value)) return 'Bubble Hard Case';
@@ -240,7 +241,6 @@ for (const category of scrapedCategories) {
 const familyCodes = {
   'Twist Leather Case': 'TLC',
   'Z-Fold Case': 'ZFD',
-  'Z-Flip Case': 'ZFL',
   'Hard Case': 'HDC',
   'Bubble Hard Case': 'BHC',
   'Survivor Case': 'SUR',
@@ -248,6 +248,13 @@ const familyCodes = {
   'Tablet Case': 'TBC',
   'Unclassified Case': 'UNC',
 };
+
+const retiredDuplicateSourceIds = new Map([
+  ['9604', { replacementSku: 'TM8-TAB-6433', reason: 'Duplicate Black variant after Z-Flip was corrected to Z-Fold.' }],
+  ['9605', { replacementSku: 'TM8-TAB-6432', reason: 'Duplicate Pink variant after Z-Flip was corrected to Z-Fold.' }],
+  ['9606', { replacementSku: 'TM8-TAB-6428', reason: 'Duplicate Grey variant after Z-Flip was corrected to Z-Fold.' }],
+  ['8121', { replacementSku: 'TM8-TAB-6417', reason: 'Duplicate Yellow variant in the iPad 9.7-inch Z-Fold group.' }],
+]);
 
 const candidateVariants = sourceRows.map((row) => {
   const sourceId = String(row[0] ?? '').trim();
@@ -259,6 +266,10 @@ const candidateVariants = sourceRows.map((row) => {
   const groupCode = `TM8-GRP-${profile.code}-${familyCodes[family] ?? 'UNC'}`;
   const sourceKey = `${normalizeKey(category)}||${normalizeKey(originalName)}`;
   const repairdesk = repairdeskByCategoryAndName.get(sourceKey) ?? {};
+  const retiredDuplicate = retiredDuplicateSourceIds.get(sourceId);
+  const familyCorrection = /z[- ]?flip/i.test(originalName)
+    ? { original_family: 'Z-Flip Case', corrected_family: 'Z-Fold Case' }
+    : null;
   return {
     sourceId,
     newSku: `TM8-TAB-${sourceId}`,
@@ -276,14 +287,19 @@ const candidateVariants = sourceRows.map((row) => {
     storeSlug: 'park-ridge',
     sourceStock: numberValue(row[15]),
     sourceCost: numberValue(row[17]),
-    retailPrice: numberValue(row[19]),
+    retailPrice: familyCorrection ? 39.95 : numberValue(row[19]),
     repairdeskProductId: String(repairdesk.repairdesk_product_id ?? ''),
     inventoryIndexId: String(repairdesk.inventory_index_id ?? ''),
+    familyCorrection,
+    removalReason: retiredDuplicate?.reason ?? '',
+    replacementSku: retiredDuplicate?.replacementSku ?? '',
   };
 });
 
+const activeCandidateVariants = candidateVariants.filter((variant) => !variant.removalReason);
+const retiredDuplicateVariants = candidateVariants.filter((variant) => variant.removalReason);
 const candidateGroupMap = new Map();
-for (const variant of candidateVariants) {
+for (const variant of activeCandidateVariants) {
   if (!candidateGroupMap.has(variant.groupCode)) {
     candidateGroupMap.set(variant.groupCode, {
       code: variant.groupCode,
@@ -312,8 +328,9 @@ for (const group of candidateGroupMap.values()) {
   for (const variant of group.variants) variant.groupImage = image;
 }
 
-const removedNoImageVariants = candidateVariants.filter((variant) => !variant.groupImage);
-const variants = candidateVariants.filter((variant) => variant.groupImage);
+const removedNoImageVariants = activeCandidateVariants.filter((variant) => !variant.groupImage);
+const removedVariants = [...retiredDuplicateVariants, ...removedNoImageVariants];
+const variants = activeCandidateVariants.filter((variant) => variant.groupImage);
 const groupMap = new Map();
 for (const variant of variants) {
   if (!groupMap.has(variant.groupCode)) {
@@ -337,14 +354,14 @@ const groups = Array.from(groupMap.values()).sort((left, right) => left.name.loc
 const profiles = Array.from(profileMap.values()).sort((left, right) => left.name.localeCompare(right.name));
 const hardCaseCount = variants.filter((variant) => ['Hard Case', 'Bubble Hard Case'].includes(variant.family)).length;
 const twistLeatherCount = variants.filter((variant) => variant.family === 'Twist Leather Case').length;
-const zFoldFlipCount = variants.filter((variant) => ['Z-Fold Case', 'Z-Flip Case'].includes(variant.family)).length;
+const zFoldCount = variants.filter((variant) => variant.family === 'Z-Fold Case').length;
 const imageMatchCount = variants.filter((variant) => variant.variantImage).length;
 const negativeStockCount = variants.filter((variant) => variant.sourceStock < 0).length;
 
 function proposedCost(variant) {
   if (['Hard Case', 'Bubble Hard Case'].includes(variant.family)) return 15;
   if (variant.family === 'Twist Leather Case') return 5;
-  if (['Z-Fold Case', 'Z-Flip Case'].includes(variant.family)) return 4;
+  if (variant.family === 'Z-Fold Case') return 4;
   const confirmedCost = costOverrides.get(variant.newSku);
   if (Number.isFinite(confirmedCost) && confirmedCost > 0) return confirmedCost;
   return variant.sourceCost > 0 ? variant.sourceCost : null;
@@ -353,7 +370,7 @@ function proposedCost(variant) {
 function costRule(variant) {
   if (['Hard Case', 'Bubble Hard Case'].includes(variant.family)) return 'Confirmed: Hard Case';
   if (variant.family === 'Twist Leather Case') return 'Confirmed: Twist Leather Case';
-  if (['Z-Fold Case', 'Z-Flip Case'].includes(variant.family)) return 'Confirmed: Z-Fold / Z-Flip Case';
+  if (variant.family === 'Z-Fold Case') return 'Confirmed: Z-Fold Case';
   if (costOverrides.has(variant.newSku)) return 'Confirmed: Owner cost override';
   return variant.sourceCost > 0 ? 'Source cost' : 'Needs cost';
 }
@@ -459,6 +476,7 @@ const importPayload = {
         variant_image_url: variant.variantImage,
         group_image_url: variant.groupImage,
         cost_rule: costRule(variant),
+        ...(variant.familyCorrection ? { catalog_correction: variant.familyCorrection } : {}),
       },
     };
   }),
@@ -486,7 +504,7 @@ summary.getRange('A1:H1').format.rowHeight = 34;
 summary.getRange('A3:B14').values = [
   ['Metric', 'Value'],
   ['Imported variants', variants.length],
-  ['Removed products with no usable group image', removedNoImageVariants.length],
+  ['Removed duplicate or image-less products', removedVariants.length],
   ['Proposed product groups', groups.length],
   ['Fit profiles requiring review', profiles.filter((profile) => profile.status === 'Required').length],
   ['RepairDesk variant images matched', imageMatchCount],
@@ -494,7 +512,7 @@ summary.getRange('A3:B14').values = [
   ['Negative stock rows clipped to zero', negativeStockCount],
   ['Hard Case rows forced to $15 cost', hardCaseCount],
   ['Twist Leather Case rows forced to $5 cost', twistLeatherCount],
-  ['Z-Fold / Z-Flip Case rows forced to $4 cost', zFoldFlipCount],
+  ['Z-Fold Case rows forced to $4 cost', zFoldCount],
   ['Rows still missing a valid cost', unresolvedCostCount],
 ];
 summary.getRange('A3:B3').format = { fill: '#DFF4EF', font: { bold: true, color: '#075E54' } };
@@ -581,11 +599,11 @@ variantSheet.getRange(`A2:AC${variants.length + 1}`).values = variants.map((vari
 variantSheet.getRange('R2').formulas = [['=MAX(0,Q2)']];
 variantSheet.getRange(`R2:R${variants.length + 1}`).fillDown();
 variantSheet.getRange('T2').formulas = [[
-  `=IF(OR(F2="Hard Case",F2="Bubble Hard Case"),15,IF(F2="Twist Leather Case",5,IF(OR(F2="Z-Fold Case",F2="Z-Flip Case"),4,IFERROR(VLOOKUP(B2,'Cost Overrides'!$A$2:$B$${costOverrideEndRow},2,FALSE),S2))))`,
+  `=IF(OR(F2="Hard Case",F2="Bubble Hard Case"),15,IF(F2="Twist Leather Case",5,IF(F2="Z-Fold Case",4,IFERROR(VLOOKUP(B2,'Cost Overrides'!$A$2:$B$${costOverrideEndRow},2,FALSE),S2))))`,
 ]];
 variantSheet.getRange(`T2:T${variants.length + 1}`).fillDown();
 variantSheet.getRange('U2').formulas = [[
-  `=IF(OR(F2="Hard Case",F2="Bubble Hard Case"),"Confirmed: Hard Case",IF(F2="Twist Leather Case","Confirmed: Twist Leather Case",IF(OR(F2="Z-Fold Case",F2="Z-Flip Case"),"Confirmed: Z-Fold / Z-Flip Case",IF(COUNTIF('Cost Overrides'!$A$2:$A$${costOverrideEndRow},B2)>0,"Confirmed: Owner cost override",IF(S2<=0,"Needs cost","Source cost")))))`,
+  `=IF(OR(F2="Hard Case",F2="Bubble Hard Case"),"Confirmed: Hard Case",IF(F2="Twist Leather Case","Confirmed: Twist Leather Case",IF(F2="Z-Fold Case","Confirmed: Z-Fold Case",IF(COUNTIF('Cost Overrides'!$A$2:$A$${costOverrideEndRow},B2)>0,"Confirmed: Owner cost override",IF(S2<=0,"Needs cost","Source cost")))))`,
 ]];
 variantSheet.getRange(`U2:U${variants.length + 1}`).fillDown();
 variantSheet.getRange('W2').formulas = [['=V2']];
@@ -679,7 +697,7 @@ costSheet.getRange('A1:F1').values = [['Priority', 'Product Family', 'Color', 'P
 costSheet.getRange('A2:F6').values = [
   [1, 'Hard Case / Bubble Hard Case', 'Any', 15, 'Confirmed', 'All names containing Hard Case, including Bubble Hard Case.'],
   [2, 'Twist Leather Case', 'Any', 5, 'Confirmed', 'Applies to every Twist Leather Case colour.'],
-  [3, 'Z-Fold Case / Z-Flip Case', 'Any', 4, 'Confirmed', 'Applies to every Z-Fold and Z-Flip Case colour.'],
+  [3, 'Z-Fold Case', 'Any', 4, 'Confirmed', 'Applies to every Z-Fold Case colour.'],
   [4, 'Owner-confirmed override', 'Any', null, 'Confirmed', 'Use the cost saved in the Cost Overrides sheet.'],
   [5, 'All other products', 'Any', null, 'Review fallback', 'Keep source cost; rows with zero source cost remain blocked.'],
 ];
@@ -712,20 +730,22 @@ issueSheet.getRange('E:E').format.columnWidth = 52;
 removedSheet.getRange('A1:H1').values = [[
   'Source Item ID', 'New SKU', 'Original Name', 'Proposed Name', 'Source Category', 'Reason Removed', 'Variant Image URL', 'Group Main Image URL',
 ]];
-removedSheet.getRange(`A2:H${removedNoImageVariants.length + 1}`).values = removedNoImageVariants.map((variant) => [
+removedSheet.getRange(`A2:H${removedVariants.length + 1}`).values = removedVariants.map((variant) => [
   variant.sourceId,
   variant.newSku,
   variant.originalName,
   variant.proposedName,
   variant.sourceCategory,
-  'Removed because no usable product or group image exists.',
+  variant.removalReason
+    ? `${variant.removalReason} Keep ${variant.replacementSku}.`
+    : 'Removed because no usable product or group image exists.',
   variant.variantImage,
   variant.groupImage,
 ]);
-removedSheet.tables.add(`A1:H${removedNoImageVariants.length + 1}`, true, 'RemovedProductsAudit');
+removedSheet.tables.add(`A1:H${removedVariants.length + 1}`, true, 'RemovedProductsAudit');
 removedSheet.freezePanes.freezeRows(1);
 removedSheet.getRange('A1:H1').format = { fill: '#59636B', font: { bold: true, color: '#FFFFFF' }, wrapText: true };
-removedSheet.getRange(`A2:H${removedNoImageVariants.length + 1}`).format.wrapText = true;
+removedSheet.getRange(`A2:H${removedVariants.length + 1}`).format.wrapText = true;
 removedSheet.getRange('A:B').format.columnWidth = 18;
 removedSheet.getRange('C:F').format.columnWidth = 34;
 removedSheet.getRange('G:H').format.columnWidth = 44;
@@ -783,7 +803,7 @@ if (missingCostVariants.length) {
   });
 } else {
   missingCostSheet.getRange('A4:K5').merge();
-  missingCostSheet.getRange('A4').values = [['No missing costs. All 287 imported product variants have a confirmed cost.']];
+  missingCostSheet.getRange('A4').values = [[`No missing costs. All ${variants.length} imported product variants have a confirmed cost.`]];
   missingCostSheet.getRange('A4:K5').format = { fill: '#DFF4EF', font: { bold: true, color: '#075E54' }, verticalAlignment: 'center' };
 }
 missingCostSheet.getRange('A:B').format.columnWidth = 18;
@@ -802,7 +822,7 @@ const previews = [
   ['Cost Rules', 'A1:F6', 'cost-rules.png'],
   ['Cost Overrides', `A1:C${costOverrideEndRow}`, 'cost-overrides.png'],
   ['Data Issues', `A1:E${Math.min(issueRows.length + 1, 25)}`, 'issues.png'],
-  ['Removed Products', `A1:H${removedNoImageVariants.length + 1}`, 'removed-products.png'],
+  ['Removed Products', `A1:H${removedVariants.length + 1}`, 'removed-products.png'],
 ];
 for (const [sheetName, range, fileName] of previews) {
   const preview = await workbook.render({ sheetName, range, scale: 1, format: 'png' });
@@ -863,9 +883,10 @@ console.log(JSON.stringify({
   negativeStockCount,
   hardCaseCount,
   twistLeatherCount,
-  zFoldFlipCount,
+  zFoldCount,
   unresolvedCostCount,
   removedNoImageCount: removedNoImageVariants.length,
+  retiredDuplicateCount: retiredDuplicateVariants.length,
   issueRows: issueRows.length,
   inspection: inspection.ndjson,
   formulaErrors: formulaErrors.ndjson,
