@@ -1,0 +1,14 @@
+{
+  "source_workbook": "TECHM8_Car_Mounts_Costs_To_Complete.xlsx",
+  "confirmed_costs": {
+    "TM8-CAR-8866": 5,
+    "TM8-CAR-6671": 5,
+    "TM8-CAR-6659": 20
+  },
+  "removed_source_ids": [
+    "9253",
+    "9104",
+    "7816",
+    "7583"
+  ]
+}
