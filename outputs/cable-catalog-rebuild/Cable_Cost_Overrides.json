@@ -1,0 +1,26 @@
+{
+  "confirmed_costs": {
+    "TM8-CBL-9622": 5,
+    "TM8-CBL-9618": 5,
+    "TM8-CBL-7646": 3.5,
+    "TM8-CBL-6675": 3,
+    "TM8-CBL-6674": 3.3,
+    "TM8-CBL-6673": 3,
+    "TM8-CBL-6559": 3,
+    "TM8-CBL-6537": 3,
+    "TM8-CBL-6536": 3,
+    "TM8-CBL-6535": 3,
+    "TM8-CBL-6534": 3,
+    "TM8-CBL-6478": 5,
+    "TM8-CBL-6089": 5,
+    "TM8-CBL-5943": 6,
+    "TM8-CBL-5942": 6,
+    "TM8-CBL-5940": 5
+  },
+  "removed_source_ids": [
+    "6537",
+    "6535",
+    "6534"
+  ],
+  "removal_reason": "No RepairDesk product image; excluded under the confirmed no-image SKU policy."
+}

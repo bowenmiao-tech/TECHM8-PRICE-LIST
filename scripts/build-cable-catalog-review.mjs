@@ -12,6 +12,7 @@ const temporaryRawImagePath = 'C:/Users/User/AppData/Local/Temp/repairdesk-cable
 const temporaryExistingProductsPath = 'C:/Users/User/AppData/Local/Temp/existing-cable-products.json';
 const cleanImagePath = `${outputDir}/RepairDesk_Cable_Images.json`;
 const existingSnapshotPath = `${outputDir}/Existing_Cable_Products_Snapshot.json`;
+const costOverridePath = `${outputDir}/Cable_Cost_Overrides.json`;
 const reviewWorkbookPath = `${outputDir}/TECHM8_Cable_Catalog_Import_Review.xlsx`;
 const costWorkbookPath = `${outputDir}/TECHM8_Cable_Costs_To_Complete.xlsx`;
 const importJsonPath = `${outputDir}/TECHM8_Cable_Draft_Import.json`;
@@ -86,6 +87,9 @@ const sourceValues = sourceSheet.getUsedRange(true).values;
 const sourceRows = sourceValues.slice(2).filter((row) => String(row[0] ?? '').trim());
 const existingProducts = JSON.parse((await fs.readFile(existingProductsPath, 'utf8')).replace(/^\uFEFF/, ''));
 const rawImageRows = parseImageRows(await fs.readFile(rawImagePath, 'utf8'));
+const costOverridePayload = JSON.parse(await fs.readFile(costOverridePath, 'utf8'));
+const confirmedCosts = new Map(Object.entries(costOverridePayload.confirmed_costs ?? {}).map(([sku, cost]) => [sku, numberValue(cost)]));
+const removedSourceIds = new Set((costOverridePayload.removed_source_ids ?? []).map(String));
 await fs.writeFile(existingSnapshotPath, JSON.stringify(existingProducts, null, 2), 'utf8');
 
 const sourceNames = new Set(sourceRows.map((row) => normalizeKey(row[4])));
@@ -188,14 +192,18 @@ const products = sourceRows.map((row) => {
   const sourceSku = String(row[8] ?? '').trim();
   const sourceUpc = String(row[11] ?? '').trim();
   const existing = findExistingProduct(row);
+  const sku = existing?.sku ?? `TM8-CBL-${sourceId}`;
   const proposedName = existing?.name ?? nameOverrides.get(sourceId) ?? originalName;
   const cableType = cableTypeFromName(proposedName);
   const length = lengthFromProduct(proposedName, sourceCategory);
   const sourceCost = numberValue(row[17]);
   const retailPrice = numberValue(row[19]);
-  const costIssue = !existing && sourceCost <= 0
+  const overrideCost = confirmedCosts.get(sku);
+  const confirmedCost = existing?.cost_price
+    ?? (overrideCost > 0 ? overrideCost : sourceCost);
+  const costIssue = !existing && confirmedCost <= 0
     ? 'Cost required'
-    : !existing && sourceCost >= retailPrice
+    : !existing && confirmedCost >= retailPrice
       ? 'Cost must be below retail price'
       : '';
   const repairDeskImage = imageByName.get(normalizeKey(originalName)) ?? '';
@@ -210,11 +218,12 @@ const products = sourceRows.map((row) => {
     }
     usedBarcodes.add(barcode);
   }
-  const isReady = Boolean(existing || (!costIssue && imageUrl));
+  const removedFromCatalog = !existing && removedSourceIds.has(sourceId);
+  const isReady = Boolean(existing || (!removedFromCatalog && !costIssue && imageUrl));
   return {
     sourceId,
     existing,
-    sku: existing?.sku ?? `TM8-CBL-${sourceId}`,
+    sku,
     barcode,
     originalName,
     proposedName,
@@ -226,20 +235,24 @@ const products = sourceRows.map((row) => {
     sourceUpc,
     sourceQuantity: numberValue(row[15]),
     sourceCost,
+    overrideCost: overrideCost > 0 ? overrideCost : null,
+    confirmedCost,
     retailPrice: existing?.sale_price ?? retailPrice,
     sourcePosVisible: String(row[35] ?? '').trim().toUpperCase() === 'YES',
     imageUrl,
     costIssue,
+    removedFromCatalog,
     isReady,
   };
 });
 
 const existingMatches = products.filter((product) => product.existing);
-const newProducts = products.filter((product) => !product.existing);
+const removedProducts = products.filter((product) => product.removedFromCatalog);
+const newProducts = products.filter((product) => !product.existing && !product.removedFromCatalog);
 const readyNewProducts = newProducts.filter((product) => product.isReady);
 const blockedNewProducts = newProducts.filter((product) => !product.isReady);
 const costReviewProducts = newProducts.filter((product) => product.costIssue);
-const missingImageProducts = newProducts.filter((product) => !product.imageUrl);
+const missingImageProducts = products.filter((product) => !product.existing && !product.imageUrl);
 
 const importPayload = {
   generated_at: new Date().toISOString(),
@@ -250,7 +263,8 @@ const importPayload = {
     inventory_imported: false,
     zero_stock_checkout_allowed: true,
     online_visible: false,
-    invalid_cost_or_missing_image_blocked: true,
+    invalid_cost_blocked: true,
+    missing_image_products_removed: true,
   },
   products: newProducts.map((product) => ({
     sku: product.sku,
@@ -264,7 +278,7 @@ const importPayload = {
       .replace('..', '.'),
     condition_label: 'Brand New',
     compatibility: product.cableType,
-    cost_price: product.costIssue ? null : product.sourceCost,
+    cost_price: product.costIssue ? null : product.confirmedCost,
     retail_price: product.retailPrice,
     image_url: product.imageUrl,
     stock_quantity: 0,
@@ -290,6 +304,7 @@ const importPayload = {
       cable_type: product.cableType,
       cable_length: product.length,
       cost_status: product.costIssue || 'valid',
+      cost_source: product.overrideCost ? 'owner_override' : 'repairdesk_source',
       image_status: product.imageUrl ? 'available' : 'missing',
     },
   })),
@@ -298,6 +313,12 @@ const importPayload = {
     product_id: product.existing.id,
     sku: product.existing.sku,
     name: product.existing.name,
+  })),
+  removed_products: removedProducts.map((product) => ({
+    source_external_id: product.sourceId,
+    sku: product.sku,
+    name: product.proposedName,
+    reason: costOverridePayload.removal_reason,
   })),
 };
 
@@ -321,7 +342,7 @@ summarySheet.getRange('A3:B11').values = [
   ['New products active in POS', readyNewProducts.length],
   ['New products blocked pending review', blockedNewProducts.length],
   ['New products needing cost correction', costReviewProducts.length],
-  ['New products missing an image', missingImageProducts.length],
+  ['Products removed because image is missing', removedProducts.length],
   ['Source stock imported', 0],
 ];
 summarySheet.getRange('A3:B3').format = { fill: '#DFF4EF', font: { bold: true, color: '#075E54' } };
@@ -337,12 +358,14 @@ summarySheet.getRange('D4:H10').values = [
   ['Generate a TECHM8 SKU only for products missing from the new POS.'],
   ['All new store and website stock starts at zero.'],
   ['Zero stock remains available for checkout.'],
-  ['Block only products with invalid cost or no image.'],
+  ['Remove products without a source image; block only invalid costs.'],
 ];
 summarySheet.getRange('D4:H10').format = { wrapText: true, fill: '#F7FAFC', font: { color: '#243640' } };
 summarySheet.getRange('A13:H13').merge();
-summarySheet.getRange('A13').values = [['Use the separate cost workbook to correct blocked costs. Existing products are intentionally excluded from that workbook.']];
-summarySheet.getRange('A13:H13').format = { fill: '#FFF1B8', font: { bold: true, color: '#6B4F00' }, wrapText: true };
+summarySheet.getRange('A13').values = [[costReviewProducts.length
+  ? 'Use the separate cost workbook to correct blocked costs. Existing products are intentionally excluded from that workbook.'
+  : 'All retained products have a confirmed cost and image and are ready for the POS.']];
+summarySheet.getRange('A13:H13').format = { fill: costReviewProducts.length ? '#FFF1B8' : '#DFF4EF', font: { bold: true, color: costReviewProducts.length ? '#6B4F00' : '#075E54' }, wrapText: true };
 summarySheet.getRange('A:H').format.columnWidth = 16;
 summarySheet.getRange('A:A').format.columnWidth = 44;
 summarySheet.getRange('D:H').format.columnWidth = 19;
@@ -355,7 +378,7 @@ const productHeaders = [
 productSheet.getRange('A1:S1').values = [productHeaders];
 productSheet.getRange(`A2:S${products.length + 1}`).values = products.map((product) => [
   product.sourceId,
-  product.existing ? 'Existing - unchanged' : product.isReady ? 'New - active' : 'New - blocked',
+  product.existing ? 'Existing - unchanged' : product.removedFromCatalog ? 'Removed - no image' : product.isReady ? 'New - active' : 'New - blocked',
   product.sku,
   product.barcode,
   product.originalName,
@@ -363,7 +386,7 @@ productSheet.getRange(`A2:S${products.length + 1}`).values = products.map((produ
   product.cableType,
   product.length,
   product.sourceCategory,
-  product.existing ? product.existing.cost_price : product.sourceCost || null,
+  product.existing ? product.existing.cost_price : product.confirmedCost || null,
   product.retailPrice,
   product.imageUrl,
   product.sourceQuantity,
@@ -374,7 +397,9 @@ productSheet.getRange(`A2:S${products.length + 1}`).values = products.map((produ
   product.sourceUpc,
   product.existing
     ? 'Existing record preserved exactly.'
-    : [product.costIssue, !product.imageUrl ? 'Image required' : '', product.sourceQuantity !== 0 ? 'Source stock reset to zero' : '']
+    : product.removedFromCatalog
+      ? costOverridePayload.removal_reason
+      : [product.costIssue, !product.imageUrl ? 'Image required' : '', product.overrideCost ? 'Owner-confirmed cost applied' : '', product.sourceQuantity !== 0 ? 'Source stock reset to zero' : '']
       .filter(Boolean)
       .join('; '),
 ]);
@@ -393,7 +418,7 @@ productSheet.getRange(`J2:K${products.length + 1}`).format.numberFormat = '$#,##
 productSheet.getRange(`M2:M${products.length + 1}`).format.numberFormat = '0';
 
 const categoryCounts = new Map();
-for (const product of products) {
+for (const product of products.filter((product) => !product.removedFromCatalog)) {
   const key = `${product.cableType}|${product.length ?? 'Not stated'}`;
   categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + 1);
 }
@@ -434,7 +459,7 @@ const imageHeaders = ['Source Item ID', 'New SKU', 'Product Name', 'Source POS V
 imageSheet.getRange('A1:F1').values = [imageHeaders];
 if (missingImageProducts.length) {
   imageSheet.getRange(`A2:F${missingImageProducts.length + 1}`).values = missingImageProducts.map((product) => [
-    product.sourceId, product.sku, product.proposedName, product.sourcePosVisible ? 'YES' : 'NO', product.costIssue || 'Valid', 'No product image found in RepairDesk POS.',
+    product.sourceId, product.sku, product.proposedName, product.sourcePosVisible ? 'YES' : 'NO', product.costIssue || 'Valid', product.removedFromCatalog ? costOverridePayload.removal_reason : 'No product image found in RepairDesk POS.',
   ]);
   imageSheet.tables.add(`A1:F${missingImageProducts.length + 1}`, true, 'CableMissingImages');
   imageSheet.getRange(`A2:F${missingImageProducts.length + 1}`).format.wrapText = true;
@@ -456,16 +481,22 @@ costInputSheet.getRange('A2:I2').merge();
 costInputSheet.getRange('A2').values = [['Enter the unit cost in the yellow Cost To Enter column. Existing POS products are not included and will not be changed.']];
 costInputSheet.getRange('A2:I2').format = { fill: '#EAF2FF', font: { bold: true, color: '#204B7A' }, wrapText: true };
 costInputSheet.getRange('A4:I4').values = [costHeaders];
-costInputSheet.getRange(`A5:I${costReviewProducts.length + 4}`).values = costReviewProducts.map((product) => [
-  product.sourceId, product.sku, product.proposedName, product.cableType, product.length,
-  product.retailPrice, product.sourceCost || null, null, product.costIssue,
-]);
-costInputSheet.tables.add(`A4:I${costReviewProducts.length + 4}`, true, 'CableCostsToComplete');
 costInputSheet.freezePanes.freezeRows(4);
 costInputSheet.getRange('A4:I4').format = { fill: '#9C2F22', font: { bold: true, color: '#FFFFFF' }, wrapText: true };
-costInputSheet.getRange(`A5:I${costReviewProducts.length + 4}`).format.wrapText = true;
-costInputSheet.getRange(`H5:H${costReviewProducts.length + 4}`).format = { fill: '#FFF1B8', font: { bold: true, color: '#6B4F00' } };
-costInputSheet.getRange(`F5:H${costReviewProducts.length + 4}`).format.numberFormat = '$#,##0.00';
+if (costReviewProducts.length) {
+  costInputSheet.getRange(`A5:I${costReviewProducts.length + 4}`).values = costReviewProducts.map((product) => [
+    product.sourceId, product.sku, product.proposedName, product.cableType, product.length,
+    product.retailPrice, product.sourceCost || null, null, product.costIssue,
+  ]);
+  costInputSheet.tables.add(`A4:I${costReviewProducts.length + 4}`, true, 'CableCostsToComplete');
+  costInputSheet.getRange(`A5:I${costReviewProducts.length + 4}`).format.wrapText = true;
+  costInputSheet.getRange(`H5:H${costReviewProducts.length + 4}`).format = { fill: '#FFF1B8', font: { bold: true, color: '#6B4F00' } };
+  costInputSheet.getRange(`F5:H${costReviewProducts.length + 4}`).format.numberFormat = '$#,##0.00';
+} else {
+  costInputSheet.getRange('A5:I5').merge();
+  costInputSheet.getRange('A5').values = [['No cost updates are outstanding.']];
+  costInputSheet.getRange('A5:I5').format = { fill: '#DFF4EF', font: { bold: true, color: '#075E54' } };
+}
 costInputSheet.getRange('A:B').format.columnWidth = 18;
 costInputSheet.getRange('C:D').format.columnWidth = 36;
 costInputSheet.getRange('E:I').format.columnWidth = 18;
@@ -484,9 +515,9 @@ const previews = [
   [workbook, 'Import Summary', 'A1:H13', 'summary.png'],
   [workbook, 'Product Review', `A1:S${products.length + 1}`, 'products.png'],
   [workbook, 'Category Plan', `A1:E${categoryRows.length + 1}`, 'category-plan.png'],
-  [workbook, 'Cost Review', `A1:I${costReviewProducts.length + 1}`, 'cost-review.png'],
-  [workbook, 'Missing Images', `A1:F${missingImageProducts.length + 1}`, 'missing-images.png'],
-  [costWorkbook, 'Costs To Complete', `A1:I${costReviewProducts.length + 4}`, 'costs-to-complete.png'],
+  [workbook, 'Cost Review', `A1:I${Math.max(2, costReviewProducts.length + 1)}`, 'cost-review.png'],
+  [workbook, 'Missing Images', `A1:F${Math.max(2, missingImageProducts.length + 1)}`, 'missing-images.png'],
+  [costWorkbook, 'Costs To Complete', `A1:I${Math.max(5, costReviewProducts.length + 4)}`, 'costs-to-complete.png'],
 ];
 for (const [previewWorkbook, sheetName, range, fileName] of previews) {
   const preview = await previewWorkbook.render({ sheetName, range, scale: 1, format: 'png' });
@@ -587,6 +618,12 @@ set name = excluded.name,
     source_metadata = excluded.source_metadata,
     updated_at = timezone('utc'::text, now());
 
+delete from public.products
+where source_system = 'repairdesk_cables'
+  and source_external_id in (
+    select jsonb_array_elements_text(${jsonLiteral(importPayload.removed_products.map((product) => product.source_external_id))})
+  );
+
 commit;
 
 select
@@ -605,6 +642,7 @@ console.log(JSON.stringify({
   newProducts: newProducts.length,
   readyNewProducts: readyNewProducts.length,
   blockedNewProducts: blockedNewProducts.length,
+  removedProducts: removedProducts.length,
   costReviewProducts: costReviewProducts.length,
   missingImageProducts: missingImageProducts.length,
   cleanedImages: cleanImageRows.length,
