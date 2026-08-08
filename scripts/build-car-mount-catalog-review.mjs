@@ -153,7 +153,7 @@ const readyProducts = candidateProducts.filter((product) => product.confirmedCos
 const importPayload = {
   generated_at: new Date().toISOString(),
   source_file: 'products (15).xlsx',
-  category: { slug: 'holder-car-play-charger', name: 'Car Accessories' },
+  category: { slug: 'holder-car-play-charger', name: 'Car Holders' },
   release_policy: {
     inventory_imported: false,
     source_pos_hidden_excluded: true,

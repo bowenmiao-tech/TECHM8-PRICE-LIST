@@ -1,0 +1,899 @@
+[
+  {
+    "id": 98,
+    "sku": "694102765160",
+    "slug": "wekome-wdc-50-240w-charging-cable",
+    "name": "WEKOME WDC-50 240W Charging Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 4,
+    "sale_price": 39,
+    "compare_at_price": null,
+    "barcode": "6941027651605",
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 29,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 29,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757589619-6f682b8e.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757589619-6f682b8e.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757589619-6f682b8e.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757589619-6f682b8e.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-50 240W Charging Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757587969-897e1c38.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757587969-897e1c38.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-50 240W Charging Cable",
+        "sort_order": 1
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757590859-cae93571.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757590859-cae93571.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-50 240W Charging Cable",
+        "sort_order": 2
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757595946-c781b498.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757595946-c781b498.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-50 240W Charging Cable",
+        "sort_order": 3
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757589619-6f682b8e.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757589619-6f682b8e.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-50 240W Charging Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757587969-897e1c38.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757587969-897e1c38.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-50 240W Charging Cable",
+        "sort_order": 1
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757590859-cae93571.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757590859-cae93571.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-50 240W Charging Cable",
+        "sort_order": 2
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757595946-c781b498.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-50-240w-charging-cable/1779757595946-c781b498.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-50 240W Charging Cable",
+        "sort_order": 3
+      }
+    ],
+    "updated_at": "2026-07-19T05:38:19.071421+00:00"
+  },
+  {
+    "id": 97,
+    "sku": "1025940",
+    "slug": "wekome-66w-wdc-59a-type-c-usb-charging-data-cable",
+    "name": "WEKOME 66W WDC-59a Type-C-USB Charging Data Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 2,
+    "sale_price": 31.95,
+    "compare_at_price": null,
+    "barcode": "6941027651346",
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 2,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 2,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757925225-105f135e.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757925225-105f135e.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757925225-105f135e.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757925225-105f135e.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME 66W WDC-59a Type-C-USB Charging Data Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757926380-dacdd26b.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757926380-dacdd26b.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME 66W WDC-59a Type-C-USB Charging Data Cable",
+        "sort_order": 1
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757925225-105f135e.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757925225-105f135e.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME 66W WDC-59a Type-C-USB Charging Data Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757926380-dacdd26b.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-66w-wdc-59a-type-c-usb-charging-data-cable/1779757926380-dacdd26b.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME 66W WDC-59a Type-C-USB Charging Data Cable",
+        "sort_order": 1
+      }
+    ],
+    "updated_at": "2026-07-19T05:38:18.67971+00:00"
+  },
+  {
+    "id": 96,
+    "sku": "1026141",
+    "slug": "wekome-wdc-60-type-c-c-charging-data-cable",
+    "name": "WEKOME WDC-60 Type-C-C Charging Data Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 2,
+    "sale_price": 36.59,
+    "compare_at_price": null,
+    "barcode": "6941027651360",
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 9,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 9,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757900970-2b6d6d0b.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757900970-2b6d6d0b.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757900970-2b6d6d0b.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757900970-2b6d6d0b.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-60 Type-C-C Charging Data Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757899694-df031ad5.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757899694-df031ad5.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-60 Type-C-C Charging Data Cable",
+        "sort_order": 1
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757900970-2b6d6d0b.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757900970-2b6d6d0b.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-60 Type-C-C Charging Data Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757899694-df031ad5.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-60-type-c-c-charging-data-cable/1779757899694-df031ad5.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-60 Type-C-C Charging Data Cable",
+        "sort_order": 1
+      }
+    ],
+    "updated_at": "2026-07-19T05:38:18.213445+00:00"
+  },
+  {
+    "id": 95,
+    "sku": "103841038",
+    "slug": "wekome-wdc-61-lighting-to-typec-charging-data-cable",
+    "name": "WEKOME WDC-61 Lighting to TypeC Charging Data Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 2,
+    "sale_price": 36.59,
+    "compare_at_price": null,
+    "barcode": "6941027651384",
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 1,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 1,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757858531-b4e92ab9.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757858531-b4e92ab9.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757858531-b4e92ab9.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757858531-b4e92ab9.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-61 Lighting to TypeC Charging Data Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757856696-2a5b9ce5.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757856696-2a5b9ce5.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-61 Lighting to TypeC Charging Data Cable",
+        "sort_order": 1
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757858531-b4e92ab9.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757858531-b4e92ab9.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-61 Lighting to TypeC Charging Data Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757856696-2a5b9ce5.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-61-lighting-to-typec-charging-data-cable/1779757856696-2a5b9ce5.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-61 Lighting to TypeC Charging Data Cable",
+        "sort_order": 1
+      }
+    ],
+    "updated_at": "2026-07-19T05:38:17.846945+00:00"
+  },
+  {
+    "id": 94,
+    "sku": "110671637",
+    "slug": "wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable",
+    "name": "WEKOME WDC-123i U-Lighting Kinkong Raycor Fast Charging Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 0.9,
+    "sale_price": 35.95,
+    "compare_at_price": null,
+    "barcode": "6941027656937",
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 25,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 25,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757734215-029de1dc.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757734215-029de1dc.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757734215-029de1dc.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757734215-029de1dc.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-123i U-Lighting Kinkong Raycor Fast Charging Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757735498-5c442436.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757735498-5c442436.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-123i U-Lighting Kinkong Raycor Fast Charging Cable",
+        "sort_order": 1
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757734215-029de1dc.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757734215-029de1dc.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-123i U-Lighting Kinkong Raycor Fast Charging Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757735498-5c442436.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123i-u-lighting-kinkong-raycor-fast-charging-cable/1779757735498-5c442436.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-123i U-Lighting Kinkong Raycor Fast Charging Cable",
+        "sort_order": 1
+      }
+    ],
+    "updated_at": "2026-07-19T05:38:17.43799+00:00"
+  },
+  {
+    "id": 93,
+    "sku": "110681638",
+    "slug": "wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable",
+    "name": "WEKOME WDC-123a U-Type C Kinkong Raycor Fast Charging Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 0.9,
+    "sale_price": 35.95,
+    "compare_at_price": null,
+    "barcode": "6941027656044",
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 24,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 24,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757683334-f93b610d.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757683334-f93b610d.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757683334-f93b610d.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757683334-f93b610d.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-123a U-Type C Kinkong Raycor Fast Charging Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757684459-314c9766.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757684459-314c9766.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-123a U-Type C Kinkong Raycor Fast Charging Cable",
+        "sort_order": 1
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757683334-f93b610d.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757683334-f93b610d.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-123a U-Type C Kinkong Raycor Fast Charging Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757684459-314c9766.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-123a-u-type-c-kinkong-raycor-fast-charging-cable/1779757684459-314c9766.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-123a U-Type C Kinkong Raycor Fast Charging Cable",
+        "sort_order": 1
+      }
+    ],
+    "updated_at": "2026-07-19T05:38:17.030245+00:00"
+  },
+  {
+    "id": 110,
+    "sku": "6941027651469",
+    "slug": "wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable",
+    "name": "WEKOME Gray WDC-51 240W 4-in-1 Fast Charging Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 4.2,
+    "sale_price": 39.95,
+    "compare_at_price": null,
+    "barcode": null,
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 0,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 0,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437328331-3cb711d0.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437328331-3cb711d0.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437328331-3cb711d0.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437328331-3cb711d0.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME Gray WDC-51 240W 4-in-1 Fast Charging Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437377122-fcabacb1.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437377122-fcabacb1.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME Gray WDC-51 240W 4-in-1 Fast Charging Cable",
+        "sort_order": 1
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437370250-b3475340.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437370250-b3475340.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME Gray WDC-51 240W 4-in-1 Fast Charging Cable",
+        "sort_order": 2
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437328331-3cb711d0.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437328331-3cb711d0.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME Gray WDC-51 240W 4-in-1 Fast Charging Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437377122-fcabacb1.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437377122-fcabacb1.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME Gray WDC-51 240W 4-in-1 Fast Charging Cable",
+        "sort_order": 1
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437370250-b3475340.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-gray-wdc-51-240w-4-in-1-fast-charging-cable/1784437370250-b3475340.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME Gray WDC-51 240W 4-in-1 Fast Charging Cable",
+        "sort_order": 2
+      }
+    ],
+    "updated_at": "2026-07-19T05:31:56.650798+00:00"
+  },
+  {
+    "id": 109,
+    "sku": "6941027660096-COPY",
+    "slug": "wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy",
+    "name": "WEKOME WDC-C33 2m USB-C to Lightning Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 2.6,
+    "sale_price": 39.99,
+    "compare_at_price": null,
+    "barcode": null,
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 0,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 0,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437129690-7437d24e.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437129690-7437d24e.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437129690-7437d24e.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437129690-7437d24e.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 2m USB-C to Lightning Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437099826-20a0cf88.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437099826-20a0cf88.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable (Copy)",
+        "sort_order": 1
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437129690-7437d24e.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437129690-7437d24e.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 2m USB-C to Lightning Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437099826-20a0cf88.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable-copy/1784437099826-20a0cf88.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable (Copy)",
+        "sort_order": 1
+      }
+    ],
+    "updated_at": "2026-07-19T05:31:56.431912+00:00"
+  },
+  {
+    "id": 108,
+    "sku": "6941027660096",
+    "slug": "wekome-wdc-c33-1-2m-usb-c-to-lightning-cable",
+    "name": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 1.8,
+    "sale_price": 35.99,
+    "compare_at_price": null,
+    "barcode": null,
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 0,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 0,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437020130-8003f0a6.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437020130-8003f0a6.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437020130-8003f0a6.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437020130-8003f0a6.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437023910-a4f3b8d1.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437023910-a4f3b8d1.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable",
+        "sort_order": 1
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437048549-9db56012.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437048549-9db56012.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable",
+        "sort_order": 2
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437020130-8003f0a6.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437020130-8003f0a6.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable",
+        "sort_order": 0
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437023910-a4f3b8d1.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437023910-a4f3b8d1.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable",
+        "sort_order": 1
+      },
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437048549-9db56012.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/wekome-wdc-c33-1-2m-usb-c-to-lightning-cable/1784437048549-9db56012.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "WEKOME WDC-C33 1.2m USB-C to Lightning Cable",
+        "sort_order": 2
+      }
+    ],
+    "updated_at": "2026-07-19T05:31:56.149766+00:00"
+  },
+  {
+    "id": 99,
+    "sku": "8830389",
+    "slug": "1m-ultra-tough-type-c-to-type-c-cable",
+    "name": "1M ULTRA TOUGH TYPE C TO TYPE C CABLE",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 0,
+    "sale_price": 35,
+    "compare_at_price": null,
+    "barcode": null,
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 9,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 9,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-type-c-to-type-c-cable/1784437660210-503b3b04.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-type-c-to-type-c-cable/1784437660210-503b3b04.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-type-c-to-type-c-cable/1784437660210-503b3b04.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-type-c-to-type-c-cable/1784437660210-503b3b04.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "1M ULTRA TOUGH TYPE C TO TYPE C CABLE",
+        "sort_order": 0
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-type-c-to-type-c-cable/1784437660210-503b3b04.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-type-c-to-type-c-cable/1784437660210-503b3b04.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "1M ULTRA TOUGH TYPE C TO TYPE C CABLE",
+        "sort_order": 0
+      }
+    ],
+    "updated_at": "2026-07-19T05:07:46.182932+00:00"
+  },
+  {
+    "id": 100,
+    "sku": "8822381",
+    "slug": "1m-ultra-tough-type-c-to-lightning-cable",
+    "name": "1M Ultra Tough Type c to Lightning Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 0,
+    "sale_price": 35,
+    "compare_at_price": null,
+    "barcode": null,
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 5,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 5,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-type-c-to-lightning-cable/1784437643393-879d59ec.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-type-c-to-lightning-cable/1784437643393-879d59ec.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-type-c-to-lightning-cable/1784437643393-879d59ec.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-type-c-to-lightning-cable/1784437643393-879d59ec.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "1M Ultra Tough Type c to Lightning Cable",
+        "sort_order": 0
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-type-c-to-lightning-cable/1784437643393-879d59ec.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-type-c-to-lightning-cable/1784437643393-879d59ec.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "1M Ultra Tough Type c to Lightning Cable",
+        "sort_order": 0
+      }
+    ],
+    "updated_at": "2026-07-19T05:07:30.473316+00:00"
+  },
+  {
+    "id": 101,
+    "sku": "8014563",
+    "slug": "3-in-1-cabin-crew-charging-cable",
+    "name": "3 in 1 Cabin Crew Charging Cable",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 0,
+    "sale_price": 25,
+    "compare_at_price": null,
+    "barcode": null,
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 2,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 2,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/3-in-1-cabin-crew-charging-cable/1784437615884-f3386886.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/3-in-1-cabin-crew-charging-cable/1784437615884-f3386886.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/3-in-1-cabin-crew-charging-cable/1784437615884-f3386886.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/3-in-1-cabin-crew-charging-cable/1784437615884-f3386886.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "3 in 1 Cabin Crew Charging Cable",
+        "sort_order": 0
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/3-in-1-cabin-crew-charging-cable/1784437615884-f3386886.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/3-in-1-cabin-crew-charging-cable/1784437615884-f3386886.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "3 in 1 Cabin Crew Charging Cable",
+        "sort_order": 0
+      }
+    ],
+    "updated_at": "2026-07-19T05:07:04.509422+00:00"
+  },
+  {
+    "id": 102,
+    "sku": "59065",
+    "slug": "1m-ultra-tough-micro-usb-cable",
+    "name": "1M ULTRA TOUGH LIGHTING CABLE",
+    "category": {
+      "id": 19,
+      "slug": "cable",
+      "name": "Cable"
+    },
+    "category_id": 19,
+    "category_slug": "cable",
+    "category_name": "Cable",
+    "cost_price": 1.5,
+    "sale_price": 29,
+    "compare_at_price": null,
+    "barcode": null,
+    "variant_name": null,
+    "variant_color": null,
+    "source_system": null,
+    "source_external_id": null,
+    "product_group": null,
+    "product_group_id": null,
+    "product_group_code": null,
+    "product_group_name": null,
+    "product_group_image_url": null,
+    "fit_profile": null,
+    "total_stock": 34,
+    "is_pos_visible": true,
+    "store_inventory": [
+      {
+        "store_slug": "warehouse-dispatch",
+        "store_name": "Warehouse Dispatch",
+        "quantity": 34,
+        "shelf_location": "ONLINE"
+      }
+    ],
+    "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-micro-usb-cable/1784437577400-dbfd3a8d.webp",
+    "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-micro-usb-cable/1784437577400-dbfd3a8d.webp?width=160&height=160&resize=contain&quality=70",
+    "gallery_images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-micro-usb-cable/1784437577400-dbfd3a8d.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-micro-usb-cable/1784437577400-dbfd3a8d.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "1M ULTRA TOUGH LIGHTING CABLE",
+        "sort_order": 0
+      }
+    ],
+    "images": [
+      {
+        "image_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/object/public/product-images/product-details/1m-ultra-tough-micro-usb-cable/1784437577400-dbfd3a8d.webp",
+        "thumbnail_url": "https://fwlronvmgqzkleofriis.supabase.co/storage/v1/render/image/public/product-images/product-details/1m-ultra-tough-micro-usb-cable/1784437577400-dbfd3a8d.webp?width=160&height=160&resize=contain&quality=70",
+        "alt_text": "1M ULTRA TOUGH LIGHTING CABLE",
+        "sort_order": 0
+      }
+    ],
+    "updated_at": "2026-07-19T05:06:33.67271+00:00"
+  }
+]
