@@ -7335,6 +7335,7 @@
         return 'Other & Universal';
       }
       if (category === 'Tablet Cases') {
+        if (/universal/.test(text)) return 'Other & Universal';
         if (/samsung|galaxy tab/.test(text)) return 'Samsung Galaxy Tab';
         if (/ipad|apple/.test(text)) return 'Apple iPad';
         return 'Other & Universal';
