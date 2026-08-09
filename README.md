@@ -64,7 +64,8 @@ Completed product-sale flow:
 - Product browsing opens on a category grid; staff can enter a category or switch to `All Products` without losing the fixed checkout panel.
 - Product cards show one main image, name, sale price, and stock for the selected store.
 - Search supports product name, SKU, and barcode.
-- Categories come from the product API and category search remains global across all products.
+- The POS always shows these fixed retail groups, including empty groups: `Phone Cases`, `Tablet Cases`, `Screen Protection`, `Cables & Adapters`, `Charging & Power`, `Audio`, `Mounts & Holders`, `Watch Accessories`, `Computer & Gaming`, and `Other Electronics`.
+- Existing API categories are mapped into those groups in the POS display layer. Source product records are not renamed or rewritten, and search still includes the original category.
 - A local product snapshot is displayed immediately when available, while the protected live API refreshes in the background.
 - Product images are loaded progressively, and gallery thumbnails are intentionally omitted to keep the POS fast.
 - The entire product card adds the item to the cart.

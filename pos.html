@@ -850,7 +850,7 @@
 
     .category-card {
       min-width: 0;
-      height: 154px;
+      height: 176px;
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;
       gap: 10px;
@@ -863,6 +863,12 @@
       text-align: left;
       overflow: hidden;
       transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .category-card.is-empty {
+      border-style: dashed;
+      background: #fbfcfc;
+      box-shadow: none;
     }
 
     .category-card:hover {
@@ -900,6 +906,19 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .category-card-description {
+      min-height: 30px;
+      display: -webkit-box;
+      overflow: hidden;
+      color: #61716f;
+      font-size: 11px;
+      font-weight: 650;
+      line-height: 1.35;
+      white-space: normal;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
     }
 
     .category-card-count {
@@ -4274,7 +4293,7 @@
       }
 
       .category-card {
-        height: 132px;
+        height: 160px;
         padding: 13px;
       }
 
@@ -5074,6 +5093,21 @@
         store_stock: { 'park-ridge': 5, fairfield: 3, 'north-lakes': 4, toowong: 2, brassall: 2 }
       }
     ];
+
+    const POS_PRODUCT_CATEGORIES = [
+      { name: 'Phone Cases', icon: 'bi-phone', description: 'Phone cases by brand and model' },
+      { name: 'Tablet Cases', icon: 'bi-tablet', description: 'iPad, Galaxy Tab, and universal cases' },
+      { name: 'Screen Protection', icon: 'bi-phone', description: 'Phone, tablet, watch, and lens protection' },
+      { name: 'Cables & Adapters', icon: 'bi-usb-plug', description: 'Charging, data, display, network, and audio' },
+      { name: 'Charging & Power', icon: 'bi-lightning-charge', description: 'Wall, wireless, car, laptop, and power banks' },
+      { name: 'Audio', icon: 'bi-headphones', description: 'Earphones, headphones, headsets, and speakers' },
+      { name: 'Mounts & Holders', icon: 'bi-car-front', description: 'Vehicle, desk, monitor, and device holders' },
+      { name: 'Watch Accessories', icon: 'bi-smartwatch', description: 'Watch bands and cases' },
+      { name: 'Computer & Gaming', icon: 'bi-controller', description: 'Computer hardware, peripherals, and gaming' },
+      { name: 'Other Electronics', icon: 'bi-box-seam', description: 'Drones, fans, lighting, and other devices' }
+    ];
+
+    const POS_PRODUCT_CATEGORY_NAMES = new Set(POS_PRODUCT_CATEGORIES.map(category => category.name));
 
     const state = {
       products: [],
@@ -7056,12 +7090,16 @@
               name: String((device && (device.display_name || device.name)) || '')
             })).filter(device => device.name)
           : [];
+        const sourceCategory = getProductCategory(item);
+        const category = canonicalProductCategory(item, sourceCategory);
 
         return {
           id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
           sku: item.sku || '',
           name: item.name || item.product_name || 'Unnamed product',
-          category: getProductCategory(item),
+          category,
+          subcategory: canonicalProductSubcategory(item, category, sourceCategory),
+          source_category: sourceCategory,
           cost_price: Number(item.cost_price || item.cost || 0),
           sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
           barcode: item.barcode || '',
@@ -7124,6 +7162,116 @@
           || getCategoryLabel(value.slug);
       }
       return '';
+    }
+
+    function productCategorySearchText(item, sourceCategory = '') {
+      const values = [
+        sourceCategory,
+        item.name,
+        item.product_name,
+        item.product_family,
+        item.product_group_name,
+        item.model,
+        item.short_description,
+        item.compatibility
+      ];
+      return values.map(value => getCategoryLabel(value)).filter(Boolean).join(' ').toLowerCase();
+    }
+
+    function canonicalProductCategory(item, sourceCategory = '') {
+      const source = String(sourceCategory || '').trim();
+      if (POS_PRODUCT_CATEGORY_NAMES.has(source)) return source;
+
+      const sourceKey = source.toLowerCase();
+      const text = productCategorySearchText(item, sourceCategory);
+
+      if (/ipad.*case|tablet.*case/.test(sourceKey)) return 'Tablet Cases';
+      if (/phone.*case/.test(sourceKey)) return 'Phone Cases';
+      if (/screen|glass|protector/.test(sourceKey)) return 'Screen Protection';
+      if (/cable|adapter|adaptor|otg/.test(sourceKey)) return 'Cables & Adapters';
+      if (/charger|charging|power bank/.test(sourceKey)) return 'Charging & Power';
+      if (/headphone|earbud|audio|speaker|microphone/.test(sourceKey)) return 'Audio';
+      if (/car holder|holder|stand|mount/.test(sourceKey)) return 'Mounts & Holders';
+      if (/watch|band/.test(sourceKey)) return 'Watch Accessories';
+      if (/computer|console|gaming|graphics|liquid cooling|controller|ps5/.test(sourceKey)) return 'Computer & Gaming';
+
+      if (/screen protector|tempered glass|glass screen|lens protector/.test(text)) return 'Screen Protection';
+      if (/(ipad|tablet|galaxy tab).*(case|cover)|(?:case|cover).*(ipad|tablet|galaxy tab)/.test(text)) return 'Tablet Cases';
+      if (/(iphone|phone|galaxy|pixel).*(case|cover)|(?:case|cover).*(iphone|phone|galaxy|pixel)/.test(text)) return 'Phone Cases';
+      if (/airpods?|earbuds?.*(case|pouch)|air\s?tag.*(case|holder)/.test(text)) return 'Other Electronics';
+      if (/wall charger|wireless charger|car charger|macbook charger|power bank|charging station|travel adaptor|travel adapter/.test(text)) return 'Charging & Power';
+      if (/carplay|android auto|fm transmitter|\bcable\b|hdmi|displayport|\bdp\b|ethernet|otg|card reader|audio adapter|audio adaptor/.test(text)) return 'Cables & Adapters';
+      if (/headphone|headset|earphone|earbud|\btws\b|speaker|microphone/.test(text)) return 'Audio';
+      if (/car holder|phone holder|tablet holder|desktop holder|bike holder|bicycle holder|\bmount\b|phone stand|tablet stand|laptop stand|selfie stick|card holder|pop socket|popsocket|phone strap/.test(text)) return 'Mounts & Holders';
+      if (/watch band|watch strap|apple watch case/.test(text)) return 'Watch Accessories';
+      if (/graphics card|\bgpu\b|\bcpu\b|liquid cool|pc case|power suppl|\bram\b|hard drive|\bssd\b|keyboard|mouse|webcam|usb hub|\bdock\b|wireless adapter|playstation|ps5|xbox|controller|gaming|simulator|cockpit/.test(text)) return 'Computer & Gaming';
+      return 'Other Electronics';
+    }
+
+    function canonicalProductSubcategory(item, category, sourceCategory = '') {
+      const text = productCategorySearchText(item, sourceCategory);
+      if (category === 'Phone Cases') {
+        if (/samsung|galaxy/.test(text)) return 'Samsung Galaxy';
+        if (/google|pixel/.test(text)) return 'Google Pixel';
+        if (/iphone|apple/.test(text)) return 'Apple iPhone';
+        return 'Other & Universal';
+      }
+      if (category === 'Tablet Cases') {
+        if (/samsung|galaxy tab/.test(text)) return 'Samsung Galaxy Tab';
+        if (/ipad|apple/.test(text)) return 'Apple iPad';
+        return 'Other & Universal';
+      }
+      if (category === 'Screen Protection') {
+        if (/ipad|tablet/.test(text)) return 'Tablet Screen Protection';
+        if (/watch|lens/.test(text)) return 'Watch & Lens Protection';
+        return 'Phone Screen Protection';
+      }
+      if (category === 'Cables & Adapters') {
+        if (/carplay|android auto|fm transmitter/.test(text)) return 'Car Connectivity';
+        if (/hdmi|displayport|\bdp\b|vga|dvi/.test(text)) return 'Display & Computer Cables';
+        if (/ethernet|network|cat\s?[5-8]/.test(text)) return 'Network Cables';
+        if (/3\.5mm|\baux\b|audio adapter|audio adaptor/.test(text)) return 'Audio Cables & Adapters';
+        if (/otg|card reader/.test(text)) return 'OTG & Card Readers';
+        return 'Charging & Data Cables';
+      }
+      if (category === 'Charging & Power') {
+        if (/power bank/.test(text)) return 'Power Banks';
+        if (/car charger/.test(text)) return 'Car Chargers';
+        if (/macbook|laptop charger/.test(text)) return 'Laptop Chargers';
+        if (/wireless|magsafe|charging station/.test(text)) return 'Wireless Chargers';
+        return 'Wall Chargers';
+      }
+      if (category === 'Audio') {
+        if (/speaker/.test(text)) return 'Speakers';
+        if (/microphone/.test(text)) return 'Microphones';
+        if (/headset|gaming headphone/.test(text)) return 'Headsets';
+        if (/wireless|bluetooth|earbud|\btws\b/.test(text)) return 'Wireless Earbuds & Headphones';
+        return 'Wired Earphones & Headphones';
+      }
+      if (category === 'Mounts & Holders') {
+        if (/car|vehicle|bike|bicycle/.test(text)) return 'Vehicle Mounts';
+        if (/monitor/.test(text)) return 'Monitor Mounts';
+        if (/laptop/.test(text)) return 'Laptop Stands';
+        if (/selfie|live stream/.test(text)) return 'Selfie Sticks & Live Stands';
+        if (/card holder|wallet|pop socket|popsocket|strap/.test(text)) return 'Wallets, Card Holders & Grips';
+        return 'Phone & Tablet Stands';
+      }
+      if (category === 'Watch Accessories') return /case/.test(text) ? 'Watch Cases' : 'Watch Bands';
+      if (category === 'Computer & Gaming') {
+        if (/playstation|ps5|xbox|controller|console/.test(text)) return 'Consoles & Controllers';
+        if (/simulator|cockpit|gaming chair|gaming table/.test(text)) return 'Gaming & Simulation';
+        if (/hard drive|\bssd\b|sd card|flash drive/.test(text)) return 'Storage';
+        if (/keyboard|mouse|webcam|office combo/.test(text)) return 'Input & Office Peripherals';
+        if (/hub|dock/.test(text)) return 'Hubs & Docks';
+        if (/wireless adapter|network/.test(text)) return 'Networking';
+        return 'PC Components';
+      }
+      if (/drone/.test(text)) return 'Drones & Accessories';
+      if (/fan/.test(text)) return 'Personal Fans';
+      if (/clock|light/.test(text)) return 'Lighting & Clocks';
+      if (/airpods?|earbud.*(case|pouch)/.test(text)) return 'Earbud Cases';
+      if (/air\s?tag/.test(text)) return 'Tracker Cases';
+      return 'Other Electronics';
     }
 
     function uniqueSorted(values) {
@@ -8562,7 +8710,7 @@
         || INTERNAL_PRODUCTS_ENDPOINT;
 
       if (!endpoint) {
-        state.products = demoProducts;
+        state.products = normalizeProducts(demoProducts);
         state.productLoading = false;
         setSyncStatus('Demo products loaded', 'bi-database-check');
         renderAll();
@@ -8656,8 +8804,7 @@
     }
 
     function categories() {
-      return Array.from(new Set(state.products.map(product => product.category).filter(Boolean)))
-        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      return POS_PRODUCT_CATEGORIES.map(category => category.name);
     }
 
     function filteredProducts() {
@@ -8669,6 +8816,8 @@
           product.sku,
           product.barcode,
           product.category,
+          product.subcategory,
+          product.source_category,
           product.product_group_name,
           product.product_family,
           product.variant_name,
@@ -8896,6 +9045,8 @@
     }
 
     function categoryIcon(category) {
+      const configuredCategory = POS_PRODUCT_CATEGORIES.find(item => item.name === category);
+      if (configuredCategory) return configuredCategory.icon;
       const value = String(category || '').toLowerCase();
       if (/cable|adapter|otg/.test(value)) return 'bi-usb-plug';
       if (/charger|power/.test(value)) return 'bi-lightning-charge';
@@ -8942,15 +9093,17 @@
       if (!query && state.productBrowseMode === 'categories') {
         const grouped = categories().map(category => ({
           category,
+          description: POS_PRODUCT_CATEGORIES.find(item => item.name === category)?.description || '',
           count: productTiles(state.products.filter(product => product.category === category)).length
         }));
         els.productGrid.className = 'product-grid category-layout';
         els.productGrid.setAttribute('aria-label', 'Product categories');
         els.productGrid.innerHTML = grouped.map(group => `
-          <button class="category-card" type="button" data-open-category="${escapeHtml(group.category)}">
+          <button class="category-card ${group.count ? '' : 'is-empty'}" type="button" data-open-category="${escapeHtml(group.category)}" aria-label="Open ${escapeHtml(group.category)}, ${group.count} products">
             <span class="category-icon"><i class="bi ${categoryIcon(group.category)}"></i></span>
             <span class="category-card-copy">
               <span class="category-card-name">${escapeHtml(group.category)}</span>
+              <span class="category-card-description">${escapeHtml(group.description)}</span>
               <span class="category-card-count">${group.count} ${group.count === 1 ? 'product' : 'products'}</span>
             </span>
           </button>
@@ -8962,12 +9115,13 @@
       els.productGrid.className = 'product-grid product-layout';
       els.productGrid.setAttribute('aria-label', query ? 'Product search results' : (state.productBrowseMode === 'category' ? state.category : 'All products'));
       if (!products.length) {
+        const emptyCategory = !query && state.productBrowseMode === 'category';
         els.productGrid.innerHTML = `
           <div class="empty-state">
             <div>
-              <div class="cart-empty-icon"><i class="bi bi-search"></i></div>
-              <strong>No matching products</strong>
-              <div>Try another product name, SKU, barcode, or category.</div>
+              <div class="cart-empty-icon"><i class="bi ${emptyCategory ? 'bi-box-seam' : 'bi-search'}"></i></div>
+              <strong>${emptyCategory ? 'No products in this category' : 'No matching products'}</strong>
+              <div>${emptyCategory ? 'Products will appear here when they are assigned to this category.' : 'Try another product name, SKU, barcode, or category.'}</div>
             </div>
           </div>
         `;
@@ -9855,12 +10009,33 @@
           store_inventory: [{ store_slug: 'park-ridge', quantity: 2 }]
         }
       ] });
+      const categoryMappingSamples = normalizeProducts({ rows: [
+        { id: 'map-cable', name: 'USB-C Cable', category_name: 'Cable' },
+        { id: 'map-car-charger', name: '35W Car Charger', category_name: 'Car Chargers' },
+        { id: 'map-car-holder', name: 'MagSafe Car Holder', category_name: 'Car Holders' },
+        { id: 'map-headphones', name: 'Bluetooth Headphones', category_name: 'Wireless & Bluetooth Headphones' },
+        { id: 'map-gpu', name: 'RTX Graphics Card', category_name: 'Graphics Cards' },
+        { id: 'map-carplay', name: 'Wireless Dongle for CarPlay', category_name: 'Accessories' }
+      ] });
+      const expectedMappings = [
+        'Cables & Adapters',
+        'Charging & Power',
+        'Mounts & Holders',
+        'Audio',
+        'Computer & Gaming',
+        'Cables & Adapters'
+      ];
 
       state.products = products;
       state.cart = [];
       state.storeId = 'park-ridge';
-      state.productBrowseMode = 'all';
+      state.productBrowseMode = 'categories';
       state.search = '';
+      renderProductBrowser();
+      const categoryCards = Array.from(els.productGrid.querySelectorAll('[data-open-category]'));
+      const categoryCardNames = categoryCards.map(card => card.dataset.openCategory);
+      const emptyCategoryCardCount = categoryCards.filter(card => card.classList.contains('is-empty')).length;
+      state.productBrowseMode = 'all';
       renderProductBrowser();
       const grouped = productTiles(state.products);
       const groupCard = document.querySelector('[data-open-product-group="TM8-GRP-IPAD10-HDC"]');
@@ -9882,6 +10057,11 @@
 
       document.body.dataset.catalogTestResult = JSON.stringify({
         normalized: products.length,
+        fixedCategoryCount: categoryCards.length,
+        fixedCategoryNames: categoryCardNames,
+        emptyCategoryCardCount,
+        categoryMappingResults: categoryMappingSamples.map(product => product.category),
+        categoryMappingPass: categoryMappingSamples.every((product, index) => product.category === expectedMappings[index]),
         tileCount: grouped.length,
         variantCount: grouped[0]?.variant_count || 0,
         groupStock: grouped[0]?.group_stock || 0,
@@ -9901,6 +10081,13 @@
         state.search = '';
         renderProductBrowser();
         openProductVariantModal('TM8-GRP-IPAD10-HDC');
+      } else {
+        state.cart = [];
+        state.search = '';
+        state.category = 'All';
+        state.productBrowseMode = 'categories';
+        renderProductBrowser();
+        renderCart();
       }
     }
 

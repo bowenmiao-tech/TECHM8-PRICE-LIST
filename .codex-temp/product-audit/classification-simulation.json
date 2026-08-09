@@ -1,0 +1,418 @@
+{
+  "total": 2692,
+  "proposedRoots": [
+    {
+      "key": "Cases",
+      "count": 2056
+    },
+    {
+      "key": "Computer Hardware & Peripherals",
+      "count": 127
+    },
+    {
+      "key": "Watch Bands",
+      "count": 124
+    },
+    {
+      "key": "Cables & Adapters",
+      "count": 85
+    },
+    {
+      "key": "Charging & Power",
+      "count": 78
+    },
+    {
+      "key": "Audio",
+      "count": 75
+    },
+    {
+      "key": "Mounts, Holders & Grips",
+      "count": 72
+    },
+    {
+      "key": "Gaming & Simulation",
+      "count": 37
+    },
+    {
+      "key": "Screen Protection",
+      "count": 21
+    },
+    {
+      "key": "POS Services & Adjustments",
+      "count": 9
+    },
+    {
+      "key": "Lifestyle Electronics",
+      "count": 7
+    },
+    {
+      "key": "Exclude",
+      "count": 1
+    }
+  ],
+  "proposedPaths": [
+    {
+      "key": "Cases > Phone Cases",
+      "count": 1749
+    },
+    {
+      "key": "Cases > Tablet Cases",
+      "count": 288
+    },
+    {
+      "key": "Watch Bands > Watch Bands",
+      "count": 124
+    },
+    {
+      "key": "Computer Hardware & Peripherals > Input & Office Peripherals",
+      "count": 44
+    },
+    {
+      "key": "Computer Hardware & Peripherals > PC Components",
+      "count": 41
+    },
+    {
+      "key": "Cables & Adapters > Charging & Data Cables",
+      "count": 35
+    },
+    {
+      "key": "Cables & Adapters > AV, Network & Computer Cables",
+      "count": 33
+    },
+    {
+      "key": "Computer Hardware & Peripherals > Storage",
+      "count": 33
+    },
+    {
+      "key": "Audio > Wireless Earbuds & Headphones",
+      "count": 28
+    },
+    {
+      "key": "Mounts, Holders & Grips > Vehicle Mounts",
+      "count": 27
+    },
+    {
+      "key": "Charging & Power > Power Banks",
+      "count": 25
+    },
+    {
+      "key": "Mounts, Holders & Grips > Wallets, Card Holders & Grips",
+      "count": 22
+    },
+    {
+      "key": "Screen Protection > Screen Protectors",
+      "count": 21
+    },
+    {
+      "key": "Audio > Wired Earphones & Headphones",
+      "count": 19
+    },
+    {
+      "key": "Charging & Power > Wireless Chargers",
+      "count": 18
+    },
+    {
+      "key": "Audio > Speakers",
+      "count": 16
+    },
+    {
+      "key": "Gaming & Simulation > Simulation Equipment",
+      "count": 14
+    },
+    {
+      "key": "Charging & Power > Wall Chargers",
+      "count": 13
+    },
+    {
+      "key": "Gaming & Simulation > Simulation Furniture",
+      "count": 12
+    },
+    {
+      "key": "Audio > Headsets",
+      "count": 11
+    },
+    {
+      "key": "Charging & Power > Car Chargers",
+      "count": 11
+    },
+    {
+      "key": "Charging & Power > Laptop Chargers",
+      "count": 11
+    },
+    {
+      "key": "Gaming & Simulation > Consoles & Controllers",
+      "count": 11
+    },
+    {
+      "key": "Mounts, Holders & Grips > Phone & Tablet Stands",
+      "count": 9
+    },
+    {
+      "key": "Cables & Adapters > Audio Adapters",
+      "count": 8
+    },
+    {
+      "key": "Cases > Laptop Bags & Sleeves",
+      "count": 8
+    },
+    {
+      "key": "Computer Hardware & Peripherals > Networking",
+      "count": 8
+    },
+    {
+      "key": "Cases > Earbud Cases",
+      "count": 6
+    },
+    {
+      "key": "Mounts, Holders & Grips > Selfie Sticks & Live Stands",
+      "count": 5
+    },
+    {
+      "key": "POS Services & Adjustments > Special POS Items",
+      "count": 5
+    },
+    {
+      "key": "Cables & Adapters > Car Connectivity",
+      "count": 4
+    },
+    {
+      "key": "Cables & Adapters > Hubs & Docks",
+      "count": 4
+    },
+    {
+      "key": "Cases > Tracker Cases",
+      "count": 4
+    },
+    {
+      "key": "Mounts, Holders & Grips > Straps & Grips",
+      "count": 4
+    },
+    {
+      "key": "Lifestyle Electronics > Personal Fans",
+      "count": 3
+    },
+    {
+      "key": "Mounts, Holders & Grips > Monitor Mounts",
+      "count": 3
+    },
+    {
+      "key": "Lifestyle Electronics > Drones & Accessories",
+      "count": 2
+    },
+    {
+      "key": "Lifestyle Electronics > Lighting & Clocks",
+      "count": 2
+    },
+    {
+      "key": "Mounts, Holders & Grips > Laptop Stands",
+      "count": 2
+    },
+    {
+      "key": "POS Services & Adjustments > Packaging",
+      "count": 2
+    },
+    {
+      "key": "Audio > Microphones",
+      "count": 1
+    },
+    {
+      "key": "Cables & Adapters > Adapters & OTG",
+      "count": 1
+    },
+    {
+      "key": "Cases > Watch Cases",
+      "count": 1
+    },
+    {
+      "key": "Computer Hardware & Peripherals > Input Devices",
+      "count": 1
+    },
+    {
+      "key": "Exclude > Repair/Obsolete Item",
+      "count": 1
+    },
+    {
+      "key": "POS Services & Adjustments > Gaming Services",
+      "count": 1
+    },
+    {
+      "key": "POS Services & Adjustments > SIM & Mobile Services",
+      "count": 1
+    }
+  ],
+  "needsReview": [],
+  "excluded": [
+    {
+      "id": "9663",
+      "category": "Drone",
+      "name": "LCD FRAME",
+      "manufacturer": "Acer",
+      "device": "N18H1",
+      "sku": "966320",
+      "upc": "",
+      "cost": "70.00",
+      "retail": "199.00",
+      "stock": "0",
+      "pos": "YES",
+      "source": "products (19).xlsx",
+      "sourceRow": 114,
+      "proposedRoot": "Exclude",
+      "proposedSubcategory": "Repair/Obsolete Item"
+    }
+  ],
+  "services": [
+    {
+      "id": "10291",
+      "category": "Uncategorized",
+      "name": "Surcharge",
+      "manufacturer": "",
+      "device": "",
+      "sku": "10291484",
+      "upc": "",
+      "cost": "0.00",
+      "retail": "0.00",
+      "stock": "-82",
+      "pos": "YES",
+      "source": "products (18).xlsx",
+      "sourceRow": 487,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "Special POS Items"
+    },
+    {
+      "id": "10054",
+      "category": "Uncategorized",
+      "name": "Racing Simulator 1hr play",
+      "manufacturer": "",
+      "device": "",
+      "sku": "1005437",
+      "upc": "",
+      "cost": "0.00",
+      "retail": "29.95",
+      "stock": "0",
+      "pos": "YES",
+      "source": "products (19).xlsx",
+      "sourceRow": 95,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "Gaming Services"
+    },
+    {
+      "id": "8633",
+      "category": "Uncategorized",
+      "name": "Techm8 Small Bag",
+      "manufacturer": "",
+      "device": "",
+      "sku": "8633797",
+      "upc": "",
+      "cost": "0.00",
+      "retail": "0.00",
+      "stock": "943",
+      "pos": "YES",
+      "source": "products (20).xlsx",
+      "sourceRow": 165,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "Packaging"
+    },
+    {
+      "id": "8632",
+      "category": "Uncategorized",
+      "name": "Techm8 Big Bag",
+      "manufacturer": "",
+      "device": "",
+      "sku": "8632796",
+      "upc": "",
+      "cost": "0.00",
+      "retail": "0.00",
+      "stock": "452",
+      "pos": "YES",
+      "source": "products (20).xlsx",
+      "sourceRow": 166,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "Packaging"
+    },
+    {
+      "id": "8416",
+      "category": "Uncategorized",
+      "name": "Special Order",
+      "manufacturer": "",
+      "device": "",
+      "sku": "8416553",
+      "upc": "",
+      "cost": "0.00",
+      "retail": "0.00",
+      "stock": "9949",
+      "pos": "YES",
+      "source": "products (20).xlsx",
+      "sourceRow": 299,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "Special POS Items"
+    },
+    {
+      "id": "6769",
+      "category": "Uncategorized",
+      "name": "Shop Credit",
+      "manufacturer": "",
+      "device": "",
+      "sku": "676992",
+      "upc": "",
+      "cost": "0.00",
+      "retail": "0.00",
+      "stock": "982",
+      "pos": "YES",
+      "source": "products (22).xlsx",
+      "sourceRow": 184,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "Special POS Items"
+    },
+    {
+      "id": "6021",
+      "category": "Uncategorized",
+      "name": "Special",
+      "manufacturer": "",
+      "device": "",
+      "sku": "595728",
+      "upc": "",
+      "cost": "5.00",
+      "retail": "5.00",
+      "stock": "775",
+      "pos": "YES",
+      "source": "products (23).xlsx",
+      "sourceRow": 154,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "Special POS Items"
+    },
+    {
+      "id": "5957",
+      "category": "Uncategorized",
+      "name": "MIS & Other Products",
+      "manufacturer": "",
+      "device": "",
+      "sku": "595728",
+      "upc": "",
+      "cost": "0.00",
+      "retail": "0.00",
+      "stock": "613",
+      "pos": "YES",
+      "source": "products (23).xlsx",
+      "sourceRow": 168,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "Special POS Items"
+    },
+    {
+      "id": "5934",
+      "category": "Uncategorized",
+      "name": "$2 SIM",
+      "manufacturer": "",
+      "device": "",
+      "sku": "593419",
+      "upc": "",
+      "cost": "0.00",
+      "retail": "2.00",
+      "stock": "870",
+      "pos": "YES",
+      "source": "products (23).xlsx",
+      "sourceRow": 180,
+      "proposedRoot": "POS Services & Adjustments",
+      "proposedSubcategory": "SIM & Mobile Services"
+    }
+  ]
+}
