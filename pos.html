@@ -5095,16 +5095,123 @@
     ];
 
     const POS_PRODUCT_CATEGORIES = [
-      { name: 'Phone Cases', icon: 'bi-phone', description: 'Phone cases by brand and model' },
-      { name: 'Tablet Cases', icon: 'bi-tablet', description: 'iPad, Galaxy Tab, and universal cases' },
-      { name: 'Screen Protection', icon: 'bi-phone', description: 'Phone, tablet, watch, and lens protection' },
-      { name: 'Cables & Adapters', icon: 'bi-usb-plug', description: 'Charging, data, display, network, and audio' },
-      { name: 'Charging & Power', icon: 'bi-lightning-charge', description: 'Wall, wireless, car, laptop, and power banks' },
-      { name: 'Audio', icon: 'bi-headphones', description: 'Earphones, headphones, headsets, and speakers' },
-      { name: 'Mounts & Holders', icon: 'bi-car-front', description: 'Vehicle, desk, monitor, and device holders' },
-      { name: 'Watch Accessories', icon: 'bi-smartwatch', description: 'Watch bands and cases' },
-      { name: 'Computer & Gaming', icon: 'bi-controller', description: 'Computer hardware, peripherals, and gaming' },
-      { name: 'Other Electronics', icon: 'bi-box-seam', description: 'Drones, fans, lighting, and other devices' }
+      {
+        name: 'Phone Cases',
+        icon: 'bi-phone',
+        description: 'Phone cases by brand and model',
+        subcategories: [
+          { name: 'Apple iPhone', icon: 'bi-apple', description: 'Cases for Apple iPhone models' },
+          { name: 'Samsung Galaxy', icon: 'bi-phone', description: 'Cases for Samsung Galaxy models' },
+          { name: 'Google Pixel', icon: 'bi-phone', description: 'Cases for Google Pixel models' },
+          { name: 'Other & Universal', icon: 'bi-grid', description: 'Other brands and universal phone cases' }
+        ]
+      },
+      {
+        name: 'Tablet Cases',
+        icon: 'bi-tablet',
+        description: 'iPad, Galaxy Tab, and universal cases',
+        subcategories: [
+          { name: 'Apple iPad', icon: 'bi-tablet', description: 'Cases for Apple iPad models' },
+          { name: 'Samsung Galaxy Tab', icon: 'bi-tablet-landscape', description: 'Cases for Samsung Galaxy Tab models' },
+          { name: 'Other & Universal', icon: 'bi-grid', description: 'Other brands and universal tablet cases' }
+        ]
+      },
+      {
+        name: 'Screen Protection',
+        icon: 'bi-phone',
+        description: 'Phone, tablet, watch, and lens protection',
+        subcategories: [
+          { name: 'Phone Screen Protection', icon: 'bi-phone', description: 'Phone screen protectors and tempered glass' },
+          { name: 'Tablet Screen Protection', icon: 'bi-tablet', description: 'Tablet and iPad screen protection' },
+          { name: 'Watch & Lens Protection', icon: 'bi-smartwatch', description: 'Watch, camera, and lens protection' }
+        ]
+      },
+      {
+        name: 'Cables & Adapters',
+        icon: 'bi-usb-plug',
+        description: 'Charging, data, display, network, and audio',
+        subcategories: [
+          { name: 'Charging & Data Cables', icon: 'bi-usb-plug', description: 'USB, Lightning, and USB-C cables' },
+          { name: 'Display & Computer Cables', icon: 'bi-display', description: 'HDMI, DisplayPort, VGA, and computer cables' },
+          { name: 'Network Cables', icon: 'bi-ethernet', description: 'Ethernet and network cables' },
+          { name: 'Audio Cables & Adapters', icon: 'bi-headphones', description: 'AUX and audio connection adapters' },
+          { name: 'OTG & Card Readers', icon: 'bi-sd-card', description: 'OTG adapters and memory card readers' },
+          { name: 'Car Connectivity', icon: 'bi-car-front', description: 'CarPlay, Android Auto, and FM transmitters' }
+        ]
+      },
+      {
+        name: 'Charging & Power',
+        icon: 'bi-lightning-charge',
+        description: 'Wall, wireless, car, laptop, and power banks',
+        subcategories: [
+          { name: 'Wall Chargers', icon: 'bi-plug', description: 'USB and USB-C wall chargers' },
+          { name: 'Wireless Chargers', icon: 'bi-broadcast', description: 'Wireless, MagSafe, and charging stations' },
+          { name: 'Car Chargers', icon: 'bi-car-front', description: 'USB and wireless vehicle chargers' },
+          { name: 'Laptop Chargers', icon: 'bi-laptop', description: 'MacBook and laptop power adapters' },
+          { name: 'Power Banks', icon: 'bi-battery-charging', description: 'Portable batteries and power banks' }
+        ]
+      },
+      {
+        name: 'Audio',
+        icon: 'bi-headphones',
+        description: 'Earphones, headphones, headsets, and speakers',
+        subcategories: [
+          { name: 'Wired Earphones & Headphones', icon: 'bi-headphones', description: 'Wired personal audio products' },
+          { name: 'Wireless Earbuds & Headphones', icon: 'bi-bluetooth', description: 'Bluetooth earbuds and headphones' },
+          { name: 'Headsets', icon: 'bi-headset', description: 'Call, computer, and gaming headsets' },
+          { name: 'Speakers', icon: 'bi-speaker', description: 'Portable and desktop speakers' },
+          { name: 'Microphones', icon: 'bi-mic', description: 'Computer, streaming, and recording microphones' }
+        ]
+      },
+      {
+        name: 'Mounts & Holders',
+        icon: 'bi-car-front',
+        description: 'Vehicle, desk, monitor, and device holders',
+        subcategories: [
+          { name: 'Vehicle Mounts', icon: 'bi-car-front', description: 'Car, bike, and vehicle device mounts' },
+          { name: 'Phone & Tablet Stands', icon: 'bi-phone', description: 'Desk stands for phones and tablets' },
+          { name: 'Laptop Stands', icon: 'bi-laptop', description: 'Laptop stands and risers' },
+          { name: 'Monitor Mounts', icon: 'bi-display', description: 'Monitor arms, mounts, and stands' },
+          { name: 'Selfie Sticks & Live Stands', icon: 'bi-camera-video', description: 'Selfie sticks and live-streaming stands' },
+          { name: 'Wallets, Card Holders & Grips', icon: 'bi-credit-card', description: 'Phone wallets, grips, and card holders' }
+        ]
+      },
+      {
+        name: 'Watch Accessories',
+        icon: 'bi-smartwatch',
+        description: 'Watch bands and cases',
+        subcategories: [
+          { name: 'Watch Bands', icon: 'bi-smartwatch', description: 'Replacement straps and watch bands' },
+          { name: 'Watch Cases', icon: 'bi-shield', description: 'Cases and protection for smart watches' }
+        ]
+      },
+      {
+        name: 'Computer & Gaming',
+        icon: 'bi-controller',
+        description: 'Computer hardware, peripherals, and gaming',
+        subcategories: [
+          { name: 'PC Components', icon: 'bi-cpu', description: 'PC parts, cooling, cases, RAM, and power supplies' },
+          { name: 'Input & Office Peripherals', icon: 'bi-keyboard', description: 'Keyboards, mice, webcams, and office sets' },
+          { name: 'Hubs & Docks', icon: 'bi-usb-symbol', description: 'Computer hubs and docking stations' },
+          { name: 'Networking', icon: 'bi-router', description: 'Wireless and network adapters' },
+          { name: 'Storage', icon: 'bi-device-ssd', description: 'Drives, SSDs, memory cards, and flash storage' },
+          { name: 'Consoles & Controllers', icon: 'bi-controller', description: 'Console accessories and controllers' },
+          { name: 'Gaming & Simulation', icon: 'bi-joystick', description: 'Gaming furniture and simulator equipment' }
+        ]
+      },
+      {
+        name: 'Other Electronics',
+        icon: 'bi-box-seam',
+        description: 'Drones, fans, lighting, and other devices',
+        subcategories: [
+          { name: 'Drones & Accessories', icon: 'bi-airplane', description: 'Drones and related accessories' },
+          { name: 'Personal Fans', icon: 'bi-fan', description: 'Portable and desktop fans' },
+          { name: 'Lighting & Clocks', icon: 'bi-lightbulb', description: 'Lights, lamps, and digital clocks' },
+          { name: 'Earbud Cases', icon: 'bi-earbuds', description: 'Cases and pouches for earbuds' },
+          { name: 'Tracker Cases', icon: 'bi-geo-alt', description: 'Cases and holders for tracking devices' },
+          { name: 'Other Electronics', icon: 'bi-box-seam', description: 'Electronic products outside other groups' }
+        ]
+      }
     ];
 
     const POS_PRODUCT_CATEGORY_NAMES = new Set(POS_PRODUCT_CATEGORIES.map(category => category.name));
@@ -5112,6 +5219,7 @@
     const state = {
       products: [],
       productBrowseMode: 'categories',
+      subcategory: '',
       productLoading: false,
       productLoadPromise: null,
       productRequestId: 0,
@@ -7092,14 +7200,18 @@
           : [];
         const sourceCategory = getProductCategory(item);
         const category = canonicalProductCategory(item, sourceCategory);
+        const sourceSubcategory = getCategoryLabel(item.subcategory_name)
+          || getCategoryLabel(item.subcategory)
+          || getCategoryLabel(item.product_subcategory);
 
         return {
           id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
           sku: item.sku || '',
           name: item.name || item.product_name || 'Unnamed product',
           category,
-          subcategory: canonicalProductSubcategory(item, category, sourceCategory),
+          subcategory: canonicalProductSubcategory(item, category, sourceCategory, sourceSubcategory),
           source_category: sourceCategory,
+          source_subcategory: sourceSubcategory,
           cost_price: Number(item.cost_price || item.cost || 0),
           sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
           barcode: item.barcode || '',
@@ -7164,9 +7276,10 @@
       return '';
     }
 
-    function productCategorySearchText(item, sourceCategory = '') {
+    function productCategorySearchText(item, sourceCategory = '', sourceSubcategory = '') {
       const values = [
         sourceCategory,
+        sourceSubcategory,
         item.name,
         item.product_name,
         item.product_family,
@@ -7208,8 +7321,13 @@
       return 'Other Electronics';
     }
 
-    function canonicalProductSubcategory(item, category, sourceCategory = '') {
-      const text = productCategorySearchText(item, sourceCategory);
+    function canonicalProductSubcategory(item, category, sourceCategory = '', sourceSubcategory = '') {
+      const suppliedSubcategory = subcategories(category).find(subcategory => (
+        subcategory.name.toLowerCase() === String(sourceSubcategory || '').trim().toLowerCase()
+      ));
+      if (suppliedSubcategory) return suppliedSubcategory.name;
+
+      const text = productCategorySearchText(item, sourceCategory, sourceSubcategory);
       if (category === 'Phone Cases') {
         if (/samsung|galaxy/.test(text)) return 'Samsung Galaxy';
         if (/google|pixel/.test(text)) return 'Google Pixel';
@@ -8807,10 +8925,21 @@
       return POS_PRODUCT_CATEGORIES.map(category => category.name);
     }
 
+    function categoryDefinition(categoryName) {
+      return POS_PRODUCT_CATEGORIES.find(category => category.name === categoryName) || null;
+    }
+
+    function subcategories(categoryName) {
+      return categoryDefinition(categoryName)?.subcategories || [];
+    }
+
     function filteredProducts() {
       const query = state.search.trim().toLowerCase();
       return state.products.filter(product => {
-        const inCategory = query || state.productBrowseMode !== 'category' || product.category === state.category;
+        const inCategory = query
+          || (state.productBrowseMode !== 'category' && state.productBrowseMode !== 'subcategory')
+          || (product.category === state.category
+            && (state.productBrowseMode !== 'subcategory' || product.subcategory === state.subcategory));
         const searchable = [
           product.name,
           product.sku,
@@ -8818,6 +8947,7 @@
           product.category,
           product.subcategory,
           product.source_category,
+          product.source_subcategory,
           product.product_group_name,
           product.product_family,
           product.variant_name,
@@ -9045,8 +9175,12 @@
     }
 
     function categoryIcon(category) {
-      const configuredCategory = POS_PRODUCT_CATEGORIES.find(item => item.name === category);
+      const configuredCategory = categoryDefinition(category);
       if (configuredCategory) return configuredCategory.icon;
+      for (const parentCategory of POS_PRODUCT_CATEGORIES) {
+        const configuredSubcategory = parentCategory.subcategories.find(item => item.name === category);
+        if (configuredSubcategory) return configuredSubcategory.icon;
+      }
       const value = String(category || '').toLowerCase();
       if (/cable|adapter|otg/.test(value)) return 'bi-usb-plug';
       if (/charger|power/.test(value)) return 'bi-lightning-charge';
@@ -9066,8 +9200,12 @@
       const categoryModeActive = state.productBrowseMode !== 'all';
       const context = query
         ? `<span class="browse-context-copy"><strong>Search results</strong> - ${displayedProducts().length} products</span>`
-        : state.productBrowseMode === 'category'
-          ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> - ${displayedProducts().length} products</span>`
+        : state.productBrowseMode === 'subcategory'
+          ? `<button class="browse-back" type="button" data-category-back title="Back to ${escapeHtml(state.category)}" aria-label="Back to ${escapeHtml(state.category)}"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> / ${escapeHtml(state.subcategory)} - ${displayedProducts().length} products</span>`
+          : state.productBrowseMode === 'subcategories'
+            ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> - ${subcategories(state.category).length} groups</span>`
+            : state.productBrowseMode === 'category'
+              ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> - ${displayedProducts().length} products</span>`
           : state.productBrowseMode === 'all'
             ? `<span class="browse-context-copy"><strong>All products</strong> - ${productTiles(state.products).length} products</span>`
             : `<span class="browse-context-copy"><strong>Categories</strong> - ${categories().length} groups</span>`;
@@ -9111,17 +9249,42 @@
         return;
       }
 
+      if (!query && state.productBrowseMode === 'subcategories') {
+        const grouped = subcategories(state.category).map(subcategory => ({
+          ...subcategory,
+          count: productTiles(state.products.filter(product => (
+            product.category === state.category && product.subcategory === subcategory.name
+          ))).length
+        }));
+        els.productGrid.className = 'product-grid category-layout';
+        els.productGrid.setAttribute('aria-label', `${state.category} subcategories`);
+        els.productGrid.innerHTML = grouped.map(group => `
+          <button class="category-card ${group.count ? '' : 'is-empty'}" type="button" data-open-subcategory="${escapeHtml(group.name)}" aria-label="Open ${escapeHtml(group.name)}, ${group.count} products">
+            <span class="category-icon"><i class="bi ${categoryIcon(group.name)}"></i></span>
+            <span class="category-card-copy">
+              <span class="category-card-name">${escapeHtml(group.name)}</span>
+              <span class="category-card-description">${escapeHtml(group.description)}</span>
+              <span class="category-card-count">${group.count} ${group.count === 1 ? 'product' : 'products'}</span>
+            </span>
+          </button>
+        `).join('');
+        return;
+      }
+
       const products = displayedProducts();
       els.productGrid.className = 'product-grid product-layout';
-      els.productGrid.setAttribute('aria-label', query ? 'Product search results' : (state.productBrowseMode === 'category' ? state.category : 'All products'));
+      els.productGrid.setAttribute('aria-label', query
+        ? 'Product search results'
+        : (state.productBrowseMode === 'subcategory' ? `${state.category}, ${state.subcategory}` : 'All products'));
       if (!products.length) {
-        const emptyCategory = !query && state.productBrowseMode === 'category';
+        const emptyCategory = !query && (state.productBrowseMode === 'category' || state.productBrowseMode === 'subcategory');
+        const emptyLabel = state.productBrowseMode === 'subcategory' ? 'subcategory' : 'category';
         els.productGrid.innerHTML = `
           <div class="empty-state">
             <div>
               <div class="cart-empty-icon"><i class="bi ${emptyCategory ? 'bi-box-seam' : 'bi-search'}"></i></div>
-              <strong>${emptyCategory ? 'No products in this category' : 'No matching products'}</strong>
-              <div>${emptyCategory ? 'Products will appear here when they are assigned to this category.' : 'Try another product name, SKU, barcode, or category.'}</div>
+              <strong>${emptyCategory ? `No products in this ${emptyLabel}` : 'No matching products'}</strong>
+              <div>${emptyCategory ? `Products will appear here when they are assigned to this ${emptyLabel}.` : 'Try another product name, SKU, barcode, or category.'}</div>
             </div>
           </div>
         `;
@@ -10025,6 +10188,14 @@
         'Computer & Gaming',
         'Cables & Adapters'
       ];
+      const expectedSubcategoryMappings = [
+        'Charging & Data Cables',
+        'Car Chargers',
+        'Vehicle Mounts',
+        'Wireless Earbuds & Headphones',
+        'PC Components',
+        'Car Connectivity'
+      ];
 
       state.products = products;
       state.cart = [];
@@ -10035,7 +10206,19 @@
       const categoryCards = Array.from(els.productGrid.querySelectorAll('[data-open-category]'));
       const categoryCardNames = categoryCards.map(card => card.dataset.openCategory);
       const emptyCategoryCardCount = categoryCards.filter(card => card.classList.contains('is-empty')).length;
+      state.category = 'Tablet Cases';
+      state.productBrowseMode = 'subcategories';
+      renderProductBrowser();
+      const subcategoryCards = Array.from(els.productGrid.querySelectorAll('[data-open-subcategory]'));
+      const subcategoryCardNames = subcategoryCards.map(card => card.dataset.openSubcategory);
+      const emptySubcategoryCardCount = subcategoryCards.filter(card => card.classList.contains('is-empty')).length;
+      state.subcategory = 'Apple iPad';
+      state.productBrowseMode = 'subcategory';
+      renderProductBrowser();
+      const subcategoryProductCardRendered = Boolean(document.querySelector('[data-open-product-group="TM8-GRP-IPAD10-HDC"]'));
       state.productBrowseMode = 'all';
+      state.category = 'All';
+      state.subcategory = '';
       renderProductBrowser();
       const grouped = productTiles(state.products);
       const groupCard = document.querySelector('[data-open-product-group="TM8-GRP-IPAD10-HDC"]');
@@ -10060,8 +10243,14 @@
         fixedCategoryCount: categoryCards.length,
         fixedCategoryNames: categoryCardNames,
         emptyCategoryCardCount,
+        fixedSubcategoryCount: POS_PRODUCT_CATEGORIES.reduce((total, category) => total + category.subcategories.length, 0),
+        tabletSubcategoryNames: subcategoryCardNames,
+        emptyTabletSubcategoryCardCount: emptySubcategoryCardCount,
+        subcategoryProductCardRendered,
         categoryMappingResults: categoryMappingSamples.map(product => product.category),
         categoryMappingPass: categoryMappingSamples.every((product, index) => product.category === expectedMappings[index]),
+        subcategoryMappingResults: categoryMappingSamples.map(product => product.subcategory),
+        subcategoryMappingPass: categoryMappingSamples.every((product, index) => product.subcategory === expectedSubcategoryMappings[index]),
         tileCount: grouped.length,
         variantCount: grouped[0]?.variant_count || 0,
         groupStock: grouped[0]?.group_stock || 0,
@@ -10085,6 +10274,7 @@
         state.cart = [];
         state.search = '';
         state.category = 'All';
+        state.subcategory = '';
         state.productBrowseMode = 'categories';
         renderProductBrowser();
         renderCart();
@@ -11550,9 +11740,16 @@
       if (modeButton) {
         state.productBrowseMode = modeButton.dataset.browseMode;
         state.category = 'All';
+        state.subcategory = '';
       } else if (backButton) {
-        state.productBrowseMode = 'categories';
-        state.category = 'All';
+        if (state.productBrowseMode === 'subcategory') {
+          state.productBrowseMode = 'subcategories';
+          state.subcategory = '';
+        } else {
+          state.productBrowseMode = 'categories';
+          state.category = 'All';
+          state.subcategory = '';
+        }
       } else {
         return;
       }
@@ -11564,7 +11761,16 @@
       const categoryCard = event.target.closest('[data-open-category]');
       if (categoryCard) {
         state.category = categoryCard.dataset.openCategory;
-        state.productBrowseMode = 'category';
+        state.subcategory = '';
+        state.productBrowseMode = 'subcategories';
+        els.productGrid.scrollTop = 0;
+        renderProductBrowser();
+        return;
+      }
+      const subcategoryCard = event.target.closest('[data-open-subcategory]');
+      if (subcategoryCard) {
+        state.subcategory = subcategoryCard.dataset.openSubcategory;
+        state.productBrowseMode = 'subcategory';
         els.productGrid.scrollTop = 0;
         renderProductBrowser();
         return;

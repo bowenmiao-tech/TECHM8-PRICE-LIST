@@ -65,7 +65,8 @@ Completed product-sale flow:
 - Product cards show one main image, name, sale price, and stock for the selected store.
 - Search supports product name, SKU, and barcode.
 - The POS always shows these fixed retail groups, including empty groups: `Phone Cases`, `Tablet Cases`, `Screen Protection`, `Cables & Adapters`, `Charging & Power`, `Audio`, `Mounts & Holders`, `Watch Accessories`, `Computer & Gaming`, and `Other Electronics`.
-- Existing API categories are mapped into those groups in the POS display layer. Source product records are not renamed or rewritten, and search still includes the original category.
+- Each main group opens a fixed second-level category grid before showing products. Empty second-level groups remain visible.
+- Existing API categories are mapped into the hierarchy in the POS display layer. Source product records are not renamed or rewritten, and search still includes the original category and subcategory.
 - A local product snapshot is displayed immediately when available, while the protected live API refreshes in the background.
 - Product images are loaded progressively, and gallery thumbnails are intentionally omitted to keep the POS fast.
 - The entire product card adds the item to the cart.
@@ -73,6 +74,22 @@ Completed product-sale flow:
 - Grouped products use one POS/website card and one main image. Sellable colours remain separate product rows with their own SKU, barcode, cost, price, and store stock.
 - Clicking a multi-colour product group opens a compact colour selector; a one-variant group and legacy products still add directly.
 - An exact SKU or barcode search bypasses grouping and returns the precise sellable variant.
+
+POS product hierarchy:
+
+| Main category | Second-level categories |
+| --- | --- |
+| Phone Cases | Apple iPhone; Samsung Galaxy; Google Pixel; Other & Universal |
+| Tablet Cases | Apple iPad; Samsung Galaxy Tab; Other & Universal |
+| Screen Protection | Phone Screen Protection; Tablet Screen Protection; Watch & Lens Protection |
+| Cables & Adapters | Charging & Data Cables; Display & Computer Cables; Network Cables; Audio Cables & Adapters; OTG & Card Readers; Car Connectivity |
+| Charging & Power | Wall Chargers; Wireless Chargers; Car Chargers; Laptop Chargers; Power Banks |
+| Audio | Wired Earphones & Headphones; Wireless Earbuds & Headphones; Headsets; Speakers; Microphones |
+| Mounts & Holders | Vehicle Mounts; Phone & Tablet Stands; Laptop Stands; Monitor Mounts; Selfie Sticks & Live Stands; Wallets, Card Holders & Grips |
+| Watch Accessories | Watch Bands; Watch Cases |
+| Computer & Gaming | PC Components; Input & Office Peripherals; Hubs & Docks; Networking; Storage; Consoles & Controllers; Gaming & Simulation |
+| Other Electronics | Drones & Accessories; Personal Fans; Lighting & Clocks; Earbud Cases; Tracker Cases; Other Electronics |
+
 - Quantity change, cancel, hold, and resume are available.
 - Held carts are stored per store and shared between POS terminals.
 - Restoring a held cart is atomic, so another terminal cannot restore the same cart again.
