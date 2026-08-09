@@ -1,0 +1,26 @@
+[
+  {
+    "sku": "110541619",
+    "name": "WEKOME WP-C53 Car Charger",
+    "cost_price": 3,
+    "retail_price": 39,
+    "stock_quantity": 3,
+    "upc": "6941027651551"
+  },
+  {
+    "sku": "110531618",
+    "name": "WEKOME WP-C54 Car Charger",
+    "cost_price": 3,
+    "retail_price": 39,
+    "stock_quantity": 3,
+    "upc": "6941027651735"
+  },
+  {
+    "sku": "110511620",
+    "name": "WEKOME WP-C64 Car Charger",
+    "cost_price": 3,
+    "retail_price": 39,
+    "stock_quantity": 3,
+    "upc": "6941027655641"
+  }
+]
