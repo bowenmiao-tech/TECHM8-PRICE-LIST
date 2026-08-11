@@ -11,6 +11,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $runScript = Join-Path $PSScriptRoot 'run-crazyparts-price-monitor.ps1'
+$supportedRunScript = Join-Path $PSScriptRoot 'run-crazyparts-supported-brands.ps1'
 $credentialPath = Join-Path (Split-Path -Parent $PSScriptRoot) '.secrets\crazyparts-credential.xml'
 
 if (-not (Test-Path -LiteralPath $credentialPath)) {
@@ -52,7 +53,12 @@ $scopeArguments = if ($All) {
 } else {
     "-Family `"$Family`" -Concurrency 2"
 }
-$taskAction.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScript`" $scopeArguments -SyncSupabase"
+$taskScript = if ($useSupportedBrands) { $supportedRunScript } else { $runScript }
+$taskAction.Arguments = if ($useSupportedBrands) {
+    "-NoProfile -ExecutionPolicy Bypass -File `"$taskScript`" -Concurrency 1"
+} else {
+    "-NoProfile -ExecutionPolicy Bypass -File `"$taskScript`" $scopeArguments -SyncSupabase"
+}
 $taskAction.WorkingDirectory = Split-Path -Parent $PSScriptRoot
 
 # TASK_CREATE_OR_UPDATE = 6; TASK_LOGON_INTERACTIVE_TOKEN = 3.

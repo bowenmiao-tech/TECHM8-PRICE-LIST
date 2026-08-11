@@ -55,7 +55,7 @@ Run the A Series update and sync matched prices to the website Admin database:
 Run every supported phone brand and sync the verified result:
 
 ```powershell
-.\scripts\run-crazyparts-price-monitor.ps1 -SupportedBrands -Concurrency 4 -SyncSupabase
+.\scripts\run-crazyparts-supported-brands.ps1 -Concurrency 1
 ```
 
 Supported scope: Samsung A Series, OPPO, HUAWEI, XIAOMI, REDMI, MOTOROLA, NOKIA, ONEPLUS, REALME, VIVO and SONY. SONY game-console and generic category pages are excluded.
@@ -82,7 +82,7 @@ To choose a different day and time:
 .\scripts\install-crazyparts-monthly-task.ps1 -DayOfMonth 2 -StartTime '04:30'
 ```
 
-The Windows task is configured to update all supported phone brands by default with four concurrent model-page workers. Pass `-All` to the installer only when a deliberately broader full-site crawl is wanted. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
+The Windows task is configured to update all supported phone brands one family at a time. Each completed family is backed up, replaced and verified before the next family begins, and a failed family is retried once without blocking already completed updates. Pass `-All` to the installer only when a deliberately broader full-site crawl is wanted. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
 
 ## Safety behaviour
 

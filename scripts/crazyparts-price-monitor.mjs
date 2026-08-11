@@ -99,6 +99,7 @@ function normaliseModelHref(input) {
 function isEligibleRepairModel(model) {
   const family = String(model.family || '').trim().toLowerCase();
   const name = String(model.name || '').trim();
+  if (name.toLowerCase() === family) return false;
   if (family === 'sony' && (/playstation/i.test(name) || /^sony\s+xperia$/i.test(name))) return false;
   return true;
 }
@@ -819,11 +820,13 @@ async function main() {
 
     let nextIndex = 0;
     let completed = 0;
+    let fatalError = null;
     const concurrency = Math.max(1, Math.min(8, Math.floor(args.concurrency || 1), selectedModels.length || 1));
     console.log(`Using ${concurrency} concurrent model page worker(s).`);
     const workers = Array.from({ length: concurrency }, async (_, workerIndex) => {
       const workerPage = workerIndex === 0 ? page : await context.newPage();
       while (true) {
+        if (fatalError) break;
         const index = nextIndex;
         nextIndex += 1;
         if (index >= selectedModels.length) break;
@@ -846,6 +849,11 @@ async function main() {
           completed += 1;
           console.log(`[${completed}/${selectedModels.length}] ${result.heading}: ${result.products.length} products read`);
         } catch (error) {
+          if (error.code === 'CRAZYPARTS_RATE_LIMIT') {
+            fatalError = error;
+            console.error(`Stopping this run because Crazy Parts is still rate limiting requests.`);
+            break;
+          }
           failures.push({
             brand: model.brand,
             model: model.name,
@@ -862,6 +870,7 @@ async function main() {
       if (workerIndex !== 0) await workerPage.close();
     });
     await Promise.all(workers);
+    if (fatalError) throw fatalError;
 
     await context.close();
   } finally {
