@@ -17,7 +17,7 @@ For every model and repair type, the workbook uses the lowest and highest eligib
 - `scripts/crazyparts-price-monitor.mjs` performs the login, model discovery, scraping, classification and workbook build.
 - `scripts/setup-crazyparts-credential.ps1` stores the login using Windows user encryption.
 - `scripts/run-crazyparts-price-monitor.ps1` safely loads the encrypted login and starts the monitor.
-- `scripts/sync-crazyparts-to-supabase.mjs` matches the completed A Series run to existing Admin rows, backs up the old values, updates only the four approved repair categories, and verifies every write.
+- `scripts/sync-crazyparts-to-supabase.mjs` backs up the old values, updates only the four approved repair categories, and verifies every write. A Series keeps its variant-aware matching; the supported non-Samsung brands are fully replaced from a complete supplier run so stale models are removed.
 - `scripts/install-crazyparts-monthly-task.ps1` creates the monthly Windows scheduled task.
 - `outputs/crazyparts-price-monitor/TECHM8_CrazyParts_Repair_Prices.xlsx` is the current internal workbook.
 - `outputs/crazyparts-price-monitor/history/` keeps raw JSON history for auditing and recovery.
@@ -52,6 +52,14 @@ Run the A Series update and sync matched prices to the website Admin database:
 .\scripts\run-crazyparts-price-monitor.ps1 -Family 'A Series' -SyncSupabase
 ```
 
+Run every supported phone brand and sync the verified result:
+
+```powershell
+.\scripts\run-crazyparts-price-monitor.ps1 -SupportedBrands -Concurrency 4 -SyncSupabase
+```
+
+Supported scope: Samsung A Series, OPPO, HUAWEI, XIAOMI, REDMI, MOTOROLA, NOKIA, ONEPLUS, REALME, VIVO and SONY. SONY game-console and generic category pages are excluded.
+
 ## Full manual update
 
 ```powershell
@@ -74,7 +82,7 @@ To choose a different day and time:
 .\scripts\install-crazyparts-monthly-task.ps1 -DayOfMonth 2 -StartTime '04:30'
 ```
 
-The Windows task is configured to update `A Series` by default. Pass `-All` to the installer only when a deliberately slower full-site monthly crawl is wanted. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
+The Windows task is configured to update all supported phone brands by default with four concurrent model-page workers. Pass `-All` to the installer only when a deliberately broader full-site crawl is wanted. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
 
 ## Safety behaviour
 
@@ -83,5 +91,6 @@ The Windows task is configured to update `A Series` by default. Pass `-All` to t
 - It never places orders or changes the Crazy Parts account.
 - Products are eligible only when Sydney or Melbourne is `In Stock` or `Low Stock`.
 - A run with more than 10% failed model pages does not replace the current workbook.
+- A non-Samsung brand is never replaced unless every selected model page completed, the run was not model-limited, and at least one eligible repair price was produced for that brand.
 - Source product names, prices, stock and URLs are retained in the workbook and raw history.
 - Formula errors are scanned before the workbook is saved.

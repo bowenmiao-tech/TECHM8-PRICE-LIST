@@ -4,7 +4,8 @@ param(
     [ValidatePattern('^([01]\d|2[0-3]):[0-5]\d$')]
     [string]$StartTime = '05:00',
     [string]$TaskName = 'TECHM8 Crazy Parts Monthly Price Update',
-    [string]$Family = 'A Series',
+    [string]$Family = '',
+    [switch]$SupportedBrands,
     [switch]$All
 )
 
@@ -27,13 +28,13 @@ $taskService = New-Object -ComObject 'Schedule.Service'
 $taskService.Connect()
 $taskFolder = $taskService.GetFolder('\')
 $taskDefinition = $taskService.NewTask(0)
-$taskDefinition.RegistrationInfo.Description = 'Updates TECHM8 repair prices from Crazy Parts member pricing and syncs matched A Series prices to Supabase.'
+$taskDefinition.RegistrationInfo.Description = 'Updates TECHM8 phone repair prices from Crazy Parts and replaces the supported brand prices in Supabase.'
 $taskDefinition.Settings.Enabled = $true
 $taskDefinition.Settings.StartWhenAvailable = $true
 $taskDefinition.Settings.AllowDemandStart = $true
 $taskDefinition.Settings.DisallowStartIfOnBatteries = $false
 $taskDefinition.Settings.StopIfGoingOnBatteries = $false
-$taskDefinition.Settings.ExecutionTimeLimit = 'PT3H'
+$taskDefinition.Settings.ExecutionTimeLimit = 'PT6H'
 
 $monthlyTrigger = $taskDefinition.Triggers.Create(4)
 $monthlyTrigger.StartBoundary = $startBoundary.ToString('yyyy-MM-ddTHH:mm:ss')
@@ -43,12 +44,25 @@ $monthlyTrigger.Enabled = $true
 
 $taskAction = $taskDefinition.Actions.Create(0)
 $taskAction.Path = 'powershell.exe'
-$scopeArguments = if ($All) { '-All' } else { "-Family `"$Family`"" }
+$useSupportedBrands = $SupportedBrands -or (-not $All -and [string]::IsNullOrWhiteSpace($Family))
+$scopeArguments = if ($All) {
+    '-All -Concurrency 4'
+} elseif ($useSupportedBrands) {
+    '-SupportedBrands -Concurrency 4'
+} else {
+    "-Family `"$Family`" -Concurrency 2"
+}
 $taskAction.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScript`" $scopeArguments -SyncSupabase"
 $taskAction.WorkingDirectory = Split-Path -Parent $PSScriptRoot
 
 # TASK_CREATE_OR_UPDATE = 6; TASK_LOGON_INTERACTIVE_TOKEN = 3.
 $taskFolder.RegisterTaskDefinition($TaskName, $taskDefinition, 6, $null, $null, 3, $null) | Out-Null
 
-$scopeDescription = if ($All) { 'all discovered models' } else { "family '$Family'" }
+$scopeDescription = if ($All) {
+    'all discovered models'
+} elseif ($useSupportedBrands) {
+    'A Series, OPPO, HUAWEI, XIAOMI, REDMI, MOTOROLA, NOKIA, ONEPLUS, REALME, VIVO and SONY'
+} else {
+    "family '$Family'"
+}
 Write-Host "Scheduled '$TaskName' for $scopeDescription on day $DayOfMonth of every month at $StartTime."

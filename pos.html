@@ -7347,10 +7347,10 @@
       }
       if (category === 'Cables & Adapters') {
         if (/carplay|android auto|fm transmitter/.test(text)) return 'Car Connectivity';
-        if (/hdmi|displayport|\bdp\b|vga|dvi/.test(text)) return 'Display & Computer Cables';
-        if (/ethernet|network|cat\s?[5-8]/.test(text)) return 'Network Cables';
+        if (/hdmi|displayport|\bdp\b|vga|dvi|hard drive|printer cable|power cable|\biec\b|am-bm|am-am/.test(text)) return 'Display & Computer Cables';
+        if (/ethernet|network|cat\s?[5-8]|patch cord|\bsstp\b/.test(text)) return 'Network Cables';
         if (/3\.5mm|\baux\b|audio adapter|audio adaptor/.test(text)) return 'Audio Cables & Adapters';
-        if (/otg|card reader/.test(text)) return 'OTG & Card Readers';
+        if (/otg|card reader|sd card adapter/.test(text)) return 'OTG & Card Readers';
         return 'Charging & Data Cables';
       }
       if (category === 'Charging & Power') {
@@ -7368,8 +7368,8 @@
         return 'Wired Earphones & Headphones';
       }
       if (category === 'Mounts & Holders') {
-        if (/car|vehicle|bike|bicycle/.test(text)) return 'Vehicle Mounts';
         if (/monitor/.test(text)) return 'Monitor Mounts';
+        if (/car|vehicle|bike|bicycle/.test(text)) return 'Vehicle Mounts';
         if (/laptop/.test(text)) return 'Laptop Stands';
         if (/selfie|live stream/.test(text)) return 'Selfie Sticks & Live Stands';
         if (/card holder|wallet|pop socket|popsocket|strap/.test(text)) return 'Wallets, Card Holders & Grips';
@@ -7377,12 +7377,13 @@
       }
       if (category === 'Watch Accessories') return /case/.test(text) ? 'Watch Cases' : 'Watch Bands';
       if (category === 'Computer & Gaming') {
-        if (/playstation|ps5|xbox|controller|console/.test(text)) return 'Consoles & Controllers';
-        if (/simulator|cockpit|gaming chair|gaming table/.test(text)) return 'Gaming & Simulation';
-        if (/hard drive|\bssd\b|sd card|flash drive/.test(text)) return 'Storage';
-        if (/keyboard|mouse|webcam|office combo/.test(text)) return 'Input & Office Peripherals';
-        if (/hub|dock/.test(text)) return 'Hubs & Docks';
-        if (/wireless adapter|network/.test(text)) return 'Networking';
+        if (/fan controller|pc fan|cpu fan|cpu cooler|power suppl|graphics card|\bgpu\b|\bram\b|pc case/.test(text)) return 'PC Components';
+        if (/playstation|ps5|xbox|controller|console|nintendo switch|joy[ -]?con/.test(text)) return 'Consoles & Controllers';
+        if (/simulator|cockpit|gaming chair|gaming table|\bmoza\b|pedal|shifter|steering wheel/.test(text)) return 'Gaming & Simulation';
+        if (/hard drive|\bssd\b|sd card|flash drive|\busb\s*\d+\s*gb\b/.test(text)) return 'Storage';
+        if (/keyboard|mouse|webcam|office combo|keycap|\bcombo\b|laptop (?:case|bag|sleeve)/.test(text)) return 'Input & Office Peripherals';
+        if (/hub|dock|splitter/.test(text)) return 'Hubs & Docks';
+        if (/wireless adapter|wireless pcie adapter|network|wi-?fi|\bax\d{3,4}\b/.test(text)) return 'Networking';
         return 'PC Components';
       }
       if (/drone/.test(text)) return 'Drones & Accessories';
@@ -8859,9 +8860,6 @@
         const controller = new AbortController();
         const timeoutId = window.setTimeout(() => controller.abort(), 20000);
         try {
-        const url = new URL(endpoint, window.location.href);
-        url.searchParams.set('page', '1');
-        url.searchParams.set('limit', '500');
         const headers = {};
         const staffToken = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
           ? window.Techm8StaffAuth.getToken()
@@ -8880,17 +8878,33 @@
           headers.Authorization = `Bearer ${window.TECHM8_SUPABASE.anonKey}`;
         }
 
-        const response = await fetch(url.toString(), {
-          headers,
-          cache: 'no-store',
-          signal: controller.signal
-        });
-        if (!response.ok) {
-          const errorPayload = await response.json().catch(() => ({}));
-          throw new Error(errorPayload.message || `Product API request failed: ${response.status}`);
-        }
-        const payload = await response.json();
-        const products = normalizeProducts(payload);
+        const productRows = [];
+        let page = 1;
+        let hasMore = false;
+        do {
+          const url = new URL(endpoint, window.location.href);
+          url.searchParams.set('page', String(page));
+          url.searchParams.set('limit', '500');
+          const response = await fetch(url.toString(), {
+            headers,
+            cache: 'no-store',
+            signal: controller.signal
+          });
+          if (!response.ok) {
+            const errorPayload = await response.json().catch(() => ({}));
+            throw new Error(errorPayload.message || `Product API request failed: ${response.status}`);
+          }
+          const payload = await response.json();
+          const pageRows = Array.isArray(payload)
+            ? payload
+            : (payload.products || payload.rows || payload.data || []);
+          productRows.push(...pageRows);
+          hasMore = payload && !Array.isArray(payload) && payload.has_more === true;
+          page += 1;
+          if (page > 100) throw new Error('Product API pagination exceeded the safe page limit.');
+        } while (hasMore);
+
+        const products = normalizeProducts(productRows);
         if (!products.length) throw new Error('Product API returned no products.');
         if (requestId !== state.productRequestId) return;
         state.products = products;
@@ -10179,7 +10193,17 @@
         { id: 'map-car-holder', name: 'MagSafe Car Holder', category_name: 'Car Holders' },
         { id: 'map-headphones', name: 'Bluetooth Headphones', category_name: 'Wireless & Bluetooth Headphones' },
         { id: 'map-gpu', name: 'RTX Graphics Card', category_name: 'Graphics Cards' },
-        { id: 'map-carplay', name: 'Wireless Dongle for CarPlay', category_name: 'Accessories' }
+        { id: 'map-carplay', name: 'Wireless Dongle for CarPlay', category_name: 'Accessories' },
+        { id: 'map-fan-controller', name: '10-Port PC Fan Controller', category_name: 'Gaming Essentials' },
+        { id: 'map-monitor-arm', name: 'Monitor Arm Support', category_name: 'Car Holders' },
+        { id: 'map-keycaps', name: '142-key Keycap Set', category_name: 'Gaming Essentials' },
+        { id: 'map-racing-pedals', name: 'MOZA Throttle and Brake Pedal Set', category_name: 'Gaming Essentials' },
+        { id: 'map-usb-storage', name: 'USB 128GB', category_name: 'Gaming Essentials' },
+        { id: 'map-switch', name: 'Nintendo Switch Joy-Con Pair', category_name: 'Gaming Essentials' },
+        { id: 'map-wifi', name: 'AX1800 WiFi USB Adapter', category_name: 'Gaming Essentials' },
+        { id: 'map-card-reader', name: 'SD Card Adapter', category_name: 'Cable' },
+        { id: 'map-network-cable', name: 'SSTP Flat Patch Cord 5M', category_name: 'Cable' },
+        { id: 'map-laptop-case', name: '13 Inch Laptop Case Blue', category_name: 'Gaming Essentials' }
       ] });
       const expectedMappings = [
         'Cables & Adapters',
@@ -10187,7 +10211,17 @@
         'Mounts & Holders',
         'Audio',
         'Computer & Gaming',
-        'Cables & Adapters'
+        'Cables & Adapters',
+        'Computer & Gaming',
+        'Mounts & Holders',
+        'Computer & Gaming',
+        'Computer & Gaming',
+        'Computer & Gaming',
+        'Computer & Gaming',
+        'Computer & Gaming',
+        'Cables & Adapters',
+        'Cables & Adapters',
+        'Computer & Gaming'
       ];
       const expectedSubcategoryMappings = [
         'Charging & Data Cables',
@@ -10195,7 +10229,17 @@
         'Vehicle Mounts',
         'Wireless Earbuds & Headphones',
         'PC Components',
-        'Car Connectivity'
+        'Car Connectivity',
+        'PC Components',
+        'Monitor Mounts',
+        'Input & Office Peripherals',
+        'Gaming & Simulation',
+        'Storage',
+        'Consoles & Controllers',
+        'Networking',
+        'OTG & Card Readers',
+        'Network Cables',
+        'Input & Office Peripherals'
       ];
 
       state.products = products;

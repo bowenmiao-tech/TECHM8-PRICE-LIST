@@ -58,6 +58,15 @@ The migrations add product groups, fit profiles, directional device compatibilit
 
 The current tablet-case catalogue contains 287 products under 67 groups. All are active and visible in POS; online visibility remains off until the matching public-storefront grouping change is deployed. `TM8-TAB-10064` was deliberately removed because neither the variant nor its product group had a usable image. All Twist Leather Cases cost $5, all Z-Fold and Z-Flip Cases cost $4, Hard and Bubble Hard Cases cost $15, and the 16 owner-confirmed exception costs are persisted in `outputs/product-catalog-rebuild/TECHM8_Tablet_Case_Cost_Overrides.json`. No imported product remains blocked by missing cost.
 
+The computer-product catalogue import is stored in:
+
+```text
+supabase/website-migrations/20260812011000_import_repairdesk_computer_products.sql
+outputs/computer-product-catalog-rebuild/TECHM8_Computer_Products_Import.json
+```
+
+It imports 137 owner-approved products into existing categories only. Forty-one red review rows are excluded, five exact DualSense products remain untouched, and the two owner-confirmed MSI A13 products are retained as separate new records. All imported rows are active in POS, hidden online, start at zero stock, and have one validated main image. The migration rejects category, SKU, or source-identity conflicts and validates the full catalogue before committing.
+
 ## POS Repair Tickets
 
 `pos-repair-tickets` is the browser-safe Repair Board endpoint. Repair tickets belong to a store, not to the staff member who created them. Staff identity is kept as the creator/updater/activity actor.

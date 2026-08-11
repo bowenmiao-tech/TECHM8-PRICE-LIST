@@ -13,9 +13,11 @@ function parseArgs(argv) {
     all: false,
     headful: false,
     maxModels: 0,
+    concurrency: 1,
     families: [],
     models: [],
     rebuildLatest: false,
+    listFamilies: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -25,7 +27,9 @@ function parseArgs(argv) {
     else if (arg === '--family') options.families.push(argv[++index]);
     else if (arg === '--model') options.models.push(argv[++index]);
     else if (arg === '--max-models') options.maxModels = Number(argv[++index] || 0);
+    else if (arg === '--concurrency') options.concurrency = Number(argv[++index] || 1);
     else if (arg === '--rebuild-latest') options.rebuildLatest = true;
+    else if (arg === '--list-families') options.listFamilies = true;
     else if (arg === '--help') options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -46,8 +50,10 @@ Options:
   --family <name>      Process one menu family, for example "A Series"
   --model <slug/url>   Process one model; may be repeated
   --max-models <n>     Limit the selected models for a controlled test
+  --concurrency <n>    Number of model pages processed in parallel (default 1)
   --headful            Show the browser window
   --rebuild-latest     Rebuild the workbook from the latest saved raw run
+  --list-families      Log in and list the currently available model families
 `);
 }
 
@@ -88,6 +94,13 @@ function normaliseModelHref(input) {
   if (/^https?:\/\//i.test(value)) return new URL(value).pathname;
   if (value.startsWith('/products/')) return value.split('?')[0];
   return `/products/${value.replace(/^\/+|\/+$/g, '')}`;
+}
+
+function isEligibleRepairModel(model) {
+  const family = String(model.family || '').trim().toLowerCase();
+  const name = String(model.name || '').trim();
+  if (family === 'sony' && (/playstation/i.test(name) || /^sony\s+xperia$/i.test(name))) return false;
+  return true;
 }
 
 function categoryLabel(category) {
@@ -371,6 +384,7 @@ function summariseModels(models, capturedAt) {
   const categories = ['screen', 'battery', 'charging_port', 'camera'];
 
   for (const model of models) {
+    if (!isEligibleRepairModel({ ...model, name: model.heading || model.name })) continue;
     const relevant = model.products.filter((product) => (
       product.category && productMatchesModel(product.name, model.heading || model.name)
     ));
@@ -710,7 +724,7 @@ async function main() {
     printHelp();
     return;
   }
-  if (!args.all && !args.families.length && !args.models.length && !args.rebuildLatest) {
+  if (!args.all && !args.families.length && !args.models.length && !args.rebuildLatest && !args.listFamilies) {
     throw new Error('Choose --all, --family, or provide at least one --model. This safety check prevents accidental full-site runs.');
   }
 
@@ -765,12 +779,28 @@ async function main() {
     console.log(`Logged in with ${config.expectedMemberTier} member pricing.`);
 
     const discovered = await discoverModels(page, config);
+    if (args.listFamilies) {
+      const familyCounts = new Map();
+      for (const model of discovered) {
+        const key = `${model.brand}|${model.family}`;
+        familyCounts.set(key, (familyCounts.get(key) || 0) + 1);
+      }
+      console.log('Available Crazy Parts model families:');
+      for (const [key, count] of [...familyCounts].sort(([left], [right]) => left.localeCompare(right))) {
+        const [brand, family] = key.split('|');
+        console.log(`${brand}\t${family}\t${count}`);
+      }
+      await context.close();
+      return;
+    }
     const discoveredByHref = new Map(discovered.map((model) => [model.href, model]));
     if (args.all) {
-      selectedModels = discovered;
+      selectedModels = discovered.filter(isEligibleRepairModel);
     } else {
       const familyNames = new Set(args.families.map((value) => String(value || '').trim().toLowerCase()));
-      const familyModels = discovered.filter((model) => familyNames.has(model.family.toLowerCase()));
+      const familyModels = discovered.filter((model) => (
+        familyNames.has(model.family.toLowerCase()) && isEligibleRepairModel(model)
+      ));
       const manualModels = args.models.map((value) => {
         const href = normaliseModelHref(value);
         return discoveredByHref.get(href) || {
@@ -787,37 +817,51 @@ async function main() {
     if (args.maxModels > 0) selectedModels = selectedModels.slice(0, args.maxModels);
     console.log(`Selected ${selectedModels.length} model page(s).`);
 
-    for (let index = 0; index < selectedModels.length; index += 1) {
-      const model = selectedModels[index];
-      try {
-        let result;
-        const rateLimitAttempts = Math.max(1, config.rateLimitRetryAttempts || 1);
-        for (let attempt = 1; attempt <= rateLimitAttempts; attempt += 1) {
-          try {
-            result = await scrapeModel(page, model, config);
-            break;
-          } catch (error) {
-            if (error.code !== 'CRAZYPARTS_RATE_LIMIT' || attempt === rateLimitAttempts) throw error;
-            const waitMs = Math.min(config.rateLimitBackoffMs * (2 ** (attempt - 1)), 300000);
-            console.warn(`Crazy Parts rate limit reached. Waiting ${Math.round(waitMs / 1000)} seconds before retry ${attempt + 1}/${rateLimitAttempts}.`);
-            await sleep(waitMs);
+    let nextIndex = 0;
+    let completed = 0;
+    const concurrency = Math.max(1, Math.min(8, Math.floor(args.concurrency || 1), selectedModels.length || 1));
+    console.log(`Using ${concurrency} concurrent model page worker(s).`);
+    const workers = Array.from({ length: concurrency }, async (_, workerIndex) => {
+      const workerPage = workerIndex === 0 ? page : await context.newPage();
+      while (true) {
+        const index = nextIndex;
+        nextIndex += 1;
+        if (index >= selectedModels.length) break;
+        const model = selectedModels[index];
+        try {
+          let result;
+          const rateLimitAttempts = Math.max(1, config.rateLimitRetryAttempts || 1);
+          for (let attempt = 1; attempt <= rateLimitAttempts; attempt += 1) {
+            try {
+              result = await scrapeModel(workerPage, model, config);
+              break;
+            } catch (error) {
+              if (error.code !== 'CRAZYPARTS_RATE_LIMIT' || attempt === rateLimitAttempts) throw error;
+              const waitMs = Math.min(config.rateLimitBackoffMs * (2 ** (attempt - 1)), 300000);
+              console.warn(`Crazy Parts rate limit reached. Waiting ${Math.round(waitMs / 1000)} seconds before retry ${attempt + 1}/${rateLimitAttempts}.`);
+              await sleep(waitMs);
+            }
           }
+          scrapedModels.push(result);
+          completed += 1;
+          console.log(`[${completed}/${selectedModels.length}] ${result.heading}: ${result.products.length} products read`);
+        } catch (error) {
+          failures.push({
+            brand: model.brand,
+            model: model.name,
+            repairType: '',
+            issue: 'Model page failed',
+            details: error.message,
+            url: new URL(model.href, config.baseUrl).toString(),
+          });
+          completed += 1;
+          console.error(`[${completed}/${selectedModels.length}] ${model.name}: ${error.message}`);
         }
-        scrapedModels.push(result);
-        console.log(`[${index + 1}/${selectedModels.length}] ${result.heading}: ${result.products.length} products read`);
-      } catch (error) {
-        failures.push({
-          brand: model.brand,
-          model: model.name,
-          repairType: '',
-          issue: 'Model page failed',
-          details: error.message,
-          url: new URL(model.href, config.baseUrl).toString(),
-        });
-        console.error(`[${index + 1}/${selectedModels.length}] ${model.name}: ${error.message}`);
+        if (nextIndex < selectedModels.length) await sleep(config.pageDelayMs);
       }
-      if (index + 1 < selectedModels.length) await sleep(config.pageDelayMs);
-    }
+      if (workerIndex !== 0) await workerPage.close();
+    });
+    await Promise.all(workers);
 
     await context.close();
   } finally {
@@ -841,6 +885,8 @@ async function main() {
   const rawData = {
     capturedAt,
     scope,
+    selectionComplete: args.maxModels === 0 && args.models.length === 0,
+    requestedFamilies: args.families,
     modelsSelected: selectedModels.length,
     modelsProcessed: scrapedModels.length,
     repairRows: summary.repairRows,

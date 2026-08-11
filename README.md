@@ -61,6 +61,7 @@ Password rules:
 
 Completed product-sale flow:
 - Live products load through the browser-safe `pos-products` Edge Function.
+- Product loading follows the API `has_more` pagination flag, so catalogues larger than 500 rows are loaded completely.
 - Product browsing opens on a category grid; staff can enter a category or switch to `All Products` without losing the fixed checkout panel.
 - Product cards show one main image, name, sale price, and stock for the selected store.
 - Search supports product name, SKU, and barcode.
@@ -89,6 +90,14 @@ POS product hierarchy:
 | Watch Accessories | Watch Bands; Watch Cases |
 | Computer & Gaming | PC Components; Input & Office Peripherals; Hubs & Docks; Networking; Storage; Consoles & Controllers; Gaming & Simulation |
 | Other Electronics | Drones & Accessories; Personal Fans; Lighting & Clocks; Earbud Cases; Tracker Cases; Other Electronics |
+
+Computer product catalogue import completed on 12 August 2026:
+- The reviewed source contained 183 products. The 41 owner-marked red rows were excluded and the 5 exact existing DualSense products were preserved without changes.
+- 137 products were imported: 135 approved new rows plus the 2 owner-confirmed MSI A13 products that remain separate from the existing catalogue items.
+- No category records were created, renamed, or removed. Products were assigned to the existing database categories and continue to use the POS display hierarchy above.
+- Every imported product is active and visible in POS, hidden from the online storefront, starts with zero stock, and has one working main image.
+- The three owner-supplied images are stored in the public `product-images` Supabase Storage bucket.
+- The repeatable import source is `supabase/website-migrations/20260812011000_import_repairdesk_computer_products.sql`; its generated payload is `outputs/computer-product-catalog-rebuild/TECHM8_Computer_Products_Import.json`.
 
 - Quantity change, cancel, hold, and resume are available.
 - Held carts are stored per store and shared between POS terminals.

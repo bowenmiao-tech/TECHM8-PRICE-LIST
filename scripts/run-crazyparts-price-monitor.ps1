@@ -1,9 +1,12 @@
 param(
     [switch]$All,
+    [switch]$SupportedBrands,
     [string[]]$Family,
     [string[]]$Model,
     [switch]$Headful,
     [switch]$SyncSupabase,
+    [ValidateRange(1, 8)]
+    [int]$Concurrency = 1,
     [int]$MaxModels = 0,
     [string]$CredentialPath
 )
@@ -24,6 +27,10 @@ $env:CRAZYPARTS_EMAIL = $credential.UserName
 $env:CRAZYPARTS_PASSWORD = $credential.GetNetworkCredential().Password
 
 $nodeArgs = @((Join-Path $PSScriptRoot 'crazyparts-price-monitor.mjs'))
+$supportedFamilies = @(
+    'A Series', 'Oppo', 'Huawei', 'Xiaomi', 'Redmi', 'Motorola',
+    'Nokia', 'Oneplus', 'Realme', 'Vivo', 'Sony'
+)
 
 if ($All) {
     $nodeArgs += '--all'
@@ -35,7 +42,12 @@ foreach ($modelValue in $Model) {
     }
 }
 
-foreach ($familyValue in $Family) {
+$familyValues = @($Family)
+if ($SupportedBrands) {
+    $familyValues += $supportedFamilies
+}
+
+foreach ($familyValue in @($familyValues | Select-Object -Unique)) {
     if (-not [string]::IsNullOrWhiteSpace($familyValue)) {
         $nodeArgs += @('--family', $familyValue)
     }
@@ -48,6 +60,8 @@ if ($Headful) {
 if ($MaxModels -gt 0) {
     $nodeArgs += @('--max-models', [string]$MaxModels)
 }
+
+$nodeArgs += @('--concurrency', [string]$Concurrency)
 
 Push-Location $projectRoot
 try {

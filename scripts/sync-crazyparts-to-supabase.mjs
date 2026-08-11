@@ -9,6 +9,20 @@ const outputDir = path.join(projectRoot, 'outputs', 'crazyparts-price-monitor');
 const historyDir = path.join(outputDir, 'history');
 const backupDir = path.join(outputDir, 'supabase-backups');
 
+const familyConfig = new Map([
+  ['a series', { dbBrand: 'Samsung A Series', displayBrand: 'Samsung', mode: 'samsung' }],
+  ['oppo', { dbBrand: 'OPPO', displayBrand: 'OPPO', mode: 'replace' }],
+  ['huawei', { dbBrand: 'HUAWEI', displayBrand: 'Huawei', mode: 'replace' }],
+  ['xiaomi', { dbBrand: 'XIAOMI', displayBrand: 'Xiaomi', mode: 'replace' }],
+  ['redmi', { dbBrand: 'REDMI', displayBrand: 'Redmi', mode: 'replace' }],
+  ['motorola', { dbBrand: 'MOTOROLA', displayBrand: 'Motorola', mode: 'replace' }],
+  ['nokia', { dbBrand: 'NOKIA', displayBrand: 'Nokia', mode: 'replace' }],
+  ['oneplus', { dbBrand: 'ONEPLUS', displayBrand: 'OnePlus', mode: 'replace' }],
+  ['realme', { dbBrand: 'REALME', displayBrand: 'Realme', mode: 'replace' }],
+  ['vivo', { dbBrand: 'VIVO', displayBrand: 'Vivo', mode: 'replace' }],
+  ['sony', { dbBrand: 'SONY', displayBrand: 'Sony', mode: 'replace' }],
+]);
+
 function parseArgs(argv) {
   return {
     apply: argv.includes('--apply'),
@@ -116,9 +130,13 @@ async function latestHistory(explicitPath) {
   for (const name of files) {
     const filePath = path.join(historyDir, name);
     const parsed = JSON.parse(await fs.readFile(filePath, 'utf8'));
-    if (/A Series/i.test(parsed.scope || '') && parsed.modelsProcessed >= 80) return filePath;
+    const families = new Set([
+      ...(parsed.repairRows || []).map((row) => String(row.family || '').toLowerCase()),
+      ...(parsed.sourceRows || []).map((row) => String(row.family || '').toLowerCase()),
+    ]);
+    if ([...families].some((family) => familyConfig.has(family))) return filePath;
   }
-  throw new Error('No complete A Series history file was found.');
+  throw new Error('No supported Crazy Parts history file was found.');
 }
 
 async function supabaseConfig() {
@@ -129,13 +147,28 @@ async function supabaseConfig() {
   return { url, anonKey };
 }
 
-async function readSiteRows(config) {
-  const endpoint = `${config.url}/rest/v1/repair_prices?select=brand,model,issue,price&brand=eq.Samsung%20A%20Series&order=model.asc`;
-  const response = await fetch(endpoint, {
-    headers: { apikey: config.anonKey, Authorization: `Bearer ${config.anonKey}` },
-  });
-  if (!response.ok) throw new Error(`Could not read repair prices: ${await response.text()}`);
-  return response.json();
+async function readSiteRows(config, brands) {
+  const rows = [];
+  const pageSize = 1000;
+  for (const brand of brands) {
+    for (let offset = 0; ; offset += pageSize) {
+      const params = new URLSearchParams({
+        select: 'brand,model,issue,price',
+        brand: `eq.${brand}`,
+        order: 'model.asc,issue.asc',
+        limit: String(pageSize),
+        offset: String(offset),
+      });
+      const response = await fetch(`${config.url}/rest/v1/repair_prices?${params}`, {
+        headers: { apikey: config.anonKey, Authorization: `Bearer ${config.anonKey}` },
+      });
+      if (!response.ok) throw new Error(`Could not read ${brand} repair prices: ${await response.text()}`);
+      const page = await response.json();
+      rows.push(...page);
+      if (page.length < pageSize) break;
+    }
+  }
+  return rows;
 }
 
 function makePlan(rawData, siteRows) {
@@ -225,6 +258,94 @@ function makePlan(rawData, siteRows) {
   return { updates, unmatched, obsoleteModels, supplierModels: candidates.length };
 }
 
+function canonicalOtherModelName(sourceModel, displayBrand) {
+  let model = String(sourceModel || '')
+    .replace(/\s*\(/g, ' (')
+    .replace(/\)\s*/g, ') ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!model) return '';
+
+  const escapedBrand = displayBrand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const prefix = new RegExp(`^${escapedBrand}\\b`, 'i');
+  if (prefix.test(model)) return model.replace(prefix, displayBrand).trim();
+  return `${displayBrand} ${model}`;
+}
+
+function makeReplacementPlan(rawData, siteRows, configs) {
+  if (rawData.selectionComplete === false) {
+    throw new Error('Destructive brand replacement refused: the source run used a model limit or manual model selection.');
+  }
+  if (Number(rawData.modelsProcessed) !== Number(rawData.modelsSelected)) {
+    throw new Error(`Destructive brand replacement refused: ${rawData.modelsProcessed || 0}/${rawData.modelsSelected || 0} model pages completed.`);
+  }
+  const pageFailures = (rawData.exceptions || []).filter((item) => item.issue === 'Model page failed');
+  if (pageFailures.length) {
+    throw new Error(`Destructive brand replacement refused: ${pageFailures.length} model page(s) failed.`);
+  }
+
+  const byFamily = new Map(configs.map((config) => [config.family, config]));
+  const groups = new Map();
+  for (const row of rawData.repairRows || []) {
+    const config = byFamily.get(String(row.family || '').toLowerCase());
+    if (!config) continue;
+    const model = canonicalOtherModelName(row.model, config.displayBrand);
+    if (!model || !issuesForRepairType(row.repairType).length) continue;
+    const key = `${config.dbBrand}|${model}|${row.repairType}`;
+    if (!groups.has(key)) groups.set(key, {
+      brand: config.dbBrand,
+      model,
+      repairType: row.repairType,
+      sources: [],
+    });
+    groups.get(key).sources.push(row);
+  }
+
+  const siteMap = new Map(siteRows.map((row) => [`${row.brand}|${row.model}|${row.issue}`, row]));
+  const updates = [];
+  for (const group of groups.values()) {
+    const minimum = priceForPart(Math.min(...group.sources.map((source) => source.minPartPrice)));
+    const maximum = priceForPart(Math.max(...group.sources.map((source) => source.maxPartPrice)));
+    const newPrice = minimum === maximum ? String(minimum) : `${minimum} - ${maximum}`;
+    for (const issue of issuesForRepairType(group.repairType)) {
+      const existing = siteMap.get(`${group.brand}|${group.model}|${issue}`);
+      updates.push({
+        brand: group.brand,
+        model: group.model,
+        issue,
+        oldPrice: existing?.price ?? null,
+        newPrice,
+        sourceModel: [...new Set(group.sources.map((source) => source.model))].join(' / '),
+        repairType: group.repairType,
+      });
+    }
+  }
+
+  const replaceBrands = configs.map((config) => config.dbBrand);
+  for (const brand of replaceBrands) {
+    if (!updates.some((row) => row.brand === brand)) {
+      throw new Error(`Destructive brand replacement refused: ${brand} produced no eligible repair prices.`);
+    }
+  }
+  return {
+    updates,
+    unmatched: [],
+    obsoleteModels: [],
+    replaceBrands,
+    supplierModels: new Set(updates.map((row) => `${row.brand}|${row.model}`)).size,
+  };
+}
+
+function configsInHistory(rawData) {
+  const families = new Set([
+    ...(rawData.repairRows || []).map((row) => String(row.family || '').toLowerCase()),
+    ...(rawData.sourceRows || []).map((row) => String(row.family || '').toLowerCase()),
+  ]);
+  return [...families]
+    .map((family) => ({ family, ...familyConfig.get(family) }))
+    .filter((config) => config.dbBrand);
+}
+
 function sqlForUpdates(plan) {
   const payload = JSON.stringify(plan.updates.map((item) => ({
     brand: item.brand,
@@ -233,7 +354,12 @@ function sqlForUpdates(plan) {
     new_price: item.newPrice,
   })));
   const obsoletePayload = JSON.stringify(plan.obsoleteModels);
+  const replacementPayload = JSON.stringify(plan.replaceBrands || []);
   return `begin;
+delete from public.repair_prices
+where brand in (
+  select value from jsonb_array_elements_text($techm8_replace$${replacementPayload}$techm8_replace$::jsonb)
+);
 with incoming as (
   select *
   from jsonb_to_recordset($techm8_sync$${payload}$techm8_sync$::jsonb)
@@ -272,14 +398,35 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const historyPath = await latestHistory(args.history);
   const rawData = JSON.parse(await fs.readFile(historyPath, 'utf8'));
+  const configs = configsInHistory(rawData);
+  if (!configs.length) throw new Error('The selected history does not contain a supported model family.');
+  const affectedBrands = [...new Set(configs.map((config) => config.dbBrand))];
   const config = await supabaseConfig();
-  const beforeRows = await readSiteRows(config);
-  const plan = makePlan(rawData, beforeRows);
+  const beforeRows = await readSiteRows(config, affectedBrands);
+  const samsungConfig = configs.find((item) => item.mode === 'samsung');
+  const replacementConfigs = configs.filter((item) => item.mode === 'replace');
+  const samsungPlan = samsungConfig
+    ? makePlan({
+      ...rawData,
+      repairRows: (rawData.repairRows || []).filter((row) => String(row.family || '').toLowerCase() === samsungConfig.family),
+    }, beforeRows.filter((row) => row.brand === samsungConfig.dbBrand))
+    : null;
+  const replacementPlan = replacementConfigs.length
+    ? makeReplacementPlan(rawData, beforeRows, replacementConfigs)
+    : null;
+  const plan = {
+    updates: [...(samsungPlan?.updates || []), ...(replacementPlan?.updates || [])],
+    unmatched: samsungPlan?.unmatched || [],
+    obsoleteModels: samsungPlan?.obsoleteModels || [],
+    replaceBrands: replacementPlan?.replaceBrands || [],
+    supplierModels: (samsungPlan?.supplierModels || 0) + (replacementPlan?.supplierModels || 0),
+  };
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '-');
 
   const newRows = plan.updates.filter((item) => item.oldPrice === null).length;
   const targetModels = new Set(plan.updates.map((item) => item.model)).size;
-  console.log(`Prepared ${plan.updates.length} Admin price row(s) across ${targetModels} Admin model(s) from ${plan.supplierModels} supplier model(s): ${newRows} new row(s), ${plan.unmatched.length} unmatched existing row(s).`);
+  console.log(`Prepared ${plan.updates.length} Admin price row(s) across ${targetModels} Admin model(s) for ${affectedBrands.join(', ')}: ${newRows} new row(s), ${plan.unmatched.length} unmatched existing row(s).`);
+  if (plan.replaceBrands.length) console.log(`Full brand replacement: ${plan.replaceBrands.join(', ')}`);
   const newModels = [...new Set(plan.updates.filter((item) => item.oldPrice === null).map((item) => item.model))];
   if (newModels.length) console.log(`New/expanded models: ${newModels.join(', ')}`);
   if (plan.obsoleteModels.length) console.log(`Obsolete generic/duplicate models to remove: ${plan.obsoleteModels.join(', ')}`);
@@ -297,7 +444,7 @@ async function main() {
   await fs.writeFile(backupPath, JSON.stringify({ historyPath, rows: beforeRows, plan }, null, 2));
   await applyPlan(plan, stamp);
 
-  const afterRows = await readSiteRows(config);
+  const afterRows = await readSiteRows(config, affectedBrands);
   const afterMap = new Map(afterRows.map((row) => [`${row.brand}|${row.model}|${row.issue}`, row.price]));
   const failed = plan.updates.filter((item) => (
     afterMap.get(`${item.brand}|${item.model}|${item.issue}`) !== item.newPrice
@@ -305,9 +452,19 @@ async function main() {
   if (failed.length) throw new Error(`${failed.length} price row(s) failed verification.`);
   const obsoleteRemaining = afterRows.filter((row) => plan.obsoleteModels.includes(row.model));
   if (obsoleteRemaining.length) throw new Error(`${obsoleteRemaining.length} obsolete generic row(s) failed deletion verification.`);
+  for (const brand of plan.replaceBrands) {
+    const expected = plan.updates.filter((row) => row.brand === brand);
+    const expectedKeys = new Set(expected.map((row) => `${row.model}|${row.issue}`));
+    const actual = afterRows.filter((row) => row.brand === brand);
+    const unexpected = actual.filter((row) => !expectedKeys.has(`${row.model}|${row.issue}`));
+    if (actual.length !== expected.length || unexpected.length) {
+      throw new Error(`${brand} replacement verification failed: expected ${expected.length} rows, found ${actual.length}.`);
+    }
+  }
 
   const changed = plan.updates.filter((item) => item.oldPrice !== item.newPrice).length;
-  console.log(`Supabase price sync verified: ${plan.updates.length} rows checked, ${changed} changed, ${newRows} inserted.`);
+  const inserted = plan.updates.filter((item) => plan.replaceBrands.includes(item.brand) || item.oldPrice === null).length;
+  console.log(`Supabase price sync verified: ${plan.updates.length} rows checked, ${changed} changed, ${inserted} inserted/replaced.`);
   console.log(`Pre-sync backup: ${backupPath}`);
 }
 
