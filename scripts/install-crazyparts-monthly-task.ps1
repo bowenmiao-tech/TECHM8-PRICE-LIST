@@ -3,7 +3,9 @@ param(
     [int]$DayOfMonth = 1,
     [ValidatePattern('^([01]\d|2[0-3]):[0-5]\d$')]
     [string]$StartTime = '05:00',
-    [string]$TaskName = 'TECHM8 Crazy Parts Monthly Price Update'
+    [string]$TaskName = 'TECHM8 Crazy Parts Monthly Price Update',
+    [string]$Family = 'A Series',
+    [switch]$All
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,10 +43,12 @@ $monthlyTrigger.Enabled = $true
 
 $taskAction = $taskDefinition.Actions.Create(0)
 $taskAction.Path = 'powershell.exe'
-$taskAction.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScript`" -All"
+$scopeArguments = if ($All) { '-All' } else { "-Family `"$Family`"" }
+$taskAction.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScript`" $scopeArguments"
 $taskAction.WorkingDirectory = Split-Path -Parent $PSScriptRoot
 
 # TASK_CREATE_OR_UPDATE = 6; TASK_LOGON_INTERACTIVE_TOKEN = 3.
 $taskFolder.RegisterTaskDefinition($TaskName, $taskDefinition, 6, $null, $null, 3, $null) | Out-Null
 
-Write-Host "Scheduled '$TaskName' for day $DayOfMonth of every month at $StartTime."
+$scopeDescription = if ($All) { 'all discovered models' } else { "family '$Family'" }
+Write-Host "Scheduled '$TaskName' for $scopeDescription on day $DayOfMonth of every month at $StartTime."

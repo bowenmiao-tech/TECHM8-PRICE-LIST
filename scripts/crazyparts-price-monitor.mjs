@@ -13,15 +13,19 @@ function parseArgs(argv) {
     all: false,
     headful: false,
     maxModels: 0,
+    families: [],
     models: [],
+    rebuildLatest: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--all') options.all = true;
     else if (arg === '--headful') options.headful = true;
+    else if (arg === '--family') options.families.push(argv[++index]);
     else if (arg === '--model') options.models.push(argv[++index]);
     else if (arg === '--max-models') options.maxModels = Number(argv[++index] || 0);
+    else if (arg === '--rebuild-latest') options.rebuildLatest = true;
     else if (arg === '--help') options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -34,13 +38,16 @@ function printHelp() {
 
 Usage:
   node scripts/crazyparts-price-monitor.mjs --all
+  node scripts/crazyparts-price-monitor.mjs --family "A Series"
   node scripts/crazyparts-price-monitor.mjs --model "a17-5g-(a176)"
 
 Options:
   --all                Process every discovered model
+  --family <name>      Process one menu family, for example "A Series"
   --model <slug/url>   Process one model; may be repeated
   --max-models <n>     Limit the selected models for a controlled test
   --headful            Show the browser window
+  --rebuild-latest     Rebuild the workbook from the latest saved raw run
 `);
 }
 
@@ -95,7 +102,7 @@ function categoryLabel(category) {
 function classifyProduct(name) {
   const value = String(name || '').toLowerCase().replace(/[–—]/g, '-');
 
-  const screenExcluded = /(screen protector|tempered glass|protective glass|rear cover|back glass|screen tester|lcd tester|frame only|middle frame|housing)/i;
+  const screenExcluded = /(screen protector|tempered glass|protective glass|rear cover|back glass|tester|testing|test cable|fpc connector|lcd connector|screen connector|display connector|screen flex|lcd flex|digitizer flex|frame only|middle frame|housing|front glass|screen glass only)/i;
   const screenTerms = /(\blcd\b|\boled\b|screen replacement|screen assembly|display assembly|digitizer)/i;
   if (!screenExcluded.test(value) && screenTerms.test(value)) return 'screen';
 
@@ -112,6 +119,19 @@ function classifyProduct(name) {
   if (cameraTerms.test(value) && !cameraExcluded.test(value)) return 'camera';
 
   return null;
+}
+
+function productMatchesModel(productName, modelHeading) {
+  const title = String(productName || '');
+  const heading = String(modelHeading || '');
+  const parenthetical = [...heading.matchAll(/\(([^)]+)\)/g)].map((match) => match[1]).join(' ');
+  const modelCodes = parenthetical.match(/\b[A-Z]\d{2,4}[A-Z]?\b/gi) || [];
+  if (modelCodes.some((code) => new RegExp(`\\b${code}[A-Z]?\\b`, 'i').test(title))) return true;
+
+  const plainHeading = heading.replace(/^Samsung\s+(?:Galaxy\s+)?/i, '').trim();
+  const token = plainHeading.match(/^([A-Z]\d+[A-Z]*)\b/i)?.[1];
+  if (!token) return true;
+  return new RegExp(`\\b(?:Samsung(?:\\s+Galaxy)?|Galaxy)\\s+${token}\\b`, 'i').test(title);
 }
 
 function parseMoney(value) {
@@ -301,8 +321,15 @@ async function scrapeModel(page, model, config) {
       throw new Error('The Crazy Parts session expired during the run.');
     }
 
-    heading = cleanMenuText(await page.locator('h1').first().innerText().catch(() => model.name));
     const bodyText = await page.locator('body').innerText();
+    const documentTitle = await page.title();
+    if (/Error 1015|rate.?limit|you are being rate limited/i.test(`${documentTitle}\n${bodyText}`)) {
+      const error = new Error('Crazy Parts rate limit (Error 1015)');
+      error.code = 'CRAZYPARTS_RATE_LIMIT';
+      throw error;
+    }
+
+    heading = cleanMenuText(await page.locator('h1').first().innerText().catch(() => model.name));
     if (/Login to see price/i.test(bodyText)) {
       throw new Error('Member pricing is no longer available in the current session.');
     }
@@ -344,7 +371,9 @@ function summariseModels(models, capturedAt) {
   const categories = ['screen', 'battery', 'charging_port', 'camera'];
 
   for (const model of models) {
-    const relevant = model.products.filter((product) => product.category);
+    const relevant = model.products.filter((product) => (
+      product.category && productMatchesModel(product.name, model.heading || model.name)
+    ));
     for (const product of relevant) {
       sourceRows.push({
         brand: model.brand,
@@ -407,12 +436,61 @@ async function loadPreviousSuccessfulRun(historyDir) {
   for (const fileName of files) {
     try {
       const parsed = JSON.parse(await fs.readFile(path.join(historyDir, fileName), 'utf8'));
-      if (Array.isArray(parsed.repairRows)) return parsed;
+      const rows = [...(parsed.repairRows || []), ...(parsed.sourceRows || [])];
+      const hasRateLimitPage = rows.some((row) => /Error 1015|rate.?limit/i.test(`${row.model || ''} ${row.name || ''}`));
+      const representedModels = new Set((parsed.sourceRows || []).map((row) => `${row.brand}|${row.model}`)).size;
+      const expectedModels = Number(parsed.modelsProcessed || 0);
+      const hasReasonableCoverage = !expectedModels || representedModels >= Math.ceil(expectedModels * 0.8);
+      if (Array.isArray(parsed.repairRows) && !hasRateLimitPage && hasReasonableCoverage) return parsed;
     } catch {
       // Ignore a damaged history entry and continue to an older successful run.
     }
   }
   return null;
+}
+
+async function loadLatestSavedRun(historyDir) {
+  const files = (await fs.readdir(historyDir).catch(() => []))
+    .filter((name) => name.endsWith('.json') && !name.endsWith('-failed.json'))
+    .sort()
+    .reverse();
+  for (const fileName of files) {
+    try {
+      const filePath = path.join(historyDir, fileName);
+      const parsed = JSON.parse(await fs.readFile(filePath, 'utf8'));
+      if (Array.isArray(parsed.sourceRows)) return { filePath, parsed };
+    } catch {
+      // Ignore a damaged history entry and continue.
+    }
+  }
+  return null;
+}
+
+function modelsFromSourceRows(sourceRows) {
+  const models = new Map();
+  for (const row of sourceRows) {
+    const key = `${row.brand}|${row.family}|${row.model}|${row.modelUrl}`;
+    if (!models.has(key)) {
+      models.set(key, {
+        brand: row.brand,
+        family: row.family,
+        name: row.model,
+        heading: row.model,
+        href: row.modelUrl,
+        products: [],
+      });
+    }
+    models.get(key).products.push({
+      category: row.category,
+      name: row.name,
+      price: row.price,
+      sydStock: row.sydStock,
+      melStock: row.melStock,
+      available: row.available,
+      url: row.url,
+    });
+  }
+  return [...models.values()];
 }
 
 function applyPriceChangeChecks(summary, previousRun, config) {
@@ -607,10 +685,23 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
 
   console.log(inspect.ndjson);
   const temporaryPath = `${workbookPath}.tmp.xlsx`;
+  await fs.rm(temporaryPath, { force: true }).catch(() => {});
   const output = await SpreadsheetFile.exportXlsx(workbook);
   await output.save(temporaryPath);
-  await fs.rm(workbookPath, { force: true });
-  await fs.rename(temporaryPath, workbookPath);
+  try {
+    await fs.rm(workbookPath, { force: true });
+    await fs.rename(temporaryPath, workbookPath);
+    return workbookPath;
+  } catch (error) {
+    if (!['EBUSY', 'EPERM', 'EACCES'].includes(error.code)) throw error;
+    const extension = path.extname(workbookPath);
+    const runDirectory = path.basename(path.dirname(previewDir));
+    const pendingPath = `${workbookPath.slice(0, -extension.length)}_PENDING_${runDirectory}${extension}`;
+    await fs.rm(pendingPath, { force: true }).catch(() => {});
+    await fs.rename(temporaryPath, pendingPath);
+    console.warn(`The current workbook is open or locked. The new workbook was saved as: ${pendingPath}`);
+    return pendingPath;
+  }
 }
 
 async function main() {
@@ -619,17 +710,11 @@ async function main() {
     printHelp();
     return;
   }
-  if (!args.all && !args.models.length) {
-    throw new Error('Choose --all or provide at least one --model. This safety check prevents accidental full-site runs.');
+  if (!args.all && !args.families.length && !args.models.length && !args.rebuildLatest) {
+    throw new Error('Choose --all, --family, or provide at least one --model. This safety check prevents accidental full-site runs.');
   }
 
   const config = JSON.parse(await fs.readFile(configPath, 'utf8'));
-  const email = process.env.CRAZYPARTS_EMAIL;
-  const password = process.env.CRAZYPARTS_PASSWORD;
-  if (!email || !password) {
-    throw new Error('Crazy Parts credentials are not available. Use run-crazyparts-price-monitor.ps1.');
-  }
-
   const capturedAt = brisbaneTimestamp();
   const runId = safeRunId(capturedAt);
   const outputDir = path.resolve(projectRoot, config.outputDir);
@@ -637,6 +722,32 @@ async function main() {
   const previewDir = path.join(outputDir, '.runtime', runId, 'previews');
   const workbookPath = path.join(outputDir, 'TECHM8_CrazyParts_Repair_Prices.xlsx');
   await fs.mkdir(historyDir, { recursive: true });
+
+  if (args.rebuildLatest) {
+    const latest = await loadLatestSavedRun(historyDir);
+    if (!latest) throw new Error('No saved raw run is available to rebuild.');
+    const summary = summariseModels(modelsFromSourceRows(latest.parsed.sourceRows), latest.parsed.capturedAt);
+    const retainedExceptions = (latest.parsed.exceptions || []).filter((item) => (
+      item.issue !== 'Large price change' && item.issue !== 'All matching parts are out of stock'
+    ));
+    const rebuilt = {
+      ...latest.parsed,
+      repairRows: summary.repairRows,
+      sourceRows: summary.sourceRows,
+      exceptions: [...summary.exceptions, ...retainedExceptions],
+    };
+    await fs.writeFile(latest.filePath, JSON.stringify(rebuilt, null, 2));
+    const savedWorkbookPath = await buildWorkbook(rebuilt, config, workbookPath, previewDir);
+    console.log(`Workbook rebuilt: ${savedWorkbookPath}`);
+    console.log(`Raw run history updated: ${latest.filePath}`);
+    return;
+  }
+
+  const email = process.env.CRAZYPARTS_EMAIL;
+  const password = process.env.CRAZYPARTS_PASSWORD;
+  if (!email || !password) {
+    throw new Error('Crazy Parts credentials are not available. Use run-crazyparts-price-monitor.ps1.');
+  }
 
   const browser = await launchBrowser(config, args.headful);
   const failures = [];
@@ -658,12 +769,20 @@ async function main() {
     if (args.all) {
       selectedModels = discovered;
     } else {
-      selectedModels = args.models.map((value) => {
+      const familyNames = new Set(args.families.map((value) => String(value || '').trim().toLowerCase()));
+      const familyModels = discovered.filter((model) => familyNames.has(model.family.toLowerCase()));
+      const manualModels = args.models.map((value) => {
         const href = normaliseModelHref(value);
         return discoveredByHref.get(href) || {
           brand: 'Unknown', family: 'Manual', name: cleanMenuText(value), href,
         };
       });
+      selectedModels = [...new Map([...familyModels, ...manualModels].map((model) => [model.href, model])).values()];
+      for (const familyName of args.families) {
+        if (!familyModels.some((model) => model.family.toLowerCase() === String(familyName).trim().toLowerCase())) {
+          throw new Error(`No models were discovered for family: ${familyName}`);
+        }
+      }
     }
     if (args.maxModels > 0) selectedModels = selectedModels.slice(0, args.maxModels);
     console.log(`Selected ${selectedModels.length} model page(s).`);
@@ -671,7 +790,19 @@ async function main() {
     for (let index = 0; index < selectedModels.length; index += 1) {
       const model = selectedModels[index];
       try {
-        const result = await scrapeModel(page, model, config);
+        let result;
+        const rateLimitAttempts = Math.max(1, config.rateLimitRetryAttempts || 1);
+        for (let attempt = 1; attempt <= rateLimitAttempts; attempt += 1) {
+          try {
+            result = await scrapeModel(page, model, config);
+            break;
+          } catch (error) {
+            if (error.code !== 'CRAZYPARTS_RATE_LIMIT' || attempt === rateLimitAttempts) throw error;
+            const waitMs = Math.min(config.rateLimitBackoffMs * (2 ** (attempt - 1)), 300000);
+            console.warn(`Crazy Parts rate limit reached. Waiting ${Math.round(waitMs / 1000)} seconds before retry ${attempt + 1}/${rateLimitAttempts}.`);
+            await sleep(waitMs);
+          }
+        }
         scrapedModels.push(result);
         console.log(`[${index + 1}/${selectedModels.length}] ${result.heading}: ${result.products.length} products read`);
       } catch (error) {
@@ -704,7 +835,9 @@ async function main() {
   summary.exceptions.push(...failures);
   const previousRun = await loadPreviousSuccessfulRun(historyDir);
   applyPriceChangeChecks(summary, previousRun, config);
-  const scope = args.all ? 'All discovered models' : selectedModels.map((model) => model.name).join(', ');
+  const scope = args.all
+    ? 'All discovered models'
+    : [...args.families.map((value) => `Family: ${value}`), ...args.models.map((value) => `Model: ${value}`)].join(', ');
   const rawData = {
     capturedAt,
     scope,
@@ -717,8 +850,8 @@ async function main() {
   const historyPath = path.join(historyDir, `${runId}.json`);
   await fs.writeFile(historyPath, JSON.stringify(rawData, null, 2));
 
-  await buildWorkbook(rawData, config, workbookPath, previewDir);
-  console.log(`Workbook updated: ${workbookPath}`);
+  const savedWorkbookPath = await buildWorkbook(rawData, config, workbookPath, previewDir);
+  console.log(`Workbook updated: ${savedWorkbookPath}`);
   console.log(`Raw run history: ${historyPath}`);
 }
 

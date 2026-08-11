@@ -1,5 +1,6 @@
 param(
     [switch]$All,
+    [string[]]$Family,
     [string[]]$Model,
     [switch]$Headful,
     [int]$MaxModels = 0,
@@ -33,6 +34,12 @@ foreach ($modelValue in $Model) {
     }
 }
 
+foreach ($familyValue in $Family) {
+    if (-not [string]::IsNullOrWhiteSpace($familyValue)) {
+        $nodeArgs += @('--family', $familyValue)
+    }
+}
+
 if ($Headful) {
     $nodeArgs += '--headful'
 }
@@ -53,4 +60,3 @@ finally {
 }
 
 exit $exitCode
-

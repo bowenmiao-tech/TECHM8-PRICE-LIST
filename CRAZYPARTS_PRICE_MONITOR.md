@@ -39,6 +39,12 @@ The password is requested as a hidden secure input and is never stored in source
 .\scripts\run-crazyparts-price-monitor.ps1 -Model 'a17-5g-(a176)'
 ```
 
+## Run one model family
+
+```powershell
+.\scripts\run-crazyparts-price-monitor.ps1 -Family 'A Series'
+```
+
 ## Full manual update
 
 ```powershell
@@ -61,7 +67,7 @@ To choose a different day and time:
 .\scripts\install-crazyparts-monthly-task.ps1 -DayOfMonth 2 -StartTime '04:30'
 ```
 
-The Windows task is configured to run the full `-All` update. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
+The Windows task is configured to update `A Series` by default. Pass `-All` to the installer only when a deliberately slower full-site monthly crawl is wanted. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
 
 ## Safety behaviour
 
