@@ -17,6 +17,7 @@ For every model and repair type, the workbook uses the lowest and highest eligib
 - `scripts/crazyparts-price-monitor.mjs` performs the login, model discovery, scraping, classification and workbook build.
 - `scripts/setup-crazyparts-credential.ps1` stores the login using Windows user encryption.
 - `scripts/run-crazyparts-price-monitor.ps1` safely loads the encrypted login and starts the monitor.
+- `scripts/sync-crazyparts-to-supabase.mjs` matches the completed A Series run to existing Admin rows, backs up the old values, updates only the four approved repair categories, and verifies every write.
 - `scripts/install-crazyparts-monthly-task.ps1` creates the monthly Windows scheduled task.
 - `outputs/crazyparts-price-monitor/TECHM8_CrazyParts_Repair_Prices.xlsx` is the current internal workbook.
 - `outputs/crazyparts-price-monitor/history/` keeps raw JSON history for auditing and recovery.
@@ -43,6 +44,12 @@ The password is requested as a hidden secure input and is never stored in source
 
 ```powershell
 .\scripts\run-crazyparts-price-monitor.ps1 -Family 'A Series'
+```
+
+Run the A Series update and sync matched prices to the website Admin database:
+
+```powershell
+.\scripts\run-crazyparts-price-monitor.ps1 -Family 'A Series' -SyncSupabase
 ```
 
 ## Full manual update

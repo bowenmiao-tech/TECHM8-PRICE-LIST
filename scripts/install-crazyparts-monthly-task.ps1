@@ -27,7 +27,7 @@ $taskService = New-Object -ComObject 'Schedule.Service'
 $taskService.Connect()
 $taskFolder = $taskService.GetFolder('\')
 $taskDefinition = $taskService.NewTask(0)
-$taskDefinition.RegistrationInfo.Description = 'Updates TECHM8 internal repair prices from Crazy Parts member pricing.'
+$taskDefinition.RegistrationInfo.Description = 'Updates TECHM8 repair prices from Crazy Parts member pricing and syncs matched A Series prices to Supabase.'
 $taskDefinition.Settings.Enabled = $true
 $taskDefinition.Settings.StartWhenAvailable = $true
 $taskDefinition.Settings.AllowDemandStart = $true
@@ -44,7 +44,7 @@ $monthlyTrigger.Enabled = $true
 $taskAction = $taskDefinition.Actions.Create(0)
 $taskAction.Path = 'powershell.exe'
 $scopeArguments = if ($All) { '-All' } else { "-Family `"$Family`"" }
-$taskAction.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScript`" $scopeArguments"
+$taskAction.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScript`" $scopeArguments -SyncSupabase"
 $taskAction.WorkingDirectory = Split-Path -Parent $PSScriptRoot
 
 # TASK_CREATE_OR_UPDATE = 6; TASK_LOGON_INTERACTIVE_TOKEN = 3.

@@ -3,6 +3,7 @@ param(
     [string[]]$Family,
     [string[]]$Model,
     [switch]$Headful,
+    [switch]$SyncSupabase,
     [int]$MaxModels = 0,
     [string]$CredentialPath
 )
@@ -52,6 +53,10 @@ Push-Location $projectRoot
 try {
     & node @nodeArgs
     $exitCode = $LASTEXITCODE
+    if ($exitCode -eq 0 -and $SyncSupabase) {
+        & node (Join-Path $PSScriptRoot 'sync-crazyparts-to-supabase.mjs') --apply
+        $exitCode = $LASTEXITCODE
+    }
 }
 finally {
     Remove-Item Env:CRAZYPARTS_EMAIL -ErrorAction SilentlyContinue
