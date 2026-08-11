@@ -34,7 +34,7 @@ function describeModel(value) {
   const plain = text.replace(/^Samsung\s+(?:Galaxy\s+)?/i, '');
   return {
     base: plain.match(/^\s*(A\d+(?:S|\+)?)/i)?.[1]?.toLowerCase() || '',
-    codes: (text.match(/\bA\d{2,4}[A-Z]?\b/gi) || []).map((item) => item.toLowerCase()),
+    codes: (text.match(/\bA\d{3,4}[A-Z]?\b/gi) || []).map((item) => item.toLowerCase()),
     network: /5g/i.test(text) ? '5g' : (/4g/i.test(text) ? '4g' : ''),
     clean: cleanModel(text),
     japanese: /japanese/i.test(text),
@@ -120,20 +120,30 @@ function makePlan(rawData, siteRows) {
     const repairType = repairTypeForIssue(siteRow.issue);
     if (!repairType) continue;
     const match = findBestModel(siteRow.model, candidates);
-    const source = match?.candidate.rows.find((row) => row.repairType === repairType);
-    if (!source) {
+    const siteDescription = describeModel(siteRow.model);
+    const codeMatches = siteDescription.codes.length > 1
+      ? candidates.filter((candidate) => (
+        candidate.description.base === siteDescription.base
+        && candidate.description.codes.some((code) => siteDescription.codes.includes(code))
+      ))
+      : [];
+    const matchedCandidates = codeMatches.length > 1 ? codeMatches : (match ? [match.candidate] : []);
+    const sources = matchedCandidates
+      .map((candidate) => candidate.rows.find((row) => row.repairType === repairType))
+      .filter(Boolean);
+    if (!sources.length) {
       unmatched.push({ model: siteRow.model, issue: siteRow.issue, sourceModel: match?.candidate.model || '' });
       continue;
     }
-    const minimum = priceForPart(source.minPartPrice);
-    const maximum = priceForPart(source.maxPartPrice);
+    const minimum = priceForPart(Math.min(...sources.map((source) => source.minPartPrice)));
+    const maximum = priceForPart(Math.max(...sources.map((source) => source.maxPartPrice)));
     updates.push({
       brand: siteRow.brand,
       model: siteRow.model,
       issue: siteRow.issue,
       oldPrice: siteRow.price,
       newPrice: minimum === maximum ? String(minimum) : `${minimum} - ${maximum}`,
-      sourceModel: match.candidate.model,
+      sourceModel: matchedCandidates.map((candidate) => candidate.model).join(' / '),
       repairType,
     });
   }
