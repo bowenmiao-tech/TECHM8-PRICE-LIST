@@ -1,0 +1,16 @@
+{
+  "baseUrl": "https://www.crazyparts.com.au",
+  "outputDir": "outputs/crazyparts-price-monitor",
+  "expectedMemberTier": "Diamond",
+  "gstRate": 0.1,
+  "labourCharge": 110,
+  "roundingIncrement": 5,
+  "pageSize": 36,
+  "pageDelayMs": 900,
+  "loginAttempts": 3,
+  "loginRetryDelayMs": 5000,
+  "navigationTimeoutMs": 30000,
+  "maxFailureRatePercent": 10,
+  "maxPriceChangePercent": 30,
+  "browserChannel": "chrome"
+}
