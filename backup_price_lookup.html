@@ -472,6 +472,11 @@
         },
         formattedPrice() {
           if (!this.currentIssue) return '—';
+          const priceText = String(this.currentIssue.price || '').trim();
+          const rangeValues = priceText.match(/\d+(?:\.\d+)?/g);
+          if (rangeValues && rangeValues.length >= 2) {
+            return '$' + Number(rangeValues[0]) + ' - $' + Number(rangeValues[1]);
+          }
           const value = this.parsePriceNumber(this.currentIssue.price);
           if (value !== null) return '$' + value;
           return this.currentIssue.price || 'Contact us';
