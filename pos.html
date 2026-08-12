@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-pos-build" content="2026-08-13-audio-holder-catalog">
+  <meta name="techm8-pos-build" content="2026-08-13-pos-catalog-arrangement">
   <title>TECHM8 POS</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js"></script>
+  <script src="./vendor/sortable.min.js"></script>
   <style>
     :root {
       --tm-green: #07896f;
@@ -23,6 +24,8 @@
     }
 
     * { box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
 
     body {
       margin: 0;
@@ -780,6 +783,51 @@
       display: none;
     }
 
+    .arrangement-mode-button {
+      color: #24424b;
+      background: #eef5f7;
+    }
+
+    .arrangement-mode-button.active {
+      border-color: #24424b;
+      color: #fff;
+      background: #24424b;
+      box-shadow: 0 0 0 4px rgba(36, 66, 75, 0.1);
+    }
+
+    .arrangement-mode-notice {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px 8px 14px;
+      border: 1px solid #b7cbd2;
+      border-radius: 10px;
+      color: #24424b;
+      background: #edf5f7;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .arrangement-mode-notice[hidden] {
+      display: none;
+    }
+
+    .arrangement-mode-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arrangement-mode-actions .soft-action,
+    .arrangement-mode-actions .pay-action {
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
     .status-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -890,6 +938,7 @@
     }
 
     .category-card {
+      position: relative;
       min-width: 0;
       height: 176px;
       display: grid;
@@ -1017,6 +1066,59 @@
       background: rgba(4, 91, 73, 0.92);
       font-size: 10px;
       font-weight: 950;
+    }
+
+    .product-view.arrangement-active .category-card,
+    .product-view.arrangement-active .product-card {
+      border-color: #91afb8;
+      cursor: default;
+      user-select: none;
+      touch-action: pan-y;
+    }
+
+    .product-view.arrangement-active .category-card:hover,
+    .product-view.arrangement-active .product-card:hover {
+      transform: none;
+    }
+
+    .arrangement-drag-handle {
+      position: absolute;
+      z-index: 3;
+      top: 10px;
+      right: 10px;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #a8bec5;
+      border-radius: 9px;
+      color: #24424b;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 4px 12px rgba(20, 40, 48, 0.12);
+      cursor: grab;
+      font-size: 19px;
+      touch-action: none;
+    }
+
+    .arrangement-drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .sortable-ghost {
+      opacity: 0.34;
+    }
+
+    .sortable-chosen {
+      border-color: var(--tm-green) !important;
+      box-shadow: 0 12px 30px rgba(7, 137, 111, 0.18) !important;
+    }
+
+    .arrangement-admin-modal {
+      width: min(480px, calc(100vw - 28px));
+    }
+
+    .arrangement-admin-fields {
+      grid-template-columns: 1fr;
     }
 
     .product-image {
@@ -4594,12 +4696,22 @@
           <div class="product-top-actions">
             <button id="specialProductBtn" class="staff-pill" type="button"><i class="bi bi-bag-plus"></i><span>Special Products</span></button>
             <button id="stocktakeModeBtn" class="staff-pill stocktake-mode-button" type="button" hidden aria-pressed="false"><i class="bi bi-clipboard-check"></i><span>Stocktake</span></button>
+            <button id="arrangementModeBtn" class="staff-pill arrangement-mode-button" type="button" hidden aria-pressed="false"><i class="bi bi-arrows-move"></i><span>Arrange POS</span></button>
           </div>
         </div>
 
         <div id="stocktakeModeNotice" class="stocktake-mode-notice" hidden>
           <i class="bi bi-pencil-square"></i>
           <span>Stocktake mode is active. Select a product to edit its POS category and this store's quantity.</span>
+        </div>
+
+        <div id="arrangementModeNotice" class="arrangement-mode-notice" hidden>
+          <i class="bi bi-grip-vertical"></i>
+          <span id="arrangementNoticeCopy">Drag the handles to arrange the POS catalogue.</span>
+          <div class="arrangement-mode-actions">
+            <button id="arrangementCancel" class="soft-action" type="button">Cancel</button>
+            <button id="arrangementSave" class="pay-action" type="button" disabled><i class="bi bi-cloud-arrow-up"></i> Save order</button>
+          </div>
         </div>
 
         <div class="status-row">
@@ -4978,6 +5090,33 @@
           <button id="stocktakeCancel" class="soft-action" type="button">Cancel</button>
           <button id="stocktakeSave" class="pay-action" type="submit"><i class="bi bi-cloud-arrow-up"></i> Save & Sync</button>
         </div>
+      </div>
+    </form>
+  </div>
+
+  <div id="arrangementAdminModal" class="modal-backdrop" aria-hidden="true">
+    <form id="arrangementAdminForm" class="special-modal arrangement-admin-modal" role="dialog" aria-modal="true" aria-labelledby="arrangementAdminTitle">
+      <div class="customer-modal-header">
+        <div class="customer-modal-icon"><i class="bi bi-shield-lock"></i></div>
+        <div>
+          <h2 id="arrangementAdminTitle" class="customer-modal-title">Administrator verification</h2>
+          <div class="customer-modal-subtitle">Sign in with the Bowen administrator account to arrange POS.</div>
+        </div>
+      </div>
+      <div class="special-fields arrangement-admin-fields">
+        <label>
+          Admin account
+          <input id="arrangementAdminEmail" type="email" autocomplete="username" required>
+        </label>
+        <label>
+          Password
+          <input id="arrangementAdminPassword" type="password" autocomplete="current-password" required>
+        </label>
+      </div>
+      <div id="arrangementAdminError" class="special-error" role="alert"></div>
+      <div class="special-actions">
+        <button id="arrangementAdminCancel" class="soft-action" type="button">Cancel</button>
+        <button id="arrangementAdminSubmit" class="pay-action" type="submit"><i class="bi bi-unlock"></i> Verify</button>
       </div>
     </form>
   </div>
@@ -5430,7 +5569,8 @@
         description: 'Computer hardware, peripherals, and gaming',
         subcategories: [
           { name: 'PC Components', icon: 'bi-cpu', description: 'PC parts, cooling, cases, RAM, and power supplies' },
-          { name: 'Input & Office Peripherals', icon: 'bi-keyboard', description: 'Keyboards, mice, webcams, and office sets' },
+          { name: 'Keyboards, Mice & Accessories', icon: 'bi-keyboard', description: 'Keyboards, mice, combos, keycaps, and mouse pads' },
+          { name: 'Other Computer Accessories', icon: 'bi-laptop', description: 'Webcams, laptop bags, sleeves, and related accessories' },
           { name: 'Hubs & Docks', icon: 'bi-usb-symbol', description: 'Computer hubs and docking stations' },
           { name: 'Networking', icon: 'bi-router', description: 'Wireless and network adapters' },
           { name: 'Storage', icon: 'bi-device-ssd', description: 'Drives, SSDs, memory cards, and flash storage' },
@@ -5469,6 +5609,14 @@
       stocktakeCategories: [],
       stocktakeAccessCheckedAt: 0,
       stocktakeProductId: '',
+      arrangementAccessEnabled: false,
+      arrangementMode: false,
+      arrangementCategories: [],
+      arrangementDirty: false,
+      arrangementScope: '',
+      arrangementSnapshot: null,
+      arrangementSortable: null,
+      arrangementChanges: null,
       repairQuotes: [],
       repairTickets: [],
       repairSearch: '',
@@ -5559,6 +5707,7 @@
     const POS_SHARED_STATE_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-shared-state';
     const POS_USED_DEVICES_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-used-devices';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
+    const POS_ARRANGEMENT_ADMIN_SESSION_KEY = 'techm8_pos_arrangement_admin_session';
     const els = {
       productGrid: document.getElementById('productGrid'),
       storeSwitchBtn: document.getElementById('storeSwitchBtn'),
@@ -5669,6 +5818,18 @@
       specialProductError: document.getElementById('specialProductError'),
       stocktakeModeBtn: document.getElementById('stocktakeModeBtn'),
       stocktakeModeNotice: document.getElementById('stocktakeModeNotice'),
+      arrangementModeBtn: document.getElementById('arrangementModeBtn'),
+      arrangementModeNotice: document.getElementById('arrangementModeNotice'),
+      arrangementNoticeCopy: document.getElementById('arrangementNoticeCopy'),
+      arrangementSave: document.getElementById('arrangementSave'),
+      arrangementCancel: document.getElementById('arrangementCancel'),
+      arrangementAdminModal: document.getElementById('arrangementAdminModal'),
+      arrangementAdminForm: document.getElementById('arrangementAdminForm'),
+      arrangementAdminEmail: document.getElementById('arrangementAdminEmail'),
+      arrangementAdminPassword: document.getElementById('arrangementAdminPassword'),
+      arrangementAdminError: document.getElementById('arrangementAdminError'),
+      arrangementAdminSubmit: document.getElementById('arrangementAdminSubmit'),
+      arrangementAdminCancel: document.getElementById('arrangementAdminCancel'),
       stocktakeModal: document.getElementById('stocktakeModal'),
       stocktakeForm: document.getElementById('stocktakeForm'),
       stocktakeImage: document.getElementById('stocktakeImage'),
@@ -6236,8 +6397,15 @@
       state.stocktakeMode = false;
       state.stocktakeCategories = [];
       state.stocktakeAccessCheckedAt = 0;
+      state.arrangementAccessEnabled = false;
+      state.arrangementMode = false;
+      state.arrangementDirty = false;
+      state.arrangementSnapshot = null;
+      state.arrangementChanges = null;
+      destroyArrangementSortable();
       closeStocktakeEditor();
       updateStocktakeUi();
+      updateArrangementUi();
       updateStaffButton();
       updateStoreBadge();
       renderLiveTargetDashboard();
@@ -6613,6 +6781,13 @@
       state.stocktakeCategories = [];
       state.stocktakeAccessCheckedAt = 0;
       updateStocktakeUi();
+      state.arrangementAccessEnabled = false;
+      state.arrangementMode = false;
+      state.arrangementDirty = false;
+      state.arrangementSnapshot = null;
+      state.arrangementChanges = null;
+      destroyArrangementSortable();
+      updateArrangementUi();
       setCurrentStore(context.nextStoreId, false, { skipShift: true, bypassRoleCheck: true });
       ensureActiveShiftRecord();
       loadStocktakeContext({ silent: true }).catch(console.error);
@@ -7507,6 +7682,9 @@
           product_group_name: String(item.product_group_name || productGroup.name || ''),
           product_group_image_url: normalizeImageUrl(item.product_group_image_url || productGroup.image_url || ''),
           product_family: String(item.product_family || productGroup.product_family || ''),
+          pos_sort_order: Number.isInteger(Number(item.pos_sort_order ?? productGroup.pos_sort_order))
+            ? Number(item.pos_sort_order ?? productGroup.pos_sort_order)
+            : null,
           variant_name: String(item.variant_name || ''),
           variant_color: String(item.variant_color || ''),
           fit_profile_code: String(fitProfile.code || ''),
@@ -7668,7 +7846,8 @@
         if (/playstation|ps5|xbox|controller|console|nintendo switch|joy[ -]?con/.test(text)) return 'Consoles & Controllers';
         if (/simulator|cockpit|gaming chair|gaming table|\bmoza\b|pedal|shifter|steering wheel/.test(text)) return 'Gaming & Simulation';
         if (/hard drive|\bssd\b|sd card|flash drive|\busb\s*\d+\s*gb\b/.test(text)) return 'Storage';
-        if (/keyboard|mouse|webcam|office combo|keycap|\bcombo\b|laptop (?:case|bag|sleeve)/.test(text)) return 'Input & Office Peripherals';
+        if (/webcam|laptop (?:case|bag|sleeve)/.test(text)) return 'Other Computer Accessories';
+        if (/keyboard|mouse|office combo|keycap|mouse pad|\bcombo\b/.test(text)) return 'Keyboards, Mice & Accessories';
         if (/hub|dock|splitter/.test(text)) return 'Hubs & Docks';
         if (/wireless adapter|wireless pcie adapter|network|wi-?fi|\bax\d{3,4}\b/.test(text)) return 'Networking';
         return 'PC Components';
@@ -9166,6 +9345,7 @@
         }
 
         const productRows = [];
+        let loadedPosCategories = [];
         let page = 1;
         let hasMore = false;
         do {
@@ -9182,6 +9362,9 @@
             throw new Error(errorPayload.message || `Product API request failed: ${response.status}`);
           }
           const payload = await response.json();
+          if (!loadedPosCategories.length && Array.isArray(payload?.pos_categories)) {
+            loadedPosCategories = payload.pos_categories;
+          }
           const pageRows = Array.isArray(payload)
             ? payload
             : (payload.products || payload.rows || payload.data || []);
@@ -9195,6 +9378,7 @@
         if (!products.length) throw new Error('Product API returned no products.');
         if (requestId !== state.productRequestId) return;
         state.products = products;
+        if (loadedPosCategories.length) applyPosCategoryOrder(loadedPosCategories);
         state.productsFromCache = false;
         writeProductCache(products);
         setSyncStatus('Live products loaded', 'bi-cloud-check');
@@ -9245,7 +9429,7 @@
       els.stocktakeModeBtn.title = state.stocktakeMode ? 'Exit stocktake mode' : 'Enter stocktake mode';
       els.stocktakeModeNotice.hidden = !state.stocktakeMode;
       els.productView.classList.toggle('stocktake-active', state.stocktakeMode);
-      els.specialProductBtn.disabled = state.stocktakeMode;
+      els.specialProductBtn.disabled = state.stocktakeMode || state.arrangementMode;
     }
 
     function setStocktakeMode(enabled) {
@@ -9459,6 +9643,379 @@
       } finally {
         els.stocktakeSave.disabled = false;
         els.stocktakeSave.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Save & Sync';
+      }
+    }
+
+    function applyPosCategoryOrder(rows) {
+      const taxonomy = (Array.isArray(rows) ? rows : [])
+        .map(row => ({
+          id: Number(row.id),
+          category_name: String(row.category_name || ''),
+          subcategory_name: String(row.subcategory_name || ''),
+          category_sort: Number(row.category_sort) || 0,
+          subcategory_sort: Number(row.subcategory_sort) || 0
+        }))
+        .filter(row => row.id > 0 && row.category_name && row.subcategory_name);
+      if (!taxonomy.length) return;
+
+      state.arrangementCategories = taxonomy;
+      const categoryRanks = new Map();
+      taxonomy.forEach(row => {
+        const current = categoryRanks.get(row.category_name);
+        if (current == null || row.category_sort < current) categoryRanks.set(row.category_name, row.category_sort);
+      });
+      POS_PRODUCT_CATEGORIES.sort((left, right) => (
+        (categoryRanks.get(left.name) ?? 1000000) - (categoryRanks.get(right.name) ?? 1000000)
+        || left.name.localeCompare(right.name)
+      ));
+      POS_PRODUCT_CATEGORIES.forEach(category => {
+        const subcategoryRanks = new Map(
+          taxonomy
+            .filter(row => row.category_name === category.name)
+            .map(row => [row.subcategory_name, row.subcategory_sort])
+        );
+        category.subcategories.sort((left, right) => (
+          (subcategoryRanks.get(left.name) ?? 1000000) - (subcategoryRanks.get(right.name) ?? 1000000)
+          || left.name.localeCompare(right.name)
+        ));
+      });
+    }
+
+    function canCurrentStaffArrangePos() {
+      return staffIdentityKey(state.selectedStaffName) === 'bowen'
+        && staffRoleFor(state.selectedStaffName) === 'admin';
+    }
+
+    function arrangementEndpoint() {
+      return window.TECHM8_POS_PRODUCTS_ENDPOINT
+        || localStorage.getItem('techm8_pos_products_endpoint')
+        || INTERNAL_PRODUCTS_ENDPOINT;
+    }
+
+    function arrangementAdminToken() {
+      return sessionStorage.getItem(POS_ARRANGEMENT_ADMIN_SESSION_KEY) || '';
+    }
+
+    function arrangementRequestHeaders() {
+      const headers = posProductRequestHeaders();
+      const adminToken = arrangementAdminToken();
+      if (adminToken) headers['x-admin-session'] = adminToken;
+      return headers;
+    }
+
+    function arrangementScopeForView() {
+      if (state.productBrowseMode === 'categories') return 'categories';
+      if (state.productBrowseMode === 'subcategories') return 'subcategories';
+      if (state.productBrowseMode === 'subcategory') return 'products';
+      return '';
+    }
+
+    function arrangementSnapshot() {
+      return {
+        categories: POS_PRODUCT_CATEGORIES.map(category => category.name),
+        subcategories: Object.fromEntries(POS_PRODUCT_CATEGORIES.map(category => [
+          category.name,
+          category.subcategories.map(subcategory => subcategory.name)
+        ])),
+        productOrders: Object.fromEntries(state.products.map(product => [product.id, product.pos_sort_order]))
+      };
+    }
+
+    function restoreArrangementSnapshot() {
+      const snapshot = state.arrangementSnapshot;
+      if (!snapshot) return;
+      const categoryRank = new Map(snapshot.categories.map((name, index) => [name, index]));
+      POS_PRODUCT_CATEGORIES.sort((left, right) => (
+        (categoryRank.get(left.name) ?? 1000000) - (categoryRank.get(right.name) ?? 1000000)
+      ));
+      POS_PRODUCT_CATEGORIES.forEach(category => {
+        const order = snapshot.subcategories[category.name] || [];
+        const rank = new Map(order.map((name, index) => [name, index]));
+        category.subcategories.sort((left, right) => (
+          (rank.get(left.name) ?? 1000000) - (rank.get(right.name) ?? 1000000)
+        ));
+      });
+      state.products.forEach(product => {
+        product.pos_sort_order = snapshot.productOrders[product.id] ?? null;
+      });
+    }
+
+    function destroyArrangementSortable() {
+      if (state.arrangementSortable && state.arrangementSortable.destroy) {
+        state.arrangementSortable.destroy();
+      }
+      state.arrangementSortable = null;
+    }
+
+    function updateArrangementNotice() {
+      if (!els.arrangementNoticeCopy) return;
+      const scope = arrangementScopeForView();
+      const copy = scope === 'categories'
+        ? 'Drag the handles to arrange the main POS categories.'
+        : scope === 'subcategories'
+          ? `Drag the handles to arrange groups inside ${state.category}.`
+          : scope === 'products'
+            ? `Drag the handles to arrange products inside ${state.subcategory}.`
+            : 'Open a category and subcategory to arrange products.';
+      els.arrangementNoticeCopy.textContent = state.arrangementDirty ? `${copy} Unsaved changes.` : copy;
+      els.arrangementSave.disabled = !state.arrangementDirty;
+    }
+
+    function updateArrangementUi() {
+      const candidate = canCurrentStaffArrangePos();
+      if (!candidate) {
+        state.arrangementAccessEnabled = false;
+        state.arrangementMode = false;
+        state.arrangementDirty = false;
+        destroyArrangementSortable();
+      }
+      if (!els.arrangementModeBtn) return;
+      els.arrangementModeBtn.hidden = !candidate;
+      els.arrangementModeBtn.classList.toggle('active', state.arrangementMode);
+      els.arrangementModeBtn.setAttribute('aria-pressed', String(state.arrangementMode));
+      els.arrangementModeBtn.title = state.arrangementMode ? 'POS arrangement mode is active' : 'Arrange POS catalogue';
+      els.arrangementModeNotice.hidden = !state.arrangementMode;
+      els.productView.classList.toggle('arrangement-active', state.arrangementMode);
+      els.specialProductBtn.disabled = state.stocktakeMode || state.arrangementMode;
+      els.stocktakeModeBtn.disabled = state.arrangementMode;
+      els.searchInput.disabled = state.arrangementMode;
+      updateArrangementNotice();
+    }
+
+    function openArrangementAdminModal() {
+      els.arrangementAdminError.textContent = '';
+      els.arrangementAdminPassword.value = '';
+      els.arrangementAdminModal.classList.add('show');
+      els.arrangementAdminModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => (els.arrangementAdminEmail.value ? els.arrangementAdminPassword : els.arrangementAdminEmail).focus(), 0);
+    }
+
+    function closeArrangementAdminModal() {
+      els.arrangementAdminModal.classList.remove('show');
+      els.arrangementAdminModal.setAttribute('aria-hidden', 'true');
+      els.arrangementAdminError.textContent = '';
+      els.arrangementAdminPassword.value = '';
+    }
+
+    async function loadArrangementContext(options = {}) {
+      if (!canCurrentStaffArrangePos()) return false;
+      if (!arrangementAdminToken()) {
+        if (options.interactive) openArrangementAdminModal();
+        return false;
+      }
+
+      const url = new URL(arrangementEndpoint(), window.location.href);
+      url.searchParams.set('mode', 'arrangement-context');
+      url.searchParams.set('staff_name', state.selectedStaffName);
+      try {
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: arrangementRequestHeaders(),
+          cache: 'no-store'
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.enabled) {
+          if (response.status === 401) sessionStorage.removeItem(POS_ARRANGEMENT_ADMIN_SESSION_KEY);
+          throw new Error(result.message || 'Administrator verification failed.');
+        }
+        state.arrangementAccessEnabled = true;
+        applyPosCategoryOrder(result.categories || []);
+        updateArrangementUi();
+        return true;
+      } catch (error) {
+        console.error(error);
+        state.arrangementAccessEnabled = false;
+        if (options.interactive) {
+          showToast(error.message || 'POS arrangement is unavailable.');
+          openArrangementAdminModal();
+        }
+        return false;
+      }
+    }
+
+    function setArrangementMode(enabled) {
+      if (enabled && !state.arrangementAccessEnabled) return;
+      if (!enabled) destroyArrangementSortable();
+      state.arrangementMode = Boolean(enabled);
+      if (state.arrangementMode) {
+        setStocktakeMode(false);
+        state.search = '';
+        els.searchInput.value = '';
+        state.category = 'All';
+        state.subcategory = '';
+        state.productBrowseMode = 'categories';
+        state.arrangementSnapshot = arrangementSnapshot();
+        state.arrangementChanges = { categories: null, subcategories: new Map(), products: new Map() };
+        state.arrangementDirty = false;
+      } else {
+        state.arrangementSnapshot = null;
+        state.arrangementChanges = null;
+        state.arrangementDirty = false;
+      }
+      updateArrangementUi();
+      renderProductBrowser();
+    }
+
+    async function beginArrangementMode() {
+      if (!canCurrentStaffArrangePos()) return;
+      if (!window.Sortable) {
+        showToast('POS arrangement controls could not be loaded. Refresh and try again.');
+        return;
+      }
+      const allowed = await loadArrangementContext({ interactive: true });
+      if (allowed) setArrangementMode(true);
+    }
+
+    function markArrangementDirty() {
+      state.arrangementDirty = true;
+      updateArrangementNotice();
+    }
+
+    function captureArrangementOrder() {
+      const scope = arrangementScopeForView();
+      const cards = Array.from(els.productGrid.querySelectorAll(':scope > [data-arrange-type]'));
+      if (!scope || !cards.length || !state.arrangementChanges) return;
+
+      if (scope === 'categories') {
+        const names = cards.map(card => card.dataset.arrangeKey);
+        const definitions = new Map(POS_PRODUCT_CATEGORIES.map(category => [category.name, category]));
+        POS_PRODUCT_CATEGORIES.splice(0, POS_PRODUCT_CATEGORIES.length, ...names.map(name => definitions.get(name)).filter(Boolean));
+        state.arrangementChanges.categories = names.map((name, index) => ({
+          target_type: 'category',
+          target_key: name,
+          sort_order: (index + 1) * 10
+        }));
+      } else if (scope === 'subcategories') {
+        const definition = categoryDefinition(state.category);
+        if (!definition) return;
+        const names = cards.map(card => card.dataset.arrangeKey);
+        const definitions = new Map(definition.subcategories.map(subcategory => [subcategory.name, subcategory]));
+        definition.subcategories.splice(0, definition.subcategories.length, ...names.map(name => definitions.get(name)).filter(Boolean));
+        const rows = cards.map((card, index) => ({
+          target_type: 'subcategory',
+          target_id: Number(card.dataset.arrangeId),
+          sort_order: (index + 1) * 10
+        }));
+        state.arrangementChanges.subcategories.set(state.category, rows);
+      } else {
+        const rows = cards.map((card, index) => {
+          const targetType = card.dataset.arrangeType;
+          const targetId = Number(card.dataset.arrangeId);
+          const sortOrder = (index + 1) * 10;
+          state.products.forEach(product => {
+            if (targetType === 'group' && Number(product.product_group_id) === targetId) product.pos_sort_order = sortOrder;
+            if (targetType === 'product' && Number(product.id) === targetId) product.pos_sort_order = sortOrder;
+          });
+          return { target_type: targetType, target_id: targetId, sort_order: sortOrder };
+        });
+        state.arrangementChanges.products.set(`${state.category}|${state.subcategory}`, rows);
+      }
+      markArrangementDirty();
+    }
+
+    function setupArrangementSortable() {
+      destroyArrangementSortable();
+      const scope = arrangementScopeForView();
+      updateArrangementNotice();
+      if (!state.arrangementMode || !scope || !window.Sortable) return;
+      const cards = els.productGrid.querySelectorAll(':scope > [data-arrange-type]');
+      if (cards.length < 2) return;
+      state.arrangementSortable = window.Sortable.create(els.productGrid, {
+        animation: 160,
+        draggable: '[data-arrange-type]',
+        handle: '.arrangement-drag-handle',
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        forceFallback: true,
+        fallbackTolerance: 4,
+        delay: 120,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 4,
+        onEnd: captureArrangementOrder
+      });
+    }
+
+    async function saveArrangementChanges() {
+      if (!state.arrangementDirty || !state.arrangementChanges) return;
+      const requests = [];
+      if (state.arrangementChanges.categories?.length) {
+        requests.push({ scope: 'categories', rows: state.arrangementChanges.categories });
+      }
+      const subcategoryRows = Array.from(state.arrangementChanges.subcategories.values()).flat();
+      if (subcategoryRows.length) requests.push({ scope: 'subcategories', rows: subcategoryRows });
+      const productRows = Array.from(state.arrangementChanges.products.values()).flat();
+      if (productRows.length) requests.push({ scope: 'products', rows: productRows });
+      if (!requests.length) return;
+
+      els.arrangementSave.disabled = true;
+      els.arrangementSave.innerHTML = '<i class="bi bi-arrow-repeat"></i> Saving...';
+      try {
+        for (const request of requests) {
+          const response = await fetch(arrangementEndpoint(), {
+            method: 'PUT',
+            headers: arrangementRequestHeaders(),
+            body: JSON.stringify({
+              mode: 'arrangement',
+              staff_name: state.selectedStaffName,
+              scope: request.scope,
+              rows: request.rows
+            })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            if (response.status === 401) sessionStorage.removeItem(POS_ARRANGEMENT_ADMIN_SESSION_KEY);
+            throw new Error(result.message || 'POS order could not be saved.');
+          }
+        }
+        state.arrangementDirty = false;
+        showToast('POS display order saved.');
+        setArrangementMode(false);
+        await loadProducts({ force: true });
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'POS order could not be saved.');
+        updateArrangementNotice();
+      } finally {
+        els.arrangementSave.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Save order';
+        els.arrangementSave.disabled = !state.arrangementDirty;
+      }
+    }
+
+    function cancelArrangementChanges() {
+      restoreArrangementSnapshot();
+      setArrangementMode(false);
+      renderProductBrowser();
+      showToast('POS arrangement changes cancelled.');
+    }
+
+    async function submitArrangementAdminLogin() {
+      const loginEmail = els.arrangementAdminEmail.value.trim();
+      const password = els.arrangementAdminPassword.value;
+      if (!loginEmail || !password) {
+        els.arrangementAdminError.textContent = 'Enter the administrator account and password.';
+        return;
+      }
+      els.arrangementAdminError.textContent = '';
+      els.arrangementAdminSubmit.disabled = true;
+      els.arrangementAdminSubmit.textContent = 'Verifying...';
+      try {
+        const result = await window.Techm8StaffAuth.callRpc('create_admin_session', {
+          login_email: loginEmail,
+          input_password: password
+        });
+        if (!result?.ok || !result.session_token) throw new Error(result?.message || 'Administrator sign-in failed.');
+        sessionStorage.setItem(POS_ARRANGEMENT_ADMIN_SESSION_KEY, result.session_token);
+        closeArrangementAdminModal();
+        const allowed = await loadArrangementContext({ interactive: false });
+        if (!allowed) throw new Error('Administrator verification failed.');
+        setArrangementMode(true);
+      } catch (error) {
+        console.error(error);
+        if (!els.arrangementAdminModal.classList.contains('show')) openArrangementAdminModal();
+        els.arrangementAdminError.textContent = error.message || 'Administrator sign-in failed.';
+      } finally {
+        els.arrangementAdminSubmit.disabled = false;
+        els.arrangementAdminSubmit.innerHTML = '<i class="bi bi-unlock"></i> Verify';
       }
     }
 
@@ -9700,7 +10257,14 @@
       });
 
       const tabletCasesOnly = tiles.length > 0 && tiles.every(isTabletCaseProduct);
+      const sharedSubcategory = new Set(tiles.map(product => `${product.category}|${product.subcategory}`)).size === 1;
+      const hasManualOrder = sharedSubcategory && tiles.some(product => Number.isInteger(product.pos_sort_order));
       return tiles.sort((a, b) => {
+        if (hasManualOrder) {
+          return (Number.isInteger(a.pos_sort_order) ? a.pos_sort_order : 1000000)
+            - (Number.isInteger(b.pos_sort_order) ? b.pos_sort_order : 1000000)
+            || String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true });
+        }
         if (tabletCasesOnly) return compareTabletCaseProducts(a, b);
         return displayProductStock(b) - displayProductStock(a)
           || a.name.localeCompare(b.name, undefined, { numeric: true });
@@ -9754,7 +10318,7 @@
       els.categoryTabs.innerHTML = `
         <div class="browse-mode-tabs" role="tablist" aria-label="Product browsing mode">
           <button class="browse-mode-button ${categoryModeActive ? 'active' : ''}" type="button" role="tab" aria-selected="${categoryModeActive}" data-browse-mode="categories">By Category</button>
-          <button class="browse-mode-button ${state.productBrowseMode === 'all' ? 'active' : ''}" type="button" role="tab" aria-selected="${state.productBrowseMode === 'all'}" data-browse-mode="all">All Products</button>
+          <button class="browse-mode-button ${state.productBrowseMode === 'all' ? 'active' : ''}" type="button" role="tab" aria-selected="${state.productBrowseMode === 'all'}" data-browse-mode="all" ${state.arrangementMode ? 'disabled' : ''}>All Products</button>
         </div>
         <div class="browse-context">${context}</div>
       `;
@@ -9778,7 +10342,8 @@
         els.productGrid.className = 'product-grid category-layout';
         els.productGrid.setAttribute('aria-label', 'Product categories');
         els.productGrid.innerHTML = grouped.map(group => `
-          <button class="category-card ${group.count ? '' : 'is-empty'}" type="button" data-open-category="${escapeHtml(group.category)}" aria-label="Open ${escapeHtml(group.category)}, ${group.count} products">
+          <button class="category-card ${group.count ? '' : 'is-empty'}" type="button" data-open-category="${escapeHtml(group.category)}" ${state.arrangementMode ? `data-arrange-type="category" data-arrange-key="${escapeHtml(group.category)}"` : ''} aria-label="Open ${escapeHtml(group.category)}, ${group.count} products">
+            ${state.arrangementMode ? '<span class="arrangement-drag-handle" aria-label="Drag category"><i class="bi bi-grip-vertical"></i></span>' : ''}
             <span class="category-icon"><i class="bi ${categoryIcon(group.category)}"></i></span>
             <span class="category-card-copy">
               <span class="category-card-name">${escapeHtml(group.category)}</span>
@@ -9787,12 +10352,14 @@
             </span>
           </button>
         `).join('');
+        setupArrangementSortable();
         return;
       }
 
       if (!query && state.productBrowseMode === 'subcategories') {
         const grouped = subcategories(state.category).map(subcategory => ({
           ...subcategory,
+          taxonomyId: state.arrangementCategories.find(row => row.category_name === state.category && row.subcategory_name === subcategory.name)?.id || 0,
           count: productTiles(state.products.filter(product => (
             product.category === state.category && product.subcategory === subcategory.name
           ))).length
@@ -9800,7 +10367,8 @@
         els.productGrid.className = 'product-grid category-layout';
         els.productGrid.setAttribute('aria-label', `${state.category} subcategories`);
         els.productGrid.innerHTML = grouped.map(group => `
-          <button class="category-card ${group.count ? '' : 'is-empty'}" type="button" data-open-subcategory="${escapeHtml(group.name)}" aria-label="Open ${escapeHtml(group.name)}, ${group.count} products">
+          <button class="category-card ${group.count ? '' : 'is-empty'}" type="button" data-open-subcategory="${escapeHtml(group.name)}" ${state.arrangementMode ? `data-arrange-type="subcategory" data-arrange-key="${escapeHtml(group.name)}" data-arrange-id="${Number(group.taxonomyId)}"` : ''} aria-label="Open ${escapeHtml(group.name)}, ${group.count} products">
+            ${state.arrangementMode ? '<span class="arrangement-drag-handle" aria-label="Drag subcategory"><i class="bi bi-grip-vertical"></i></span>' : ''}
             <span class="category-icon"><i class="bi ${categoryIcon(group.name)}"></i></span>
             <span class="category-card-copy">
               <span class="category-card-name">${escapeHtml(group.name)}</span>
@@ -9809,6 +10377,7 @@
             </span>
           </button>
         `).join('');
+        setupArrangementSortable();
         return;
       }
 
@@ -9840,14 +10409,20 @@
           : `data-add="${escapeHtml(product.id)}"`;
         const actionLabel = state.stocktakeMode
           ? 'Edit stocktake details for'
-          : (product.is_product_group ? 'Choose an option for' : 'Add');
+          : (state.arrangementMode ? 'Arrange' : (product.is_product_group ? 'Choose an option for' : 'Add'));
+        const arrangeType = product.product_group_id ? 'group' : 'product';
+        const arrangeId = product.product_group_id || product.id;
+        const arrangeAttribute = state.arrangementMode && arrangementScopeForView() === 'products'
+          ? `data-arrange-type="${arrangeType}" data-arrange-id="${escapeHtml(arrangeId)}"`
+          : '';
         const priceLabel = product.is_product_group && product.max_sale_price > product.sale_price
           ? `From ${money(product.sale_price)}`
           : money(product.sale_price);
         const colours = productColours(product);
         const colourLabel = colours.length ? `. Available colours: ${colours.join(', ')}` : '';
         return `
-          <article class="product-card" ${actionAttribute} role="button" tabindex="0" aria-label="${actionLabel} ${escapeHtml(product.name)}${escapeHtml(colourLabel)}">
+          <article class="product-card" ${actionAttribute} ${arrangeAttribute} role="button" tabindex="${state.arrangementMode ? '-1' : '0'}" aria-label="${actionLabel} ${escapeHtml(product.name)}${escapeHtml(colourLabel)}">
+            ${arrangeAttribute ? '<span class="arrangement-drag-handle" aria-label="Drag product"><i class="bi bi-grip-vertical"></i></span>' : ''}
             <img class="product-image" src="${escapeHtml(productImage(product))}" alt="${escapeHtml(product.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" ${index < 4 ? 'fetchpriority="high"' : ''} data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
@@ -9860,6 +10435,7 @@
           </article>
         `;
       }).join('');
+      setupArrangementSortable();
     }
 
     function usedDeviceStatusLabel(status) {
@@ -10768,14 +11344,14 @@
         'Car Connectivity',
         'PC Components',
         'Monitor Mounts',
-        'Input & Office Peripherals',
+        'Keyboards, Mice & Accessories',
         'Gaming & Simulation',
         'Storage',
         'Consoles & Controllers',
         'Networking',
         'OTG & Card Readers',
         'Network Cables',
-        'Input & Office Peripherals'
+        'Other Computer Accessories'
       ];
 
       state.products = products;
@@ -10847,11 +11423,45 @@
         exactSearchCards: els.productGrid.querySelectorAll('.product-card').length
       });
 
-      if (new URLSearchParams(window.location.search).has('catalog-modal')) {
+      const catalogTestParams = new URLSearchParams(window.location.search);
+      if (catalogTestParams.has('catalog-modal')) {
         state.search = '';
         renderProductBrowser();
         openProductVariantModal('TM8-GRP-IPAD10-HDC');
-      } else if (new URLSearchParams(window.location.search).has('catalog-stocktake')) {
+      } else if (catalogTestParams.has('catalog-arrangement')) {
+        const arrangementTestStaff = catalogTestParams.get('catalog-arrangement-staff') || 'Bowen';
+        const arrangementTestAuthorized = staffIdentityKey(arrangementTestStaff) === 'bowen';
+        state.selectedStaffName = arrangementTestStaff;
+        state.staffMembers = [{ display_name: arrangementTestStaff, job_role: arrangementTestAuthorized ? 'admin' : 'staff' }];
+        state.arrangementAccessEnabled = arrangementTestAuthorized;
+        state.arrangementCategories = POS_PRODUCT_CATEGORIES.flatMap((category, categoryIndex) => (
+          category.subcategories.map((subcategory, subcategoryIndex) => ({
+            id: categoryIndex * 100 + subcategoryIndex + 1,
+            category_name: category.name,
+            subcategory_name: subcategory.name,
+            category_sort: (categoryIndex + 1) * 10,
+            subcategory_sort: (subcategoryIndex + 1) * 10
+          }))
+        ));
+        setActiveView('products');
+        if (arrangementTestAuthorized) {
+          setArrangementMode(true);
+        } else {
+          updateArrangementUi();
+          renderProductBrowser();
+        }
+        const arrangementView = catalogTestParams.get('catalog-arrangement');
+        if (arrangementView === 'subcategories') {
+          state.category = 'Computer & Gaming';
+          state.productBrowseMode = 'subcategories';
+          renderProductBrowser();
+        } else if (arrangementView === 'products') {
+          state.category = 'Tablet Cases';
+          state.subcategory = 'Apple iPad';
+          state.productBrowseMode = 'subcategory';
+          renderProductBrowser();
+        }
+      } else if (catalogTestParams.has('catalog-stocktake')) {
         state.selectedStaffName = 'Andy';
         state.stocktakeAccessEnabled = true;
         state.stocktakeCategories = POS_PRODUCT_CATEGORIES.flatMap((category, categoryIndex) => (
@@ -12375,6 +12985,7 @@
         renderProductBrowser();
         return;
       }
+      if (state.arrangementMode) return;
       const productGroupCard = event.target.closest('[data-open-product-group]');
       if (productGroupCard) {
         openProductVariantModal(productGroupCard.dataset.openProductGroup);
@@ -12390,6 +13001,7 @@
     });
 
     els.productGrid.addEventListener('keydown', event => {
+      if (state.arrangementMode) return;
       if (event.key !== 'Enter' && event.key !== ' ') return;
       const card = event.target.closest('[data-add], [data-open-product-group]');
       if (!card) return;
@@ -12779,8 +13391,8 @@
       restoreHeldOrder(button.dataset.resumeHold);
     });
     els.specialProductBtn.addEventListener('click', () => {
-      if (state.stocktakeMode) {
-        showToast('Exit stocktake mode before adding a special product.');
+      if (state.stocktakeMode || state.arrangementMode) {
+        showToast(`Exit ${state.arrangementMode ? 'arrangement' : 'stocktake'} mode before adding a special product.`);
         return;
       }
       openSpecialProductModal();
@@ -12791,6 +13403,27 @@
         if (!enabled) return;
       }
       setStocktakeMode(!state.stocktakeMode);
+    });
+    els.arrangementModeBtn.addEventListener('click', async () => {
+      if (state.arrangementMode) {
+        if (state.arrangementDirty) {
+          showToast('Save or cancel the arrangement changes first.');
+          return;
+        }
+        setArrangementMode(false);
+        return;
+      }
+      await beginArrangementMode();
+    });
+    els.arrangementSave.addEventListener('click', saveArrangementChanges);
+    els.arrangementCancel.addEventListener('click', cancelArrangementChanges);
+    els.arrangementAdminCancel.addEventListener('click', closeArrangementAdminModal);
+    els.arrangementAdminModal.addEventListener('click', event => {
+      if (event.target === els.arrangementAdminModal) closeArrangementAdminModal();
+    });
+    els.arrangementAdminForm.addEventListener('submit', event => {
+      event.preventDefault();
+      submitArrangementAdminLogin();
     });
     els.stocktakeClose.addEventListener('click', closeStocktakeEditor);
     els.stocktakeCancel.addEventListener('click', closeStocktakeEditor);
@@ -13009,6 +13642,9 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && els.stocktakeModal.classList.contains('show')) {
         closeStocktakeEditor();
+      }
+      if (event.key === 'Escape' && els.arrangementAdminModal.classList.contains('show')) {
+        closeArrangementAdminModal();
       }
       if (event.key === 'Escape' && els.productVariantModal.classList.contains('show')) {
         closeProductVariantModal();

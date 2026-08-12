@@ -32,6 +32,7 @@ type ProductRow = {
   source_system: string | null
   source_external_id: string | null
   pos_category_id: number | null
+  pos_sort_order: number | null
   pos_category_taxonomy: {
     id: number
     category_name: string
@@ -54,6 +55,7 @@ type ProductGroupRow = {
   is_pos_visible: boolean
   is_visible: boolean
   pos_category_id: number | null
+  pos_sort_order: number | null
   pos_category_taxonomy: {
     id: number
     category_name: string
@@ -223,7 +225,7 @@ Deno.serve(async (req) => {
 
     let productsQuery = supabaseAdmin
       .from('products')
-      .select('id, sku, slug, name, upc, cost_price, retail_price, compare_at_price, image_url, stock_quantity, updated_at, is_visible, is_pos_visible, product_group_id, variant_name, variant_color, source_system, source_external_id, pos_category_id, pos_category_taxonomy(id, category_name, subcategory_name), categories(id, slug, name)', { count: 'exact' })
+      .select('id, sku, slug, name, upc, cost_price, retail_price, compare_at_price, image_url, stock_quantity, updated_at, is_visible, is_pos_visible, product_group_id, variant_name, variant_color, source_system, source_external_id, pos_category_id, pos_sort_order, pos_category_taxonomy(id, category_name, subcategory_name), categories(id, slug, name)', { count: 'exact' })
       .order('updated_at', { ascending: false })
       .order('id', { ascending: false })
       .range(from, to)
@@ -243,6 +245,18 @@ Deno.serve(async (req) => {
     const productGroupIds = Array.from(new Set(
       productRows.map((product) => product.product_group_id).filter((id): id is number => Number.isInteger(id))
     ))
+
+    const { data: posCategories, error: posCategoriesError } = await supabaseAdmin
+      .from('pos_category_taxonomy')
+      .select('id, category_name, subcategory_name, category_sort, subcategory_sort')
+      .eq('active', true)
+      .order('category_sort', { ascending: true })
+      .order('subcategory_sort', { ascending: true })
+
+    if (posCategoriesError) {
+      console.error(posCategoriesError)
+      return jsonResponse({ ok: false, error: 'POS categories could not be loaded.' }, 500)
+    }
 
     const [
       { data: images, error: imagesError },
@@ -267,7 +281,7 @@ Deno.serve(async (req) => {
       productGroupIds.length
         ? supabaseAdmin
             .from('product_groups')
-            .select('id, code, slug, name, product_family, main_image_url, is_pos_visible, is_visible, pos_category_id, pos_category_taxonomy(id, category_name, subcategory_name), product_fit_profiles(code, display_name, review_status, product_fit_profile_devices(device_models(code, display_name)))')
+            .select('id, code, slug, name, product_family, main_image_url, is_pos_visible, is_visible, pos_category_id, pos_sort_order, pos_category_taxonomy(id, category_name, subcategory_name), product_fit_profiles(code, display_name, review_status, product_fit_profile_devices(device_models(code, display_name)))')
             .in('id', productGroupIds)
         : Promise.resolve({ data: [] as ProductGroupRow[], error: null }),
     ])
@@ -374,6 +388,7 @@ Deno.serve(async (req) => {
         pos_category_id: posCategory?.id ?? null,
         pos_category_name: posCategory?.category_name ?? null,
         pos_subcategory_name: posCategory?.subcategory_name ?? null,
+        pos_sort_order: productGroup?.pos_sort_order ?? product.pos_sort_order ?? null,
         cost_price: normalizeNumber(product.cost_price),
         sale_price: normalizeNumber(product.retail_price),
         compare_at_price: normalizeNumber(product.compare_at_price),
@@ -392,6 +407,7 @@ Deno.serve(async (req) => {
               image_url: groupImageUrl,
               is_pos_visible: productGroup.is_pos_visible,
               is_visible: productGroup.is_visible,
+              pos_sort_order: productGroup.pos_sort_order,
             }
           : null,
         product_group_id: productGroup?.id ?? null,
@@ -424,6 +440,7 @@ Deno.serve(async (req) => {
       page_size: pageSize,
       total: count ?? rows.length,
       has_more: from + rows.length < (count ?? rows.length),
+      pos_categories: posCategories ?? [],
     })
   } catch (error) {
     console.error(error)

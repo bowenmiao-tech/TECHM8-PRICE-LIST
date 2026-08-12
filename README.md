@@ -70,6 +70,9 @@ Completed product-sale flow:
 - The POS always shows these fixed retail groups, including empty groups: `Phone Cases`, `Tablet Cases`, `Screen Protection`, `Cables & Adapters`, `Charging & Power`, `Audio`, `Mounts & Holders`, `Watch Accessories`, `Computer & Gaming`, and `Other Electronics`.
 - Each main group opens a fixed second-level category grid before showing products. Empty second-level groups remain visible.
 - Existing API categories are mapped into the hierarchy in the POS display layer. Source product records are not renamed or rewritten, and search still includes the original category and subcategory.
+- `Computer & Gaming > Keyboards, Mice & Accessories` contains the 41 reviewed keyboards, mice, keyboard/mouse sets, keycaps, and mouse pads. `Other Computer Accessories` contains the 1 webcam and 8 laptop bags/sleeves.
+- Bowen can open `Arrange POS` with the administrator account to drag and save the display order of main categories, second-level categories, and products. This control is hidden from all other staff and every save is rechecked by the backend.
+- POS display order is shared across stores. Store inventory remains independent and is never changed by arranging the catalogue.
 - An authorized stocktake mode allows staff to correct the fixed POS main/subcategory and the selected store's quantity without adding the product to cart.
 - Stocktake access is disabled by default and is enabled or disabled per active staff member from `stocktake-admin.html`.
 - The Edge Function rechecks access on every save. Turning access off blocks further saves even if the POS page is still open.
@@ -96,7 +99,7 @@ POS product hierarchy:
 | Audio | Wired Earphones & Headphones; Wireless Earbuds & Headphones; Headsets; Speakers; Microphones |
 | Mounts & Holders | Vehicle Mounts; Phone & Tablet Stands; Laptop Stands; Monitor Mounts; Selfie Sticks & Live Stands; Wallets, Card Holders & Grips |
 | Watch Accessories | Watch Bands; Watch Cases |
-| Computer & Gaming | PC Components; Input & Office Peripherals; Hubs & Docks; Networking; Storage; Consoles & Controllers; Gaming & Simulation |
+| Computer & Gaming | PC Components; Keyboards, Mice & Accessories; Other Computer Accessories; Hubs & Docks; Networking; Storage; Consoles & Controllers; Gaming & Simulation |
 | Other Electronics | Drones & Accessories; Personal Fans; Lighting & Clocks; Earbud Cases; Tracker Cases; Other Electronics |
 
 Computer product catalogue import completed on 12 August 2026:
