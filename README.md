@@ -109,11 +109,11 @@ Computer product catalogue import completed on 12 August 2026:
 
 Audio, holder, stand, and fan catalogue import completed on 12 August 2026:
 - The two reviewed RepairDesk exports contain 49 products. Every row was matched to its current RepairDesk POS main image.
-- 36 complete new products were imported. Six exact existing products were preserved and only assigned to `Audio > Wireless Earbuds & Headphones`.
+- Forty-three products are now managed by this import. Six exact existing products were preserved and only assigned to `Audio > Wireless Earbuds & Headphones`, so all 49 reviewed products are available in POS.
 - Headphone adapters use `Cables & Adapters > Audio Cables & Adapters`; wired and wireless headphones use their corresponding `Audio` subcategories. Phone stands, selfie/live stands, laptop stands, and personal fans use their matching fixed POS subcategories.
 - New products are active in POS, hidden online, start at zero total stock, and have no store-inventory rows. Each store therefore begins independently at zero until stocktake updates that store.
-- Seven new products remain excluded because their source cost is zero. The existing Remax G6 is already in POS but is also flagged for a cost correction.
-- The editable cost list is `outputs/audio-holder-fan-catalog-20260812/TECHM8_Audio_Holder_Fan_Import_Review.xlsx`. The repeatable import is `supabase/website-migrations/20260812194702_import_repairdesk_audio_holder_fan_products.sql` with its generated payload in the same output directory.
+- The owner-confirmed costs from 13 August 2026 enabled the final seven products and corrected the existing Remax G6 cost. No reviewed product remains blocked by missing cost.
+- The review workbook and confirmed overrides are under `outputs/audio-holder-fan-catalog-20260812/`. The repeatable migrations are `supabase/website-migrations/20260812194702_import_repairdesk_audio_holder_fan_products.sql` and `supabase/website-migrations/20260813001836_finalize_audio_holder_fan_costs.sql`.
 
 - Quantity change, cancel, hold, and resume are available.
 - Held carts are stored per store and shared between POS terminals.

@@ -1,0 +1,55 @@
+{
+  "approved_at": "2026-08-13",
+  "source_workbook": "TECHM8_Audio_Holder_Fan_Import_Review.xlsx",
+  "existing_cost_correction": {
+    "item_id": "9019",
+    "product_id": 83,
+    "sku": "6972174155067",
+    "name": "Remax G6 Wireless Gaming Earbuds",
+    "final_cost": 20
+  },
+  "newly_enabled_products": [
+    {
+      "item_id": "8482",
+      "sku": "6954851230236",
+      "name": "Remax 3.5mm Headphones Rw-106 White",
+      "final_cost": 3
+    },
+    {
+      "item_id": "8481",
+      "sku": "6954851230229",
+      "name": "Remax 3.5mm Headphones Rw-106 Black",
+      "final_cost": 3
+    },
+    {
+      "item_id": "6704",
+      "sku": "6704116",
+      "name": "Remax RB-700HB Wireless Headphones White",
+      "final_cost": 20
+    },
+    {
+      "item_id": "6703",
+      "sku": "6703115",
+      "name": "Remax RB-700HB Wireless Headphones Black",
+      "final_cost": 20
+    },
+    {
+      "item_id": "9368",
+      "sku": "6972174152707",
+      "name": "2M Stand Selfie Live Stream Stand",
+      "final_cost": 20
+    },
+    {
+      "item_id": "6771",
+      "sku": "00000000331",
+      "name": "Black Aluminium Adjustable Laptop Stand",
+      "final_cost": 8
+    },
+    {
+      "item_id": "6770",
+      "sku": "00000000330",
+      "name": "Silver Aluminium Adjustable Laptop Stand",
+      "final_cost": 8
+    }
+  ]
+}

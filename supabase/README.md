@@ -102,7 +102,7 @@ outputs/audio-holder-fan-catalog-20260812/TECHM8_Audio_Holder_Fan_Import.json
 outputs/audio-holder-fan-catalog-20260812/TECHM8_Audio_Holder_Fan_Import_Review.xlsx
 ```
 
-It reviews 49 RepairDesk products and validates one current RepairDesk POS image for every row. Thirty-six complete new products are imported, while six exact existing products are preserved and receive only their fixed POS category assignment. Seven new products with zero cost remain excluded, and the existing Remax G6 is listed for a cost correction. Imported products are POS-visible, online-hidden, and start with zero product stock and no store-inventory rows, so every store remains independently at zero until its own stocktake update.
+It reviews 49 RepairDesk products and validates one current RepairDesk POS image for every row. The first migration imports 36 complete new products while preserving six exact existing products and assigning their fixed POS category. The owner-confirmed follow-up is stored in `20260813001836_finalize_audio_holder_fan_costs.sql`; it imports the final seven products and corrects the existing Remax G6 cost. All 49 reviewed products are now available in POS, and none remains blocked by missing cost. Imported products are POS-visible, online-hidden, and start with zero product stock and no store-inventory rows, so every store remains independently at zero until its own stocktake update.
 
 ## POS Repair Tickets
 
