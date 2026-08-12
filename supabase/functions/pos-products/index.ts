@@ -1,7 +1,9 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-staff-session",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -16,7 +18,11 @@ function jsonResponse(body: JsonRecord, status = 200): Response {
   });
 }
 
-async function verifyStaffSession(sessionToken: string, request: Request): Promise<boolean> {
+async function callStaffRpc(
+  rpcName: string,
+  payload: JsonRecord,
+  request: Request,
+): Promise<JsonRecord> {
   const supabaseUrl = Deno.env.get("STAFF_AUTH_SUPABASE_URL")
     || Deno.env.get("SUPABASE_URL")
     || "";
@@ -32,23 +38,41 @@ async function verifyStaffSession(sessionToken: string, request: Request): Promi
     throw new Error("Supabase environment is not configured.");
   }
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/verify_staff_session`, {
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${rpcName}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       apikey: supabaseAnonKey,
       Authorization: authorization,
     },
-    body: JSON.stringify({ session_token: sessionToken }),
+    body: JSON.stringify(payload),
   });
 
-  if (!response.ok) return false;
-
-  const result = await response.json().catch(() => null);
-  if (Array.isArray(result)) {
-    return Boolean((result[0] as JsonRecord | undefined)?.ok);
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String((result as JsonRecord)?.message || "Staff authorization request failed."));
   }
-  return Boolean((result as JsonRecord | null)?.ok);
+
+  if (Array.isArray(result)) {
+    return (result[0] as JsonRecord | undefined) || {};
+  }
+  return (result as JsonRecord | null) || {};
+}
+
+async function verifyStaffSession(sessionToken: string, request: Request): Promise<boolean> {
+  const result = await callStaffRpc("verify_staff_session", { session_token: sessionToken }, request);
+  return Boolean(result.ok);
+}
+
+async function getStocktakeAccess(
+  sessionToken: string,
+  staffName: string,
+  request: Request,
+): Promise<JsonRecord> {
+  return await callStaffRpc("get_staff_stocktake_access", {
+    session_token: sessionToken,
+    target_staff_name: staffName,
+  }, request);
 }
 
 Deno.serve(async (request) => {
@@ -56,7 +80,7 @@ Deno.serve(async (request) => {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  if (request.method !== "GET") {
+  if (request.method !== "GET" && request.method !== "PUT") {
     return jsonResponse({ ok: false, message: "Method not allowed." }, 405);
   }
 
@@ -77,6 +101,91 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: false, message: "Invalid or expired staff session." }, 401);
   }
 
+  const inputUrl = new URL(request.url);
+  const mode = inputUrl.searchParams.get("mode") || "products";
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+  if (mode === "stocktake-context" && request.method === "GET") {
+    const staffName = (inputUrl.searchParams.get("staff_name") || "").trim();
+    if (!staffName) {
+      return jsonResponse({ ok: false, message: "Staff name is required." }, 400);
+    }
+
+    try {
+      const access = await getStocktakeAccess(sessionToken, staffName, request);
+      if (!access.ok) {
+        return jsonResponse({ ok: false, enabled: false, message: String(access.message || "Staff not found.") }, 404);
+      }
+      if (!access.enabled) {
+        return jsonResponse({ ok: true, enabled: false, staff_name: access.display_name || staffName, categories: [] });
+      }
+      if (!supabaseUrl || !serviceRoleKey) {
+        return jsonResponse({ ok: false, message: "Product database is not configured." }, 500);
+      }
+
+      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+      const { data, error } = await supabaseAdmin
+        .from("pos_category_taxonomy")
+        .select("id, category_name, subcategory_name, category_sort, subcategory_sort")
+        .eq("active", true)
+        .order("category_sort", { ascending: true })
+        .order("subcategory_sort", { ascending: true });
+
+      if (error) throw error;
+      return jsonResponse({
+        ok: true,
+        enabled: true,
+        staff_id: access.staff_id,
+        staff_name: access.display_name || staffName,
+        categories: data || [],
+      });
+    } catch (error) {
+      console.error(error);
+      return jsonResponse({ ok: false, enabled: false, message: "Stocktake access could not be loaded." }, 500);
+    }
+  }
+
+  if (request.method === "PUT") {
+    const body = await request.json().catch(() => ({})) as JsonRecord;
+    const staffName = String(body.staff_name || "").trim();
+    const productId = Number(body.product_id);
+    const posCategoryId = Number(body.pos_category_id);
+    const quantity = Number(body.quantity);
+    const storeSlug = String(body.store_slug || "").trim();
+
+    if (!staffName || !storeSlug || !Number.isInteger(productId) || productId < 1
+      || !Number.isInteger(posCategoryId) || posCategoryId < 1
+      || !Number.isInteger(quantity) || quantity < 0 || quantity > 1000000) {
+      return jsonResponse({ ok: false, message: "Valid staff, product, category, store, and quantity are required." }, 400);
+    }
+
+    try {
+      const access = await getStocktakeAccess(sessionToken, staffName, request);
+      if (!access.ok || !access.enabled) {
+        return jsonResponse({ ok: false, code: "STOCKTAKE_ACCESS_DISABLED", message: "Stocktake access is not enabled for this staff member." }, 403);
+      }
+      if (!supabaseUrl || !serviceRoleKey) {
+        return jsonResponse({ ok: false, message: "Product database is not configured." }, 500);
+      }
+
+      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+      const { data, error } = await supabaseAdmin.rpc("apply_pos_stocktake_update", {
+        target_product_id: productId,
+        target_store_slug: storeSlug,
+        target_pos_category_id: posCategoryId,
+        target_quantity: quantity,
+        target_staff_name: String(access.display_name || staffName),
+      });
+
+      if (error) throw error;
+      return jsonResponse((data as JsonRecord) || { ok: true });
+    } catch (error) {
+      console.error(error);
+      return jsonResponse({ ok: false, message: "Product stocktake changes could not be saved." }, 500);
+    }
+  }
+
   const upstreamEndpoint = Deno.env.get("INTERNAL_PRODUCTS_ENDPOINT")
     || "https://fwlronvmgqzkleofriis.supabase.co/functions/v1/internal-products";
   const upstreamApiKey = Deno.env.get("INTERNAL_PRODUCTS_API_KEY") || "";
@@ -85,7 +194,6 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: false, message: "Internal products API key is not configured." }, 500);
   }
 
-  const inputUrl = new URL(request.url);
   const upstreamUrl = new URL(upstreamEndpoint);
   upstreamUrl.searchParams.set("page", inputUrl.searchParams.get("page") || "1");
   upstreamUrl.searchParams.set("limit", inputUrl.searchParams.get("limit") || "500");

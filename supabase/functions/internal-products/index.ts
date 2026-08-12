@@ -31,6 +31,12 @@ type ProductRow = {
   variant_color: string | null
   source_system: string | null
   source_external_id: string | null
+  pos_category_id: number | null
+  pos_category_taxonomy: {
+    id: number
+    category_name: string
+    subcategory_name: string
+  } | null
   categories: {
     id: number | null
     slug: string | null
@@ -47,6 +53,12 @@ type ProductGroupRow = {
   main_image_url: string | null
   is_pos_visible: boolean
   is_visible: boolean
+  pos_category_id: number | null
+  pos_category_taxonomy: {
+    id: number
+    category_name: string
+    subcategory_name: string
+  } | null
   product_fit_profiles: {
     code: string
     display_name: string
@@ -211,7 +223,7 @@ Deno.serve(async (req) => {
 
     let productsQuery = supabaseAdmin
       .from('products')
-      .select('id, sku, slug, name, upc, cost_price, retail_price, compare_at_price, image_url, stock_quantity, updated_at, is_visible, is_pos_visible, product_group_id, variant_name, variant_color, source_system, source_external_id, categories(id, slug, name)', { count: 'exact' })
+      .select('id, sku, slug, name, upc, cost_price, retail_price, compare_at_price, image_url, stock_quantity, updated_at, is_visible, is_pos_visible, product_group_id, variant_name, variant_color, source_system, source_external_id, pos_category_id, pos_category_taxonomy(id, category_name, subcategory_name), categories(id, slug, name)', { count: 'exact' })
       .order('updated_at', { ascending: false })
       .order('id', { ascending: false })
       .range(from, to)
@@ -255,7 +267,7 @@ Deno.serve(async (req) => {
       productGroupIds.length
         ? supabaseAdmin
             .from('product_groups')
-            .select('id, code, slug, name, product_family, main_image_url, is_pos_visible, is_visible, product_fit_profiles(code, display_name, review_status, product_fit_profile_devices(device_models(code, display_name)))')
+            .select('id, code, slug, name, product_family, main_image_url, is_pos_visible, is_visible, pos_category_id, pos_category_taxonomy(id, category_name, subcategory_name), product_fit_profiles(code, display_name, review_status, product_fit_profile_devices(device_models(code, display_name)))')
             .in('id', productGroupIds)
         : Promise.resolve({ data: [] as ProductGroupRow[], error: null }),
     ])
@@ -314,6 +326,7 @@ Deno.serve(async (req) => {
         ? productGroupsById.get(product.product_group_id) ?? null
         : null
       const fitProfile = productGroup?.product_fit_profiles ?? null
+      const posCategory = productGroup?.pos_category_taxonomy ?? product.pos_category_taxonomy ?? null
       const compatibleDevices = (fitProfile?.product_fit_profile_devices ?? [])
         .map((mapping) => mapping.device_models)
         .filter((device): device is { code: string; display_name: string } => Boolean(device))
@@ -351,6 +364,16 @@ Deno.serve(async (req) => {
         category_id: product.categories?.id ?? null,
         category_slug: product.categories?.slug ?? null,
         category_name: product.categories?.name ?? null,
+        pos_category: posCategory
+          ? {
+              id: posCategory.id,
+              category_name: posCategory.category_name,
+              subcategory_name: posCategory.subcategory_name,
+            }
+          : null,
+        pos_category_id: posCategory?.id ?? null,
+        pos_category_name: posCategory?.category_name ?? null,
+        pos_subcategory_name: posCategory?.subcategory_name ?? null,
         cost_price: normalizeNumber(product.cost_price),
         sale_price: normalizeNumber(product.retail_price),
         compare_at_price: normalizeNumber(product.compare_at_price),

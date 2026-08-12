@@ -20,6 +20,33 @@ The public POS page calls:
 GET https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products?page=1&limit=500
 ```
 
+Stocktake calls use the same endpoint and staff-session headers:
+
+```text
+GET https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products?mode=stocktake-context&staff_name=Andy
+PUT https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products
+```
+
+The context call returns the staff permission and the fixed POS category taxonomy. The `PUT` body contains `staff_name`, `store_slug`, `product_id`, `pos_category_id`, and an integer `quantity`.
+
+Required stocktake migrations:
+
+```text
+# Staff/POS project abkjbhmifswfexpjkval
+supabase/migrations/20260812111500_add_pos_stocktake_permissions.sql
+
+# Product project fwlronvmgqzkleofriis
+supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql
+```
+
+Security and data rules:
+- All staff permissions begin disabled and are controlled through admin-session RPCs.
+- `pos-products` verifies both the shared staff session and the selected staff member's current permission on every save.
+- The product-project RPC updates the fixed POS category and one exact product/store inventory row in one transaction.
+- Grouped variants share the POS category at product-group level; inventory always remains per variant SKU and per store.
+- `products.stock_quantity` is recalculated as the sum of all store inventory rows after each save.
+- Every successful save appends `pos_stocktake_changes`; browser roles have no direct table access.
+
 Browser headers:
 
 ```text

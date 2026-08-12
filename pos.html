@@ -739,6 +739,42 @@
       outline: none;
     }
 
+    .product-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stocktake-mode-button {
+      color: var(--tm-green-dark);
+      background: #effaf6;
+    }
+
+    .stocktake-mode-button.active {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.1);
+    }
+
+    .stocktake-mode-notice {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid rgba(7, 137, 111, 0.28);
+      border-radius: 10px;
+      color: var(--tm-green-dark);
+      background: #e8f7f2;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .stocktake-mode-notice[hidden] {
+      display: none;
+    }
+
     .status-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -959,6 +995,23 @@
     .product-card:focus-visible {
       outline: 3px solid rgba(7, 137, 111, 0.22);
       outline-offset: 2px;
+    }
+
+    .product-view.stocktake-active .product-card {
+      border-color: rgba(7, 137, 111, 0.42);
+    }
+
+    .product-view.stocktake-active .product-card::after {
+      content: "EDIT";
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 5px 7px;
+      border-radius: 6px;
+      color: #fff;
+      background: rgba(4, 91, 73, 0.92);
+      font-size: 10px;
+      font-weight: 950;
     }
 
     .product-image {
@@ -1532,6 +1585,117 @@
       font-size: 16px;
       font-weight: 900;
       white-space: nowrap;
+    }
+
+    .stocktake-modal {
+      width: min(620px, 100%);
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .stocktake-modal-head {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr) 40px;
+      gap: 14px;
+      align-items: center;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--tm-line);
+    }
+
+    .stocktake-modal-image {
+      width: 82px;
+      height: 82px;
+      object-fit: contain;
+      border: 1px solid #e4ebee;
+      border-radius: 8px;
+      background: #f7f9fa;
+    }
+
+    .stocktake-modal-title {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+    }
+
+    .stocktake-modal-title h2 {
+      display: -webkit-box;
+      overflow: hidden;
+      font-size: 19px;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .stocktake-modal-meta {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
+    .stocktake-form-body {
+      display: grid;
+      gap: 14px;
+      padding: 18px 20px 20px;
+    }
+
+    .stocktake-store {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 12px;
+      border: 1px solid #dfe8eb;
+      border-radius: 8px;
+      color: #45565e;
+      background: #f6f9fa;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .stocktake-store strong {
+      color: var(--tm-ink);
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .stocktake-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .stocktake-field {
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+      color: #52636b;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .stocktake-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .stocktake-field select,
+    .stocktake-field input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid #ccd8dd;
+      border-radius: 8px;
+      padding: 0 12px;
+      color: var(--tm-ink);
+      background: #fff;
+      outline: none;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .stocktake-field select:focus,
+    .stocktake-field input:focus {
+      border-color: rgba(7, 137, 111, 0.55);
+      box-shadow: 0 0 0 3px rgba(7, 137, 111, 0.1);
     }
 
     .payment-modal {
@@ -3933,6 +4097,21 @@
         gap: 12px;
       }
 
+      .topbar .staff-pill {
+        width: 54px;
+        min-width: 54px;
+        padding: 0;
+        font-size: 18px;
+      }
+
+      .topbar .staff-pill span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+
       .payment-modal-body {
         grid-template-columns: 190px minmax(0, 1fr) 300px;
       }
@@ -4275,12 +4454,24 @@
         font-size: 18px;
       }
 
+      .product-top-actions {
+        gap: 6px;
+      }
+
       .topbar .staff-pill span {
         position: absolute;
         width: 1px;
         height: 1px;
         overflow: hidden;
         clip: rect(0 0 0 0);
+      }
+
+      .stocktake-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .stocktake-field.full {
+        grid-column: auto;
       }
 
       .status-row {
@@ -4395,7 +4586,15 @@
             <i class="bi bi-search"></i>
             <input id="searchInput" class="search-input" type="search" placeholder="Search product name / SKU / barcode">
           </div>
-          <button id="specialProductBtn" class="staff-pill" type="button"><i class="bi bi-bag-plus"></i><span>Special Products</span></button>
+          <div class="product-top-actions">
+            <button id="specialProductBtn" class="staff-pill" type="button"><i class="bi bi-bag-plus"></i><span>Special Products</span></button>
+            <button id="stocktakeModeBtn" class="staff-pill stocktake-mode-button" type="button" hidden aria-pressed="false"><i class="bi bi-clipboard-check"></i><span>Stocktake</span></button>
+          </div>
+        </div>
+
+        <div id="stocktakeModeNotice" class="stocktake-mode-notice" hidden>
+          <i class="bi bi-pencil-square"></i>
+          <span>Stocktake mode is active. Select a product to edit its POS category and this store's quantity.</span>
         </div>
 
         <div class="status-row">
@@ -4741,6 +4940,41 @@
       </div>
       <div id="productVariantList" class="product-variant-list"></div>
     </section>
+  </div>
+
+  <div id="stocktakeModal" class="modal-backdrop" aria-hidden="true">
+    <form id="stocktakeForm" class="special-modal stocktake-modal" role="dialog" aria-modal="true" aria-labelledby="stocktakeTitle">
+      <div class="stocktake-modal-head">
+        <img id="stocktakeImage" class="stocktake-modal-image" alt="">
+        <div class="stocktake-modal-title">
+          <h2 id="stocktakeTitle">Edit product</h2>
+          <div id="stocktakeMeta" class="stocktake-modal-meta"></div>
+        </div>
+        <button id="stocktakeClose" class="modal-close" type="button" aria-label="Close stocktake editor"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="stocktake-form-body">
+        <div class="stocktake-store"><span>Inventory location</span><strong id="stocktakeStoreName"></strong></div>
+        <div class="stocktake-fields">
+          <label class="stocktake-field">
+            Main category
+            <select id="stocktakeCategory" required></select>
+          </label>
+          <label class="stocktake-field">
+            Subcategory
+            <select id="stocktakeSubcategory" required></select>
+          </label>
+          <label class="stocktake-field full">
+            Quantity in this store
+            <input id="stocktakeQuantity" type="number" min="0" max="1000000" step="1" inputmode="numeric" required>
+          </label>
+        </div>
+        <div id="stocktakeError" class="special-error" role="alert"></div>
+        <div class="special-actions">
+          <button id="stocktakeCancel" class="soft-action" type="button">Cancel</button>
+          <button id="stocktakeSave" class="pay-action" type="submit"><i class="bi bi-cloud-arrow-up"></i> Save & Sync</button>
+        </div>
+      </div>
+    </form>
   </div>
 
   <div id="refundModal" class="modal-backdrop" aria-hidden="true">
@@ -5225,6 +5459,11 @@
       productRequestId: 0,
       productsFromCache: false,
       activeProductGroupCode: '',
+      stocktakeAccessEnabled: false,
+      stocktakeMode: false,
+      stocktakeCategories: [],
+      stocktakeAccessCheckedAt: 0,
+      stocktakeProductId: '',
       repairQuotes: [],
       repairTickets: [],
       repairSearch: '',
@@ -5423,6 +5662,21 @@
       specialProductPrice: document.getElementById('specialProductPrice'),
       specialProductCancel: document.getElementById('specialProductCancel'),
       specialProductError: document.getElementById('specialProductError'),
+      stocktakeModeBtn: document.getElementById('stocktakeModeBtn'),
+      stocktakeModeNotice: document.getElementById('stocktakeModeNotice'),
+      stocktakeModal: document.getElementById('stocktakeModal'),
+      stocktakeForm: document.getElementById('stocktakeForm'),
+      stocktakeImage: document.getElementById('stocktakeImage'),
+      stocktakeTitle: document.getElementById('stocktakeTitle'),
+      stocktakeMeta: document.getElementById('stocktakeMeta'),
+      stocktakeStoreName: document.getElementById('stocktakeStoreName'),
+      stocktakeCategory: document.getElementById('stocktakeCategory'),
+      stocktakeSubcategory: document.getElementById('stocktakeSubcategory'),
+      stocktakeQuantity: document.getElementById('stocktakeQuantity'),
+      stocktakeError: document.getElementById('stocktakeError'),
+      stocktakeClose: document.getElementById('stocktakeClose'),
+      stocktakeCancel: document.getElementById('stocktakeCancel'),
+      stocktakeSave: document.getElementById('stocktakeSave'),
       productVariantModal: document.getElementById('productVariantModal'),
       productVariantImage: document.getElementById('productVariantImage'),
       productVariantTitle: document.getElementById('productVariantTitle'),
@@ -5973,6 +6227,12 @@
       state.shiftPaymentTotals = null;
       state.todayProgress = null;
       state.todayProgressError = '';
+      state.stocktakeAccessEnabled = false;
+      state.stocktakeMode = false;
+      state.stocktakeCategories = [];
+      state.stocktakeAccessCheckedAt = 0;
+      closeStocktakeEditor();
+      updateStocktakeUi();
       updateStaffButton();
       updateStoreBadge();
       renderLiveTargetDashboard();
@@ -6197,6 +6457,10 @@
         updateStoreBadge();
         return false;
       }
+      if (state.storeId !== storeId) {
+        closeStocktakeEditor();
+        closeProductVariantModal();
+      }
       state.storeId = storeId;
       localStorage.setItem(POS_STORE_KEY, storeId);
       state.todayProgress = null;
@@ -6339,8 +6603,14 @@
       state.openingConfirmed = Boolean(options.keepOpeningConfirmed);
       sessionStorage.setItem(POS_STAFF_KEY, context.selectedName);
       localStorage.setItem(POS_STAFF_KEY, context.selectedName);
+      state.stocktakeAccessEnabled = false;
+      state.stocktakeMode = false;
+      state.stocktakeCategories = [];
+      state.stocktakeAccessCheckedAt = 0;
+      updateStocktakeUi();
       setCurrentStore(context.nextStoreId, false, { skipShift: true, bypassRoleCheck: true });
       ensureActiveShiftRecord();
+      loadStocktakeContext({ silent: true }).catch(console.error);
     }
 
     function resumeActiveShift() {
@@ -7198,8 +7468,17 @@
               name: String((device && (device.display_name || device.name)) || '')
             })).filter(device => device.name)
           : [];
+        const posCategory = item.pos_category && typeof item.pos_category === 'object'
+          ? item.pos_category
+          : {};
         const sourceCategory = getProductCategory(item);
-        const category = canonicalProductCategory(item, sourceCategory);
+        const posCategoryName = getCategoryLabel(item.pos_category_name)
+          || getCategoryLabel(posCategory.category_name);
+        const posSubcategoryName = getCategoryLabel(item.pos_subcategory_name)
+          || getCategoryLabel(posCategory.subcategory_name);
+        const category = POS_PRODUCT_CATEGORY_NAMES.has(posCategoryName)
+          ? posCategoryName
+          : canonicalProductCategory(item, sourceCategory);
         const sourceSubcategory = getCategoryLabel(item.subcategory_name)
           || getCategoryLabel(item.subcategory)
           || getCategoryLabel(item.product_subcategory);
@@ -7209,7 +7488,9 @@
           sku: item.sku || '',
           name: item.name || item.product_name || 'Unnamed product',
           category,
-          subcategory: canonicalProductSubcategory(item, category, sourceCategory, sourceSubcategory),
+          subcategory: posSubcategoryName
+            || canonicalProductSubcategory(item, category, sourceCategory, sourceSubcategory),
+          pos_category_id: Number(item.pos_category_id || posCategory.id || 0) || null,
           source_category: sourceCategory,
           source_subcategory: sourceSubcategory,
           cost_price: Number(item.cost_price || item.cost || 0),
@@ -7217,6 +7498,7 @@
           barcode: item.barcode || '',
           image_url: normalizeImageUrl(getProductImageUrl(item)),
           product_group_code: String(item.product_group_code || productGroup.code || ''),
+          product_group_id: Number(item.product_group_id || productGroup.id || 0) || null,
           product_group_name: String(item.product_group_name || productGroup.name || ''),
           product_group_image_url: normalizeImageUrl(item.product_group_image_url || productGroup.image_url || ''),
           product_family: String(item.product_family || productGroup.product_family || ''),
@@ -8936,6 +9218,245 @@
       els.syncStatus.innerHTML = `<i class="bi ${icon}"></i><span>${text}</span>`;
     }
 
+    function posProductRequestHeaders() {
+      const headers = { 'Content-Type': 'application/json' };
+      const staffToken = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+        ? window.Techm8StaffAuth.getToken()
+        : '';
+      if (staffToken) headers['x-staff-session'] = staffToken;
+      if (window.TECHM8_SUPABASE && window.TECHM8_SUPABASE.anonKey) {
+        headers.apikey = window.TECHM8_SUPABASE.anonKey;
+        headers.Authorization = `Bearer ${window.TECHM8_SUPABASE.anonKey}`;
+      }
+      return headers;
+    }
+
+    function updateStocktakeUi() {
+      if (!state.stocktakeAccessEnabled) state.stocktakeMode = false;
+      if (!els.stocktakeModeBtn) return;
+      els.stocktakeModeBtn.hidden = !state.stocktakeAccessEnabled;
+      els.stocktakeModeBtn.classList.toggle('active', state.stocktakeMode);
+      els.stocktakeModeBtn.setAttribute('aria-pressed', String(state.stocktakeMode));
+      els.stocktakeModeBtn.title = state.stocktakeMode ? 'Exit stocktake mode' : 'Enter stocktake mode';
+      els.stocktakeModeNotice.hidden = !state.stocktakeMode;
+      els.productView.classList.toggle('stocktake-active', state.stocktakeMode);
+      els.specialProductBtn.disabled = state.stocktakeMode;
+    }
+
+    function setStocktakeMode(enabled) {
+      if (enabled && !state.stocktakeAccessEnabled) {
+        showToast('Stocktake access is not enabled for this staff member.');
+        return;
+      }
+      state.stocktakeMode = Boolean(enabled);
+      if (!state.stocktakeMode) {
+        closeProductVariantModal();
+        closeStocktakeEditor();
+      }
+      updateStocktakeUi();
+      renderProducts();
+    }
+
+    async function loadStocktakeContext(options = {}) {
+      const silent = Boolean(options.silent);
+      const maxAge = Number(options.maxAge || 0);
+      if (!state.selectedStaffName) {
+        state.stocktakeAccessEnabled = false;
+        state.stocktakeCategories = [];
+        updateStocktakeUi();
+        return false;
+      }
+      if (maxAge > 0 && Date.now() - state.stocktakeAccessCheckedAt < maxAge) {
+        return state.stocktakeAccessEnabled;
+      }
+
+      const endpoint = window.TECHM8_POS_PRODUCTS_ENDPOINT
+        || localStorage.getItem('techm8_pos_products_endpoint')
+        || INTERNAL_PRODUCTS_ENDPOINT;
+      const url = new URL(endpoint, window.location.href);
+      url.searchParams.set('mode', 'stocktake-context');
+      url.searchParams.set('staff_name', state.selectedStaffName);
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 12000);
+      try {
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: posProductRequestHeaders(),
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.message || 'Stocktake access could not be checked.');
+        state.stocktakeAccessEnabled = Boolean(result.enabled);
+        state.stocktakeCategories = Array.isArray(result.categories) ? result.categories : [];
+        state.stocktakeAccessCheckedAt = Date.now();
+        if (!state.stocktakeAccessEnabled) {
+          state.stocktakeMode = false;
+          closeStocktakeEditor();
+        }
+        updateStocktakeUi();
+        return state.stocktakeAccessEnabled;
+      } catch (error) {
+        console.error(error);
+        state.stocktakeAccessEnabled = false;
+        state.stocktakeCategories = [];
+        state.stocktakeMode = false;
+        state.stocktakeAccessCheckedAt = Date.now();
+        closeStocktakeEditor();
+        updateStocktakeUi();
+        if (!silent) showToast(error.name === 'AbortError' ? 'Stocktake access check timed out.' : (error.message || 'Stocktake access unavailable.'));
+        return false;
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    }
+
+    function stocktakeCategoryNames() {
+      return Array.from(new Set(state.stocktakeCategories.map(row => String(row.category_name || '')).filter(Boolean)));
+    }
+
+    function populateStocktakeSubcategories(selectedTaxonomyId) {
+      const categoryName = els.stocktakeCategory.value;
+      const rows = state.stocktakeCategories.filter(row => row.category_name === categoryName);
+      els.stocktakeSubcategory.innerHTML = rows.map(row => `
+        <option value="${Number(row.id)}" ${Number(row.id) === Number(selectedTaxonomyId) ? 'selected' : ''}>${escapeHtml(row.subcategory_name)}</option>
+      `).join('');
+      if (!els.stocktakeSubcategory.value && rows.length) {
+        els.stocktakeSubcategory.value = String(rows[0].id);
+      }
+    }
+
+    async function openStocktakeEditor(productId, options = {}) {
+      if (!state.stocktakeMode) return;
+      if (!options.skipAccessCheck) {
+        const hasAccess = await loadStocktakeContext({ maxAge: 30000 });
+        if (!hasAccess) {
+          showToast('Stocktake access has been disabled.');
+          return;
+        }
+      }
+
+      const product = state.products.find(item => item.id === String(productId));
+      if (!product) return;
+      const categoryNames = stocktakeCategoryNames();
+      if (!categoryNames.length) {
+        showToast('POS categories are unavailable.');
+        return;
+      }
+
+      const exactCategory = state.stocktakeCategories.find(row => Number(row.id) === Number(product.pos_category_id))
+        || state.stocktakeCategories.find(row => row.category_name === product.category && row.subcategory_name === product.subcategory)
+        || state.stocktakeCategories.find(row => row.category_name === product.category)
+        || state.stocktakeCategories[0];
+
+      state.stocktakeProductId = product.id;
+      els.stocktakeTitle.textContent = product.name;
+      els.stocktakeMeta.textContent = [product.sku ? `SKU ${product.sku}` : '', product.variant_color || product.variant_name || ''].filter(Boolean).join(' · ');
+      els.stocktakeImage.src = productImage(product);
+      els.stocktakeImage.alt = product.name;
+      els.stocktakeImage.onerror = () => {
+        els.stocktakeImage.onerror = null;
+        els.stocktakeImage.src = productPlaceholderImage(product);
+      };
+      els.stocktakeStoreName.textContent = storeById(state.storeId).name;
+      els.stocktakeCategory.innerHTML = categoryNames.map(name => `<option value="${escapeHtml(name)}" ${name === exactCategory.category_name ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('');
+      populateStocktakeSubcategories(exactCategory.id);
+      els.stocktakeQuantity.value = String(Math.max(0, Math.floor(getProductStock(product))));
+      els.stocktakeError.textContent = '';
+      els.stocktakeSave.disabled = false;
+      els.stocktakeSave.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Save & Sync';
+      els.stocktakeModal.classList.add('show');
+      els.stocktakeModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => els.stocktakeQuantity.focus(), 0);
+    }
+
+    function closeStocktakeEditor() {
+      state.stocktakeProductId = '';
+      if (!els.stocktakeModal) return;
+      els.stocktakeModal.classList.remove('show');
+      els.stocktakeModal.setAttribute('aria-hidden', 'true');
+      if (els.stocktakeError) els.stocktakeError.textContent = '';
+    }
+
+    function updateProductStoreQuantity(product, storeSlug, quantity) {
+      if (!Array.isArray(product.store_inventory)) product.store_inventory = [];
+      const normalizedStore = normalizeStoreKey(storeSlug);
+      let row = product.store_inventory.find(item => [item.store_slug, item.store_id, item.store_name].some(value => normalizeStoreKey(value) === normalizedStore));
+      if (!row) {
+        row = { store_slug: storeSlug, store_name: storeById(storeSlug).name, quantity: 0 };
+        product.store_inventory.push(row);
+      }
+      row.quantity = quantity;
+      if ('qty_on_hand' in product) product.qty_on_hand = undefined;
+    }
+
+    async function saveStocktakeProduct() {
+      const product = state.products.find(item => item.id === state.stocktakeProductId);
+      const quantity = Number(els.stocktakeQuantity.value);
+      const posCategoryId = Number(els.stocktakeSubcategory.value);
+      if (!product) {
+        els.stocktakeError.textContent = 'Product is no longer available.';
+        return;
+      }
+      if (!Number.isInteger(quantity) || quantity < 0 || quantity > 1000000) {
+        els.stocktakeError.textContent = 'Enter a whole quantity between 0 and 1,000,000.';
+        return;
+      }
+      if (!Number.isInteger(posCategoryId) || posCategoryId < 1) {
+        els.stocktakeError.textContent = 'Choose a valid POS category.';
+        return;
+      }
+
+      const endpoint = window.TECHM8_POS_PRODUCTS_ENDPOINT
+        || localStorage.getItem('techm8_pos_products_endpoint')
+        || INTERNAL_PRODUCTS_ENDPOINT;
+      els.stocktakeError.textContent = '';
+      els.stocktakeSave.disabled = true;
+      els.stocktakeSave.textContent = 'Saving...';
+      try {
+        const response = await fetch(endpoint, {
+          method: 'PUT',
+          headers: posProductRequestHeaders(),
+          body: JSON.stringify({
+            staff_name: state.selectedStaffName,
+            store_slug: state.storeId,
+            product_id: Number(product.id),
+            pos_category_id: posCategoryId,
+            quantity
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 403 || result.code === 'STOCKTAKE_ACCESS_DISABLED') {
+            state.stocktakeAccessEnabled = false;
+            state.stocktakeMode = false;
+            updateStocktakeUi();
+          }
+          throw new Error(result.message || 'Stocktake changes could not be saved.');
+        }
+
+        const affectedProducts = result.product_group_id
+          ? state.products.filter(item => Number(item.product_group_id) === Number(result.product_group_id))
+          : [product];
+        affectedProducts.forEach(item => {
+          item.pos_category_id = Number(result.pos_category_id || posCategoryId);
+          item.category = result.category || els.stocktakeCategory.value;
+          item.subcategory = result.subcategory || els.stocktakeSubcategory.selectedOptions[0]?.textContent || '';
+        });
+        updateProductStoreQuantity(product, state.storeId, quantity);
+        writeProductCache(state.products);
+        closeStocktakeEditor();
+        renderProductBrowser();
+        showToast(`${product.name}: ${quantity} in stock at ${storeById(state.storeId).code}.`);
+      } catch (error) {
+        console.error(error);
+        els.stocktakeError.textContent = error.message || 'Stocktake changes could not be saved.';
+      } finally {
+        els.stocktakeSave.disabled = false;
+        els.stocktakeSave.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Save & Sync';
+      }
+    }
+
     function categories() {
       return POS_PRODUCT_CATEGORIES.map(category => category.name);
     }
@@ -9312,7 +9833,9 @@
         const actionAttribute = product.is_product_group
           ? `data-open-product-group="${escapeHtml(product.product_group_code)}"`
           : `data-add="${escapeHtml(product.id)}"`;
-        const actionLabel = product.is_product_group ? 'Choose an option for' : 'Add';
+        const actionLabel = state.stocktakeMode
+          ? 'Edit stocktake details for'
+          : (product.is_product_group ? 'Choose an option for' : 'Add');
         const priceLabel = product.is_product_group && product.max_sale_price > product.sale_price
           ? `From ${money(product.sale_price)}`
           : money(product.sale_price);
@@ -10065,6 +10588,10 @@
     }
 
     function addToCart(productId) {
+      if (state.stocktakeMode) {
+        openStocktakeEditor(productId);
+        return;
+      }
       const product = state.products.find(item => item.id === productId);
       if (!product) return;
 
@@ -10094,7 +10621,11 @@
       const variants = productVariantsForGroup(groupCode);
       if (!variants.length) return;
       if (variants.length === 1) {
-        addToCart(variants[0].id);
+        if (state.stocktakeMode) {
+          openStocktakeEditor(variants[0].id);
+        } else {
+          addToCart(variants[0].id);
+        }
         return;
       }
 
@@ -10107,7 +10638,7 @@
       const compatibleDevices = (first.compatible_devices || []).map(device => device.name).filter(Boolean);
       const fitCopy = compatibleDevices.length
         ? `Fits ${compatibleDevices.join(', ')}`
-        : (first.fit_profile_name ? `Fit profile: ${first.fit_profile_name}` : 'Choose the colour to add');
+        : (first.fit_profile_name ? `Fit profile: ${first.fit_profile_name}` : (state.stocktakeMode ? 'Choose the exact product to edit' : 'Choose the colour to add'));
 
       state.activeProductGroupCode = groupCode;
       els.productVariantTitle.textContent = first.product_group_name || first.name;
@@ -10123,7 +10654,7 @@
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
         const optionName = variant.variant_color || variant.variant_name || variant.name;
         return `
-          <button class="product-variant-option" type="button" data-add-variant="${escapeHtml(variant.id)}" aria-label="Add ${escapeHtml(variant.name)}, ${stock} in stock">
+          <button class="product-variant-option" type="button" data-add-variant="${escapeHtml(variant.id)}" aria-label="${state.stocktakeMode ? 'Edit' : 'Add'} ${escapeHtml(variant.name)}, ${stock} in stock">
             <img class="product-variant-option-image" src="${escapeHtml(productImage(variant))}" alt="${escapeHtml(variant.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" data-fallback="${escapeHtml(productPlaceholderImage(variant))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
             <span class="product-variant-option-body">
               <span class="product-variant-colour">${productColourSwatch(optionName)}<span>${escapeHtml(optionName)}</span></span>
@@ -10315,6 +10846,25 @@
         state.search = '';
         renderProductBrowser();
         openProductVariantModal('TM8-GRP-IPAD10-HDC');
+      } else if (new URLSearchParams(window.location.search).has('catalog-stocktake')) {
+        state.selectedStaffName = 'Andy';
+        state.stocktakeAccessEnabled = true;
+        state.stocktakeCategories = POS_PRODUCT_CATEGORIES.flatMap((category, categoryIndex) => (
+          category.subcategories.map((subcategory, subcategoryIndex) => ({
+            id: categoryIndex * 100 + subcategoryIndex + 1,
+            category_name: category.name,
+            subcategory_name: subcategory.name,
+            category_sort: categoryIndex,
+            subcategory_sort: subcategoryIndex
+          }))
+        ));
+        state.search = '';
+        state.category = 'All';
+        state.subcategory = '';
+        state.productBrowseMode = 'all';
+        setActiveView('products');
+        setStocktakeMode(true);
+        openStocktakeEditor('1002', { skipAccessCheck: true });
       } else {
         state.cart = [];
         state.search = '';
@@ -11827,7 +12377,11 @@
       }
       const button = event.target.closest('[data-add]');
       if (!button) return;
-      addToCart(button.dataset.add);
+      if (state.stocktakeMode) {
+        openStocktakeEditor(button.dataset.add);
+      } else {
+        addToCart(button.dataset.add);
+      }
     });
 
     els.productGrid.addEventListener('keydown', event => {
@@ -11837,6 +12391,8 @@
       event.preventDefault();
       if (card.dataset.openProductGroup) {
         openProductVariantModal(card.dataset.openProductGroup);
+      } else if (state.stocktakeMode) {
+        openStocktakeEditor(card.dataset.add);
       } else {
         addToCart(card.dataset.add);
       }
@@ -12217,7 +12773,30 @@
       if (!button) return;
       restoreHeldOrder(button.dataset.resumeHold);
     });
-    els.specialProductBtn.addEventListener('click', openSpecialProductModal);
+    els.specialProductBtn.addEventListener('click', () => {
+      if (state.stocktakeMode) {
+        showToast('Exit stocktake mode before adding a special product.');
+        return;
+      }
+      openSpecialProductModal();
+    });
+    els.stocktakeModeBtn.addEventListener('click', async () => {
+      if (!state.stocktakeMode) {
+        const enabled = await loadStocktakeContext({ maxAge: 5000 });
+        if (!enabled) return;
+      }
+      setStocktakeMode(!state.stocktakeMode);
+    });
+    els.stocktakeClose.addEventListener('click', closeStocktakeEditor);
+    els.stocktakeCancel.addEventListener('click', closeStocktakeEditor);
+    els.stocktakeModal.addEventListener('click', event => {
+      if (event.target === els.stocktakeModal) closeStocktakeEditor();
+    });
+    els.stocktakeCategory.addEventListener('change', () => populateStocktakeSubcategories());
+    els.stocktakeForm.addEventListener('submit', event => {
+      event.preventDefault();
+      saveStocktakeProduct();
+    });
     els.specialProductCancel.addEventListener('click', closeSpecialProductModal);
     els.specialProductModal.addEventListener('click', event => {
       if (event.target === els.specialProductModal) closeSpecialProductModal();
@@ -12233,8 +12812,12 @@
     els.productVariantList.addEventListener('click', event => {
       const button = event.target.closest('[data-add-variant]');
       if (!button) return;
-      addToCart(button.dataset.addVariant);
       closeProductVariantModal();
+      if (state.stocktakeMode) {
+        openStocktakeEditor(button.dataset.addVariant);
+      } else {
+        addToCart(button.dataset.addVariant);
+      }
     });
     els.specialRepairCancel.addEventListener('click', closeSpecialRepairModal);
     els.specialRepairModal.addEventListener('click', event => {
@@ -12419,6 +13002,12 @@
       addCustomer();
     });
     document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && els.stocktakeModal.classList.contains('show')) {
+        closeStocktakeEditor();
+      }
+      if (event.key === 'Escape' && els.productVariantModal.classList.contains('show')) {
+        closeProductVariantModal();
+      }
       if (event.key === 'Escape' && els.specialProductModal.classList.contains('show')) {
         closeSpecialProductModal();
       }
@@ -12484,6 +13073,9 @@
     window.setInterval(() => {
       if (state.activeView === 'target' && document.visibilityState === 'visible') {
         loadTodayProgress({ silent: true });
+      }
+      if (state.selectedStaffName && document.visibilityState === 'visible') {
+        loadStocktakeContext({ silent: true });
       }
     }, 30000);
   </script>

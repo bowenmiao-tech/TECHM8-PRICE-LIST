@@ -26,6 +26,8 @@ Admin pages:
 - `daily-report-admin.html` - report review page
 - `nl-report-admin.html` - North Lakes product cost, payable, temporary save, and upload admin
 - `lcd-inventory-admin.html` - LCD inventory admin
+- `schedule-admin.html` - POS roster and staff PIN admin
+- `stocktake-admin.html` - temporary per-staff POS stocktake access control
 
 Database / auth:
 - `supabase_schema.sql` - source of truth for schema, seed, functions, and RPCs
@@ -68,6 +70,12 @@ Completed product-sale flow:
 - The POS always shows these fixed retail groups, including empty groups: `Phone Cases`, `Tablet Cases`, `Screen Protection`, `Cables & Adapters`, `Charging & Power`, `Audio`, `Mounts & Holders`, `Watch Accessories`, `Computer & Gaming`, and `Other Electronics`.
 - Each main group opens a fixed second-level category grid before showing products. Empty second-level groups remain visible.
 - Existing API categories are mapped into the hierarchy in the POS display layer. Source product records are not renamed or rewritten, and search still includes the original category and subcategory.
+- An authorized stocktake mode allows staff to correct the fixed POS main/subcategory and the selected store's quantity without adding the product to cart.
+- Stocktake access is disabled by default and is enabled or disabled per active staff member from `stocktake-admin.html`.
+- The Edge Function rechecks access on every save. Turning access off blocks further saves even if the POS page is still open.
+- Store quantity changes write only to `product_store_inventory` for the currently selected store. The product's online total stock is then recalculated from all store inventory rows.
+- Stocktake saves are atomic and append an audit row containing staff, store, product, previous/new category, and previous/new quantity.
+- Grouped colour/option products share one POS category, but quantity remains independent for the exact selected SKU and store.
 - A local product snapshot is displayed immediately when available, while the protected live API refreshes in the background.
 - Product images are loaded progressively, and gallery thumbnails are intentionally omitted to keep the POS fast.
 - The entire product card adds the item to the cart.
@@ -208,6 +216,7 @@ Database-backed and shared between terminals:
 - per-store held carts
 - per-store opening cash, active shift, and end-shift reconciliation
 - second-hand seller acquisitions, unique device inventory, status history, and buy/sell ledger
+- per-staff stocktake permission, fixed POS category assignments, store-specific stocktake quantities, and stocktake audit history
 
 Browser-local convenience state:
 - selected staff/store and local staff PIN/assignment overrides
@@ -222,7 +231,8 @@ Do not use browser-local values as the source of truth for accounting or managem
 - Edge Function project: `fwlronvmgqzkleofriis`.
 - Staff/POS database project: `abkjbhmifswfexpjkval`.
 - `pos-products` proxies the protected internal product API without exposing its API key.
-- `internal-products` version 19 returns optional product-group, colour, fit-profile, and compatible-device fields while preserving the legacy product response.
+- `pos-products` also checks stocktake permission and atomically saves approved POS category/store-inventory changes.
+- `internal-products` returns optional product-group, colour, fit-profile, compatible-device, and assigned POS-category fields while preserving the legacy product response.
 - `pos-repair-tickets`, `pos-sales-orders`, `pos-shared-state`, `pos-used-devices`, and `send-pos-receipt-email` validate `x-staff-session` and call staff/POS database RPCs.
 - Full endpoint and migration deployment notes are in `supabase/README.md`.
 
@@ -239,6 +249,10 @@ Required POS migrations, in order:
 10. `20260719011727_fix_pos_today_progress_category.sql`
 11. `20260719013325_fix_pos_today_progress_repair_attribution.sql`
 12. `20260719013856_index_pos_daily_target_results_shift_code.sql`
+13. `20260812111500_add_pos_stocktake_permissions.sql`
+
+Product-project stocktake migration:
+- `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
 
 ### Current Limitations And Roadmap
 
@@ -263,7 +277,6 @@ Second-hand device follow-ups:
 - add inter-store device transfer with immutable source/destination events
 
 Optional later integrations:
-- stock write-back to the product/inventory system
 - payment terminal integrations
 
 ## Homepage Rules
