@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { reportCrazyPartsStatus } from './crazyparts-status.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outputDir = path.join(projectRoot, 'outputs', 'crazyparts-price-monitor');
@@ -10,18 +11,20 @@ const historyDir = path.join(outputDir, 'history');
 const backupDir = path.join(outputDir, 'supabase-backups');
 
 const familyConfig = new Map([
-  ['a series', { dbBrand: 'Samsung A Series', displayBrand: 'Samsung', mode: 'samsung' }],
-  ['oppo', { dbBrand: 'OPPO', displayBrand: 'OPPO', mode: 'replace' }],
-  ['huawei', { dbBrand: 'HUAWEI', displayBrand: 'Huawei', mode: 'replace' }],
-  ['xiaomi', { dbBrand: 'XIAOMI', displayBrand: 'Xiaomi', mode: 'replace' }],
-  ['redmi', { dbBrand: 'REDMI', displayBrand: 'Redmi', mode: 'replace' }],
-  ['motorola', { dbBrand: 'MOTOROLA', displayBrand: 'Motorola', mode: 'replace' }],
-  ['nokia', { dbBrand: 'NOKIA', displayBrand: 'Nokia', mode: 'replace' }],
-  ['oneplus', { dbBrand: 'ONEPLUS', displayBrand: 'OnePlus', mode: 'replace' }],
-  ['realme', { dbBrand: 'REALME', displayBrand: 'Realme', mode: 'replace' }],
-  ['vivo', { dbBrand: 'VIVO', displayBrand: 'Vivo', mode: 'replace' }],
-  ['sony', { dbBrand: 'SONY', displayBrand: 'Sony', mode: 'replace' }],
+  ['a series', { dbBrand: 'Samsung A Series', displayBrand: 'Samsung', statusFamily: 'A Series', mode: 'samsung' }],
+  ['oppo', { dbBrand: 'OPPO', displayBrand: 'OPPO', statusFamily: 'Oppo', mode: 'replace' }],
+  ['huawei', { dbBrand: 'HUAWEI', displayBrand: 'Huawei', statusFamily: 'Huawei', mode: 'replace' }],
+  ['xiaomi', { dbBrand: 'XIAOMI', displayBrand: 'Xiaomi', statusFamily: 'Xiaomi', mode: 'replace' }],
+  ['redmi', { dbBrand: 'REDMI', displayBrand: 'Redmi', statusFamily: 'Redmi', mode: 'replace' }],
+  ['motorola', { dbBrand: 'MOTOROLA', displayBrand: 'Motorola', statusFamily: 'Motorola', mode: 'replace' }],
+  ['nokia', { dbBrand: 'NOKIA', displayBrand: 'Nokia', statusFamily: 'Nokia', mode: 'replace' }],
+  ['oneplus', { dbBrand: 'ONEPLUS', displayBrand: 'OnePlus', statusFamily: 'Oneplus', mode: 'replace' }],
+  ['realme', { dbBrand: 'REALME', displayBrand: 'Realme', statusFamily: 'Realme', mode: 'replace' }],
+  ['vivo', { dbBrand: 'VIVO', displayBrand: 'Vivo', statusFamily: 'Vivo', mode: 'replace' }],
+  ['sony', { dbBrand: 'SONY', displayBrand: 'Sony', statusFamily: 'Sony', mode: 'replace' }],
 ]);
+
+let activeStatusFamilies = [];
 
 function parseArgs(argv) {
   return {
@@ -355,6 +358,7 @@ function sqlForUpdates(plan) {
   })));
   const obsoletePayload = JSON.stringify(plan.obsoleteModels);
   const replacementPayload = JSON.stringify(plan.replaceBrands || []);
+  const statusPayload = JSON.stringify(plan.statusRows || []);
   return `begin;
 delete from public.repair_prices
 where brand in (
@@ -375,6 +379,24 @@ where brand = 'Samsung A Series'
   and model in (
     select value from jsonb_array_elements_text($techm8_obsolete$${obsoletePayload}$techm8_obsolete$::jsonb)
   );
+with incoming_status as (
+  select *
+  from jsonb_to_recordset($techm8_status$${statusPayload}$techm8_status$::jsonb)
+    as status_data(family text, total_models integer, processed_models integer, eligible_models integer, repair_rows integer)
+)
+update public.crazyparts_update_status as target
+set status = 'completed',
+    total_models = incoming_status.total_models,
+    processed_models = incoming_status.processed_models,
+    eligible_models = incoming_status.eligible_models,
+    repair_rows = incoming_status.repair_rows,
+    progress_percent = 100,
+    message = 'Latest verified prices are live.',
+    completed_at = now(),
+    last_success_at = now(),
+    updated_at = now()
+from incoming_status
+where target.family = incoming_status.family;
 commit;`;
 }
 
@@ -400,6 +422,7 @@ async function main() {
   const rawData = JSON.parse(await fs.readFile(historyPath, 'utf8'));
   const configs = configsInHistory(rawData);
   if (!configs.length) throw new Error('The selected history does not contain a supported model family.');
+  activeStatusFamilies = configs.map((config) => config.statusFamily);
   const affectedBrands = [...new Set(configs.map((config) => config.dbBrand))];
   const config = await supabaseConfig();
   const beforeRows = await readSiteRows(config, affectedBrands);
@@ -420,6 +443,17 @@ async function main() {
     obsoleteModels: samsungPlan?.obsoleteModels || [],
     replaceBrands: replacementPlan?.replaceBrands || [],
     supplierModels: (samsungPlan?.supplierModels || 0) + (replacementPlan?.supplierModels || 0),
+    statusRows: configs.map((config) => {
+      const brandUpdates = [...(samsungPlan?.updates || []), ...(replacementPlan?.updates || [])]
+        .filter((row) => row.brand === config.dbBrand);
+      return {
+        family: config.statusFamily,
+        total_models: Number(rawData.modelsSelected || rawData.modelsProcessed || 0),
+        processed_models: Number(rawData.modelsProcessed || 0),
+        eligible_models: new Set(brandUpdates.map((row) => row.model)).size,
+        repair_rows: brandUpdates.length,
+      };
+    }),
   };
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '-');
 
@@ -469,6 +503,12 @@ async function main() {
 }
 
 main().catch((error) => {
+  for (const family of activeStatusFamilies) {
+    reportCrazyPartsStatus(family, {
+      status: 'failed',
+      message: `Database sync failed: ${error.message}. Existing prices were kept when verification did not complete.`,
+    });
+  }
   console.error(`Crazy Parts Supabase sync failed: ${error.message}`);
   process.exitCode = 1;
 });

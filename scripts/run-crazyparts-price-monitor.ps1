@@ -25,6 +25,7 @@ if (-not (Test-Path -LiteralPath $CredentialPath)) {
 $credential = Import-Clixml -LiteralPath $CredentialPath
 $env:CRAZYPARTS_EMAIL = $credential.UserName
 $env:CRAZYPARTS_PASSWORD = $credential.GetNetworkCredential().Password
+$env:CRAZYPARTS_TRACK_STATUS = if ($SyncSupabase) { '1' } else { '0' }
 
 $nodeArgs = @((Join-Path $PSScriptRoot 'crazyparts-price-monitor.mjs'))
 $supportedFamilies = @(
@@ -75,6 +76,7 @@ try {
 finally {
     Remove-Item Env:CRAZYPARTS_EMAIL -ErrorAction SilentlyContinue
     Remove-Item Env:CRAZYPARTS_PASSWORD -ErrorAction SilentlyContinue
+    Remove-Item Env:CRAZYPARTS_TRACK_STATUS -ErrorAction SilentlyContinue
     Pop-Location
 }
 

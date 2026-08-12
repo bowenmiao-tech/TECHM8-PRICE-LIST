@@ -224,6 +224,81 @@
       cursor: pointer;
     }
 
+    .price-update-panel {
+      margin-bottom: 22px;
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid var(--tm-border);
+      background: linear-gradient(135deg, #f8fbfa 0%, #fff8f2 100%);
+    }
+
+    .update-panel-head,
+    .update-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .update-panel-head h2 { margin: 0; font-size: 20px; }
+    .update-panel-head p { margin: 6px 0 0; color: var(--tm-muted); font-size: 13px; }
+    .update-summary { margin-top: 18px; }
+    .update-summary strong { font-size: 16px; }
+    .update-summary span { color: var(--tm-muted); font-size: 13px; }
+
+    .update-progress-track,
+    .brand-progress-track {
+      overflow: hidden;
+      border-radius: 999px;
+      background: #dfe8e4;
+    }
+
+    .update-progress-track { height: 14px; margin-top: 10px; }
+    .brand-progress-track { height: 7px; margin-top: 10px; }
+
+    .update-progress-fill,
+    .brand-progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--tm-dark), var(--tm-accent));
+      transition: width .35s ease;
+    }
+
+    .brand-status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .brand-status-card {
+      padding: 14px;
+      border: 1px solid var(--tm-border);
+      border-radius: 16px;
+      background: rgba(255,255,255,.9);
+    }
+
+    .brand-status-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .brand-status-name { font-size: 14px; font-weight: 800; }
+    .brand-status-day { margin-top: 3px; color: var(--tm-muted); font-size: 11px; }
+    .brand-status-meta { margin-top: 9px; color: #4f616a; font-size: 12px; line-height: 1.5; }
+
+    .status-pill {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #edf1f3;
+      color: #566770;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .status-pill.running, .status-pill.syncing { background: #fff0df; color: #a64d00; }
+    .status-pill.completed { background: #e4f5ec; color: #17643e; }
+    .status-pill.failed, .status-pill.rate_limited { background: #fde8e6; color: #b3261e; }
+
     @media (max-width: 1100px) {
       .card-grid {
         grid-template-columns: 1fr;
@@ -272,6 +347,24 @@
         <div class="top-actions">
           <button class="ghost-button" type="button" id="logoutButton">Logout</button>
         </div>
+
+        <section class="price-update-panel" aria-labelledby="priceUpdateTitle">
+          <div class="update-panel-head">
+            <div>
+              <h2 id="priceUpdateTitle">Crazy Parts Price Update Progress</h2>
+              <p>One phone brand runs each day from the 1st to the 11th. Progress refreshes automatically.</p>
+            </div>
+            <button class="ghost-button" type="button" id="refreshPriceProgress">Refresh Progress</button>
+          </div>
+          <div class="update-summary">
+            <strong id="priceProgressHeadline">Loading update status…</strong>
+            <span id="priceProgressDetail"></span>
+          </div>
+          <div class="update-progress-track" role="progressbar" aria-label="Monthly brand update progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="update-progress-fill" id="priceProgressFill"></div>
+          </div>
+          <div class="brand-status-grid" id="brandStatusGrid"></div>
+        </section>
 
         <h2 class="section-title">Select A Backend Tool</h2>
         <p class="section-copy">
@@ -347,7 +440,7 @@
   </div>
 
   <script>
-    window.Techm8StaffAuth.init({
+    const adminAuthReady = window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
       title: 'Admin Login',
       subtitle: 'Sign in with the admin account and password to open the backend portal.',
@@ -359,6 +452,90 @@
       verifyRpc: 'verify_admin_session',
       revokeRpc: 'revoke_admin_session'
     });
+
+    function escapeStatusHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function brisbaneMonthKey(value) {
+      if (!value) return '';
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Australia/Brisbane', year: 'numeric', month: '2-digit'
+      }).formatToParts(new Date(value));
+      const data = Object.fromEntries(parts.map(part => [part.type, part.value]));
+      return data.year + '-' + data.month;
+    }
+
+    function formatStatusTime(value) {
+      if (!value) return 'Not completed yet';
+      return new Date(value).toLocaleString('en-AU', {
+        timeZone: 'Australia/Brisbane', day: '2-digit', month: 'short',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    async function loadPriceUpdateProgress() {
+      const headline = document.getElementById('priceProgressHeadline');
+      const detail = document.getElementById('priceProgressDetail');
+      const grid = document.getElementById('brandStatusGrid');
+      try {
+        const config = window.TECHM8_SUPABASE;
+        const select = 'family,brand,schedule_day,status,total_models,processed_models,eligible_models,repair_rows,progress_percent,message,started_at,completed_at,last_success_at,updated_at';
+        const response = await fetch(config.url + '/rest/v1/crazyparts_update_status?select=' + select + '&order=sort_order.asc', {
+          cache: 'no-store',
+          headers: { apikey: config.anonKey, Authorization: 'Bearer ' + config.anonKey }
+        });
+        const rows = await response.json();
+        if (!response.ok || !Array.isArray(rows)) throw new Error((rows && rows.message) || 'Status could not be loaded.');
+
+        const currentMonth = brisbaneMonthKey(new Date());
+        const completedThisMonth = rows.filter(row => brisbaneMonthKey(row.last_success_at) === currentMonth).length;
+        const overallPercent = rows.length ? Math.round((completedThisMonth / rows.length) * 100) : 0;
+        const active = rows.find(row => row.status === 'running' || row.status === 'syncing');
+        const issue = rows.find(row => row.status === 'rate_limited' || row.status === 'failed');
+        headline.textContent = active
+          ? active.brand + ': ' + Number(active.progress_percent || 0).toFixed(0) + '% in progress'
+          : (issue ? issue.brand + ': attention required' : completedThisMonth + ' of ' + rows.length + ' brands updated this month');
+        detail.textContent = active ? (active.message || '') : (issue ? (issue.message || '') : 'Monthly progress ' + overallPercent + '%');
+        const fill = document.getElementById('priceProgressFill');
+        fill.style.width = (active ? Number(active.progress_percent || 0) : overallPercent) + '%';
+        fill.parentElement.setAttribute('aria-valuenow', String(active ? Number(active.progress_percent || 0) : overallPercent));
+
+        grid.innerHTML = rows.map(row => {
+          const percent = Math.max(0, Math.min(100, Number(row.progress_percent || 0)));
+          const displayStatus = row.status === 'completed' && brisbaneMonthKey(row.last_success_at) !== currentMonth
+            ? 'scheduled'
+            : row.status;
+          const counts = row.total_models
+            ? `${row.processed_models || 0}/${row.total_models} model pages`
+            : 'Waiting for next run';
+          return `<article class="brand-status-card">
+            <div class="brand-status-top">
+              <div><div class="brand-status-name">${escapeStatusHtml(row.brand)}</div><div class="brand-status-day">Runs monthly on day ${row.schedule_day}</div></div>
+              <span class="status-pill ${escapeStatusHtml(displayStatus)}">${escapeStatusHtml(displayStatus.replace('_', ' '))}</span>
+            </div>
+            <div class="brand-progress-track"><div class="brand-progress-fill" style="width:${percent}%"></div></div>
+            <div class="brand-status-meta">${escapeStatusHtml(counts)}<br>Last success: ${escapeStatusHtml(formatStatusTime(row.last_success_at))}</div>
+          </article>`;
+        }).join('');
+      } catch (error) {
+        headline.textContent = 'Price update progress unavailable';
+        detail.textContent = error.message || 'Please refresh the page.';
+        grid.innerHTML = '';
+      }
+    }
+
+    adminAuthReady.then(function () {
+      loadPriceUpdateProgress();
+      window.setInterval(loadPriceUpdateProgress, 30000);
+    });
+
+    document.getElementById('refreshPriceProgress').addEventListener('click', loadPriceUpdateProgress);
 
     document.getElementById('logoutButton').addEventListener('click', function () {
       window.Techm8StaffAuth.logout();

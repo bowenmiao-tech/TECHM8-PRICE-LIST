@@ -18,7 +18,7 @@ For every model and repair type, the workbook uses the lowest and highest eligib
 - `scripts/setup-crazyparts-credential.ps1` stores the login using Windows user encryption.
 - `scripts/run-crazyparts-price-monitor.ps1` safely loads the encrypted login and starts the monitor.
 - `scripts/sync-crazyparts-to-supabase.mjs` backs up the old values, updates only the four approved repair categories, and verifies every write. A Series keeps its variant-aware matching; the supported non-Samsung brands are fully replaced from a complete supplier run so stale models are removed.
-- `scripts/install-crazyparts-monthly-task.ps1` creates the monthly Windows scheduled task.
+- `scripts/install-crazyparts-daily-brand-tasks.ps1` creates eleven monthly Windows tasks: one brand per day from the 1st to the 11th.
 - `outputs/crazyparts-price-monitor/TECHM8_CrazyParts_Repair_Prices.xlsx` is the current internal workbook.
 - `outputs/crazyparts-price-monitor/history/` keeps raw JSON history for auditing and recovery.
 
@@ -68,21 +68,21 @@ Supported scope: Samsung A Series, OPPO, HUAWEI, XIAOMI, REDMI, MOTOROLA, NOKIA,
 
 The full run intentionally waits between pages and may take 30–60 minutes depending on the number of models on Crazy Parts.
 
-## Install monthly update
+## Install the monthly brand sequence
 
-The default schedule is the first day of each month at 5:00 AM:
-
-```powershell
-.\scripts\install-crazyparts-monthly-task.ps1
-```
-
-To choose a different day and time:
+The default schedule runs one brand at 5:00 AM on each day from the 1st through the 11th:
 
 ```powershell
-.\scripts\install-crazyparts-monthly-task.ps1 -DayOfMonth 2 -StartTime '04:30'
+.\scripts\install-crazyparts-daily-brand-tasks.ps1
 ```
 
-The Windows task is configured to update all supported phone brands one family at a time. Each completed family is backed up, replaced and verified before the next family begins, and a failed family is retried once without blocking already completed updates. Pass `-All` to the installer only when a deliberately broader full-site crawl is wanted. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
+To choose a different start time for every brand:
+
+```powershell
+.\scripts\install-crazyparts-daily-brand-tasks.ps1 -StartTime '04:30'
+```
+
+The order is Samsung A Series, OPPO, HUAWEI, XIAOMI, REDMI, MOTOROLA, NOKIA, ONEPLUS, REALME, VIVO and SONY. Each run publishes live progress to the Admin Portal, then backs up, replaces and verifies that brand before marking it complete. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
 
 ## Safety behaviour
 

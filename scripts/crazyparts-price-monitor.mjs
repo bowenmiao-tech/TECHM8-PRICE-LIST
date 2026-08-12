@@ -4,6 +4,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { SpreadsheetFile, Workbook } from '@oai/artifact-tool';
+import { reportCrazyPartsStatus, trackedFamilyFromArgs } from './crazyparts-status.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const configPath = path.join(projectRoot, 'crazyparts-price-monitor.config.json');
@@ -721,6 +722,7 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const trackedFamily = trackedFamilyFromArgs(process.argv.slice(2));
   if (args.help) {
     printHelp();
     return;
@@ -762,6 +764,19 @@ async function main() {
   const password = process.env.CRAZYPARTS_PASSWORD;
   if (!email || !password) {
     throw new Error('Crazy Parts credentials are not available. Use run-crazyparts-price-monitor.ps1.');
+  }
+
+  if (trackedFamily) {
+    reportCrazyPartsStatus(trackedFamily, {
+      status: 'running',
+      totalModels: 0,
+      processedModels: 0,
+      eligibleModels: 0,
+      repairRows: 0,
+      progressPercent: 0,
+      message: 'Logging in and discovering Crazy Parts model pages.',
+      startedNow: true,
+    });
   }
 
   const browser = await launchBrowser(config, args.headful);
@@ -817,6 +832,15 @@ async function main() {
     }
     if (args.maxModels > 0) selectedModels = selectedModels.slice(0, args.maxModels);
     console.log(`Selected ${selectedModels.length} model page(s).`);
+    if (trackedFamily) {
+      reportCrazyPartsStatus(trackedFamily, {
+        status: 'running',
+        totalModels: selectedModels.length,
+        processedModels: 0,
+        progressPercent: 0,
+        message: `Reading 0 of ${selectedModels.length} model pages.`,
+      });
+    }
 
     let nextIndex = 0;
     let completed = 0;
@@ -848,6 +872,15 @@ async function main() {
           scrapedModels.push(result);
           completed += 1;
           console.log(`[${completed}/${selectedModels.length}] ${result.heading}: ${result.products.length} products read`);
+          if (trackedFamily && (completed === selectedModels.length || completed % 5 === 0)) {
+            reportCrazyPartsStatus(trackedFamily, {
+              status: 'running',
+              totalModels: selectedModels.length,
+              processedModels: completed,
+              progressPercent: Math.min(94, Math.round((completed / selectedModels.length) * 94)),
+              message: `Reading model pages: ${completed} of ${selectedModels.length}.`,
+            });
+          }
         } catch (error) {
           if (error.code === 'CRAZYPARTS_RATE_LIMIT') {
             fatalError = error;
@@ -864,6 +897,15 @@ async function main() {
           });
           completed += 1;
           console.error(`[${completed}/${selectedModels.length}] ${model.name}: ${error.message}`);
+          if (trackedFamily && (completed === selectedModels.length || completed % 5 === 0)) {
+            reportCrazyPartsStatus(trackedFamily, {
+              status: 'running',
+              totalModels: selectedModels.length,
+              processedModels: completed,
+              progressPercent: Math.min(94, Math.round((completed / selectedModels.length) * 94)),
+              message: `Reading model pages: ${completed} of ${selectedModels.length}; ${failures.length} failed.`,
+            });
+          }
         }
         if (nextIndex < selectedModels.length) await sleep(config.pageDelayMs);
       }
@@ -905,12 +947,33 @@ async function main() {
   const historyPath = path.join(historyDir, `${runId}.json`);
   await fs.writeFile(historyPath, JSON.stringify(rawData, null, 2));
 
+  if (trackedFamily) {
+    reportCrazyPartsStatus(trackedFamily, {
+      status: 'syncing',
+      totalModels: selectedModels.length,
+      processedModels: selectedModels.length,
+      eligibleModels: new Set(summary.repairRows.map((row) => row.model)).size,
+      repairRows: summary.repairRows.length,
+      progressPercent: 95,
+      message: 'Supplier prices captured. Updating and verifying the Admin price list.',
+    });
+  }
+
   const savedWorkbookPath = await buildWorkbook(rawData, config, workbookPath, previewDir);
   console.log(`Workbook updated: ${savedWorkbookPath}`);
   console.log(`Raw run history: ${historyPath}`);
 }
 
 main().catch((error) => {
+  const trackedFamily = trackedFamilyFromArgs(process.argv.slice(2));
+  if (trackedFamily) {
+    reportCrazyPartsStatus(trackedFamily, {
+      status: error.code === 'CRAZYPARTS_RATE_LIMIT' ? 'rate_limited' : 'failed',
+      message: error.code === 'CRAZYPARTS_RATE_LIMIT'
+        ? 'Crazy Parts rate limit is active. The existing Admin prices were kept.'
+        : `Update failed: ${error.message}`,
+    });
+  }
   console.error(`Crazy Parts price monitor failed: ${error.message}`);
   process.exitCode = 1;
 });
