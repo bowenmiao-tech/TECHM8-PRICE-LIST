@@ -107,6 +107,14 @@ Computer product catalogue import completed on 12 August 2026:
 - The three owner-supplied images are stored in the public `product-images` Supabase Storage bucket.
 - The repeatable import source is `supabase/website-migrations/20260812011000_import_repairdesk_computer_products.sql`; its generated payload is `outputs/computer-product-catalog-rebuild/TECHM8_Computer_Products_Import.json`.
 
+Audio, holder, stand, and fan catalogue import completed on 12 August 2026:
+- The two reviewed RepairDesk exports contain 49 products. Every row was matched to its current RepairDesk POS main image.
+- 36 complete new products were imported. Six exact existing products were preserved and only assigned to `Audio > Wireless Earbuds & Headphones`.
+- Headphone adapters use `Cables & Adapters > Audio Cables & Adapters`; wired and wireless headphones use their corresponding `Audio` subcategories. Phone stands, selfie/live stands, laptop stands, and personal fans use their matching fixed POS subcategories.
+- New products are active in POS, hidden online, start at zero total stock, and have no store-inventory rows. Each store therefore begins independently at zero until stocktake updates that store.
+- Seven new products remain excluded because their source cost is zero. The existing Remax G6 is already in POS but is also flagged for a cost correction.
+- The editable cost list is `outputs/audio-holder-fan-catalog-20260812/TECHM8_Audio_Holder_Fan_Import_Review.xlsx`. The repeatable import is `supabase/website-migrations/20260812194702_import_repairdesk_audio_holder_fan_products.sql` with its generated payload in the same output directory.
+
 - Quantity change, cancel, hold, and resume are available.
 - Held carts are stored per store and shared between POS terminals.
 - Restoring a held cart is atomic, so another terminal cannot restore the same cart again.

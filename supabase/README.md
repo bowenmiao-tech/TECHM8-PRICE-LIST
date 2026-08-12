@@ -94,6 +94,16 @@ outputs/computer-product-catalog-rebuild/TECHM8_Computer_Products_Import.json
 
 It imports 137 owner-approved products into existing categories only. Forty-one red review rows are excluded, five exact DualSense products remain untouched, and the two owner-confirmed MSI A13 products are retained as separate new records. All imported rows are active in POS, hidden online, start at zero stock, and have one validated main image. The migration rejects category, SKU, or source-identity conflicts and validates the full catalogue before committing.
 
+The audio, holder, stand, and fan catalogue import is stored in:
+
+```text
+supabase/website-migrations/20260812194702_import_repairdesk_audio_holder_fan_products.sql
+outputs/audio-holder-fan-catalog-20260812/TECHM8_Audio_Holder_Fan_Import.json
+outputs/audio-holder-fan-catalog-20260812/TECHM8_Audio_Holder_Fan_Import_Review.xlsx
+```
+
+It reviews 49 RepairDesk products and validates one current RepairDesk POS image for every row. Thirty-six complete new products are imported, while six exact existing products are preserved and receive only their fixed POS category assignment. Seven new products with zero cost remain excluded, and the existing Remax G6 is listed for a cost correction. Imported products are POS-visible, online-hidden, and start with zero product stock and no store-inventory rows, so every store remains independently at zero until its own stocktake update.
+
 ## POS Repair Tickets
 
 `pos-repair-tickets` is the browser-safe Repair Board endpoint. Repair tickets belong to a store, not to the staff member who created them. Staff identity is kept as the creator/updater/activity actor.
