@@ -558,6 +558,17 @@ function setWidths(sheet, lastRow, widths) {
   });
 }
 
+function safeWorkbookValue(value) {
+  if (typeof value !== 'string') return value;
+  return value
+    .replace(/\u001B\[[0-?]*[ -/]*[@-~]/g, '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '');
+}
+
+function safeWorkbookRows(rows) {
+  return rows.map((row) => row.map(safeWorkbookValue));
+}
+
 async function buildWorkbook(data, config, workbookPath, previewDir) {
   const capturedDisplay = data.capturedAt.replace('T', ' ').replace('+10:00', ' Brisbane');
   const workbook = Workbook.create();
@@ -568,7 +579,7 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
 
   for (const sheet of [prices, source, exceptions, settings]) sheet.showGridLines = false;
 
-  settings.getRange('A1:B8').values = [
+  settings.getRange('A1:B8').values = safeWorkbookRows([
     ['Setting', 'Value'],
     ['GST rate', config.gstRate],
     ['Labour charge', config.labourCharge],
@@ -577,7 +588,7 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     ['Captured at', capturedDisplay],
     ['Scope', data.scope],
     ['Source', config.baseUrl],
-  ];
+  ]);
   settings.getRange('A1:B1').format = { fill: '#123B5D', font: { bold: true, color: '#FFFFFF' } };
   settings.getRange('B2').format.numberFormat = '0%';
   settings.getRange('B3:B4').format.numberFormat = '"$"#,##0.00';
@@ -609,11 +620,11 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
 
   const priceStartRow = 7;
   if (data.repairRows.length) {
-    const values = data.repairRows.map((row) => [
+    const values = safeWorkbookRows(data.repairRows.map((row) => [
       row.brand, row.family, row.model, row.repairType, row.minPartPrice, row.maxPartPrice,
       null, null, row.optionCount, row.stockSummary, row.status,
       capturedDisplay,
-    ]);
+    ]));
     const priceEndRow = priceStartRow + values.length - 1;
     prices.getRange(`A${priceStartRow}:L${priceEndRow}`).values = values;
     prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+'Settings'!$B$3)/'Settings'!$B$4,0)*'Settings'!$B$4`]];
@@ -645,10 +656,10 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
 
   const sourceHeaders = ['Brand', 'Family', 'Model', 'Repair Type', 'Product', 'Member Price ex GST', 'Sydney Stock', 'Melbourne Stock', 'Eligible', 'Product URL', 'Captured'];
   source.getRange('A1:K1').values = [sourceHeaders];
-  const sourceRows = data.sourceRows.length ? data.sourceRows.map((row) => [
+  const sourceRows = data.sourceRows.length ? safeWorkbookRows(data.sourceRows.map((row) => [
     row.brand, row.family, row.model, row.repairType, row.name, row.price,
     row.sydStock, row.melStock, row.available ? 'Yes' : 'No', row.url, capturedDisplay,
-  ]) : [['', '', '', '', 'No matching source products', null, '', '', '', config.baseUrl, capturedDisplay]];
+  ])) : [['', '', '', '', 'No matching source products', null, '', '', '', config.baseUrl, capturedDisplay]];
   source.getRange(`A2:K${sourceRows.length + 1}`).values = sourceRows;
   source.getRange(`F2:F${sourceRows.length + 1}`).format.numberFormat = '"$"#,##0.00';
   source.getRange(`A1:K${sourceRows.length + 1}`).format.wrapText = true;
@@ -659,9 +670,9 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
 
   const exceptionHeaders = ['Brand', 'Model', 'Repair Type', 'Issue', 'Details', 'Model URL'];
   exceptions.getRange('A1:F1').values = [exceptionHeaders];
-  const exceptionRows = data.exceptions.length ? data.exceptions.map((row) => [
+  const exceptionRows = data.exceptions.length ? safeWorkbookRows(data.exceptions.map((row) => [
     row.brand || '', row.model || '', row.repairType || '', row.issue, row.details || '', row.url || '',
-  ]) : [['', '', '', 'No exceptions', '', '']];
+  ])) : [['', '', '', 'No exceptions', '', '']];
   exceptions.getRange(`A2:F${exceptionRows.length + 1}`).values = exceptionRows;
   exceptions.getRange(`A1:F${exceptionRows.length + 1}`).format.wrapText = true;
   const exceptionTable = exceptions.tables.add(`A1:F${exceptionRows.length + 1}`, true, 'ExceptionsTable');
