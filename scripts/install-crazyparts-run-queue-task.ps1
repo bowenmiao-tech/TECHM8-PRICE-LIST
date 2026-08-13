@@ -2,8 +2,12 @@ param()
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$queueScript = Join-Path $PSScriptRoot 'process-crazyparts-run-queue.ps1'
+$hiddenLauncher = Join-Path $PSScriptRoot 'run-crazyparts-queue-hidden.vbs'
 $taskName = 'TECHM8 Crazy Parts Run Queue'
+
+if (-not (Test-Path -LiteralPath $hiddenLauncher)) {
+    throw 'The hidden Auto Price List queue launcher is missing.'
+}
 
 $taskService = New-Object -ComObject 'Schedule.Service'
 $taskService.Connect()
@@ -27,8 +31,8 @@ $trigger.Repetition.StopAtDurationEnd = $false
 $trigger.Enabled = $true
 
 $action = $definition.Actions.Create(0)
-$action.Path = 'powershell.exe'
-$action.Arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$queueScript`""
+$action.Path = 'wscript.exe'
+$action.Arguments = "//B //NoLogo `"$hiddenLauncher`""
 $action.WorkingDirectory = $projectRoot
 
 # TASK_CREATE_OR_UPDATE = 6; TASK_LOGON_INTERACTIVE_TOKEN = 3.
