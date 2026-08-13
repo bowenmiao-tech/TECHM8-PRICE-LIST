@@ -5609,7 +5609,6 @@
           { name: 'Drones & Accessories', icon: 'bi-airplane', description: 'Drones and related accessories' },
           { name: 'Personal Fans', icon: 'bi-fan', description: 'Portable and desktop fans' },
           { name: 'Lighting & Clocks', icon: 'bi-lightbulb', description: 'Lights, lamps, and digital clocks' },
-          { name: 'Earbud Cases', icon: 'bi-earbuds', description: 'Cases and pouches for earbuds' },
           { name: 'Tracker Cases', icon: 'bi-geo-alt', description: 'Cases and holders for tracking devices' },
           { name: 'Other Electronics', icon: 'bi-box-seam', description: 'Electronic products outside other groups' }
         ]
@@ -5618,9 +5617,8 @@
         name: 'Uncategorized',
         icon: 'bi-question-square',
         description: 'Products awaiting category review',
-        subcategories: [
-          { name: 'Uncategorized', icon: 'bi-question-square', description: 'Products awaiting category review' }
-        ]
+        directProducts: true,
+        subcategories: []
       }
     ];
 
@@ -7878,7 +7876,7 @@
       if (/drone/.test(text)) return 'Drones & Accessories';
       if (/fan/.test(text)) return 'Personal Fans';
       if (/clock|light/.test(text)) return 'Lighting & Clocks';
-      if (/airpods?|earbud.*(case|pouch)/.test(text)) return 'Earbud Cases';
+      if (/airpods?|earbud.*(case|pouch)/.test(text)) return 'Other Electronics';
       if (/air\s?tag/.test(text)) return 'Tracker Cases';
       return 'Other Electronics';
     }
@@ -11306,6 +11304,20 @@
             compatible_devices: [{ code: 'IPAD-10', display_name: 'iPad 10th Gen 10.9' }]
           },
           store_inventory: [{ store_slug: 'park-ridge', quantity: 2 }]
+        },
+        {
+          id: 1003,
+          sku: 'TM8-MISC-1003',
+          name: 'Uncategorized Accessory',
+          cost_price: 1,
+          sale_price: 5,
+          barcode: '2999000010031',
+          pos_category: {
+            id: 999,
+            category_name: 'Uncategorized',
+            subcategory_name: 'Uncategorized'
+          },
+          stock_quantity: 0
         }
       ] });
       const categoryMappingSamples = normalizeProducts({ rows: [
@@ -11372,6 +11384,12 @@
       const categoryCards = Array.from(els.productGrid.querySelectorAll('[data-open-category]'));
       const categoryCardNames = categoryCards.map(card => card.dataset.openCategory);
       const emptyCategoryCardCount = categoryCards.filter(card => card.classList.contains('is-empty')).length;
+      const uncategorizedCategoryCard = categoryCards.find(card => card.dataset.openCategory === 'Uncategorized');
+      uncategorizedCategoryCard?.click();
+      const uncategorizedOpensProductsDirectly = state.category === 'Uncategorized'
+        && state.productBrowseMode === 'category'
+        && subcategories('Uncategorized').length === 0
+        && Boolean(document.querySelector('[data-add="1003"]'));
       state.category = 'Tablet Cases';
       state.productBrowseMode = 'subcategories';
       renderProductBrowser();
@@ -11483,6 +11501,7 @@
         fixedCategoryCount: categoryCards.length,
         fixedCategoryNames: categoryCardNames,
         emptyCategoryCardCount,
+        uncategorizedOpensProductsDirectly,
         fixedSubcategoryCount: POS_PRODUCT_CATEGORIES.reduce((total, category) => total + category.subcategories.length, 0),
         tabletSubcategoryNames: subcategoryCardNames,
         emptyTabletSubcategoryCardCount: emptySubcategoryCardCount,
@@ -11514,7 +11533,17 @@
       });
 
       const catalogTestParams = new URLSearchParams(window.location.search);
-      if (catalogTestParams.has('catalog-watch-band')) {
+      if (catalogTestParams.has('catalog-uncategorized')) {
+        state.products = products;
+        state.search = '';
+        state.category = 'Uncategorized';
+        state.subcategory = '';
+        state.productBrowseMode = 'category';
+        state.cart = [];
+        setActiveView('products');
+        renderProductBrowser();
+        renderCart();
+      } else if (catalogTestParams.has('catalog-watch-band')) {
         state.products = watchBandProducts;
         state.search = '';
         renderProductBrowser();
@@ -13067,7 +13096,7 @@
       if (categoryCard) {
         state.category = categoryCard.dataset.openCategory;
         state.subcategory = '';
-        state.productBrowseMode = 'subcategories';
+        state.productBrowseMode = categoryDefinition(state.category)?.directProducts ? 'category' : 'subcategories';
         els.productGrid.scrollTop = 0;
         renderProductBrowser();
         return;

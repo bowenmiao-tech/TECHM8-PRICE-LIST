@@ -100,8 +100,8 @@ POS product hierarchy:
 | Mounts & Holders | Vehicle Mounts; Phone & Tablet Stands; Laptop Stands; Monitor Mounts; Selfie Sticks & Live Stands; Wallets, Card Holders & Grips |
 | Watch Accessories | Watch Bands; Watch Cases |
 | Computer & Gaming | PC Components; Keyboards, Mice & Accessories; Other Computer Accessories; Hubs & Docks; Networking; Storage; Consoles & Controllers; Gaming & Simulation |
-| Other Electronics | Drones & Accessories; Personal Fans; Lighting & Clocks; Earbud Cases; Tracker Cases; Other Electronics |
-| Uncategorized | Uncategorized |
+| Other Electronics | Drones & Accessories; Personal Fans; Lighting & Clocks; Tracker Cases; Other Electronics |
+| Uncategorized | Products display immediately without a second-level category |
 
 Computer product catalogue import completed on 12 August 2026:
 - The reviewed source contained 183 products. The 41 owner-marked red rows were excluded and the 5 exact existing DualSense products were preserved without changes.
@@ -128,7 +128,7 @@ Watch band catalogue import completed on 13 August 2026:
 Miscellaneous accessory catalogue import completed on 14 August 2026:
 - The reviewed RepairDesk export contains 34 products. All 34 have a working RepairDesk main image, a unique POS SKU, and a unique internal EAN-13 barcode.
 - Fifteen colour variants are grouped into four selectable POS cards: MagSafe Silicone Phone Grip, MagSafe Multi-Wallet, MagSafe Card Wallet, and Adhesive Silicone Card Holder.
-- Nineteen products use `Mounts & Holders > Wallets, Card Holders & Grips`; the remaining classified products use the matching `Other Electronics` subcategories. Eight products awaiting manual review use `Uncategorized > Uncategorized`.
+- Nineteen products use `Mounts & Holders > Wallets, Card Holders & Grips`; the remaining classified products use the matching `Other Electronics` subcategories. This import initially assigns nine products to the top-level `Uncategorized` view; later stocktake corrections may add more. The view opens its products directly without showing a second-level category.
 - All products are active in POS, hidden from the online storefront, start at zero total stock, and have no store-inventory rows. Each store therefore remains independently at zero until stocktake updates that store.
 - The owner-confirmed zero cost and zero retail values are preserved intentionally. The repeatable generator is `scripts/build-product-28-catalog-import.mjs`; the generated payload and review workbook are under `outputs/product-28-catalog-review-20260813/`; the deployed migration is `supabase/website-migrations/20260814004500_import_repairdesk_misc_accessory_catalog.sql`.
 

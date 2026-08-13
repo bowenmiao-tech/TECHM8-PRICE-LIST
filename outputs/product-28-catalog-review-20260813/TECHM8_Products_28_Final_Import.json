@@ -335,9 +335,9 @@
       "brand": "CTF",
       "model": null,
       "database_category_slug": "accessories",
-      "pos_main_category": "Other Electronics",
-      "pos_subcategory": "Earbud Cases",
-      "short_description": "Earbud Cases",
+      "pos_main_category": "Uncategorized",
+      "pos_subcategory": "Uncategorized",
+      "short_description": "Uncategorized",
       "condition_label": "Brand New",
       "compatibility": null,
       "cost_price": 5,
@@ -365,8 +365,8 @@
         "owner_confirmed_retail": 32.99,
         "owner_confirmed_at": "2026-08-14",
         "image_source": "repairdesk_pos",
-        "pos_main_category": "Other Electronics",
-        "pos_subcategory": "Earbud Cases"
+        "pos_main_category": "Uncategorized",
+        "pos_subcategory": "Uncategorized"
       }
     },
     {

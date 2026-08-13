@@ -40,7 +40,7 @@ const productPlan = {
   '10853': ['MagSafe Multi-Wallet - Brown', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', 'TM8-GRP-MISC-MAGSAFE-MULTI-WALLET', 'Brown'],
   '10852': ['MagSafe Multi-Wallet - Black', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', 'TM8-GRP-MISC-MAGSAFE-MULTI-WALLET', 'Black'],
   '10851': ['MagSafe Multi-Wallet - Grey', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', 'TM8-GRP-MISC-MAGSAFE-MULTI-WALLET', 'Grey'],
-  '10322': ['CTF Earbuds Pouch', 'CTF', 'accessories', 'Other Electronics', 'Earbud Cases', null, null],
+  '10322': ['CTF Earbuds Pouch', 'CTF', 'accessories', 'Uncategorized', 'Uncategorized', null, null],
   '10321': ['CTF Car Holder & Grip MagSafe Stand', 'CTF', 'accessories', 'Uncategorized', 'Uncategorized', null, null],
   '8974': ['Card Strap Holder', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', null, null],
   '8633': ['TechM8 Small Bag', 'TechM8', 'accessories', 'Uncategorized', 'Uncategorized', null, null],
