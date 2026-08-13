@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-pos-build" content="2026-08-13-bowen-direct-arrangement">
+  <meta name="techm8-pos-build" content="2026-08-13-watch-band-size-options">
   <title>TECHM8 POS</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
@@ -1591,6 +1591,31 @@
         #edf1f2;
     }
 
+    .product-size-options {
+      min-height: 20px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .product-size-chip,
+    .product-variant-size {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 20px;
+      padding: 2px 7px;
+      border: 1px solid #cbd8dc;
+      border-radius: 5px;
+      color: #29434d;
+      background: #f4f8f9;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
     .product-variant-fit {
       color: var(--tm-muted);
       font-size: 12px;
@@ -1658,6 +1683,16 @@
       width: 20px;
       height: 20px;
       flex-basis: 20px;
+    }
+
+    .product-variant-size {
+      width: fit-content;
+      min-height: 32px;
+      padding: 6px 12px;
+      border-color: rgba(7, 137, 111, 0.34);
+      color: #08765f;
+      background: #e9f7f3;
+      font-size: 14px;
     }
 
     .product-variant-option-name {
@@ -10018,6 +10053,39 @@
       `;
     }
 
+    function isWatchBandProduct(product) {
+      return String(product?.product_family || '').trim().toLowerCase() === 'watch_band'
+        || String(product?.product_group_code || '').toUpperCase().startsWith('TM8-GRP-WB-');
+    }
+
+    function productVariantSizeName(product) {
+      return String(product?.variant_name || '').trim();
+    }
+
+    function productSizes(product) {
+      if (!isWatchBandProduct(product)) return [];
+      const variants = Array.isArray(product.variant_options) ? product.variant_options : [product];
+      const unique = new Map();
+      variants.forEach(variant => {
+        const size = productVariantSizeName(variant);
+        if (!size) return;
+        const key = size.toLowerCase();
+        if (!unique.has(key)) unique.set(key, size);
+      });
+      return Array.from(unique.values()).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    }
+
+    function productSizeOptions(product) {
+      if (!isWatchBandProduct(product)) return '';
+      const sizes = productSizes(product);
+      if (!sizes.length) return '';
+      return `
+        <div class="product-size-options" aria-label="Available sizes: ${escapeHtml(sizes.join(', '))}">
+          ${sizes.map(size => `<span class="product-size-chip">${escapeHtml(size)}</span>`).join('')}
+        </div>
+      `;
+    }
+
     const tabletCaseDeviceOrder = new Map([
       ['IPAD-97-LEGACY', 20130],
       ['IPAD-MINI45', 20150],
@@ -10125,7 +10193,7 @@
       });
 
       grouped.forEach((variants, groupCode) => {
-        if (variants.length === 1) {
+        if (variants.length === 1 && !isWatchBandProduct(variants[0])) {
           tiles.push({
             ...variants[0],
             name: variants[0].product_group_name || variants[0].name,
@@ -10315,13 +10383,16 @@
           : money(product.sale_price);
         const colours = productColours(product);
         const colourLabel = colours.length ? `. Available colours: ${colours.join(', ')}` : '';
+        const sizes = productSizes(product);
+        const sizeLabel = sizes.length ? `. Available sizes: ${sizes.join(', ')}` : '';
         return `
-          <article class="product-card" ${actionAttribute} ${arrangeAttribute} role="button" tabindex="${state.arrangementMode ? '-1' : '0'}" aria-label="${actionLabel} ${escapeHtml(product.name)}${escapeHtml(colourLabel)}">
+          <article class="product-card" ${actionAttribute} ${arrangeAttribute} role="button" tabindex="${state.arrangementMode ? '-1' : '0'}" aria-label="${actionLabel} ${escapeHtml(product.name)}${escapeHtml(colourLabel)}${escapeHtml(sizeLabel)}">
             ${arrangeAttribute ? '<span class="arrangement-drag-handle" aria-label="Drag product"><i class="bi bi-grip-vertical"></i></span>' : ''}
             <img class="product-image" src="${escapeHtml(productImage(product))}" alt="${escapeHtml(product.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" ${index < 4 ? 'fetchpriority="high"' : ''} data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
               ${productColourSwatches(product)}
+              ${productSizeOptions(product)}
               <div class="product-price">
                 <span class="sale-price">${priceLabel}</span>
                 <span class="stock-pill ${stockClass}">${stock} in stock</span>
@@ -11084,6 +11155,10 @@
       return state.products
         .filter(product => product.product_group_code === groupCode)
         .sort((a, b) => {
+          if (isWatchBandProduct(a) || isWatchBandProduct(b)) {
+            return productVariantSizeName(a).localeCompare(productVariantSizeName(b), undefined, { numeric: true })
+              || String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true });
+          }
           return getProductStock(b) - getProductStock(a)
             || String(a.variant_color || a.variant_name || a.name).localeCompare(
               String(b.variant_color || b.variant_name || b.name),
@@ -11096,7 +11171,8 @@
     function openProductVariantModal(groupCode) {
       const variants = productVariantsForGroup(groupCode);
       if (!variants.length) return;
-      if (variants.length === 1) {
+      const watchBandGroup = isWatchBandProduct(variants[0]);
+      if (variants.length === 1 && !watchBandGroup) {
         if (state.stocktakeMode) {
           openStocktakeEditor(variants[0].id);
         } else {
@@ -11112,7 +11188,9 @@
         image_url: first.product_group_image_url || first.image_url
       };
       const compatibleDevices = (first.compatible_devices || []).map(device => device.name).filter(Boolean);
-      const fitCopy = compatibleDevices.length
+      const fitCopy = watchBandGroup
+        ? (state.stocktakeMode ? 'Choose the size to edit' : 'Choose the size to add')
+        : compatibleDevices.length
         ? `Fits ${compatibleDevices.join(', ')}`
         : (first.fit_profile_name ? `Fit profile: ${first.fit_profile_name}` : (state.stocktakeMode ? 'Choose the exact product to edit' : 'Choose the colour to add'));
 
@@ -11128,12 +11206,17 @@
       els.productVariantList.innerHTML = variants.map((variant, index) => {
         const stock = getProductStock(variant);
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
-        const optionName = variant.variant_color || variant.variant_name || variant.name;
+        const optionName = watchBandGroup
+          ? (variant.variant_name || variant.name)
+          : (variant.variant_color || variant.variant_name || variant.name);
+        const optionMeta = watchBandGroup
+          ? `<span class="product-variant-size">${escapeHtml(optionName)}</span>`
+          : `<span class="product-variant-colour">${productColourSwatch(optionName)}<span>${escapeHtml(optionName)}</span></span>`;
         return `
           <button class="product-variant-option" type="button" data-add-variant="${escapeHtml(variant.id)}" aria-label="${state.stocktakeMode ? 'Edit' : 'Add'} ${escapeHtml(variant.name)}, ${stock} in stock">
             <img class="product-variant-option-image" src="${escapeHtml(productImage(variant))}" alt="${escapeHtml(variant.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" data-fallback="${escapeHtml(productPlaceholderImage(variant))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
             <span class="product-variant-option-body">
-              <span class="product-variant-colour">${productColourSwatch(optionName)}<span>${escapeHtml(optionName)}</span></span>
+              ${optionMeta}
               <span class="product-variant-option-name">${escapeHtml(variant.name)}</span>
               <span class="product-variant-option-footer">
                 <span class="product-variant-option-price">${money(variant.sale_price)}</span>
@@ -11290,6 +11373,80 @@
       renderProductBrowser();
       const exactBarcodeDirectCard = Boolean(document.querySelector('[data-add="1002"]'));
 
+      const watchBandProducts = normalizeProducts({ rows: [
+        {
+          id: 2001,
+          sku: 'TM8-WB-2001',
+          name: 'Fabric Apple Watch Band - Black - 38/40mm',
+          category_name: 'Watch Accessories',
+          subcategory_name: 'Watch Bands',
+          cost_price: 5,
+          sale_price: 30,
+          stock_quantity: 0,
+          image_url: 'https://example.com/watch-band-small.jpg',
+          product_group_code: 'TM8-GRP-WB-FABRIC-BLACK',
+          product_group_name: 'Fabric Apple Watch Band - Black',
+          product_family: 'watch_band',
+          variant_name: '38/40mm',
+          variant_color: 'Black'
+        },
+        {
+          id: 2002,
+          sku: 'TM8-WB-2002',
+          name: 'Fabric Apple Watch Band - Black - 42/44mm',
+          category_name: 'Watch Accessories',
+          subcategory_name: 'Watch Bands',
+          cost_price: 5,
+          sale_price: 30,
+          stock_quantity: 0,
+          image_url: 'https://example.com/watch-band-large.jpg',
+          product_group_code: 'TM8-GRP-WB-FABRIC-BLACK',
+          product_group_name: 'Fabric Apple Watch Band - Black',
+          product_family: 'watch_band',
+          variant_name: '42/44mm',
+          variant_color: 'Black'
+        },
+        {
+          id: 2003,
+          sku: 'TM8-WB-2003',
+          name: 'Ocean Band - Pink - 38/40mm',
+          category_name: 'Watch Accessories',
+          subcategory_name: 'Watch Bands',
+          cost_price: 2,
+          sale_price: 35,
+          stock_quantity: 0,
+          image_url: 'https://example.com/watch-band-pink.jpg',
+          product_group_code: 'TM8-GRP-WB-OCEAN-PINK',
+          product_group_name: 'Ocean Band - Pink',
+          product_family: 'watch_band',
+          variant_name: '38/40mm',
+          variant_color: 'Pink'
+        }
+      ] });
+      state.products = watchBandProducts;
+      state.search = '';
+      state.productBrowseMode = 'all';
+      renderProductBrowser();
+      const watchBandTiles = productTiles(state.products);
+      const watchBandCard = document.querySelector('[data-open-product-group="TM8-GRP-WB-FABRIC-BLACK"]');
+      const watchBandSizeChips = Array.from(watchBandCard?.querySelectorAll('.product-size-chip') || [])
+        .map(element => element.textContent.trim());
+      openProductVariantModal('TM8-GRP-WB-FABRIC-BLACK');
+      const watchBandModalSizes = Array.from(els.productVariantList.querySelectorAll('.product-variant-size'))
+        .map(element => element.textContent.trim());
+      const watchBandModalUsesColourSwatches = els.productVariantList.querySelectorAll('.product-variant-colour').length > 0;
+      closeProductVariantModal();
+      const singleSizeWatchBandCard = document.querySelector('[data-open-product-group="TM8-GRP-WB-OCEAN-PINK"]');
+      openProductVariantModal('TM8-GRP-WB-OCEAN-PINK');
+      const singleSizeWatchBandModalSizes = Array.from(els.productVariantList.querySelectorAll('.product-variant-size'))
+        .map(element => element.textContent.trim());
+      closeProductVariantModal();
+      state.products = products;
+      state.search = '2999000010024';
+      state.productBrowseMode = 'all';
+      renderProductBrowser();
+      const exactSearchCards = els.productGrid.querySelectorAll('.product-card').length;
+
       document.body.dataset.catalogTestResult = JSON.stringify({
         normalized: products.length,
         fixedCategoryCount: categoryCards.length,
@@ -11315,11 +11472,23 @@
         zeroStockAdded,
         modalClosedAfterAdd: !els.productVariantModal.classList.contains('show'),
         exactBarcodeDirectCard,
-        exactSearchCards: els.productGrid.querySelectorAll('.product-card').length
+        watchBandTileCount: watchBandTiles.length,
+        watchBandCardRendered: Boolean(watchBandCard),
+        watchBandSizeChips,
+        watchBandModalSizes,
+        watchBandModalUsesColourSwatches,
+        singleSizeWatchBandCardRendered: Boolean(singleSizeWatchBandCard),
+        singleSizeWatchBandModalSizes,
+        exactSearchCards
       });
 
       const catalogTestParams = new URLSearchParams(window.location.search);
-      if (catalogTestParams.has('catalog-modal')) {
+      if (catalogTestParams.has('catalog-watch-band')) {
+        state.products = watchBandProducts;
+        state.search = '';
+        renderProductBrowser();
+        openProductVariantModal('TM8-GRP-WB-FABRIC-BLACK');
+      } else if (catalogTestParams.has('catalog-modal')) {
         state.search = '';
         renderProductBrowser();
         openProductVariantModal('TM8-GRP-IPAD10-HDC');

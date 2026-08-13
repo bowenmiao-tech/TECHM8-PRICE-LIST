@@ -84,7 +84,7 @@ Completed product-sale flow:
 - The entire product card adds the item to the cart.
 - Zero-stock products are intentionally allowed to be sold.
 - Grouped products use one POS/website card and one main image. Sellable colours remain separate product rows with their own SKU, barcode, cost, price, and store stock.
-- Clicking a multi-colour product group opens a compact colour selector; a one-variant group and legacy products still add directly.
+- Clicking a multi-colour product group opens a compact colour selector. Watch bands open a size selector even when a style currently has only one available size; ordinary one-variant groups and legacy products still add directly.
 - An exact SKU or barcode search bypasses grouping and returns the precise sellable variant.
 
 POS product hierarchy:
@@ -117,6 +117,12 @@ Audio, holder, stand, and fan catalogue import completed on 12 August 2026:
 - New products are active in POS, hidden online, start at zero total stock, and have no store-inventory rows. Each store therefore begins independently at zero until stocktake updates that store.
 - The owner-confirmed costs from 13 August 2026 enabled the final seven products and corrected the existing Remax G6 cost. No reviewed product remains blocked by missing cost.
 - The review workbook and confirmed overrides are under `outputs/audio-holder-fan-catalog-20260812/`. The repeatable migrations are `supabase/website-migrations/20260812194702_import_repairdesk_audio_holder_fan_products.sql` and `supabase/website-migrations/20260813001836_finalize_audio_holder_fan_costs.sql`.
+
+Watch band catalogue import completed on 13 August 2026:
+- The reviewed RepairDesk export contained 66 rows. Five exact duplicate rows were consolidated, leaving 61 sellable size variants under 35 style-and-colour groups.
+- POS shows one card per band style and colour. Clicking the card opens the available `38/40mm` and/or `42/44mm` size choices before adding the exact SKU to the cart.
+- Every size variant keeps its own SKU, barcode, cost, price, image, and store inventory. All stores start independently at zero stock, while zero stock remains sellable in POS.
+- Products are assigned to `Watch Accessories > Watch Bands`, are visible in POS, and remain hidden from the online storefront. The repeatable import is `supabase/website-migrations/20260813121131_import_repairdesk_watch_band_catalog.sql`.
 
 - Quantity change, cancel, hold, and resume are available.
 - Held carts are stored per store and shared between POS terminals.
