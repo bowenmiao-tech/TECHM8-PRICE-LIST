@@ -28,7 +28,7 @@ $trigger.Enabled = $true
 
 $action = $definition.Actions.Create(0)
 $action.Path = 'powershell.exe'
-$action.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$queueScript`""
+$action.Arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$queueScript`""
 $action.WorkingDirectory = $projectRoot
 
 # TASK_CREATE_OR_UPDATE = 6; TASK_LOGON_INTERACTIVE_TOKEN = 3.
