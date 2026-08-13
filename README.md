@@ -67,7 +67,7 @@ Completed product-sale flow:
 - Product browsing opens on a category grid; staff can enter a category or switch to `All Products` without losing the fixed checkout panel.
 - Product cards show one main image, name, sale price, and stock for the selected store.
 - Search supports product name, SKU, and barcode.
-- The POS always shows these fixed retail groups, including empty groups: `Phone Cases`, `Tablet Cases`, `Screen Protection`, `Cables & Adapters`, `Charging & Power`, `Audio`, `Mounts & Holders`, `Watch Accessories`, `Computer & Gaming`, and `Other Electronics`.
+- The POS always shows these fixed retail groups, including empty groups: `Phone Cases`, `Tablet Cases`, `Screen Protection`, `Cables & Adapters`, `Charging & Power`, `Audio`, `Mounts & Holders`, `Watch Accessories`, `Computer & Gaming`, `Other Electronics`, and `Uncategorized`.
 - Each main group opens a fixed second-level category grid before showing products. Empty second-level groups remain visible.
 - Existing API categories are mapped into the hierarchy in the POS display layer. Source product records are not renamed or rewritten, and search still includes the original category and subcategory.
 - `Computer & Gaming > Keyboards, Mice & Accessories` contains the 41 reviewed keyboards, mice, keyboard/mouse sets, keycaps, and mouse pads. `Other Computer Accessories` contains the 1 webcam and 8 laptop bags/sleeves.
@@ -101,6 +101,7 @@ POS product hierarchy:
 | Watch Accessories | Watch Bands; Watch Cases |
 | Computer & Gaming | PC Components; Keyboards, Mice & Accessories; Other Computer Accessories; Hubs & Docks; Networking; Storage; Consoles & Controllers; Gaming & Simulation |
 | Other Electronics | Drones & Accessories; Personal Fans; Lighting & Clocks; Earbud Cases; Tracker Cases; Other Electronics |
+| Uncategorized | Uncategorized |
 
 Computer product catalogue import completed on 12 August 2026:
 - The reviewed source contained 183 products. The 41 owner-marked red rows were excluded and the 5 exact existing DualSense products were preserved without changes.
@@ -123,6 +124,13 @@ Watch band catalogue import completed on 13 August 2026:
 - POS shows one card per band style and colour. Clicking the card opens the available `38/40mm` and/or `42/44mm` size choices before adding the exact SKU to the cart.
 - Every size variant keeps its own SKU, barcode, cost, price, image, and store inventory. All stores start independently at zero stock, while zero stock remains sellable in POS.
 - Products are assigned to `Watch Accessories > Watch Bands`, are visible in POS, and remain hidden from the online storefront. The repeatable import is `supabase/website-migrations/20260813121131_import_repairdesk_watch_band_catalog.sql`.
+
+Miscellaneous accessory catalogue import completed on 14 August 2026:
+- The reviewed RepairDesk export contains 34 products. All 34 have a working RepairDesk main image, a unique POS SKU, and a unique internal EAN-13 barcode.
+- Fifteen colour variants are grouped into four selectable POS cards: MagSafe Silicone Phone Grip, MagSafe Multi-Wallet, MagSafe Card Wallet, and Adhesive Silicone Card Holder.
+- Nineteen products use `Mounts & Holders > Wallets, Card Holders & Grips`; the remaining classified products use the matching `Other Electronics` subcategories. Eight products awaiting manual review use `Uncategorized > Uncategorized`.
+- All products are active in POS, hidden from the online storefront, start at zero total stock, and have no store-inventory rows. Each store therefore remains independently at zero until stocktake updates that store.
+- The owner-confirmed zero cost and zero retail values are preserved intentionally. The repeatable generator is `scripts/build-product-28-catalog-import.mjs`; the generated payload and review workbook are under `outputs/product-28-catalog-review-20260813/`; the deployed migration is `supabase/website-migrations/20260814004500_import_repairdesk_misc_accessory_catalog.sql`.
 
 - Quantity change, cancel, hold, and resume are available.
 - Held carts are stored per store and shared between POS terminals.
