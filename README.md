@@ -126,11 +126,11 @@ Watch band catalogue import completed on 13 August 2026:
 - Products are assigned to `Watch Accessories > Watch Bands`, are visible in POS, and remain hidden from the online storefront. The repeatable import is `supabase/website-migrations/20260813121131_import_repairdesk_watch_band_catalog.sql`.
 
 Miscellaneous accessory catalogue import completed on 14 August 2026:
-- The reviewed RepairDesk export contains 34 products. All 34 have a working RepairDesk main image, a unique POS SKU, and a unique internal EAN-13 barcode.
-- Fifteen colour variants are grouped into four selectable POS cards: MagSafe Silicone Phone Grip, MagSafe Multi-Wallet, MagSafe Card Wallet, and Adhesive Silicone Card Holder.
-- Nineteen products use `Mounts & Holders > Wallets, Card Holders & Grips`; the remaining classified products use the matching `Other Electronics` subcategories. This import initially assigns nine products to the top-level `Uncategorized` view; later stocktake corrections may add more. The view opens its products directly without showing a second-level category.
+- The catalogue contains 36 products: 34 from `products (28).xlsx`, plus the Blue and Pink Silicone Card Holder variants recovered from the complete `products (21).xlsx` export. All 36 have a working RepairDesk main image, a unique POS SKU, and a unique internal EAN-13 barcode.
+- Seventeen colour variants are grouped into four selectable POS cards: MagSafe Silicone Phone Grip, MagSafe Multi-Wallet, MagSafe Card Wallet, and the complete five-colour Adhesive Silicone Card Holder.
+- Twenty-one products use `Mounts & Holders > Wallets, Card Holders & Grips`; the remaining classified products use the matching `Other Electronics` subcategories. This import initially assigns nine products to the top-level `Uncategorized` view; later stocktake corrections may add more. The view opens its products directly without showing a second-level category.
 - All products are active in POS, hidden from the online storefront, start at zero total stock, and have no store-inventory rows. Each store therefore remains independently at zero until stocktake updates that store.
-- The owner-confirmed zero cost and zero retail values are preserved intentionally. The repeatable generator is `scripts/build-product-28-catalog-import.mjs`; the generated payload and review workbook are under `outputs/product-28-catalog-review-20260813/`; the deployed migration is `supabase/website-migrations/20260814004500_import_repairdesk_misc_accessory_catalog.sql`.
+- The owner-confirmed zero cost and zero retail values are preserved intentionally. The repeatable generator is `scripts/build-product-28-catalog-import.mjs`; the generated payload and review workbook are under `outputs/product-28-catalog-review-20260813/`; the deployed migrations are `supabase/website-migrations/20260813144142_add_missing_silicone_card_holder_colors.sql` and `supabase/website-migrations/20260814004500_import_repairdesk_misc_accessory_catalog.sql`.
 
 - Quantity change, cancel, hold, and resume are available.
 - Held carts are stored per store and shared between POS terminals.

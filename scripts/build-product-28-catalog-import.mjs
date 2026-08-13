@@ -4,6 +4,7 @@ import { FileBlob, SpreadsheetFile } from '@oai/artifact-tool';
 
 const workspaceRoot = 'D:/program/TECHM8 PRICE LIST';
 const sourcePath = 'E:/ontimefile/products (28).xlsx';
+const supplementalSourcePath = 'E:/ontimefile/products (21).xlsx';
 const reviewPath = `${workspaceRoot}/outputs/product-28-catalog-review-20260813/TECHM8_Products_28_Review.xlsx`;
 const imageMapPath = `${workspaceRoot}/.codex-temp/products-28-import/repairdesk-images.json`;
 const outputDir = `${workspaceRoot}/outputs/product-28-catalog-review-20260813`;
@@ -59,6 +60,8 @@ const productPlan = {
   '7148': ['Adhesive Silicone Card Holder - Black', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', 'TM8-GRP-MISC-ADHESIVE-CARD-HOLDER', 'Black'],
   '7147': ['Adhesive Silicone Card Holder - Green', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', 'TM8-GRP-MISC-ADHESIVE-CARD-HOLDER', 'Green'],
   '7146': ['Adhesive Silicone Card Holder - Yellow', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', 'TM8-GRP-MISC-ADHESIVE-CARD-HOLDER', 'Yellow'],
+  '7145': ['Adhesive Silicone Card Holder - Blue', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', 'TM8-GRP-MISC-ADHESIVE-CARD-HOLDER', 'Blue'],
+  '7144': ['Adhesive Silicone Card Holder - Pink', 'OZTECHM8', 'holder-car-play-charger', 'Mounts & Holders', 'Wallets, Card Holders & Grips', 'TM8-GRP-MISC-ADHESIVE-CARD-HOLDER', 'Pink'],
   '6769': ['Shop Credit', 'OZTECHM8', 'accessories', 'Uncategorized', 'Uncategorized', null, null],
   '6062': ['RGB Digital Clock', 'OZTECHM8', 'accessories', 'Other Electronics', 'Lighting & Clocks', null, null],
   '6061': ['Music-Reactive RGB Light', 'OZTECHM8', 'accessories', 'Other Electronics', 'Lighting & Clocks', null, null],
@@ -80,6 +83,19 @@ const skuOverrides = {
   '10321': 'TM8-MISC-10321',
   '6021': 'TM8-MISC-6021',
   '5957': 'TM8-MISC-5957',
+};
+
+const supplementalProductPlan = {
+  '7145': {
+    cost: 2,
+    retail: 10,
+    image_url: 'https://dghyt15qon7us.cloudfront.net/images/productTheme/Inventory/small/1663820692.jpg',
+  },
+  '7144': {
+    cost: 2,
+    retail: 10,
+    image_url: 'https://dghyt15qon7us.cloudfront.net/images/productTheme/Inventory/small/1663820625.jpg',
+  },
 };
 
 async function readSheet(filePath, sheetName = 'Sheet1') {
@@ -120,11 +136,25 @@ async function validateImageUrls(products) {
 await fs.mkdir(outputDir, { recursive: true });
 
 const sourceRecords = recordsFromRows(await readSheet(sourcePath));
+const supplementalSourceRecords = recordsFromRows(await readSheet(supplementalSourcePath))
+  .filter((row) => supplementalProductPlan[text(row['Item ID'])]);
+sourceRecords.push(...supplementalSourceRecords);
 const reviewRows = await readSheet(reviewPath, 'Product Review');
 const reviewRecords = recordsFromRows(reviewRows, 0, 1);
 const images = JSON.parse(await fs.readFile(imageMapPath, 'utf8'));
 const reviewById = new Map(reviewRecords.map((row) => [text(row['Item ID']), row]));
 const imageById = new Map(images.map((row) => [text(row.id), row]));
+for (const [sourceExternalId, supplement] of Object.entries(supplementalProductPlan)) {
+  reviewById.set(sourceExternalId, {
+    'Item ID': sourceExternalId,
+    'Final Cost': supplement.cost,
+    'Final Retail': supplement.retail,
+  });
+  imageById.set(sourceExternalId, {
+    id: sourceExternalId,
+    image_url: supplement.image_url,
+  });
+}
 
 const products = sourceRecords.map((source) => {
   const sourceExternalId = text(source['Item ID']);
@@ -182,7 +212,7 @@ const products = sourceRecords.map((source) => {
   };
 });
 
-if (products.length !== 34) throw new Error(`Expected 34 products, received ${products.length}`);
+if (products.length !== 36) throw new Error(`Expected 36 products, received ${products.length}`);
 if (new Set(products.map((product) => product.sku)).size !== products.length) throw new Error('Generated SKU values are not unique');
 if (new Set(products.map((product) => product.upc)).size !== products.length) throw new Error('Generated barcode values are not unique');
 if (new Set(products.map((product) => product.source_external_id)).size !== products.length) throw new Error('Source item IDs are not unique');
@@ -282,8 +312,8 @@ from jsonb_to_recordset($catalog$${productJson}$catalog$::jsonb) as x(
 
 do $$
 begin
-  if (select count(*) from misc_accessory_product_input) <> 34 then
-    raise exception 'Expected 34 miscellaneous accessory products.';
+  if (select count(*) from misc_accessory_product_input) <> 36 then
+    raise exception 'Expected 36 miscellaneous accessory products.';
   end if;
 
   if (select count(*) from misc_accessory_group_input) <> 4 then
@@ -486,7 +516,7 @@ begin
       and product.stock_quantity = 0
       and coalesce(btrim(product.image_url), '') <> ''
       and taxonomy.active
-  ) <> 34 then
+  ) <> 36 then
     raise exception 'Miscellaneous accessory product validation failed.';
   end if;
 
