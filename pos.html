@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-pos-build" content="2026-08-13-pos-catalog-arrangement">
+  <meta name="techm8-pos-build" content="2026-08-13-bowen-direct-arrangement">
   <title>TECHM8 POS</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
@@ -1111,14 +1111,6 @@
     .sortable-chosen {
       border-color: var(--tm-green) !important;
       box-shadow: 0 12px 30px rgba(7, 137, 111, 0.18) !important;
-    }
-
-    .arrangement-admin-modal {
-      width: min(480px, calc(100vw - 28px));
-    }
-
-    .arrangement-admin-fields {
-      grid-template-columns: 1fr;
     }
 
     .product-image {
@@ -5094,33 +5086,6 @@
     </form>
   </div>
 
-  <div id="arrangementAdminModal" class="modal-backdrop" aria-hidden="true">
-    <form id="arrangementAdminForm" class="special-modal arrangement-admin-modal" role="dialog" aria-modal="true" aria-labelledby="arrangementAdminTitle">
-      <div class="customer-modal-header">
-        <div class="customer-modal-icon"><i class="bi bi-shield-lock"></i></div>
-        <div>
-          <h2 id="arrangementAdminTitle" class="customer-modal-title">Administrator verification</h2>
-          <div class="customer-modal-subtitle">Sign in with the Bowen administrator account to arrange POS.</div>
-        </div>
-      </div>
-      <div class="special-fields arrangement-admin-fields">
-        <label>
-          Admin account
-          <input id="arrangementAdminEmail" type="email" autocomplete="username" required>
-        </label>
-        <label>
-          Password
-          <input id="arrangementAdminPassword" type="password" autocomplete="current-password" required>
-        </label>
-      </div>
-      <div id="arrangementAdminError" class="special-error" role="alert"></div>
-      <div class="special-actions">
-        <button id="arrangementAdminCancel" class="soft-action" type="button">Cancel</button>
-        <button id="arrangementAdminSubmit" class="pay-action" type="submit"><i class="bi bi-unlock"></i> Verify</button>
-      </div>
-    </form>
-  </div>
-
   <div id="refundModal" class="modal-backdrop" aria-hidden="true">
     <form id="refundForm" class="special-modal refund-modal" role="dialog" aria-modal="true" aria-labelledby="refundModalTitle">
       <div class="customer-modal-header">
@@ -5707,7 +5672,6 @@
     const POS_SHARED_STATE_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-shared-state';
     const POS_USED_DEVICES_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-used-devices';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
-    const POS_ARRANGEMENT_ADMIN_SESSION_KEY = 'techm8_pos_arrangement_admin_session';
     const els = {
       productGrid: document.getElementById('productGrid'),
       storeSwitchBtn: document.getElementById('storeSwitchBtn'),
@@ -5823,13 +5787,6 @@
       arrangementNoticeCopy: document.getElementById('arrangementNoticeCopy'),
       arrangementSave: document.getElementById('arrangementSave'),
       arrangementCancel: document.getElementById('arrangementCancel'),
-      arrangementAdminModal: document.getElementById('arrangementAdminModal'),
-      arrangementAdminForm: document.getElementById('arrangementAdminForm'),
-      arrangementAdminEmail: document.getElementById('arrangementAdminEmail'),
-      arrangementAdminPassword: document.getElementById('arrangementAdminPassword'),
-      arrangementAdminError: document.getElementById('arrangementAdminError'),
-      arrangementAdminSubmit: document.getElementById('arrangementAdminSubmit'),
-      arrangementAdminCancel: document.getElementById('arrangementAdminCancel'),
       stocktakeModal: document.getElementById('stocktakeModal'),
       stocktakeForm: document.getElementById('stocktakeForm'),
       stocktakeImage: document.getElementById('stocktakeImage'),
@@ -9692,15 +9649,8 @@
         || INTERNAL_PRODUCTS_ENDPOINT;
     }
 
-    function arrangementAdminToken() {
-      return sessionStorage.getItem(POS_ARRANGEMENT_ADMIN_SESSION_KEY) || '';
-    }
-
     function arrangementRequestHeaders() {
-      const headers = posProductRequestHeaders();
-      const adminToken = arrangementAdminToken();
-      if (adminToken) headers['x-admin-session'] = adminToken;
-      return headers;
+      return posProductRequestHeaders();
     }
 
     function arrangementScopeForView() {
@@ -9782,27 +9732,8 @@
       updateArrangementNotice();
     }
 
-    function openArrangementAdminModal() {
-      els.arrangementAdminError.textContent = '';
-      els.arrangementAdminPassword.value = '';
-      els.arrangementAdminModal.classList.add('show');
-      els.arrangementAdminModal.setAttribute('aria-hidden', 'false');
-      setTimeout(() => (els.arrangementAdminEmail.value ? els.arrangementAdminPassword : els.arrangementAdminEmail).focus(), 0);
-    }
-
-    function closeArrangementAdminModal() {
-      els.arrangementAdminModal.classList.remove('show');
-      els.arrangementAdminModal.setAttribute('aria-hidden', 'true');
-      els.arrangementAdminError.textContent = '';
-      els.arrangementAdminPassword.value = '';
-    }
-
-    async function loadArrangementContext(options = {}) {
+    async function loadArrangementContext() {
       if (!canCurrentStaffArrangePos()) return false;
-      if (!arrangementAdminToken()) {
-        if (options.interactive) openArrangementAdminModal();
-        return false;
-      }
 
       const url = new URL(arrangementEndpoint(), window.location.href);
       url.searchParams.set('mode', 'arrangement-context');
@@ -9815,8 +9746,7 @@
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.enabled) {
-          if (response.status === 401) sessionStorage.removeItem(POS_ARRANGEMENT_ADMIN_SESSION_KEY);
-          throw new Error(result.message || 'Administrator verification failed.');
+          throw new Error(result.message || 'POS arrangement is unavailable.');
         }
         state.arrangementAccessEnabled = true;
         applyPosCategoryOrder(result.categories || []);
@@ -9825,10 +9755,7 @@
       } catch (error) {
         console.error(error);
         state.arrangementAccessEnabled = false;
-        if (options.interactive) {
-          showToast(error.message || 'POS arrangement is unavailable.');
-          openArrangementAdminModal();
-        }
+        showToast(error.message || 'POS arrangement is unavailable.');
         return false;
       }
     }
@@ -9862,7 +9789,7 @@
         showToast('POS arrangement controls could not be loaded. Refresh and try again.');
         return;
       }
-      const allowed = await loadArrangementContext({ interactive: true });
+      const allowed = await loadArrangementContext();
       if (allowed) setArrangementMode(true);
     }
 
@@ -9963,7 +9890,6 @@
           });
           const result = await response.json().catch(() => ({}));
           if (!response.ok) {
-            if (response.status === 401) sessionStorage.removeItem(POS_ARRANGEMENT_ADMIN_SESSION_KEY);
             throw new Error(result.message || 'POS order could not be saved.');
           }
         }
@@ -9986,37 +9912,6 @@
       setArrangementMode(false);
       renderProductBrowser();
       showToast('POS arrangement changes cancelled.');
-    }
-
-    async function submitArrangementAdminLogin() {
-      const loginEmail = els.arrangementAdminEmail.value.trim();
-      const password = els.arrangementAdminPassword.value;
-      if (!loginEmail || !password) {
-        els.arrangementAdminError.textContent = 'Enter the administrator account and password.';
-        return;
-      }
-      els.arrangementAdminError.textContent = '';
-      els.arrangementAdminSubmit.disabled = true;
-      els.arrangementAdminSubmit.textContent = 'Verifying...';
-      try {
-        const result = await window.Techm8StaffAuth.callRpc('create_admin_session', {
-          login_email: loginEmail,
-          input_password: password
-        });
-        if (!result?.ok || !result.session_token) throw new Error(result?.message || 'Administrator sign-in failed.');
-        sessionStorage.setItem(POS_ARRANGEMENT_ADMIN_SESSION_KEY, result.session_token);
-        closeArrangementAdminModal();
-        const allowed = await loadArrangementContext({ interactive: false });
-        if (!allowed) throw new Error('Administrator verification failed.');
-        setArrangementMode(true);
-      } catch (error) {
-        console.error(error);
-        if (!els.arrangementAdminModal.classList.contains('show')) openArrangementAdminModal();
-        els.arrangementAdminError.textContent = error.message || 'Administrator sign-in failed.';
-      } finally {
-        els.arrangementAdminSubmit.disabled = false;
-        els.arrangementAdminSubmit.innerHTML = '<i class="bi bi-unlock"></i> Verify';
-      }
     }
 
     function categories() {
@@ -13417,14 +13312,6 @@
     });
     els.arrangementSave.addEventListener('click', saveArrangementChanges);
     els.arrangementCancel.addEventListener('click', cancelArrangementChanges);
-    els.arrangementAdminCancel.addEventListener('click', closeArrangementAdminModal);
-    els.arrangementAdminModal.addEventListener('click', event => {
-      if (event.target === els.arrangementAdminModal) closeArrangementAdminModal();
-    });
-    els.arrangementAdminForm.addEventListener('submit', event => {
-      event.preventDefault();
-      submitArrangementAdminLogin();
-    });
     els.stocktakeClose.addEventListener('click', closeStocktakeEditor);
     els.stocktakeCancel.addEventListener('click', closeStocktakeEditor);
     els.stocktakeModal.addEventListener('click', event => {
@@ -13642,9 +13529,6 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && els.stocktakeModal.classList.contains('show')) {
         closeStocktakeEditor();
-      }
-      if (event.key === 'Escape' && els.arrangementAdminModal.classList.contains('show')) {
-        closeArrangementAdminModal();
       }
       if (event.key === 'Escape' && els.productVariantModal.classList.contains('show')) {
         closeProductVariantModal();

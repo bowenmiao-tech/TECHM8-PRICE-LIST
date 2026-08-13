@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-staff-session, x-admin-session",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-staff-session",
   "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
 };
 
@@ -64,12 +64,6 @@ async function verifyStaffSession(sessionToken: string, request: Request): Promi
   return Boolean(result.ok);
 }
 
-async function verifyAdminSession(sessionToken: string, request: Request): Promise<boolean> {
-  if (!sessionToken) return false;
-  const result = await callStaffRpc("verify_admin_session", { session_token: sessionToken }, request);
-  return Boolean(result.ok);
-}
-
 async function getStocktakeAccess(
   sessionToken: string,
   staffName: string,
@@ -117,16 +111,11 @@ Deno.serve(async (request) => {
 
   if (mode === "arrangement-context" && request.method === "GET") {
     const staffName = (inputUrl.searchParams.get("staff_name") || "").trim();
-    const adminSessionToken = request.headers.get("x-admin-session") || "";
     if (staffName.toLowerCase() !== "bowen") {
       return jsonResponse({ ok: false, enabled: false, code: "ARRANGEMENT_FORBIDDEN", message: "POS arrangement is available to Bowen only." }, 403);
     }
 
     try {
-      const isAdmin = await verifyAdminSession(adminSessionToken, request);
-      if (!isAdmin) {
-        return jsonResponse({ ok: false, enabled: false, code: "ADMIN_SESSION_REQUIRED", message: "Administrator sign-in is required." }, 401);
-      }
       if (!supabaseUrl || !serviceRoleKey) {
         return jsonResponse({ ok: false, enabled: false, message: "Product database is not configured." }, 500);
       }
@@ -154,16 +143,11 @@ Deno.serve(async (request) => {
 
   if (request.method === "PUT" && String(requestBody.mode || "") === "arrangement") {
     const staffName = String(requestBody.staff_name || "").trim();
-    const adminSessionToken = request.headers.get("x-admin-session") || "";
     if (staffName.toLowerCase() !== "bowen") {
       return jsonResponse({ ok: false, code: "ARRANGEMENT_FORBIDDEN", message: "POS arrangement is available to Bowen only." }, 403);
     }
 
     try {
-      const isAdmin = await verifyAdminSession(adminSessionToken, request);
-      if (!isAdmin) {
-        return jsonResponse({ ok: false, code: "ADMIN_SESSION_REQUIRED", message: "Administrator sign-in is required." }, 401);
-      }
       if (!supabaseUrl || !serviceRoleKey) {
         return jsonResponse({ ok: false, message: "Product database is not configured." }, 500);
       }

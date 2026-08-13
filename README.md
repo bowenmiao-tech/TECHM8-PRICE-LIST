@@ -71,7 +71,7 @@ Completed product-sale flow:
 - Each main group opens a fixed second-level category grid before showing products. Empty second-level groups remain visible.
 - Existing API categories are mapped into the hierarchy in the POS display layer. Source product records are not renamed or rewritten, and search still includes the original category and subcategory.
 - `Computer & Gaming > Keyboards, Mice & Accessories` contains the 41 reviewed keyboards, mice, keyboard/mouse sets, keycaps, and mouse pads. `Other Computer Accessories` contains the 1 webcam and 8 laptop bags/sleeves.
-- Bowen can open `Arrange POS` with the administrator account to drag and save the display order of main categories, second-level categories, and products. This control is hidden from all other staff and every save is rechecked by the backend.
+- Bowen can open `Arrange POS` directly to drag and save the display order of main categories, second-level categories, and products. No second login is required; the control is hidden from all other staff and every save is rechecked by the backend.
 - POS display order is shared across stores. Store inventory remains independent and is never changed by arranging the catalogue.
 - An authorized stocktake mode allows staff to correct the fixed POS main/subcategory and the selected store's quantity without adding the product to cart.
 - Stocktake access is disabled by default and is enabled or disabled per active staff member from `stocktake-admin.html`.
