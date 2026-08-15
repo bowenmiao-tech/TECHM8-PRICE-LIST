@@ -4709,6 +4709,502 @@
         grid-template-columns: 1fr;
       }
     }
+    .transfer-view {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .pos-app.transfer-mode {
+      grid-template-columns: 64px minmax(0, 1fr);
+    }
+
+    .pos-app.transfer-mode .checkout-panel {
+      display: none;
+    }
+
+    .transfer-page {
+      min-height: 0;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-right: 4px;
+    }
+
+    .transfer-head,
+    .transfer-toolbar,
+    .transfer-head-actions,
+    .transfer-status-tabs,
+    .transfer-card-head,
+    .transfer-route,
+    .transfer-card-foot,
+    .transfer-modal-actions,
+    .transfer-photo-actions {
+      display: flex;
+      align-items: center;
+    }
+
+    .transfer-head {
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .transfer-head-actions,
+    .transfer-modal-actions,
+    .transfer-photo-actions {
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .transfer-kicker {
+      margin-bottom: 5px;
+      color: var(--tm-green);
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .transfer-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .transfer-summary-card {
+      padding: 14px 16px;
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(18, 34, 42, .05);
+    }
+
+    .transfer-summary-card span {
+      display: block;
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .transfer-summary-card strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .transfer-toolbar {
+      gap: 10px;
+    }
+
+    .transfer-toolbar .search-wrap {
+      flex: 1 1 420px;
+    }
+
+    .transfer-filter,
+    .transfer-field select,
+    .transfer-field input,
+    .transfer-field textarea,
+    .transfer-product-search input,
+    .transfer-qty-input {
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      color: var(--tm-ink);
+      background: #fff;
+      outline: none;
+    }
+
+    .transfer-filter {
+      min-width: 190px;
+      height: 48px;
+      padding: 0 12px;
+      font-weight: 800;
+    }
+
+    .transfer-status-tabs {
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .transfer-status-tab {
+      white-space: nowrap;
+      border: 1px solid var(--tm-line);
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: #42545d;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .transfer-status-tab.active {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .transfer-list {
+      min-height: 180px;
+      display: grid;
+      gap: 10px;
+      padding-bottom: 16px;
+    }
+
+    .transfer-card {
+      width: 100%;
+      border: 1px solid var(--tm-line);
+      border-radius: 17px;
+      padding: 15px 16px;
+      color: inherit;
+      text-align: left;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(18, 34, 42, .05);
+      transition: border-color .15s ease, transform .15s ease;
+    }
+
+    .transfer-card:hover {
+      border-color: rgba(7, 137, 111, .48);
+      transform: translateY(-1px);
+    }
+
+    .transfer-card-head,
+    .transfer-card-foot {
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .transfer-number {
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .transfer-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      color: #3f525b;
+      background: #eef3f5;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .transfer-status.in_transit,
+    .transfer-status.partially_received { color: #8a5b00; background: #fff4d9; }
+    .transfer-status.completed { color: #076d5b; background: #dcf7ef; }
+    .transfer-status.completed_with_issues { color: #a03b31; background: #fee9e5; }
+    .transfer-status.returned { color: #53646d; background: #e8eef1; }
+
+    .transfer-route {
+      gap: 10px;
+      margin: 13px 0;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .transfer-route i { color: var(--tm-green); }
+
+    .transfer-card-foot {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .transfer-card-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .transfer-empty {
+      min-height: 220px;
+      border: 1px dashed #cbd8dd;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      color: var(--tm-muted);
+      text-align: center;
+      background: rgba(255,255,255,.55);
+    }
+
+    .transfer-empty i {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--tm-green);
+      font-size: 30px;
+    }
+
+    .transfer-modal {
+      width: min(1080px, calc(100vw - 28px));
+      max-height: calc(100vh - 28px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .transfer-modal-header { align-items: flex-start; }
+
+    .transfer-modal-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 18px;
+      background: #f6f8f9;
+    }
+
+    .transfer-form-grid,
+    .transfer-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 13px;
+    }
+
+    .transfer-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .transfer-field.full { grid-column: 1 / -1; }
+
+    .transfer-field > span,
+    .transfer-section-label {
+      color: #42545d;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .transfer-field select,
+    .transfer-field input,
+    .transfer-field textarea,
+    .transfer-product-search input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+    }
+
+    .transfer-field textarea { min-height: 78px; resize: vertical; }
+
+    .transfer-panel {
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    .transfer-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .transfer-product-search {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .transfer-product-results,
+    .transfer-lines,
+    .transfer-receipt-history {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .transfer-product-result,
+    .transfer-line,
+    .transfer-receive-line {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 9px;
+      border: 1px solid #e4eaed;
+      border-radius: 13px;
+      background: #fff;
+    }
+
+    .transfer-product-result img,
+    .transfer-line img,
+    .transfer-receive-line img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #f5f7f8;
+    }
+
+    .transfer-product-copy strong,
+    .transfer-line-copy strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .transfer-product-copy span,
+    .transfer-line-copy span,
+    .transfer-help {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .transfer-line-controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .transfer-qty-input {
+      width: 76px;
+      height: 38px;
+      padding: 0 8px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .transfer-icon-button {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      color: #42545d;
+      background: #fff;
+    }
+
+    .transfer-icon-button.danger { color: var(--tm-red); }
+
+    .transfer-receive-line {
+      grid-template-columns: minmax(0, 1fr) 92px 92px;
+    }
+
+    .transfer-receive-qty label {
+      display: grid;
+      gap: 4px;
+      color: var(--tm-muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .transfer-photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    .transfer-photo {
+      position: relative;
+      min-height: 102px;
+      overflow: hidden;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #edf2f4;
+    }
+
+    .transfer-photo img {
+      width: 100%;
+      height: 102px;
+      display: block;
+      object-fit: cover;
+    }
+
+    .transfer-photo button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(23, 37, 44, .78);
+    }
+
+    .transfer-warning,
+    .transfer-success-note {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 11px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .transfer-warning { color: #8a5200; background: #fff3d5; }
+    .transfer-success-note { color: #076d5b; background: #dcf7ef; }
+
+    .transfer-detail-route {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 15px;
+      border-radius: 15px;
+      color: #fff;
+      background: linear-gradient(135deg, #17252c, #087e69);
+    }
+
+    .transfer-detail-route > div:last-child { text-align: right; }
+    .transfer-detail-route span { display: block; color: rgba(255,255,255,.7); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .transfer-detail-route strong { display: block; margin-top: 4px; font-size: 16px; }
+
+    .transfer-detail-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .transfer-detail-metric {
+      padding: 10px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .transfer-detail-metric span { color: var(--tm-muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .transfer-detail-metric strong { display: block; margin-top: 4px; font-size: 18px; }
+
+    .transfer-scanner {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      color: #fff;
+      background: #17252c;
+    }
+
+    .transfer-scanner video {
+      width: 100%;
+      max-height: 320px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #000;
+    }
+
+    .transfer-loading {
+      min-height: 200px;
+      display: grid;
+      place-items: center;
+      color: var(--tm-muted);
+      font-weight: 850;
+    }
+
+    @media (max-width: 900px) {
+      .transfer-summary,
+      .transfer-detail-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .transfer-form-grid,
+      .transfer-detail-grid { grid-template-columns: 1fr; }
+      .transfer-field.full { grid-column: auto; }
+      .transfer-head { align-items: flex-start; }
+      .transfer-toolbar { align-items: stretch; flex-direction: column; }
+      .transfer-filter { width: 100%; }
+      .transfer-receive-line { grid-template-columns: minmax(0, 1fr) 82px 82px; }
+    }
   </style>
 </head>
 <body>
@@ -4720,6 +5216,7 @@
         <button id="productNavBtn" class="rail-button" type="button" title="Products"><i class="bi bi-house-door-fill"></i></button>
         <button id="repairNavBtn" class="rail-button" type="button" title="Repair tickets"><i class="bi bi-clipboard2-plus"></i></button>
         <button id="usedDeviceNavBtn" class="rail-button" type="button" title="Used devices"><i class="bi bi-phone"></i></button>
+        <button id="transferNavBtn" class="rail-button" type="button" title="Stock transfer"><i class="bi bi-truck"></i></button>
         <button id="ordersNavBtn" class="rail-button" type="button" title="Invoices"><i class="bi bi-receipt"></i></button>
       </nav>
       <div class="rail-bottom">
@@ -4808,6 +5305,34 @@
         </div>
       </section>
 
+      <section id="transferView" class="workspace-view transfer-view" aria-label="Stock transfers">
+        <div class="transfer-page">
+          <div class="transfer-head">
+            <div>
+              <div class="transfer-kicker">Store to store</div>
+              <h1 class="invoice-title">Stock Transfer</h1>
+              <div class="repair-subtitle">Dispatch from any store, then receive with photo evidence at the destination.</div>
+            </div>
+            <div class="transfer-head-actions">
+              <button id="newTransferBtn" class="repair-action primary" type="button"><i class="bi bi-plus-circle"></i> New Transfer</button>
+              <button id="transferReloadBtn" class="repair-action" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+          </div>
+          <div id="transferSummary" class="transfer-summary"></div>
+          <div class="transfer-toolbar">
+            <div class="search-wrap">
+              <i class="bi bi-search"></i>
+              <input id="transferSearchInput" class="search-input" type="search" placeholder="Transfer number / staff / product / SKU / barcode">
+            </div>
+            <select id="transferStoreFilter" class="transfer-filter" aria-label="Filter by store">
+              <option value="all">All stores</option>
+            </select>
+          </div>
+          <div id="transferStatusTabs" class="transfer-status-tabs" role="tablist" aria-label="Transfer status filters"></div>
+          <div id="transferList" class="transfer-list"></div>
+        </div>
+      </section>
+
       <section id="ordersView" class="workspace-view invoice-view" aria-label="Invoice history">
         <div class="invoice-page">
           <div class="invoice-head">
@@ -4883,6 +5408,19 @@
         </div>
       </div>
     </aside>
+  </div>
+
+  <div id="transferModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal transfer-modal" role="dialog" aria-modal="true" aria-labelledby="transferModalTitle">
+      <div class="payment-modal-header transfer-modal-header">
+        <div>
+          <h2 id="transferModalTitle">Stock Transfer</h2>
+          <div id="transferModalSubtitle" class="repair-subtitle"></div>
+        </div>
+        <button id="transferModalClose" class="modal-close" type="button" aria-label="Close stock transfer"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="transferModalBody" class="transfer-modal-body"></div>
+    </div>
   </div>
 
   <div id="paymentModal" class="modal-backdrop" aria-hidden="true">
@@ -5695,6 +6233,20 @@
       usedDeviceTransactions: [],
       usedDeviceLoading: false,
       selectedUsedDeviceId: '',
+      transferStores: [],
+      transfers: [],
+      transferLoading: false,
+      transferLoaded: false,
+      transferStatus: 'all',
+      transferStore: 'all',
+      transferSearch: '',
+      transferModalMode: '',
+      transferDraft: null,
+      transferDetail: null,
+      transferReceipt: null,
+      transferPhotoUploading: 0,
+      transferScannerStream: null,
+      transferScannerTimer: 0,
       shiftPaymentTotals: null,
       refundOrder: null,
       repair: {
@@ -5735,6 +6287,7 @@
     const POS_SALES_ORDERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders';
     const POS_SHARED_STATE_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-shared-state';
     const POS_USED_DEVICES_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-used-devices';
+    const POS_STOCK_TRANSFERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-stock-transfers';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
     const els = {
       productGrid: document.getElementById('productGrid'),
@@ -5747,13 +6300,27 @@
       productView: document.getElementById('productView'),
       repairView: document.getElementById('repairView'),
       usedDeviceView: document.getElementById('usedDeviceView'),
+      transferView: document.getElementById('transferView'),
       ordersView: document.getElementById('ordersView'),
       repairWorkspace: document.getElementById('repairWorkspace'),
       targetNavBtn: document.getElementById('targetNavBtn'),
       productNavBtn: document.getElementById('productNavBtn'),
       repairNavBtn: document.getElementById('repairNavBtn'),
       usedDeviceNavBtn: document.getElementById('usedDeviceNavBtn'),
+      transferNavBtn: document.getElementById('transferNavBtn'),
       ordersNavBtn: document.getElementById('ordersNavBtn'),
+      newTransferBtn: document.getElementById('newTransferBtn'),
+      transferReloadBtn: document.getElementById('transferReloadBtn'),
+      transferSummary: document.getElementById('transferSummary'),
+      transferSearchInput: document.getElementById('transferSearchInput'),
+      transferStoreFilter: document.getElementById('transferStoreFilter'),
+      transferStatusTabs: document.getElementById('transferStatusTabs'),
+      transferList: document.getElementById('transferList'),
+      transferModal: document.getElementById('transferModal'),
+      transferModalTitle: document.getElementById('transferModalTitle'),
+      transferModalSubtitle: document.getElementById('transferModalSubtitle'),
+      transferModalBody: document.getElementById('transferModalBody'),
+      transferModalClose: document.getElementById('transferModalClose'),
       invoiceSearchInput: document.getElementById('invoiceSearchInput'),
       invoiceReloadBtn: document.getElementById('invoiceReloadBtn'),
       invoiceDateMode: document.getElementById('invoiceDateMode'),
@@ -8026,17 +8593,1037 @@
       renderRepairWorkspace();
     }
 
+    const TRANSFER_STATUS_FILTERS = [
+      { id: 'all', label: 'All' },
+      { id: 'open', label: 'To Receive' },
+      { id: 'in_transit', label: 'In Transit' },
+      { id: 'partially_received', label: 'Part Received' },
+      { id: 'completed', label: 'Completed' },
+      { id: 'completed_with_issues', label: 'Issues' },
+      { id: 'returned', label: 'Returned' }
+    ];
+
+    function transferStatusText(status) {
+      return ({
+        in_transit: 'In Transit',
+        partially_received: 'Part Received',
+        completed: 'Completed',
+        completed_with_issues: 'Completed with Issues',
+        returned: 'Returned'
+      })[status] || String(status || 'Unknown');
+    }
+
+    function transferFormatDate(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString('en-AU', {
+        timeZone: 'Australia/Brisbane',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function transferApiHeaders(json = true) {
+      const staffToken = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+        ? window.Techm8StaffAuth.getToken()
+        : '';
+      const headers = { 'x-staff-session': staffToken };
+      if (json) headers['Content-Type'] = 'application/json';
+      if (window.TECHM8_SUPABASE && window.TECHM8_SUPABASE.anonKey) {
+        headers.apikey = window.TECHM8_SUPABASE.anonKey;
+        headers.Authorization = `Bearer ${window.TECHM8_SUPABASE.anonKey}`;
+      }
+      return headers;
+    }
+
+    async function transferApiRequest(url, options = {}) {
+      const response = await fetch(url, {
+        cache: 'no-store',
+        ...options
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.ok === false) {
+        throw new Error(payload.message || `Transfer request failed: ${response.status}`);
+      }
+      return payload;
+    }
+
+    async function loadTransferContext() {
+      if (state.transferStores.length) return state.transferStores;
+      const url = new URL(POS_STOCK_TRANSFERS_ENDPOINT);
+      url.searchParams.set('mode', 'context');
+      url.searchParams.set('staff_name', currentStaffName());
+      const payload = await transferApiRequest(url.toString(), { headers: transferApiHeaders(false) });
+      state.transferStores = Array.isArray(payload.stores) ? payload.stores : [];
+      els.transferStoreFilter.innerHTML = '<option value="all">All stores</option>' + state.transferStores.map(store => `
+        <option value="${escapeHtml(store.slug)}">${escapeHtml(store.name)}</option>
+      `).join('');
+      els.transferStoreFilter.value = state.transferStore;
+      return state.transferStores;
+    }
+
+    async function loadTransfers(options = {}) {
+      if (state.transferLoading) return;
+      state.transferLoading = true;
+      renderTransfers();
+      try {
+        await loadTransferContext();
+        const url = new URL(POS_STOCK_TRANSFERS_ENDPOINT);
+        url.searchParams.set('mode', 'list');
+        url.searchParams.set('staff_name', currentStaffName());
+        url.searchParams.set('status', state.transferStatus);
+        url.searchParams.set('store', state.transferStore);
+        url.searchParams.set('search', state.transferSearch.trim());
+        url.searchParams.set('limit', '200');
+        const payload = await transferApiRequest(url.toString(), { headers: transferApiHeaders(false) });
+        state.transfers = Array.isArray(payload.transfers) ? payload.transfers : [];
+        state.transferLoaded = true;
+      } catch (error) {
+        console.error(error);
+        if (!options.silent) showToast(error.message || 'Transfers could not be loaded.');
+        state.transfers = [];
+      } finally {
+        state.transferLoading = false;
+        renderTransfers();
+      }
+    }
+
+    function renderTransferSummary() {
+      const rows = state.transfers;
+      const openRows = rows.filter(row => ['in_transit', 'partially_received'].includes(row.status));
+      const remainingUnits = openRows.reduce((sum, row) => sum + Number(row.remaining_quantity || 0), 0);
+      const issueUnits = rows.reduce((sum, row) => sum + Number(row.issue_quantity || 0), 0);
+      els.transferSummary.innerHTML = [
+        ['Shown', rows.length],
+        ['Open transfers', openRows.length],
+        ['Units in transit', remainingUnits],
+        ['Issue units', issueUnits]
+      ].map(([label, value]) => `
+        <div class="transfer-summary-card"><span>${label}</span><strong>${value}</strong></div>
+      `).join('');
+    }
+
+    function renderTransfers() {
+      els.transferStatusTabs.innerHTML = TRANSFER_STATUS_FILTERS.map(filter => `
+        <button class="transfer-status-tab ${state.transferStatus === filter.id ? 'active' : ''}" type="button" data-transfer-status="${filter.id}">${filter.label}</button>
+      `).join('');
+      renderTransferSummary();
+      if (state.transferLoading) {
+        els.transferList.innerHTML = '<div class="transfer-loading"><span><i class="bi bi-arrow-repeat"></i> Loading transfers...</span></div>';
+        return;
+      }
+      if (!state.transfers.length) {
+        els.transferList.innerHTML = `
+          <div class="transfer-empty">
+            <div><i class="bi bi-truck"></i><strong>No transfers found</strong><div class="transfer-help">Create a transfer or change the filters.</div></div>
+          </div>`;
+        return;
+      }
+      els.transferList.innerHTML = state.transfers.map(transfer => `
+        <button class="transfer-card" type="button" data-transfer-id="${transfer.id}">
+          <div class="transfer-card-head">
+            <span class="transfer-number">${escapeHtml(transfer.transfer_number)}</span>
+            <span class="transfer-status ${escapeHtml(transfer.status)}">${escapeHtml(transferStatusText(transfer.status))}</span>
+          </div>
+          <div class="transfer-route">
+            <span>${escapeHtml(transfer.source_store_name)}</span>
+            <i class="bi bi-arrow-right"></i>
+            <span>${escapeHtml(transfer.destination_store_name)}</span>
+          </div>
+          <div class="transfer-card-foot">
+            <div class="transfer-card-metrics">
+              <span>${Number(transfer.product_count || 0)} products</span>
+              <span>${Number(transfer.dispatched_quantity || 0)} dispatched</span>
+              <span>${Number(transfer.remaining_quantity || 0)} remaining</span>
+              ${Number(transfer.issue_quantity || 0) ? `<span>${Number(transfer.issue_quantity)} issues</span>` : ''}
+            </div>
+            <span>${escapeHtml(transfer.dispatched_by)} · ${escapeHtml(transferFormatDate(transfer.dispatched_at))}</span>
+          </div>
+        </button>
+      `).join('');
+    }
+
+    function openTransferModalShell(title, subtitle) {
+      els.transferModalTitle.textContent = title;
+      els.transferModalSubtitle.textContent = subtitle || '';
+      els.transferModal.classList.add('show');
+      els.transferModal.setAttribute('aria-hidden', 'false');
+    }
+
+    async function discardPendingTransferPhotos() {
+      const receipt = state.transferReceipt;
+      if (!receipt || !Array.isArray(receipt.photos) || !receipt.photos.length) return;
+      const pending = receipt.photos.slice();
+      await Promise.allSettled(pending.map(photo => transferApiRequest(POS_STOCK_TRANSFERS_ENDPOINT, {
+        method: 'POST',
+        headers: transferApiHeaders(),
+        body: JSON.stringify({
+          action: 'delete-photo',
+          staff_name: currentStaffName(),
+          transfer_id: state.transferDetail && state.transferDetail.id,
+          receipt_key: receipt.key,
+          photo_id: photo.id
+        })
+      })));
+      receipt.photos = [];
+    }
+
+    async function closeTransferModal(options = {}) {
+      if (state.transferPhotoUploading > 0) {
+        showToast('Please wait for photo uploads to finish.');
+        return;
+      }
+      stopTransferScanner();
+      const hasPendingPhotos = state.transferReceipt && Array.isArray(state.transferReceipt.photos)
+        && state.transferReceipt.photos.length > 0;
+      if (hasPendingPhotos && !options.keepPhotos) {
+        if (!confirm('Discard this unfinished receipt and delete its uploaded photos?')) return;
+        await discardPendingTransferPhotos();
+      }
+      state.transferModalMode = '';
+      state.transferDraft = null;
+      state.transferDetail = null;
+      state.transferReceipt = null;
+      els.transferModal.classList.remove('show');
+      els.transferModal.setAttribute('aria-hidden', 'true');
+      els.transferModalBody.innerHTML = '';
+    }
+
+    function transferProductStock(product, storeSlug) {
+      const normalized = normalizeStoreKey(storeSlug);
+      if (product && product.store_stock && typeof product.store_stock === 'object') {
+        const key = Object.keys(product.store_stock).find(value => normalizeStoreKey(value) === normalized);
+        if (key) return Math.max(0, Number(product.store_stock[key] || 0));
+      }
+      if (Array.isArray(product && product.store_inventory)) {
+        const row = product.store_inventory.find(item => [
+          item.store_slug, item.store_id, item.store_name, item.branch, item.name
+        ].some(value => normalizeStoreKey(value) === normalized));
+        if (row) return Math.max(0, Number(row.quantity ?? row.qty ?? row.qty_on_hand ?? row.stock_qty ?? 0));
+      }
+      if (product && product.store_inventory && typeof product.store_inventory === 'object') {
+        const key = Object.keys(product.store_inventory).find(value => normalizeStoreKey(value) === normalized);
+        if (key) return Math.max(0, Number(product.store_inventory[key] || 0));
+      }
+      return 0;
+    }
+
+    function transferStoreOptions(selectedSlug, excludedSlug) {
+      return state.transferStores.map(store => `
+        <option value="${escapeHtml(store.slug)}" ${store.slug === selectedSlug ? 'selected' : ''} ${store.slug === excludedSlug ? 'disabled' : ''}>${escapeHtml(store.name)}</option>
+      `).join('');
+    }
+
+    function transferProductMatches(product, query) {
+      const needle = String(query || '').trim().toLowerCase();
+      if (!needle) return true;
+      return [product.name, product.sku, product.barcode, product.variant_name, product.variant_color]
+        .some(value => String(value || '').toLowerCase().includes(needle));
+    }
+
+    function transferSearchProducts() {
+      const draft = state.transferDraft;
+      if (!draft) return [];
+      const selected = new Set(draft.items.map(item => String(item.productId)));
+      return state.products
+        .filter(product => !selected.has(String(product.id)))
+        .filter(product => transferProductMatches(product, draft.search))
+        .sort((a, b) => {
+          const aExact = [a.sku, a.barcode].some(value => String(value || '').toLowerCase() === String(draft.search || '').trim().toLowerCase()) ? 0 : 1;
+          const bExact = [b.sku, b.barcode].some(value => String(value || '').toLowerCase() === String(draft.search || '').trim().toLowerCase()) ? 0 : 1;
+          return aExact - bExact || transferProductStock(b, draft.source) - transferProductStock(a, draft.source) || a.name.localeCompare(b.name);
+        })
+        .slice(0, draft.search.trim() ? 30 : 12);
+    }
+
+    function renderTransferProductResults() {
+      const container = els.transferModalBody.querySelector('#transferProductResults');
+      if (!container || !state.transferDraft) return;
+      const products = transferSearchProducts();
+      container.innerHTML = products.length ? products.map(product => {
+        const stock = transferProductStock(product, state.transferDraft.source);
+        return `
+          <div class="transfer-product-result">
+            <img src="${escapeHtml(productImage(product))}" alt="">
+            <div class="transfer-product-copy">
+              <strong>${escapeHtml(product.name)}</strong>
+              <span>${escapeHtml(product.sku || 'No SKU')}${product.barcode ? ` · ${escapeHtml(product.barcode)}` : ''} · Source stock ${stock}</span>
+            </div>
+            <button class="repair-action ${stock > 0 ? 'primary' : ''}" type="button" data-transfer-add-product="${escapeHtml(product.id)}" ${stock < 1 ? 'disabled' : ''}>${stock > 0 ? 'Add' : 'No stock'}</button>
+          </div>`;
+      }).join('') : '<div class="transfer-empty"><div><i class="bi bi-search"></i>No matching products with this search.</div></div>';
+    }
+
+    function renderNewTransferModal() {
+      const draft = state.transferDraft;
+      if (!draft) return;
+      openTransferModalShell('New Stock Transfer', 'Stock leaves the source store as soon as you confirm dispatch.');
+      const selectedLines = draft.items.map(item => {
+        const product = state.products.find(row => String(row.id) === String(item.productId));
+        if (!product) return '';
+        const stock = transferProductStock(product, draft.source);
+        return `
+          <div class="transfer-line">
+            <img src="${escapeHtml(productImage(product))}" alt="">
+            <div class="transfer-line-copy">
+              <strong>${escapeHtml(product.name)}</strong>
+              <span>${escapeHtml(product.sku || 'No SKU')} · Available ${stock}</span>
+            </div>
+            <div class="transfer-line-controls">
+              <input class="transfer-qty-input" type="number" min="1" max="${stock}" step="1" value="${item.quantity}" data-transfer-quantity="${escapeHtml(product.id)}" aria-label="Transfer quantity">
+              <button class="transfer-icon-button danger" type="button" data-transfer-remove-product="${escapeHtml(product.id)}" aria-label="Remove product"><i class="bi bi-trash3"></i></button>
+            </div>
+          </div>`;
+      }).join('');
+      els.transferModalBody.innerHTML = `
+        <div class="transfer-form-grid">
+          <label class="transfer-field">
+            <span>From store</span>
+            <select id="transferSourceStore">${transferStoreOptions(draft.source, '')}</select>
+          </label>
+          <label class="transfer-field">
+            <span>To store</span>
+            <select id="transferDestinationStore">${transferStoreOptions(draft.destination, draft.source)}</select>
+          </label>
+          <label class="transfer-field full">
+            <span>Dispatch note (optional)</span>
+            <textarea id="transferDispatchNote" placeholder="Courier, box count, or handling notes">${escapeHtml(draft.note)}</textarea>
+          </label>
+        </div>
+        <div class="transfer-panel">
+          <div class="transfer-panel-head">
+            <div><strong>Add products</strong><div class="transfer-help">Search by name, SKU or barcode. Exact barcode matches appear first.</div></div>
+          </div>
+          <div class="transfer-product-search">
+            <input id="transferProductSearch" type="search" value="${escapeHtml(draft.search)}" placeholder="Product name / SKU / barcode" autocomplete="off">
+            <button class="repair-action" type="button" data-transfer-scan><i class="bi bi-upc-scan"></i> Scan barcode</button>
+          </div>
+          <div id="transferScannerHost"></div>
+          <div id="transferProductResults" class="transfer-product-results"></div>
+        </div>
+        <div class="transfer-panel">
+          <div class="transfer-panel-head">
+            <div><strong>Products to dispatch</strong><div class="transfer-help">${draft.items.length} product${draft.items.length === 1 ? '' : 's'} selected</div></div>
+          </div>
+          <div class="transfer-lines">${selectedLines || '<div class="transfer-empty"><div><i class="bi bi-box-seam"></i>Add at least one product above.</div></div>'}</div>
+        </div>
+        <div id="transferSubmitError" class="transfer-warning" hidden></div>
+        <div class="transfer-modal-actions" style="justify-content:flex-end;margin-top:14px">
+          <button class="repair-action" type="button" data-transfer-cancel>Cancel</button>
+          <button id="dispatchTransferSubmit" class="repair-action primary" type="button" data-transfer-dispatch ${draft.items.length ? '' : 'disabled'}><i class="bi bi-truck"></i> Confirm Dispatch</button>
+        </div>`;
+      renderTransferProductResults();
+      window.setTimeout(() => els.transferModalBody.querySelector('#transferProductSearch')?.focus(), 0);
+    }
+
+    async function openNewTransfer() {
+      try {
+        await loadTransferContext();
+        if (!state.products.length) await loadProducts();
+        if (state.transferStores.length < 2) throw new Error('At least two active stores are required.');
+        const currentSlug = state.transferStores.some(store => store.slug === state.storeId)
+          ? state.storeId
+          : state.transferStores[0].slug;
+        state.transferDraft = {
+          source: currentSlug,
+          destination: state.transferStores.find(store => store.slug !== currentSlug).slug,
+          note: '',
+          search: '',
+          items: [],
+          requestKey: crypto.randomUUID(),
+          submitting: false
+        };
+        state.transferModalMode = 'dispatch';
+        renderNewTransferModal();
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'New transfer could not be opened.');
+      }
+    }
+
+    function addTransferDraftProduct(productId) {
+      const draft = state.transferDraft;
+      const product = state.products.find(row => String(row.id) === String(productId));
+      if (!draft || !product) return;
+      stopTransferScanner();
+      const stock = transferProductStock(product, draft.source);
+      if (stock < 1) {
+        showToast('This product has no available stock at the source store.');
+        return;
+      }
+      if (!draft.items.some(item => String(item.productId) === String(product.id))) {
+        draft.items.push({ productId: product.id, quantity: 1 });
+      }
+      draft.search = '';
+      renderNewTransferModal();
+    }
+
+    async function backToTransferDetail() {
+      if (state.transferPhotoUploading > 0) {
+        showToast('Please wait for photo uploads to finish.');
+        return;
+      }
+      const receipt = state.transferReceipt;
+      if (receipt && receipt.photos.length) {
+        if (!confirm('Discard this unfinished receipt and delete its uploaded photos?')) return;
+        await discardPendingTransferPhotos();
+      }
+      state.transferReceipt = null;
+      state.transferModalMode = 'detail';
+      renderTransferDetailModal();
+    }
+
+    async function submitTransferDispatch() {
+      const draft = state.transferDraft;
+      if (!draft || draft.submitting) return;
+      const invalidLine = draft.items.find(item => {
+        const product = state.products.find(row => String(row.id) === String(item.productId));
+        const stock = transferProductStock(product, draft.source);
+        return !Number.isInteger(Number(item.quantity)) || Number(item.quantity) < 1 || Number(item.quantity) > stock;
+      });
+      if (!draft.items.length || invalidLine) {
+        showToast(invalidLine ? 'A quantity exceeds source-store stock.' : 'Add at least one product.');
+        return;
+      }
+      if (draft.source === draft.destination) {
+        showToast('Source and destination stores must be different.');
+        return;
+      }
+      const source = state.transferStores.find(store => store.slug === draft.source);
+      const destination = state.transferStores.find(store => store.slug === draft.destination);
+      const unitCount = draft.items.reduce((sum, item) => sum + Number(item.quantity), 0);
+      if (!confirm(`Dispatch ${unitCount} unit${unitCount === 1 ? '' : 's'} from ${source.name} to ${destination.name}? Source stock will be deducted immediately.`)) return;
+
+      draft.submitting = true;
+      const submitButton = els.transferModalBody.querySelector('#dispatchTransferSubmit');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="bi bi-arrow-repeat"></i> Dispatching...';
+      }
+      try {
+        const payload = await transferApiRequest(POS_STOCK_TRANSFERS_ENDPOINT, {
+          method: 'POST',
+          headers: transferApiHeaders(),
+          body: JSON.stringify({
+            action: 'dispatch',
+            staff_name: currentStaffName(),
+            source_store_slug: draft.source,
+            destination_store_slug: draft.destination,
+            items: draft.items.map(item => ({ product_id: Number(item.productId), quantity: Number(item.quantity) })),
+            note: draft.note,
+            request_key: draft.requestKey
+          })
+        });
+        state.transferDraft = null;
+        state.transferDetail = payload.transfer;
+        state.transferModalMode = 'detail';
+        renderTransferDetailModal();
+        showToast(`${payload.transfer.transfer_number} dispatched.`);
+        loadTransfers({ silent: true });
+        loadProducts({ force: true });
+      } catch (error) {
+        console.error(error);
+        draft.submitting = false;
+        const errorBox = els.transferModalBody.querySelector('#transferSubmitError');
+        if (errorBox) {
+          errorBox.hidden = false;
+          errorBox.textContent = error.message || 'Transfer could not be dispatched.';
+        }
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = '<i class="bi bi-truck"></i> Confirm Dispatch';
+        }
+      }
+    }
+
+    async function openTransferDetail(transferId) {
+      state.transferModalMode = 'detail';
+      state.transferDetail = null;
+      if (typeof localTransferTestMode !== 'undefined' && localTransferTestMode) {
+        const sample = state.transfers.find(item => String(item.id) === String(transferId));
+        if (sample && sample._detail) {
+          state.transferDetail = sample._detail;
+          renderTransferDetailModal();
+          return;
+        }
+      }
+      openTransferModalShell('Stock Transfer', 'Loading transfer details...');
+      els.transferModalBody.innerHTML = '<div class="transfer-loading"><span><i class="bi bi-arrow-repeat"></i> Loading transfer...</span></div>';
+      try {
+        const url = new URL(POS_STOCK_TRANSFERS_ENDPOINT);
+        url.searchParams.set('mode', 'detail');
+        url.searchParams.set('staff_name', currentStaffName());
+        url.searchParams.set('id', transferId);
+        const payload = await transferApiRequest(url.toString(), { headers: transferApiHeaders(false) });
+        state.transferDetail = payload.transfer;
+        renderTransferDetailModal();
+      } catch (error) {
+        console.error(error);
+        els.transferModalBody.innerHTML = `<div class="transfer-warning">${escapeHtml(error.message || 'Transfer could not be loaded.')}</div>`;
+      }
+    }
+
+    function transferItemTotals(transfer) {
+      return (transfer.items || []).reduce((totals, item) => {
+        totals.dispatched += Number(item.dispatched_quantity || 0);
+        totals.good += Number(item.received_good_quantity || 0);
+        totals.issues += Number(item.received_damaged_quantity || 0) + Number(item.missing_quantity || 0);
+        totals.remaining += Number(item.remaining_quantity || 0);
+        return totals;
+      }, { dispatched: 0, good: 0, issues: 0, remaining: 0 });
+    }
+
+    function renderTransferDetailModal() {
+      const transfer = state.transferDetail;
+      if (!transfer) return;
+      const totals = transferItemTotals(transfer);
+      const isOpen = ['in_transit', 'partially_received'].includes(transfer.status) && totals.remaining > 0;
+      openTransferModalShell(transfer.transfer_number, `${transferStatusText(transfer.status)} · Dispatched by ${transfer.dispatched_by}`);
+      const itemRows = (transfer.items || []).map(item => `
+        <div class="transfer-line">
+          <img src="${escapeHtml(item.image_url || productPlaceholderImage(item))}" alt="">
+          <div class="transfer-line-copy">
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>${escapeHtml(item.sku)}${item.variant ? ` · ${escapeHtml(item.variant)}` : ''}</span>
+          </div>
+          <div class="transfer-help" style="text-align:right">
+            <strong>${Number(item.dispatched_quantity || 0)} sent</strong><br>
+            ${Number(item.received_good_quantity || 0)} good · ${Number(item.received_damaged_quantity || 0)} damaged · ${Number(item.missing_quantity || 0)} missing · ${Number(item.remaining_quantity || 0)} remaining
+          </div>
+        </div>`).join('');
+      const photos = (transfer.photos || []).map(photo => `
+        <a class="transfer-photo" href="${escapeHtml(photo.signed_url || '#')}" target="_blank" rel="noopener">
+          <img src="${escapeHtml(photo.signed_url || '')}" alt="Transfer receipt photo">
+        </a>`).join('');
+      const receipts = (transfer.receipts || []).map(receipt => `
+        <div class="transfer-line" style="grid-template-columns:minmax(0,1fr) auto">
+          <div class="transfer-line-copy"><strong>${receipt.receipt_type === 'return' ? 'Returned to source' : 'Stock received'}</strong><span>${escapeHtml(receipt.received_by)} · ${escapeHtml(transferFormatDate(receipt.created_at))}${receipt.note ? ` · ${escapeHtml(receipt.note)}` : ''}</span></div>
+          <div class="transfer-help">${(receipt.items || []).reduce((sum, item) => sum + Number(item.good_quantity || 0), 0)} good · ${(receipt.items || []).reduce((sum, item) => sum + Number(item.damaged_quantity || 0), 0)} damaged · ${(receipt.items || []).reduce((sum, item) => sum + Number(item.missing_quantity || 0), 0)} missing · ${(receipt.items || []).reduce((sum, item) => sum + Number(item.returned_quantity || 0), 0)} returned</div>
+        </div>`).join('');
+      els.transferModalBody.innerHTML = `
+        <div class="transfer-detail-route">
+          <div><span>From</span><strong>${escapeHtml(transfer.source_store.name)}</strong></div>
+          <i class="bi bi-arrow-right"></i>
+          <div><span>To</span><strong>${escapeHtml(transfer.destination_store.name)}</strong></div>
+        </div>
+        <div class="transfer-detail-metrics">
+          <div class="transfer-detail-metric"><span>Dispatched</span><strong>${totals.dispatched}</strong></div>
+          <div class="transfer-detail-metric"><span>Good received</span><strong>${totals.good}</strong></div>
+          <div class="transfer-detail-metric"><span>Issues</span><strong>${totals.issues}</strong></div>
+          <div class="transfer-detail-metric"><span>Remaining</span><strong>${totals.remaining}</strong></div>
+        </div>
+        ${transfer.dispatch_note ? `<div class="transfer-panel"><strong>Dispatch note</strong><div class="transfer-help" style="margin-top:5px">${escapeHtml(transfer.dispatch_note)}</div></div>` : ''}
+        <div class="transfer-panel"><div class="transfer-panel-head"><strong>Products</strong><span class="transfer-status ${escapeHtml(transfer.status)}">${escapeHtml(transferStatusText(transfer.status))}</span></div><div class="transfer-lines">${itemRows}</div></div>
+        ${receipts ? `<div class="transfer-panel"><strong>Receipt history</strong><div class="transfer-receipt-history">${receipts}</div></div>` : ''}
+        ${photos ? `<div class="transfer-panel"><strong>Receipt photos (${transfer.photos.length})</strong><div class="transfer-photo-grid">${photos}</div></div>` : ''}
+        <div class="transfer-modal-actions" style="justify-content:flex-end;margin-top:14px">
+          <button class="repair-action" type="button" data-transfer-cancel>Close</button>
+          ${isOpen ? '<button class="repair-action" type="button" data-transfer-return><i class="bi bi-arrow-return-left"></i> Return Remaining</button>' : ''}
+          ${isOpen ? '<button class="repair-action primary" type="button" data-transfer-receive><i class="bi bi-box-arrow-in-down"></i> Receive Stock</button>' : ''}
+        </div>`;
+    }
+
+    function beginTransferReceive() {
+      const transfer = state.transferDetail;
+      if (!transfer) return;
+      state.transferReceipt = {
+        key: crypto.randomUUID(),
+        note: '',
+        photos: [],
+        submitting: false,
+        lines: (transfer.items || []).filter(item => Number(item.remaining_quantity || 0) > 0).map(item => ({
+          transferItemId: Number(item.id),
+          remaining: Number(item.remaining_quantity || 0),
+          good: Number(item.remaining_quantity || 0),
+          damaged: 0
+        }))
+      };
+      state.transferModalMode = 'receive';
+      renderTransferReceiveModal();
+    }
+
+    function transferReceiptUnaccounted() {
+      const receipt = state.transferReceipt;
+      if (!receipt) return 0;
+      return receipt.lines.reduce((sum, line) => sum + Math.max(0, line.remaining - Number(line.good || 0) - Number(line.damaged || 0)), 0);
+    }
+
+    function renderTransferReceiptPhotos() {
+      const receipt = state.transferReceipt;
+      if (!receipt || !receipt.photos.length) return '<div class="transfer-help">No photos uploaded yet. At least one is required.</div>';
+      return `<div class="transfer-photo-grid">${receipt.photos.map(photo => `
+        <div class="transfer-photo">
+          <img src="${escapeHtml(photo.signed_url || '')}" alt="Pending receipt photo">
+          <button type="button" data-transfer-delete-photo="${escapeHtml(photo.id)}" aria-label="Delete photo"><i class="bi bi-x-lg"></i></button>
+        </div>`).join('')}</div>`;
+    }
+
+    function renderTransferPhotoPanel() {
+      const receipt = state.transferReceipt;
+      const uploading = state.transferPhotoUploading;
+      return `
+        <div class="transfer-panel">
+          <div class="transfer-panel-head">
+            <div><strong>Product photos <span style="color:var(--tm-red)">*</span></strong><div class="transfer-help">Take or choose multiple photos. Images are private and attached to this receipt.</div></div>
+            <span class="transfer-status">${receipt.photos.length} uploaded${uploading ? ` · ${uploading} uploading` : ''}</span>
+          </div>
+          <div class="transfer-photo-actions">
+            <label class="repair-action primary" style="cursor:pointer"><i class="bi bi-camera"></i> Take Photo<input id="transferCameraPhotoInput" type="file" accept="image/*" capture="environment" hidden></label>
+            <label class="repair-action" style="cursor:pointer"><i class="bi bi-images"></i> Choose Photos<input id="transferPhotoInput" type="file" accept="image/*" multiple hidden></label>
+          </div>
+          <div id="transferPendingPhotos">${renderTransferReceiptPhotos()}</div>
+        </div>`;
+    }
+
+    function renderTransferReceiveModal() {
+      const transfer = state.transferDetail;
+      const receipt = state.transferReceipt;
+      if (!transfer || !receipt) return;
+      openTransferModalShell(`Receive ${transfer.transfer_number}`, `${transfer.source_store.name} to ${transfer.destination_store.name}`);
+      const rows = receipt.lines.map(line => {
+        const item = transfer.items.find(candidate => Number(candidate.id) === Number(line.transferItemId));
+        return `
+          <div class="transfer-receive-line">
+            <div class="transfer-line-copy">
+              <strong>${escapeHtml(item.name)}</strong>
+              <span>${escapeHtml(item.sku)} · ${line.remaining} remaining</span>
+            </div>
+            <div class="transfer-receive-qty"><label>Good<input class="transfer-qty-input" type="number" min="0" max="${line.remaining}" step="1" value="${line.good}" data-transfer-receive-good="${line.transferItemId}"></label></div>
+            <div class="transfer-receive-qty"><label>Damaged<input class="transfer-qty-input" type="number" min="0" max="${line.remaining}" step="1" value="${line.damaged}" data-transfer-receive-damaged="${line.transferItemId}"></label></div>
+          </div>`;
+      }).join('');
+      const unaccounted = transferReceiptUnaccounted();
+      els.transferModalBody.innerHTML = `
+        <div class="transfer-success-note"><i class="bi bi-check-circle"></i> Only “Good” quantity is added to destination saleable stock. Damaged and missing units remain in the audit history.</div>
+        <div class="transfer-panel">
+          <div class="transfer-panel-head"><div><strong>Count received products</strong><div class="transfer-help">Good is pre-filled with all remaining units for fastest receiving.</div></div><span id="transferMissingPreview" class="transfer-status">${unaccounted} unaccounted</span></div>
+          <div class="transfer-lines">${rows}</div>
+        </div>
+        <label class="transfer-field transfer-panel">
+          <span>Receipt note (optional)</span>
+          <textarea id="transferReceiptNote" placeholder="Box condition, courier notes, damage details">${escapeHtml(receipt.note)}</textarea>
+        </label>
+        ${renderTransferPhotoPanel()}
+        <div id="transferReceiveWarning" class="transfer-warning" ${unaccounted ? '' : 'hidden'}>${unaccounted ? `${unaccounted} unit${unaccounted === 1 ? '' : 's'} will be marked missing if you complete this receipt now.` : ''}</div>
+        <div class="transfer-modal-actions" style="justify-content:space-between;margin-top:14px">
+          <button class="repair-action" type="button" data-transfer-back-detail><i class="bi bi-arrow-left"></i> Back</button>
+          <div class="transfer-modal-actions">
+            <button class="repair-action" type="button" data-transfer-save-partial ${receipt.photos.length && !state.transferPhotoUploading ? '' : 'disabled'}>Save Partial</button>
+            <button class="repair-action primary" type="button" data-transfer-complete-receipt ${receipt.photos.length && !state.transferPhotoUploading ? '' : 'disabled'}><i class="bi bi-check2-circle"></i> Complete Receipt</button>
+          </div>
+        </div>`;
+    }
+
+    function beginTransferReturn() {
+      const transfer = state.transferDetail;
+      if (!transfer) return;
+      state.transferReceipt = {
+        key: crypto.randomUUID(),
+        reason: '',
+        photos: [],
+        submitting: false,
+        lines: []
+      };
+      state.transferModalMode = 'return';
+      renderTransferReturnModal();
+    }
+
+    function renderTransferReturnModal() {
+      const transfer = state.transferDetail;
+      const receipt = state.transferReceipt;
+      if (!transfer || !receipt) return;
+      const remainingItems = transfer.items.filter(item => Number(item.remaining_quantity || 0) > 0);
+      const remainingUnits = remainingItems.reduce((sum, item) => sum + Number(item.remaining_quantity || 0), 0);
+      openTransferModalShell(`Return ${transfer.transfer_number}`, `${remainingUnits} remaining unit${remainingUnits === 1 ? '' : 's'} will go back to ${transfer.source_store.name}`);
+      els.transferModalBody.innerHTML = `
+        <div class="transfer-warning"><i class="bi bi-arrow-return-left"></i> This closes the transfer and restores every remaining in-transit unit to the source store. Already received units stay at the destination.</div>
+        <div class="transfer-panel">
+          <strong>Products returning to source</strong>
+          <div class="transfer-lines">${remainingItems.map(item => `
+            <div class="transfer-line" style="grid-template-columns:minmax(0,1fr) auto">
+              <div class="transfer-line-copy"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.sku)}</span></div>
+              <strong>${Number(item.remaining_quantity)} returning</strong>
+            </div>`).join('')}</div>
+        </div>
+        <label class="transfer-field transfer-panel">
+          <span>Return reason <span style="color:var(--tm-red)">*</span></span>
+          <textarea id="transferReturnReason" placeholder="Why is the remaining stock returning to the source store?">${escapeHtml(receipt.reason)}</textarea>
+        </label>
+        ${renderTransferPhotoPanel()}
+        <div class="transfer-modal-actions" style="justify-content:space-between;margin-top:14px">
+          <button class="repair-action" type="button" data-transfer-back-detail><i class="bi bi-arrow-left"></i> Back</button>
+          <button class="repair-action primary" type="button" data-transfer-confirm-return ${receipt.photos.length && receipt.reason.trim() && !state.transferPhotoUploading ? '' : 'disabled'}><i class="bi bi-arrow-return-left"></i> Confirm Return</button>
+        </div>`;
+    }
+
+    async function transferImageForUpload(file) {
+      const safeType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+      if (safeType && file.size <= 5 * 1024 * 1024) return { blob: file, name: file.name || 'transfer-photo.jpg' };
+
+      let source;
+      let sourceUrl = '';
+      try {
+        if ('createImageBitmap' in window) {
+          source = await createImageBitmap(file);
+        } else {
+          sourceUrl = URL.createObjectURL(file);
+          source = await new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = () => reject(new Error('This image format cannot be read on this device.'));
+            image.src = sourceUrl;
+          });
+        }
+        const originalWidth = Number(source.width || source.naturalWidth || 0);
+        const originalHeight = Number(source.height || source.naturalHeight || 0);
+        if (!originalWidth || !originalHeight) throw new Error('Photo dimensions could not be read.');
+        const scale = Math.min(1, 1800 / Math.max(originalWidth, originalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(originalWidth * scale));
+        canvas.height = Math.max(1, Math.round(originalHeight * scale));
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(source, 0, 0, canvas.width, canvas.height);
+        let quality = .84;
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        while (blob && blob.size > 5 * 1024 * 1024 && quality > .5) {
+          quality -= .1;
+          blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+        }
+        if (!blob || blob.size > 5 * 1024 * 1024) throw new Error('Photo is still larger than 5 MB after compression.');
+        return { blob, name: `${String(file.name || 'transfer-photo').replace(/\.[^.]+$/, '')}.jpg` };
+      } finally {
+        if (source && typeof source.close === 'function') source.close();
+        if (sourceUrl) URL.revokeObjectURL(sourceUrl);
+      }
+    }
+
+    async function uploadTransferPhotos(fileList) {
+      const transfer = state.transferDetail;
+      const receipt = state.transferReceipt;
+      if (!transfer || !receipt) return;
+      const files = Array.from(fileList || []).filter(file => file && file.size > 0);
+      const availableSlots = Math.max(0, 12 - receipt.photos.length - state.transferPhotoUploading);
+      if (!availableSlots) {
+        showToast('A receipt can contain up to 12 photos.');
+        return;
+      }
+      const selected = files.slice(0, availableSlots);
+      if (files.length > selected.length) showToast('Only the first available photo slots will be uploaded.');
+      state.transferPhotoUploading += selected.length;
+      state.transferModalMode === 'return' ? renderTransferReturnModal() : renderTransferReceiveModal();
+
+      for (const file of selected) {
+        try {
+          const prepared = await transferImageForUpload(file);
+          const form = new FormData();
+          form.append('staff_name', currentStaffName());
+          form.append('transfer_id', String(transfer.id));
+          form.append('receipt_key', receipt.key);
+          form.append('category', state.transferModalMode === 'return' ? 'return' : 'receipt');
+          form.append('photo', prepared.blob, prepared.name);
+          const payload = await transferApiRequest(POS_STOCK_TRANSFERS_ENDPOINT, {
+            method: 'POST',
+            headers: transferApiHeaders(false),
+            body: form
+          });
+          receipt.photos.push(payload.photo);
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || 'A photo could not be uploaded.');
+        } finally {
+          state.transferPhotoUploading -= 1;
+          state.transferModalMode === 'return' ? renderTransferReturnModal() : renderTransferReceiveModal();
+        }
+      }
+    }
+
+    async function deletePendingTransferPhoto(photoId) {
+      const transfer = state.transferDetail;
+      const receipt = state.transferReceipt;
+      if (!transfer || !receipt) return;
+      const photo = receipt.photos.find(item => String(item.id) === String(photoId));
+      if (!photo) return;
+      try {
+        await transferApiRequest(POS_STOCK_TRANSFERS_ENDPOINT, {
+          method: 'POST',
+          headers: transferApiHeaders(),
+          body: JSON.stringify({
+            action: 'delete-photo',
+            staff_name: currentStaffName(),
+            transfer_id: transfer.id,
+            receipt_key: receipt.key,
+            photo_id: photo.id
+          })
+        });
+        receipt.photos = receipt.photos.filter(item => String(item.id) !== String(photo.id));
+        state.transferModalMode === 'return' ? renderTransferReturnModal() : renderTransferReceiveModal();
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Photo could not be deleted.');
+      }
+    }
+
+    async function submitTransferReceipt(finalize) {
+      const transfer = state.transferDetail;
+      const receipt = state.transferReceipt;
+      if (!transfer || !receipt || receipt.submitting) return;
+      if (!receipt.photos.length || state.transferPhotoUploading) {
+        showToast('Upload at least one product photo before receiving.');
+        return;
+      }
+      const lines = receipt.lines.map(line => ({
+        transfer_item_id: Number(line.transferItemId),
+        good_quantity: Number(line.good || 0),
+        damaged_quantity: Number(line.damaged || 0)
+      })).filter(line => line.good_quantity + line.damaged_quantity > 0);
+      const counted = lines.reduce((sum, line) => sum + line.good_quantity + line.damaged_quantity, 0);
+      if (!finalize && counted < 1) {
+        showToast('Enter at least one received quantity for a partial receipt.');
+        return;
+      }
+      const missing = transferReceiptUnaccounted();
+      const confirmation = finalize
+        ? `Complete this receipt?${missing ? ` ${missing} unaccounted unit${missing === 1 ? '' : 's'} will be marked missing.` : ''}`
+        : 'Save this as a partial receipt? Remaining units will stay in transit.';
+      if (!confirm(confirmation)) return;
+
+      receipt.submitting = true;
+      els.transferModalBody.querySelectorAll('button').forEach(button => { button.disabled = true; });
+      try {
+        const payload = await transferApiRequest(POS_STOCK_TRANSFERS_ENDPOINT, {
+          method: 'POST',
+          headers: transferApiHeaders(),
+          body: JSON.stringify({
+            action: 'receive',
+            staff_name: currentStaffName(),
+            transfer_id: transfer.id,
+            receipt_key: receipt.key,
+            lines,
+            finalize: Boolean(finalize),
+            note: receipt.note
+          })
+        });
+        state.transferReceipt = null;
+        state.transferDetail = payload.transfer;
+        state.transferModalMode = 'detail';
+        renderTransferDetailModal();
+        showToast(finalize ? 'Transfer receipt completed.' : 'Partial receipt saved.');
+        loadTransfers({ silent: true });
+        loadProducts({ force: true });
+      } catch (error) {
+        console.error(error);
+        receipt.submitting = false;
+        renderTransferReceiveModal();
+        showToast(error.message || 'Receipt could not be saved.');
+      }
+    }
+
+    async function submitTransferReturn() {
+      const transfer = state.transferDetail;
+      const receipt = state.transferReceipt;
+      if (!transfer || !receipt || receipt.submitting) return;
+      if (!receipt.reason.trim()) {
+        showToast('Enter a return reason.');
+        return;
+      }
+      if (!receipt.photos.length || state.transferPhotoUploading) {
+        showToast('Upload at least one return photo.');
+        return;
+      }
+      if (!confirm(`Return every remaining unit to ${transfer.source_store.name} and close this transfer?`)) return;
+      receipt.submitting = true;
+      els.transferModalBody.querySelectorAll('button').forEach(button => { button.disabled = true; });
+      try {
+        const payload = await transferApiRequest(POS_STOCK_TRANSFERS_ENDPOINT, {
+          method: 'POST',
+          headers: transferApiHeaders(),
+          body: JSON.stringify({
+            action: 'return',
+            staff_name: currentStaffName(),
+            transfer_id: transfer.id,
+            receipt_key: receipt.key,
+            reason: receipt.reason
+          })
+        });
+        state.transferReceipt = null;
+        state.transferDetail = payload.transfer;
+        state.transferModalMode = 'detail';
+        renderTransferDetailModal();
+        showToast('Remaining stock returned to the source store.');
+        loadTransfers({ silent: true });
+        loadProducts({ force: true });
+      } catch (error) {
+        console.error(error);
+        receipt.submitting = false;
+        renderTransferReturnModal();
+        showToast(error.message || 'Stock could not be returned.');
+      }
+    }
+
+    function stopTransferScanner() {
+      if (state.transferScannerTimer) {
+        clearInterval(state.transferScannerTimer);
+        state.transferScannerTimer = 0;
+      }
+      if (state.transferScannerStream) {
+        state.transferScannerStream.getTracks().forEach(track => track.stop());
+        state.transferScannerStream = null;
+      }
+      if (state.transferDraft) state.transferDraft.scannerOpen = false;
+      const host = els.transferModalBody && els.transferModalBody.querySelector('#transferScannerHost');
+      if (host) host.innerHTML = '';
+    }
+
+    async function startTransferScanner() {
+      const draft = state.transferDraft;
+      const host = els.transferModalBody.querySelector('#transferScannerHost');
+      if (!draft || !host) return;
+      stopTransferScanner();
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('Camera scanning is not available on this device. Type the barcode instead.');
+        return;
+      }
+      if (!('BarcodeDetector' in window)) {
+        host.innerHTML = '<div class="transfer-warning">This browser does not support camera barcode detection yet. You can type the barcode into the search box; Android Chrome tablets support direct camera scanning.</div>';
+        return;
+      }
+      draft.scannerOpen = true;
+      host.innerHTML = `
+        <div class="transfer-scanner">
+          <video id="transferScannerVideo" playsinline muted></video>
+          <div class="transfer-modal-actions" style="justify-content:space-between;margin-top:8px"><span id="transferScannerStatus">Point the rear camera at a barcode...</span><button class="repair-action" type="button" data-transfer-stop-scan>Stop</button></div>
+        </div>`;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+        state.transferScannerStream = stream;
+        const video = host.querySelector('#transferScannerVideo');
+        video.srcObject = stream;
+        await video.play();
+        const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf'] });
+        let scanning = false;
+        state.transferScannerTimer = window.setInterval(async () => {
+          if (scanning || video.readyState < 2) return;
+          scanning = true;
+          try {
+            const codes = await detector.detect(video);
+            const value = codes[0] && String(codes[0].rawValue || '').trim();
+            if (!value) return;
+            const product = state.products.find(item => [item.barcode, item.sku].some(candidate => String(candidate || '').trim().toLowerCase() === value.toLowerCase()));
+            stopTransferScanner();
+            if (product) {
+              addTransferDraftProduct(product.id);
+              showToast(`Barcode matched ${product.name}.`);
+            } else {
+              draft.search = value;
+              renderNewTransferModal();
+              showToast(`Barcode ${value} is not in the current product list.`);
+            }
+          } catch (error) {
+            console.debug('Barcode frame was not readable.', error);
+          } finally {
+            scanning = false;
+          }
+        }, 450);
+      } catch (error) {
+        console.error(error);
+        stopTransferScanner();
+        host.innerHTML = '<div class="transfer-warning">Camera permission was not granted. Type the barcode into the search box instead.</div>';
+      }
+    }
+
+    function initializeLocalTransferUiTest() {
+      state.selectedStaffName = 'Bowen';
+      state.allowedStoreIds = ['park-ridge', 'north-lakes', 'fairfield', 'toowong'];
+      state.storeId = 'park-ridge';
+      state.products = normalizeProducts(demoProducts);
+      state.transferStores = [
+        { id: 1, slug: 'park-ridge', name: 'Park Ridge' },
+        { id: 3, slug: 'north-lakes', name: 'North Lakes' },
+        { id: 2, slug: 'fairfield', name: 'Fairfield' },
+        { id: 4, slug: 'toowong', name: 'Toowong' }
+      ];
+      const sampleDetail = {
+        id: 900001,
+        transfer_number: 'TRF-UI-TEST-0001',
+        status: 'partially_received',
+        source_store: { id: 1, slug: 'park-ridge', name: 'Park Ridge' },
+        destination_store: { id: 3, slug: 'north-lakes', name: 'North Lakes' },
+        dispatched_by: 'Bowen',
+        dispatch_note: 'Local browser test only',
+        dispatched_at: new Date().toISOString(),
+        items: [
+          {
+            id: 990001,
+            product_id: 1,
+            sku: 'CASE-IP15-CLR',
+            name: 'iPhone 15 Clear Case',
+            barcode: '935800100001',
+            variant: 'Clear',
+            dispatched_quantity: 5,
+            received_good_quantity: 2,
+            received_damaged_quantity: 0,
+            missing_quantity: 0,
+            returned_quantity: 0,
+            remaining_quantity: 3,
+            image_url: ''
+          }
+        ],
+        receipts: [{
+          id: 980001,
+          receipt_key: crypto.randomUUID(),
+          receipt_type: 'receive',
+          received_by: 'Bowen',
+          note: 'Two received for UI test',
+          created_at: new Date().toISOString(),
+          items: [{ transfer_item_id: 990001, good_quantity: 2, damaged_quantity: 0, missing_quantity: 0, returned_quantity: 0 }]
+        }],
+        photos: []
+      };
+      state.transfers = [{
+        id: sampleDetail.id,
+        transfer_number: sampleDetail.transfer_number,
+        status: sampleDetail.status,
+        source_store_slug: 'park-ridge',
+        source_store_name: 'Park Ridge',
+        destination_store_slug: 'north-lakes',
+        destination_store_name: 'North Lakes',
+        dispatched_by: 'Bowen',
+        dispatched_at: sampleDetail.dispatched_at,
+        product_count: 1,
+        dispatched_quantity: 5,
+        received_good_quantity: 2,
+        issue_quantity: 0,
+        remaining_quantity: 3,
+        _detail: sampleDetail
+      }];
+      state.transferLoaded = true;
+      els.transferStoreFilter.innerHTML = '<option value="all">All stores</option>' + state.transferStores.map(store => `<option value="${store.slug}">${store.name}</option>`).join('');
+      updateStoreBadge();
+      updateStaffButton();
+      renderAll();
+      setActiveView('transfers');
+    }
+
     function setActiveView(view) {
       state.activeView = view;
+      document.querySelector('.pos-app')?.classList.toggle('transfer-mode', view === 'transfers');
       els.targetView.classList.toggle('active', view === 'target');
       els.productView.classList.toggle('active', view === 'products');
       els.repairView.classList.toggle('active', view === 'repair');
       els.usedDeviceView.classList.toggle('active', view === 'used-devices');
+      els.transferView.classList.toggle('active', view === 'transfers');
       els.ordersView.classList.toggle('active', view === 'orders');
       els.targetNavBtn.classList.toggle('active', view === 'target');
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
       els.usedDeviceNavBtn.classList.toggle('active', view === 'used-devices');
+      els.transferNavBtn.classList.toggle('active', view === 'transfers');
       els.ordersNavBtn.classList.toggle('active', view === 'orders');
       if (view === 'target') loadTodayProgress();
       if (view === 'repair') {
@@ -8046,6 +9633,10 @@
       }
       if (view === 'orders') loadInvoiceHistory();
       if (view === 'used-devices') loadUsedDevices();
+      if (view === 'transfers') {
+        if (typeof localTransferTestMode !== 'undefined' && localTransferTestMode) renderTransfers();
+        else loadTransfers({ silent: state.transferLoaded });
+      }
     }
 
     function repairTicketStoreCode() {
@@ -13143,7 +14734,178 @@
     els.productNavBtn.addEventListener('click', () => setActiveView('products'));
     els.repairNavBtn.addEventListener('click', () => setActiveView('repair'));
     els.usedDeviceNavBtn.addEventListener('click', () => setActiveView('used-devices'));
+    els.transferNavBtn.addEventListener('click', () => setActiveView('transfers'));
     els.ordersNavBtn.addEventListener('click', () => setActiveView('orders'));
+    els.newTransferBtn.addEventListener('click', openNewTransfer);
+    els.transferReloadBtn.addEventListener('click', () => loadTransfers());
+    els.transferStatusTabs.addEventListener('click', event => {
+      const button = event.target.closest('[data-transfer-status]');
+      if (!button) return;
+      state.transferStatus = button.dataset.transferStatus;
+      loadTransfers();
+    });
+    els.transferList.addEventListener('click', event => {
+      const card = event.target.closest('[data-transfer-id]');
+      if (card) openTransferDetail(card.dataset.transferId);
+    });
+    els.transferStoreFilter.addEventListener('change', event => {
+      state.transferStore = event.target.value || 'all';
+      loadTransfers();
+    });
+    els.transferSearchInput.addEventListener('input', event => {
+      state.transferSearch = event.target.value;
+      clearTimeout(loadTransfers.searchTimer);
+      loadTransfers.searchTimer = setTimeout(() => loadTransfers({ silent: true }), 280);
+    });
+    els.transferModalClose.addEventListener('click', () => closeTransferModal());
+    els.transferModal.addEventListener('click', event => {
+      if (event.target === els.transferModal) closeTransferModal();
+    });
+    els.transferModalBody.addEventListener('click', async event => {
+      const addButton = event.target.closest('[data-transfer-add-product]');
+      const removeButton = event.target.closest('[data-transfer-remove-product]');
+      if (addButton) {
+        addTransferDraftProduct(addButton.dataset.transferAddProduct);
+        return;
+      }
+      if (removeButton && state.transferDraft) {
+        state.transferDraft.items = state.transferDraft.items.filter(item => String(item.productId) !== String(removeButton.dataset.transferRemoveProduct));
+        renderNewTransferModal();
+        return;
+      }
+      if (event.target.closest('[data-transfer-scan]')) {
+        startTransferScanner();
+        return;
+      }
+      if (event.target.closest('[data-transfer-stop-scan]')) {
+        stopTransferScanner();
+        return;
+      }
+      if (event.target.closest('[data-transfer-dispatch]')) {
+        submitTransferDispatch();
+        return;
+      }
+      if (event.target.closest('[data-transfer-receive]')) {
+        beginTransferReceive();
+        return;
+      }
+      if (event.target.closest('[data-transfer-return]')) {
+        beginTransferReturn();
+        return;
+      }
+      if (event.target.closest('[data-transfer-back-detail]')) {
+        await backToTransferDetail();
+        return;
+      }
+      if (event.target.closest('[data-transfer-save-partial]')) {
+        submitTransferReceipt(false);
+        return;
+      }
+      if (event.target.closest('[data-transfer-complete-receipt]')) {
+        submitTransferReceipt(true);
+        return;
+      }
+      if (event.target.closest('[data-transfer-confirm-return]')) {
+        submitTransferReturn();
+        return;
+      }
+      const deletePhotoButton = event.target.closest('[data-transfer-delete-photo]');
+      if (deletePhotoButton) {
+        deletePendingTransferPhoto(deletePhotoButton.dataset.transferDeletePhoto);
+        return;
+      }
+      if (event.target.closest('[data-transfer-cancel]')) closeTransferModal();
+    });
+    els.transferModalBody.addEventListener('input', event => {
+      const draftQuantityProductId = event.target.dataset.transferQuantity;
+      if (draftQuantityProductId && state.transferDraft) {
+        const line = state.transferDraft.items.find(item => String(item.productId) === String(draftQuantityProductId));
+        const product = state.products.find(item => String(item.id) === String(draftQuantityProductId));
+        if (!line || !product) return;
+        const stock = transferProductStock(product, state.transferDraft.source);
+        line.quantity = Math.min(stock, Math.max(1, Math.trunc(Number(event.target.value || 1))));
+        event.target.value = line.quantity;
+        return;
+      }
+      if (event.target.id === 'transferProductSearch' && state.transferDraft) {
+        state.transferDraft.search = event.target.value;
+        renderTransferProductResults();
+        return;
+      }
+      if (event.target.id === 'transferDispatchNote' && state.transferDraft) {
+        state.transferDraft.note = event.target.value;
+        return;
+      }
+      if (event.target.id === 'transferReceiptNote' && state.transferReceipt) {
+        state.transferReceipt.note = event.target.value;
+        return;
+      }
+      if (event.target.id === 'transferReturnReason' && state.transferReceipt) {
+        state.transferReceipt.reason = event.target.value;
+        const submit = els.transferModalBody.querySelector('[data-transfer-confirm-return]');
+        if (submit) submit.disabled = !state.transferReceipt.reason.trim() || !state.transferReceipt.photos.length || state.transferPhotoUploading > 0;
+        return;
+      }
+      const goodId = event.target.dataset.transferReceiveGood;
+      const damagedId = event.target.dataset.transferReceiveDamaged;
+      if ((goodId || damagedId) && state.transferReceipt) {
+        const itemId = Number(goodId || damagedId);
+        const line = state.transferReceipt.lines.find(candidate => Number(candidate.transferItemId) === itemId);
+        if (!line) return;
+        const value = Math.max(0, Math.trunc(Number(event.target.value || 0)));
+        if (goodId) line.good = Math.min(value, line.remaining - Number(line.damaged || 0));
+        else line.damaged = Math.min(value, line.remaining - Number(line.good || 0));
+        event.target.value = goodId ? line.good : line.damaged;
+        const missing = transferReceiptUnaccounted();
+        const preview = els.transferModalBody.querySelector('#transferMissingPreview');
+        const warning = els.transferModalBody.querySelector('#transferReceiveWarning');
+        if (preview) preview.textContent = `${missing} unaccounted`;
+        if (warning) {
+          warning.hidden = missing < 1;
+          warning.textContent = missing ? `${missing} unit${missing === 1 ? '' : 's'} will be marked missing if you complete this receipt now.` : '';
+        }
+      }
+    });
+    els.transferModalBody.addEventListener('change', event => {
+      if (event.target.id === 'transferSourceStore' && state.transferDraft) {
+        const nextSource = event.target.value;
+        if (state.transferDraft.items.length && !confirm('Changing the source store will clear the selected products. Continue?')) {
+          event.target.value = state.transferDraft.source;
+          return;
+        }
+        stopTransferScanner();
+        state.transferDraft.source = nextSource;
+        state.transferDraft.items = [];
+        if (state.transferDraft.destination === nextSource) {
+          state.transferDraft.destination = state.transferStores.find(store => store.slug !== nextSource).slug;
+        }
+        renderNewTransferModal();
+        return;
+      }
+      if (event.target.id === 'transferDestinationStore' && state.transferDraft) {
+        state.transferDraft.destination = event.target.value;
+        return;
+      }
+      const quantityProductId = event.target.dataset.transferQuantity;
+      if (quantityProductId && state.transferDraft) {
+        const line = state.transferDraft.items.find(item => String(item.productId) === String(quantityProductId));
+        const product = state.products.find(item => String(item.id) === String(quantityProductId));
+        if (!line || !product) return;
+        const stock = transferProductStock(product, state.transferDraft.source);
+        line.quantity = Math.min(stock, Math.max(1, Math.trunc(Number(event.target.value || 1))));
+        event.target.value = line.quantity;
+        return;
+      }
+      if (event.target.id === 'transferCameraPhotoInput' || event.target.id === 'transferPhotoInput') {
+        uploadTransferPhotos(event.target.files);
+      }
+    });
+    els.transferModalBody.addEventListener('keydown', event => {
+      if (event.target.id !== 'transferProductSearch' || event.key !== 'Enter' || !state.transferDraft) return;
+      event.preventDefault();
+      const products = transferSearchProducts();
+      if (products.length) addTransferDraftProduct(products[0].id);
+    });
     els.usedDeviceTabs.addEventListener('click', event => {
       const button = event.target.closest('[data-used-tab]');
       if (button) setUsedDeviceTab(button.dataset.usedTab);
@@ -13800,8 +15562,12 @@
 
     const localCatalogTestMode = ['localhost', '127.0.0.1'].includes(window.location.hostname)
       && new URLSearchParams(window.location.search).has('catalog-test');
+    const localTransferTestMode = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      && new URLSearchParams(window.location.search).has('transfer-test');
 
-    if (localCatalogTestMode) {
+    if (localTransferTestMode) {
+      initializeLocalTransferUiTest();
+    } else if (localCatalogTestMode) {
       runProductCatalogSelfTest();
     } else {
       window.Techm8StaffAuth.init({
@@ -13828,7 +15594,7 @@
       if (state.activeView === 'target' && document.visibilityState === 'visible') {
         loadTodayProgress({ silent: true });
       }
-      if (state.selectedStaffName && document.visibilityState === 'visible') {
+      if (state.selectedStaffName && document.visibilityState === 'visible' && !localTransferTestMode) {
         loadStocktakeContext({ silent: true });
       }
     }, 30000);
