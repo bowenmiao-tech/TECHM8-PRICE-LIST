@@ -6,7 +6,7 @@ const ALLOWED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-staff-session",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-staff-session, x-pos-store, x-pos-shift",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
@@ -32,6 +32,7 @@ function errorMessage(error: unknown, fallback: string): string {
 
 function errorStatus(message: string): number {
   if (/not found/i.test(message)) return 404;
+  if (/only the|current store|current open shift|not allowed|does not have/i.test(message)) return 403;
   if (/already used|not available|no stock|insufficient|exceeds|different operation/i.test(message)) return 409;
   if (/required|invalid|must|between|contain|belong/i.test(message)) return 400;
   return 500;
@@ -80,6 +81,8 @@ async function getStaffContext(
   const context = await callStaffRpc("get_staff_transfer_context", {
     session_token: sessionToken,
     target_staff_name: staffName.trim(),
+    target_store_code: String(request.headers.get("x-pos-store") || "").trim(),
+    target_shift_code: String(request.headers.get("x-pos-shift") || "").trim(),
   }, request);
   if (!context.ok) throw new Error(String(context.message || "Active staff member not found."));
   return context;
@@ -113,6 +116,7 @@ async function uploadPhoto(
   request: Request,
   form: FormData,
   actorName: string,
+  actorStoreSlug: string,
 ): Promise<Response> {
   const transferId = Number(form.get("transfer_id"));
   const receiptKey = String(form.get("receipt_key") || "").trim();
@@ -129,9 +133,16 @@ async function uploadPhoto(
     return jsonResponse({ ok: false, message: "Photo category is invalid." }, 400);
   }
 
+  const admin = productAdminClient();
+  const scopedTransfer = await getScopedTransfer(admin, transferId, actorStoreSlug);
+  requireStoreRole(
+    scopedTransfer,
+    category === "return" ? "source" : "destination",
+    category === "return" ? "upload return photos" : "upload receipt photos",
+  );
+
   const extension = photo.type === "image/png" ? "png" : photo.type === "image/webp" ? "webp" : "jpg";
   const storagePath = `${transferId}/${receiptKey}/${crypto.randomUUID()}.${extension}`;
-  const admin = productAdminClient();
   const bytes = new Uint8Array(await photo.arrayBuffer());
   const { error: uploadError } = await admin.storage.from(BUCKET_NAME).upload(storagePath, bytes, {
     cacheControl: "3600",
@@ -161,7 +172,47 @@ async function uploadPhoto(
   return jsonResponse({ ok: true, photo: { ...(data as JsonRecord), signed_url: signed.signedUrl } });
 }
 
-async function deletePendingPhoto(admin: ReturnType<typeof productAdminClient>, body: JsonRecord) {
+async function getScopedTransfer(
+  admin: ReturnType<typeof productAdminClient>,
+  transferId: number,
+  actorStoreSlug: string,
+): Promise<JsonRecord> {
+  const { data, error } = await admin.rpc("pos_stock_transfer_payload_for_store", {
+    target_transfer_id: transferId,
+    target_store_slug: actorStoreSlug,
+  });
+  if (error) throw error;
+  if (!data) throw new Error("Transfer not found for the current store.");
+  return data as JsonRecord;
+}
+
+function requireStoreRole(transfer: JsonRecord, role: "source" | "destination", action: string) {
+  if (String(transfer.current_store_role || "") !== role) {
+    const storeLabel = role === "destination" ? "destination" : "source";
+    throw new Error(`Only the ${storeLabel} store can ${action}.`);
+  }
+}
+
+function addCurrentStoreRole(payload: unknown, actorStoreSlug: string) {
+  if (!payload || typeof payload !== "object") return payload;
+  const transfer = payload as JsonRecord;
+  const source = transfer.source_store as JsonRecord | undefined;
+  const destination = transfer.destination_store as JsonRecord | undefined;
+  return {
+    ...transfer,
+    current_store_role: String(source?.slug || "") === actorStoreSlug
+      ? "source"
+      : String(destination?.slug || "") === actorStoreSlug
+      ? "destination"
+      : null,
+  };
+}
+
+async function deletePendingPhoto(
+  admin: ReturnType<typeof productAdminClient>,
+  body: JsonRecord,
+  actorStoreSlug: string,
+) {
   const photoId = String(body.photo_id || "").trim();
   const receiptKey = String(body.receipt_key || "").trim();
   const transferId = Number(body.transfer_id);
@@ -171,7 +222,7 @@ async function deletePendingPhoto(admin: ReturnType<typeof productAdminClient>, 
 
   const { data: photo, error: readError } = await admin
     .from("stock_transfer_photos")
-    .select("id, storage_path, receipt_id")
+    .select("id, storage_path, receipt_id, category")
     .eq("id", photoId)
     .eq("transfer_id", transferId)
     .eq("receipt_key", receiptKey)
@@ -179,6 +230,13 @@ async function deletePendingPhoto(admin: ReturnType<typeof productAdminClient>, 
   if (readError) throw readError;
   if (!photo) return { ok: true, deleted: false };
   if (photo.receipt_id) throw new Error("Submitted receipt photos cannot be deleted.");
+
+  const scopedTransfer = await getScopedTransfer(admin, transferId, actorStoreSlug);
+  requireStoreRole(
+    scopedTransfer,
+    photo.category === "return" ? "source" : "destination",
+    photo.category === "return" ? "delete return photos" : "delete receipt photos",
+  );
 
   const { error: storageError } = await admin.storage.from(BUCKET_NAME).remove([photo.storage_path]);
   if (storageError) throw storageError;
@@ -212,8 +270,10 @@ Deno.serve(async (request) => {
 
     const staff = await getStaffContext(sessionToken, staffName, request);
     const actorName = String(staff.display_name || staffName);
+    const actorStoreSlug = String(staff.current_store_slug || "").trim();
+    if (!actorStoreSlug) throw new Error("Current store is required.");
 
-    if (form) return await uploadPhoto(request, form, actorName);
+    if (form) return await uploadPhoto(request, form, actorName, actorStoreSlug);
 
     const admin = productAdminClient();
     if (request.method === "GET") {
@@ -228,18 +288,14 @@ Deno.serve(async (request) => {
         if (!Number.isInteger(transferId) || transferId < 1) {
           return jsonResponse({ ok: false, message: "A valid transfer ID is required." }, 400);
         }
-        const { data, error } = await admin.rpc("pos_stock_transfer_payload", {
-          target_transfer_id: transferId,
-        });
-        if (error) throw error;
-        if (!data) return jsonResponse({ ok: false, message: "Transfer not found." }, 404);
+        const data = await getScopedTransfer(admin, transferId, actorStoreSlug);
         return jsonResponse({ ok: true, transfer: await addSignedPhotoUrls(admin, data) });
       }
       if (mode !== "list") return jsonResponse({ ok: false, message: "Unknown request mode." }, 400);
 
       const { data, error } = await admin.rpc("list_pos_stock_transfers", {
         target_status: url.searchParams.get("status") || "all",
-        target_store_slug: url.searchParams.get("store") || "all",
+        target_store_slug: actorStoreSlug,
         target_search_query: url.searchParams.get("search") || "",
         target_limit: Number(url.searchParams.get("limit") || 100),
       });
@@ -258,11 +314,14 @@ Deno.serve(async (request) => {
         target_client_request_key: String(body.request_key || ""),
       });
       if (error) throw error;
-      return jsonResponse({ ok: true, transfer: data });
+      return jsonResponse({ ok: true, transfer: addCurrentStoreRole(data, actorStoreSlug) as JsonRecord });
     }
     if (action === "receive") {
+      const transferId = Number(body.transfer_id);
+      const scopedTransfer = await getScopedTransfer(admin, transferId, actorStoreSlug);
+      requireStoreRole(scopedTransfer, "destination", "receive this transfer");
       const { data, error } = await admin.rpc("receive_pos_stock_transfer", {
-        target_transfer_id: Number(body.transfer_id),
+        target_transfer_id: transferId,
         target_receipt_key: String(body.receipt_key || ""),
         target_lines: Array.isArray(body.lines) ? body.lines : [],
         target_finalize: Boolean(body.finalize),
@@ -270,20 +329,23 @@ Deno.serve(async (request) => {
         target_note: String(body.note || ""),
       });
       if (error) throw error;
-      return jsonResponse({ ok: true, transfer: await addSignedPhotoUrls(admin, data) });
+      return jsonResponse({ ok: true, transfer: await addSignedPhotoUrls(admin, addCurrentStoreRole(data, actorStoreSlug)) });
     }
     if (action === "return") {
+      const transferId = Number(body.transfer_id);
+      const scopedTransfer = await getScopedTransfer(admin, transferId, actorStoreSlug);
+      requireStoreRole(scopedTransfer, "source", "return the remaining stock");
       const { data, error } = await admin.rpc("return_pos_stock_transfer", {
-        target_transfer_id: Number(body.transfer_id),
+        target_transfer_id: transferId,
         target_receipt_key: String(body.receipt_key || ""),
         target_actor_staff_name: actorName,
         target_reason: String(body.reason || ""),
       });
       if (error) throw error;
-      return jsonResponse({ ok: true, transfer: await addSignedPhotoUrls(admin, data) });
+      return jsonResponse({ ok: true, transfer: await addSignedPhotoUrls(admin, addCurrentStoreRole(data, actorStoreSlug)) });
     }
     if (action === "delete-photo") {
-      return jsonResponse(await deletePendingPhoto(admin, body));
+      return jsonResponse(await deletePendingPhoto(admin, body, actorStoreSlug));
     }
     return jsonResponse({ ok: false, message: "Unknown transfer action." }, 400);
   } catch (error) {

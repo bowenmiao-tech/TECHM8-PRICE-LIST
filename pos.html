@@ -1045,6 +1045,11 @@
       contain-intrinsic-size: auto 314px;
     }
 
+    .product-card.image-variant-card {
+      height: 314px;
+      contain-intrinsic-size: auto 314px;
+    }
+
     .watch-band-card .product-info {
       justify-content: flex-start;
     }
@@ -1590,6 +1595,39 @@
       align-content: flex-start;
       flex-wrap: wrap;
       gap: 3px;
+    }
+
+    .product-pattern-thumbnails {
+      min-height: 25px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .product-pattern-thumbnail {
+      width: 24px;
+      height: 24px;
+      flex: 0 0 24px;
+      object-fit: cover;
+      border: 1px solid #cbd8dc;
+      border-radius: 4px;
+      background: #f4f8f9;
+    }
+
+    .product-pattern-count {
+      min-width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      border-radius: 4px;
+      color: #08765f;
+      background: #e9f7f3;
+      font-size: 10px;
+      font-weight: 900;
+      white-space: nowrap;
     }
 
     .product-colour-swatch {
@@ -4658,7 +4696,8 @@
         contain-intrinsic-size: auto 250px;
       }
 
-      .product-card.watch-band-card {
+      .product-card.watch-band-card,
+      .product-card.image-variant-card {
         height: 286px;
         contain-intrinsic-size: auto 286px;
       }
@@ -5079,7 +5118,7 @@
     .transfer-icon-button.danger { color: var(--tm-red); }
 
     .transfer-receive-line {
-      grid-template-columns: minmax(0, 1fr) 92px 92px;
+      grid-template-columns: minmax(0, 1fr) repeat(3, 92px);
     }
 
     .transfer-receive-qty label {
@@ -5203,7 +5242,8 @@
       .transfer-head { align-items: flex-start; }
       .transfer-toolbar { align-items: stretch; flex-direction: column; }
       .transfer-filter { width: 100%; }
-      .transfer-receive-line { grid-template-columns: minmax(0, 1fr) 82px 82px; }
+      .transfer-receive-line { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .transfer-receive-line .transfer-line-copy { grid-column: 1 / -1; }
     }
   </style>
 </head>
@@ -5324,8 +5364,8 @@
               <i class="bi bi-search"></i>
               <input id="transferSearchInput" class="search-input" type="search" placeholder="Transfer number / staff / product / SKU / barcode">
             </div>
-            <select id="transferStoreFilter" class="transfer-filter" aria-label="Filter by store">
-              <option value="all">All stores</option>
+            <select id="transferStoreFilter" class="transfer-filter" aria-label="Current store transfers" hidden>
+              <option value="">Current store</option>
             </select>
           </div>
           <div id="transferStatusTabs" class="transfer-status-tabs" role="tablist" aria-label="Transfer status filters"></div>
@@ -6238,7 +6278,7 @@
       transferLoading: false,
       transferLoaded: false,
       transferStatus: 'all',
-      transferStore: 'all',
+      transferStore: '',
       transferSearch: '',
       transferModalMode: '',
       transferDraft: null,
@@ -8631,7 +8671,12 @@
       const staffToken = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
         ? window.Techm8StaffAuth.getToken()
         : '';
-      const headers = { 'x-staff-session': staffToken };
+      const activeShift = readActiveShift();
+      const headers = {
+        'x-staff-session': staffToken,
+        'x-pos-store': repairTicketStoreCode(),
+        'x-pos-shift': activeShift && activeShift.id ? activeShift.id : ''
+      };
       if (json) headers['Content-Type'] = 'application/json';
       if (window.TECHM8_SUPABASE && window.TECHM8_SUPABASE.anonKey) {
         headers.apikey = window.TECHM8_SUPABASE.anonKey;
@@ -8653,15 +8698,18 @@
     }
 
     async function loadTransferContext() {
-      if (state.transferStores.length) return state.transferStores;
+      if (state.transferStores.length) {
+        state.transferStore = state.storeId;
+        return state.transferStores;
+      }
       const url = new URL(POS_STOCK_TRANSFERS_ENDPOINT);
       url.searchParams.set('mode', 'context');
       url.searchParams.set('staff_name', currentStaffName());
       const payload = await transferApiRequest(url.toString(), { headers: transferApiHeaders(false) });
       state.transferStores = Array.isArray(payload.stores) ? payload.stores : [];
-      els.transferStoreFilter.innerHTML = '<option value="all">All stores</option>' + state.transferStores.map(store => `
-        <option value="${escapeHtml(store.slug)}">${escapeHtml(store.name)}</option>
-      `).join('');
+      state.transferStore = state.storeId;
+      const currentStore = state.transferStores.find(store => store.slug === state.storeId);
+      els.transferStoreFilter.innerHTML = `<option value="${escapeHtml(state.storeId)}">${escapeHtml(currentStore ? currentStore.name : storeById(state.storeId).name)}</option>`;
       els.transferStoreFilter.value = state.transferStore;
       return state.transferStores;
     }
@@ -8676,7 +8724,6 @@
         url.searchParams.set('mode', 'list');
         url.searchParams.set('staff_name', currentStaffName());
         url.searchParams.set('status', state.transferStatus);
-        url.searchParams.set('store', state.transferStore);
         url.searchParams.set('search', state.transferSearch.trim());
         url.searchParams.set('limit', '200');
         const payload = await transferApiRequest(url.toString(), { headers: transferApiHeaders(false) });
@@ -9071,10 +9118,13 @@
       return (transfer.items || []).reduce((totals, item) => {
         totals.dispatched += Number(item.dispatched_quantity || 0);
         totals.good += Number(item.received_good_quantity || 0);
-        totals.issues += Number(item.received_damaged_quantity || 0) + Number(item.missing_quantity || 0);
+        totals.damaged += Number(item.received_damaged_quantity || 0);
+        totals.missing += Number(item.missing_quantity || 0);
+        totals.returned += Number(item.returned_quantity || 0);
+        totals.issues += Number(item.received_damaged_quantity || 0) + Number(item.missing_quantity || 0) + Number(item.returned_quantity || 0);
         totals.remaining += Number(item.remaining_quantity || 0);
         return totals;
-      }, { dispatched: 0, good: 0, issues: 0, remaining: 0 });
+      }, { dispatched: 0, good: 0, damaged: 0, missing: 0, returned: 0, issues: 0, remaining: 0 });
     }
 
     function renderTransferDetailModal() {
@@ -9082,6 +9132,9 @@
       if (!transfer) return;
       const totals = transferItemTotals(transfer);
       const isOpen = ['in_transit', 'partially_received'].includes(transfer.status) && totals.remaining > 0;
+      const currentStoreRole = String(transfer.current_store_role || '');
+      const canReceive = isOpen && currentStoreRole === 'destination';
+      const canReturn = isOpen && currentStoreRole === 'source';
       openTransferModalShell(transfer.transfer_number, `${transferStatusText(transfer.status)} · Dispatched by ${transfer.dispatched_by}`);
       const itemRows = (transfer.items || []).map(item => `
         <div class="transfer-line">
@@ -9092,7 +9145,7 @@
           </div>
           <div class="transfer-help" style="text-align:right">
             <strong>${Number(item.dispatched_quantity || 0)} sent</strong><br>
-            ${Number(item.received_good_quantity || 0)} good · ${Number(item.received_damaged_quantity || 0)} damaged · ${Number(item.missing_quantity || 0)} missing · ${Number(item.remaining_quantity || 0)} remaining
+            ${Number(item.received_good_quantity || 0)} good · ${Number(item.received_damaged_quantity || 0)} damaged · ${Number(item.missing_quantity || 0)} missing · ${Number(item.returned_quantity || 0)} returned · ${Number(item.remaining_quantity || 0)} remaining
           </div>
         </div>`).join('');
       const photos = (transfer.photos || []).map(photo => `
@@ -9113,7 +9166,7 @@
         <div class="transfer-detail-metrics">
           <div class="transfer-detail-metric"><span>Dispatched</span><strong>${totals.dispatched}</strong></div>
           <div class="transfer-detail-metric"><span>Good received</span><strong>${totals.good}</strong></div>
-          <div class="transfer-detail-metric"><span>Issues</span><strong>${totals.issues}</strong></div>
+          <div class="transfer-detail-metric"><span>Exceptions</span><strong>${totals.issues}</strong></div>
           <div class="transfer-detail-metric"><span>Remaining</span><strong>${totals.remaining}</strong></div>
         </div>
         ${transfer.dispatch_note ? `<div class="transfer-panel"><strong>Dispatch note</strong><div class="transfer-help" style="margin-top:5px">${escapeHtml(transfer.dispatch_note)}</div></div>` : ''}
@@ -9122,14 +9175,18 @@
         ${photos ? `<div class="transfer-panel"><strong>Receipt photos (${transfer.photos.length})</strong><div class="transfer-photo-grid">${photos}</div></div>` : ''}
         <div class="transfer-modal-actions" style="justify-content:flex-end;margin-top:14px">
           <button class="repair-action" type="button" data-transfer-cancel>Close</button>
-          ${isOpen ? '<button class="repair-action" type="button" data-transfer-return><i class="bi bi-arrow-return-left"></i> Return Remaining</button>' : ''}
-          ${isOpen ? '<button class="repair-action primary" type="button" data-transfer-receive><i class="bi bi-box-arrow-in-down"></i> Receive Stock</button>' : ''}
+          ${canReturn ? '<button class="repair-action" type="button" data-transfer-return><i class="bi bi-arrow-return-left"></i> Return Remaining</button>' : ''}
+          ${canReceive ? '<button class="repair-action primary" type="button" data-transfer-receive><i class="bi bi-box-arrow-in-down"></i> Receive Stock</button>' : ''}
         </div>`;
     }
 
     function beginTransferReceive() {
       const transfer = state.transferDetail;
       if (!transfer) return;
+      if (transfer.current_store_role !== 'destination') {
+        showToast('Only the destination store can receive this transfer.');
+        return;
+      }
       state.transferReceipt = {
         key: crypto.randomUUID(),
         note: '',
@@ -9139,7 +9196,8 @@
           transferItemId: Number(item.id),
           remaining: Number(item.remaining_quantity || 0),
           good: Number(item.remaining_quantity || 0),
-          damaged: 0
+          damaged: 0,
+          missing: 0
         }))
       };
       state.transferModalMode = 'receive';
@@ -9149,7 +9207,10 @@
     function transferReceiptUnaccounted() {
       const receipt = state.transferReceipt;
       if (!receipt) return 0;
-      return receipt.lines.reduce((sum, line) => sum + Math.max(0, line.remaining - Number(line.good || 0) - Number(line.damaged || 0)), 0);
+      return receipt.lines.reduce((sum, line) => sum + Math.max(
+        0,
+        line.remaining - Number(line.good || 0) - Number(line.damaged || 0) - Number(line.missing || 0)
+      ), 0);
     }
 
     function renderTransferReceiptPhotos() {
@@ -9194,13 +9255,14 @@
             </div>
             <div class="transfer-receive-qty"><label>Good<input class="transfer-qty-input" type="number" min="0" max="${line.remaining}" step="1" value="${line.good}" data-transfer-receive-good="${line.transferItemId}"></label></div>
             <div class="transfer-receive-qty"><label>Damaged<input class="transfer-qty-input" type="number" min="0" max="${line.remaining}" step="1" value="${line.damaged}" data-transfer-receive-damaged="${line.transferItemId}"></label></div>
+            <div class="transfer-receive-qty"><label>Missing<input class="transfer-qty-input" type="number" min="0" max="${line.remaining}" step="1" value="${line.missing}" data-transfer-receive-missing="${line.transferItemId}"></label></div>
           </div>`;
       }).join('');
       const unaccounted = transferReceiptUnaccounted();
       els.transferModalBody.innerHTML = `
-        <div class="transfer-success-note"><i class="bi bi-check-circle"></i> Only “Good” quantity is added to destination saleable stock. Damaged and missing units remain in the audit history.</div>
+        <div class="transfer-success-note"><i class="bi bi-check-circle"></i> Only “Good” is added to destination saleable stock. Use “Missing” only when an item is confirmed lost. Any uncounted balance is restored to the source when you complete.</div>
         <div class="transfer-panel">
-          <div class="transfer-panel-head"><div><strong>Count received products</strong><div class="transfer-help">Good is pre-filled with all remaining units for fastest receiving.</div></div><span id="transferMissingPreview" class="transfer-status">${unaccounted} unaccounted</span></div>
+          <div class="transfer-panel-head"><div><strong>Count received products</strong><div class="transfer-help">Good is pre-filled with all remaining units for fastest receiving.</div></div><span id="transferMissingPreview" class="transfer-status">${unaccounted} to source</span></div>
           <div class="transfer-lines">${rows}</div>
         </div>
         <label class="transfer-field transfer-panel">
@@ -9208,7 +9270,7 @@
           <textarea id="transferReceiptNote" placeholder="Box condition, courier notes, damage details">${escapeHtml(receipt.note)}</textarea>
         </label>
         ${renderTransferPhotoPanel()}
-        <div id="transferReceiveWarning" class="transfer-warning" ${unaccounted ? '' : 'hidden'}>${unaccounted ? `${unaccounted} unit${unaccounted === 1 ? '' : 's'} will be marked missing if you complete this receipt now.` : ''}</div>
+        <div id="transferReceiveWarning" class="transfer-warning" ${unaccounted ? '' : 'hidden'}>${unaccounted ? `${unaccounted} uncounted unit${unaccounted === 1 ? '' : 's'} will return to ${escapeHtml(transfer.source_store.name)} if you complete now. They will not be marked missing.` : ''}</div>
         <div class="transfer-modal-actions" style="justify-content:space-between;margin-top:14px">
           <button class="repair-action" type="button" data-transfer-back-detail><i class="bi bi-arrow-left"></i> Back</button>
           <div class="transfer-modal-actions">
@@ -9221,6 +9283,10 @@
     function beginTransferReturn() {
       const transfer = state.transferDetail;
       if (!transfer) return;
+      if (transfer.current_store_role !== 'source') {
+        showToast('Only the source store can return the remaining stock.');
+        return;
+      }
       state.transferReceipt = {
         key: crypto.randomUUID(),
         reason: '',
@@ -9380,16 +9446,17 @@
       const lines = receipt.lines.map(line => ({
         transfer_item_id: Number(line.transferItemId),
         good_quantity: Number(line.good || 0),
-        damaged_quantity: Number(line.damaged || 0)
-      })).filter(line => line.good_quantity + line.damaged_quantity > 0);
-      const counted = lines.reduce((sum, line) => sum + line.good_quantity + line.damaged_quantity, 0);
+        damaged_quantity: Number(line.damaged || 0),
+        missing_quantity: Number(line.missing || 0)
+      })).filter(line => line.good_quantity + line.damaged_quantity + line.missing_quantity > 0);
+      const counted = lines.reduce((sum, line) => sum + line.good_quantity + line.damaged_quantity + line.missing_quantity, 0);
       if (!finalize && counted < 1) {
         showToast('Enter at least one received quantity for a partial receipt.');
         return;
       }
       const missing = transferReceiptUnaccounted();
       const confirmation = finalize
-        ? `Complete this receipt?${missing ? ` ${missing} unaccounted unit${missing === 1 ? '' : 's'} will be marked missing.` : ''}`
+        ? `Complete this receipt?${missing ? ` ${missing} uncounted unit${missing === 1 ? '' : 's'} will be restored to ${transfer.source_store.name}, not marked missing.` : ''}`
         : 'Save this as a partial receipt? Remaining units will stay in transit.';
       if (!confirm(confirmation)) return;
 
@@ -9538,9 +9605,11 @@
     }
 
     function initializeLocalTransferUiTest() {
+      const requestedRole = new URLSearchParams(window.location.search).get('transfer-role');
+      const testStoreRole = requestedRole === 'source' ? 'source' : 'destination';
       state.selectedStaffName = 'Bowen';
       state.allowedStoreIds = ['park-ridge', 'north-lakes', 'fairfield', 'toowong'];
-      state.storeId = 'park-ridge';
+      state.storeId = testStoreRole === 'source' ? 'park-ridge' : 'north-lakes';
       state.products = normalizeProducts(demoProducts);
       state.transferStores = [
         { id: 1, slug: 'park-ridge', name: 'Park Ridge' },
@@ -9554,6 +9623,7 @@
         status: 'partially_received',
         source_store: { id: 1, slug: 'park-ridge', name: 'Park Ridge' },
         destination_store: { id: 3, slug: 'north-lakes', name: 'North Lakes' },
+        current_store_role: testStoreRole,
         dispatched_by: 'Bowen',
         dispatch_note: 'Local browser test only',
         dispatched_at: new Date().toISOString(),
@@ -9603,7 +9673,8 @@
         _detail: sampleDetail
       }];
       state.transferLoaded = true;
-      els.transferStoreFilter.innerHTML = '<option value="all">All stores</option>' + state.transferStores.map(store => `<option value="${store.slug}">${store.name}</option>`).join('');
+      state.transferStore = state.storeId;
+      els.transferStoreFilter.innerHTML = `<option value="${state.storeId}">${storeById(state.storeId).name}</option>`;
       updateStoreBadge();
       updateStaffButton();
       renderAll();
@@ -9635,7 +9706,7 @@
       if (view === 'used-devices') loadUsedDevices();
       if (view === 'transfers') {
         if (typeof localTransferTestMode !== 'undefined' && localTransferTestMode) renderTransfers();
-        else loadTransfers({ silent: state.transferLoaded });
+        else syncCurrentShiftWithDatabase().then(() => loadTransfers({ silent: state.transferLoaded }));
       }
     }
 
@@ -11664,6 +11735,7 @@
     }
 
     function productColourSwatches(product) {
+      if (isImageVariantProduct(product)) return '';
       const colours = productColours(product);
       if (!colours.length) return '';
       return `
@@ -11676,6 +11748,24 @@
     function isWatchBandProduct(product) {
       return String(product?.product_family || '').trim().toLowerCase() === 'watch_band'
         || String(product?.product_group_code || '').toUpperCase().startsWith('TM8-GRP-WB-');
+    }
+
+    function isImageVariantProduct(product) {
+      const family = String(product?.product_family || '').trim().toLowerCase();
+      return family === 'universal pattern case' || family === 'special order case';
+    }
+
+    function productImageVariantPreviews(product) {
+      if (!isImageVariantProduct(product)) return '';
+      const variants = Array.isArray(product.variant_options) ? product.variant_options : [product];
+      const previews = variants.filter(variant => variant.image_url).slice(0, 5);
+      const remaining = Math.max(0, variants.length - previews.length);
+      return `
+        <div class="product-pattern-thumbnails" aria-label="${escapeHtml(`${variants.length} options`)}">
+          ${previews.map(variant => `<img class="product-pattern-thumbnail" src="${escapeHtml(productImage(variant))}" alt="" loading="lazy" decoding="async" data-fallback="${escapeHtml(productPlaceholderImage(variant))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">`).join('')}
+          ${remaining ? `<span class="product-pattern-count">+${remaining}</span>` : ''}
+        </div>
+      `;
     }
 
     function productVariantSizeName(product) {
@@ -12001,17 +12091,20 @@
         const priceLabel = product.is_product_group && product.max_sale_price > product.sale_price
           ? `From ${money(product.sale_price)}`
           : money(product.sale_price);
+        const imageVariant = isImageVariantProduct(product);
         const colours = productColours(product);
-        const colourLabel = colours.length ? `. Available colours: ${colours.join(', ')}` : '';
+        const colourLabel = !imageVariant && colours.length ? `. Available colours: ${colours.join(', ')}` : '';
+        const optionLabel = imageVariant && colours.length ? `. Available options: ${colours.join(', ')}` : '';
         const sizes = productSizes(product);
         const sizeLabel = sizes.length ? `. Available sizes: ${sizes.join(', ')}` : '';
         return `
-          <article class="product-card ${isWatchBandProduct(product) ? 'watch-band-card' : ''}" ${actionAttribute} ${arrangeAttribute} role="button" tabindex="${state.arrangementMode ? '-1' : '0'}" aria-label="${actionLabel} ${escapeHtml(product.name)}${escapeHtml(colourLabel)}${escapeHtml(sizeLabel)}">
+          <article class="product-card ${isWatchBandProduct(product) ? 'watch-band-card' : ''} ${imageVariant ? 'image-variant-card' : ''}" ${actionAttribute} ${arrangeAttribute} role="button" tabindex="${state.arrangementMode ? '-1' : '0'}" aria-label="${actionLabel} ${escapeHtml(product.name)}${escapeHtml(colourLabel)}${escapeHtml(optionLabel)}${escapeHtml(sizeLabel)}">
             ${arrangeAttribute ? '<span class="arrangement-drag-handle" aria-label="Drag product"><i class="bi bi-grip-vertical"></i></span>' : ''}
             <img class="product-image" src="${escapeHtml(productImage(product))}" alt="${escapeHtml(product.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" ${index < 4 ? 'fetchpriority="high"' : ''} data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
             <div class="product-info">
               <h2 class="product-name">${escapeHtml(product.name)}</h2>
               ${productColourSwatches(product)}
+              ${productImageVariantPreviews(product)}
               ${productSizeOptions(product)}
               <div class="product-price">
                 <span class="sale-price">${priceLabel}</span>
@@ -12792,6 +12885,7 @@
       const variants = productVariantsForGroup(groupCode);
       if (!variants.length) return;
       const watchBandGroup = isWatchBandProduct(variants[0]);
+      const imageVariantGroup = isImageVariantProduct(variants[0]);
       if (variants.length === 1 && !watchBandGroup) {
         if (state.stocktakeMode) {
           openStocktakeEditor(variants[0].id);
@@ -12810,6 +12904,10 @@
       const compatibleDevices = (first.compatible_devices || []).map(device => device.name).filter(Boolean);
       const fitCopy = watchBandGroup
         ? (state.stocktakeMode ? 'Choose the size to edit' : 'Choose the size to add')
+        : imageVariantGroup
+          ? (String(first.product_family || '').toLowerCase() === 'universal pattern case'
+            ? (state.stocktakeMode ? 'Choose the pattern to edit' : 'Choose a pattern, then confirm the phone model')
+            : (state.stocktakeMode ? 'Choose the case type to edit' : 'Choose a case type and record the phone model'))
         : compatibleDevices.length
         ? `Fits ${compatibleDevices.join(', ')}`
         : (first.fit_profile_name ? `Fit profile: ${first.fit_profile_name}` : (state.stocktakeMode ? 'Choose the exact product to edit' : 'Choose the colour to add'));
@@ -12831,7 +12929,9 @@
           : (variant.variant_color || variant.variant_name || variant.name);
         const optionMeta = watchBandGroup
           ? `<span class="product-variant-size">${escapeHtml(optionName)}</span>`
-          : `<span class="product-variant-colour">${productColourSwatch(optionName)}<span>${escapeHtml(optionName)}</span></span>`;
+          : imageVariantGroup
+            ? `<span class="product-variant-size">${escapeHtml(optionName)}</span>`
+            : `<span class="product-variant-colour">${productColourSwatch(optionName)}<span>${escapeHtml(optionName)}</span></span>`;
         return `
           <button class="product-variant-option" type="button" data-add-variant="${escapeHtml(variant.id)}" aria-label="${state.stocktakeMode ? 'Edit' : 'Add'} ${escapeHtml(variant.name)}, ${stock} in stock">
             <img class="product-variant-option-image" src="${escapeHtml(productImage(variant))}" alt="${escapeHtml(variant.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" data-fallback="${escapeHtml(productPlaceholderImage(variant))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
@@ -13013,6 +13113,54 @@
       renderProductBrowser();
       const exactBarcodeDirectCard = Boolean(document.querySelector('[data-add="1002"]'));
 
+      const universalPatternNames = [
+        'MagSafe Flower',
+        'Flower 7',
+        'Flower 6',
+        'Flower 5',
+        'Flower 4',
+        'Flower 3',
+        'Flower 2',
+        'Flower 1',
+        'Flower / Liquid 96'
+      ];
+      const universalPatternProducts = normalizeProducts({ rows: universalPatternNames.map((name, index) => ({
+        id: 3001 + index,
+        sku: `TM8-PC-PATTERN-${index + 1}`,
+        name: `Universal Flower & Pattern Phone Case - ${name}`,
+        category_name: 'Phone Cases',
+        subcategory_name: 'Other & Universal',
+        cost_price: 7,
+        sale_price: 49,
+        stock_quantity: 0,
+        image_url: `https://example.com/pattern-${index + 1}.jpg`,
+        product_group_code: 'TM8-GRP-PC-UNIVERSAL-PATTERN-CASE',
+        product_group_name: 'Universal Flower & Pattern Phone Case',
+        product_family: 'Universal Pattern Case',
+        variant_name: name,
+        variant_color: null,
+        fit_profile: {
+          code: 'PHONE-UNIVERSAL-PATTERN-CASE',
+          display_name: 'Model Confirmed at Sale',
+          compatible_devices: []
+        }
+      })) });
+      state.products = universalPatternProducts;
+      state.search = '';
+      state.productBrowseMode = 'all';
+      renderProductBrowser();
+      const universalPatternTiles = productTiles(state.products);
+      const universalPatternCard = document.querySelector('[data-open-product-group="TM8-GRP-PC-UNIVERSAL-PATTERN-CASE"]');
+      const universalPatternThumbnailCount = universalPatternCard?.querySelectorAll('.product-pattern-thumbnail').length || 0;
+      const universalPatternColourSwatchCount = universalPatternCard?.querySelectorAll('.product-colour-swatch').length || 0;
+      openProductVariantModal('TM8-GRP-PC-UNIVERSAL-PATTERN-CASE');
+      const universalPatternModalOptionCount = els.productVariantList.querySelectorAll('[data-add-variant]').length;
+      const universalPatternModalImageCount = els.productVariantList.querySelectorAll('.product-variant-option-image').length;
+      const universalPatternModalTitles = Array.from(els.productVariantList.querySelectorAll('.product-variant-option-name'))
+        .map(element => element.textContent.trim());
+      const universalPatternModalUsesColourLabels = els.productVariantList.querySelectorAll('.product-variant-colour').length > 0;
+      closeProductVariantModal();
+
       const watchBandProducts = normalizeProducts({ rows: [
         {
           id: 2001,
@@ -13113,6 +13261,14 @@
         zeroStockAdded,
         modalClosedAfterAdd: !els.productVariantModal.classList.contains('show'),
         exactBarcodeDirectCard,
+        universalPatternTileCount: universalPatternTiles.length,
+        universalPatternCardRendered: Boolean(universalPatternCard),
+        universalPatternThumbnailCount,
+        universalPatternColourSwatchCount,
+        universalPatternModalOptionCount,
+        universalPatternModalImageCount,
+        universalPatternModalTitles,
+        universalPatternModalUsesColourLabels,
         watchBandTileCount: watchBandTiles.length,
         watchBandCardRendered: Boolean(watchBandCard),
         watchBandSizeChips,
@@ -13134,6 +13290,12 @@
         setActiveView('products');
         renderProductBrowser();
         renderCart();
+      } else if (catalogTestParams.has('catalog-pattern')) {
+        state.products = universalPatternProducts;
+        state.search = '';
+        state.productBrowseMode = 'all';
+        renderProductBrowser();
+        openProductVariantModal('TM8-GRP-PC-UNIVERSAL-PATTERN-CASE');
       } else if (catalogTestParams.has('catalog-watch-band')) {
         state.products = watchBandProducts;
         state.search = '';
@@ -14848,21 +15010,23 @@
       }
       const goodId = event.target.dataset.transferReceiveGood;
       const damagedId = event.target.dataset.transferReceiveDamaged;
-      if ((goodId || damagedId) && state.transferReceipt) {
-        const itemId = Number(goodId || damagedId);
+      const missingId = event.target.dataset.transferReceiveMissing;
+      if ((goodId || damagedId || missingId) && state.transferReceipt) {
+        const itemId = Number(goodId || damagedId || missingId);
         const line = state.transferReceipt.lines.find(candidate => Number(candidate.transferItemId) === itemId);
         if (!line) return;
         const value = Math.max(0, Math.trunc(Number(event.target.value || 0)));
-        if (goodId) line.good = Math.min(value, line.remaining - Number(line.damaged || 0));
-        else line.damaged = Math.min(value, line.remaining - Number(line.good || 0));
-        event.target.value = goodId ? line.good : line.damaged;
+        if (goodId) line.good = Math.min(value, line.remaining - Number(line.damaged || 0) - Number(line.missing || 0));
+        else if (damagedId) line.damaged = Math.min(value, line.remaining - Number(line.good || 0) - Number(line.missing || 0));
+        else line.missing = Math.min(value, line.remaining - Number(line.good || 0) - Number(line.damaged || 0));
+        event.target.value = goodId ? line.good : damagedId ? line.damaged : line.missing;
         const missing = transferReceiptUnaccounted();
         const preview = els.transferModalBody.querySelector('#transferMissingPreview');
         const warning = els.transferModalBody.querySelector('#transferReceiveWarning');
-        if (preview) preview.textContent = `${missing} unaccounted`;
+        if (preview) preview.textContent = `${missing} to source`;
         if (warning) {
           warning.hidden = missing < 1;
-          warning.textContent = missing ? `${missing} unit${missing === 1 ? '' : 's'} will be marked missing if you complete this receipt now.` : '';
+          warning.textContent = missing ? `${missing} uncounted unit${missing === 1 ? '' : 's'} will return to ${state.transferDetail.source_store.name} if you complete now. They will not be marked missing.` : '';
         }
       }
     });

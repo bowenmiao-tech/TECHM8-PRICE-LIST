@@ -8,9 +8,11 @@ declare
   transfer_one_id bigint;
   transfer_two_id bigint;
   transfer_three_id bigint;
+  transfer_four_id bigint;
   transfer_one_item_id bigint;
   transfer_two_item_id bigint;
   transfer_three_item_id bigint;
+  transfer_four_item_id bigint;
   dispatch_key uuid := gen_random_uuid();
   partial_key uuid := gen_random_uuid();
   final_key uuid := gen_random_uuid();
@@ -20,6 +22,8 @@ declare
   wrong_item_key uuid := gen_random_uuid();
   return_partial_key uuid := gen_random_uuid();
   return_key uuid := gen_random_uuid();
+  missing_dispatch_key uuid := gen_random_uuid();
+  missing_receive_key uuid := gen_random_uuid();
   result_payload jsonb;
   source_quantity integer;
   destination_quantity integer;
@@ -228,16 +232,20 @@ begin
       'good_quantity', 1,
       'damaged_quantity', 0
     )),
-    true, 'Codex Transaction Test', 'Final receipt with one missing'
+    true, 'Codex Transaction Test', 'Final receipt with one uncounted unit'
   );
   if result_payload ->> 'status' <> 'completed_with_issues' then
     raise exception 'Issue completion status is incorrect';
   end if;
   if (result_payload #>> '{items,0,received_good_quantity}')::integer <> 3
     or (result_payload #>> '{items,0,received_damaged_quantity}')::integer <> 1
-    or (result_payload #>> '{items,0,missing_quantity}')::integer <> 1 then
-    raise exception 'Good, damaged or missing totals are incorrect';
+    or (result_payload #>> '{items,0,missing_quantity}')::integer <> 0
+    or (result_payload #>> '{items,0,returned_quantity}')::integer <> 1 then
+    raise exception 'Good, damaged or automatic return totals are incorrect';
   end if;
+  select quantity into source_quantity from public.product_store_inventory
+  where product_id = test_product_id and store_id = source_store_id;
+  if source_quantity <> 16 then raise exception 'Uncounted final stock was not restored to source'; end if;
   select quantity into destination_quantity from public.product_store_inventory
   where product_id = test_product_id and store_id = destination_store_id;
   if destination_quantity <> 6 then raise exception 'Issue completion added incorrect saleable stock'; end if;
@@ -336,6 +344,54 @@ begin
     raise exception 'Idempotent return restored source stock twice';
   end if;
 
+  result_payload := public.create_pos_stock_transfer(
+    'park-ridge', 'north-lakes',
+    jsonb_build_array(jsonb_build_object('product_id', test_product_id, 'quantity', 2)),
+    'Codex Transaction Test', 'Explicit missing transfer', missing_dispatch_key
+  );
+  transfer_four_id := (result_payload ->> 'id')::bigint;
+  transfer_four_item_id := (result_payload #>> '{items,0,id}')::bigint;
+  perform public.register_pos_stock_transfer_photo(
+    transfer_four_id, missing_receive_key, 'issue',
+    transfer_four_id || '/' || missing_receive_key || '/missing.jpg',
+    'image/jpeg', 1700, 'Codex Transaction Test'
+  );
+  select quantity into source_quantity from public.product_store_inventory
+  where product_id = test_product_id and store_id = source_store_id;
+  result_payload := public.receive_pos_stock_transfer(
+    transfer_four_id, missing_receive_key,
+    jsonb_build_array(jsonb_build_object(
+      'transfer_item_id', transfer_four_item_id,
+      'good_quantity', 1,
+      'damaged_quantity', 0,
+      'missing_quantity', 1
+    )),
+    true, 'Codex Transaction Test', 'One item confirmed missing'
+  );
+  if result_payload ->> 'status' <> 'completed_with_issues'
+    or (result_payload #>> '{items,0,missing_quantity}')::integer <> 1
+    or (result_payload #>> '{items,0,returned_quantity}')::integer <> 0 then
+    raise exception 'Explicit missing quantity was not retained correctly';
+  end if;
+  if (select quantity from public.product_store_inventory
+      where product_id = test_product_id and store_id = source_store_id) <> source_quantity then
+    raise exception 'Explicit missing stock was incorrectly restored to source';
+  end if;
+
+  if public.pos_stock_transfer_payload_for_store(transfer_four_id, 'park-ridge') ->> 'current_store_role' <> 'source'
+    or public.pos_stock_transfer_payload_for_store(transfer_four_id, 'north-lakes') ->> 'current_store_role' <> 'destination'
+    or public.pos_stock_transfer_payload_for_store(transfer_four_id, 'fairfield') is not null then
+    raise exception 'Transfer detail store scoping is incorrect';
+  end if;
+  if jsonb_array_length(public.list_pos_stock_transfers(
+      'all', 'fairfield', result_payload ->> 'transfer_number', 200
+    )) <> 0
+    or jsonb_array_length(public.list_pos_stock_transfers(
+      'all', 'all', result_payload ->> 'transfer_number', 200
+    )) <> 0 then
+    raise exception 'Unrelated or all-store transfer listing was not blocked';
+  end if;
+
   select coalesce(sum(quantity), 0)::integer into expected_total
   from public.product_store_inventory where product_id = test_product_id;
   select stock_quantity into saved_total from public.products where id = test_product_id;
@@ -343,9 +399,9 @@ begin
 
   select count(*) into movement_count
   from public.inventory_movements
-  where transfer_id in (transfer_one_id, transfer_two_id, transfer_three_id);
-  if movement_count <> 8 then
-    raise exception 'Expected 8 immutable inventory movements, found %', movement_count;
+  where transfer_id in (transfer_one_id, transfer_two_id, transfer_three_id, transfer_four_id);
+  if movement_count <> 11 then
+    raise exception 'Expected 11 immutable inventory movements, found %', movement_count;
   end if;
 
   test_failed := false;
@@ -358,8 +414,8 @@ begin
   end;
   if not test_failed then raise exception 'Negative store stock was accepted'; end if;
 
-  raise notice 'POS stock transfer transaction tests passed for product %, transfers %, %, %',
-    test_product_id, transfer_one_id, transfer_two_id, transfer_three_id;
+  raise notice 'POS stock transfer transaction tests passed for product %, transfers %, %, %, %',
+    test_product_id, transfer_one_id, transfer_two_id, transfer_three_id, transfer_four_id;
 end
 $transfer_test$;
 

@@ -2,29 +2,43 @@ param(
   [Parameter(Mandatory = $true)][string]$SessionToken,
   [Parameter(Mandatory = $true)][string]$AnonKey,
   [Parameter(Mandatory = $true)][string]$PhotoPath,
+  [Parameter(Mandatory = $true)][string]$SourceShiftCode,
+  [Parameter(Mandatory = $true)][string]$DestinationShiftCode,
+  [Parameter(Mandatory = $true)][string]$UnrelatedShiftCode,
   [int]$ProductId = 1,
   [string]$StaffName = 'Bowen'
 )
 
 $ErrorActionPreference = 'Stop'
 $endpoint = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-stock-transfers'
-$headers = @{
-  apikey = $AnonKey
-  Authorization = "Bearer $AnonKey"
-  'x-staff-session' = $SessionToken
+function New-TransferHeaders {
+  param([string]$StoreCode, [string]$ShiftCode, [switch]$Json)
+  $result = @{
+    apikey = $AnonKey
+    Authorization = "Bearer $AnonKey"
+    'x-staff-session' = $SessionToken
+    'x-pos-store' = $StoreCode
+    'x-pos-shift' = $ShiftCode
+  }
+  if ($Json) { $result['Content-Type'] = 'application/json' }
+  $result
 }
-$jsonHeaders = $headers.Clone()
-$jsonHeaders['Content-Type'] = 'application/json'
+
+$sourceHeaders = New-TransferHeaders -StoreCode 'parkridge' -ShiftCode $SourceShiftCode
+$sourceJsonHeaders = New-TransferHeaders -StoreCode 'parkridge' -ShiftCode $SourceShiftCode -Json
+$destinationHeaders = New-TransferHeaders -StoreCode 'northlakes' -ShiftCode $DestinationShiftCode
+$destinationJsonHeaders = New-TransferHeaders -StoreCode 'northlakes' -ShiftCode $DestinationShiftCode -Json
+$unrelatedHeaders = New-TransferHeaders -StoreCode 'toowong' -ShiftCode $UnrelatedShiftCode
 
 function Invoke-TransferJson {
-  param([hashtable]$Body)
-  Invoke-RestMethod -Method Post -Uri $endpoint -Headers $jsonHeaders -Body ($Body | ConvertTo-Json -Depth 12 -Compress)
+  param([hashtable]$Body, [hashtable]$Headers = $sourceJsonHeaders)
+  Invoke-RestMethod -Method Post -Uri $endpoint -Headers $Headers -Body ($Body | ConvertTo-Json -Depth 12 -Compress)
 }
 
 function Add-TransferPhoto {
-  param([long]$TransferId, [guid]$ReceiptKey, [string]$Category = 'receipt')
+  param([long]$TransferId, [guid]$ReceiptKey, [string]$Category = 'receipt', [hashtable]$Headers = $destinationHeaders)
   $client = [System.Net.Http.HttpClient]::new()
-  $headers.GetEnumerator() | ForEach-Object { $client.DefaultRequestHeaders.TryAddWithoutValidation($_.Key, [string]$_.Value) | Out-Null }
+  $Headers.GetEnumerator() | ForEach-Object { $client.DefaultRequestHeaders.TryAddWithoutValidation($_.Key, [string]$_.Value) | Out-Null }
   $form = [System.Net.Http.MultipartFormDataContent]::new()
   $form.Add([System.Net.Http.StringContent]::new($StaffName), 'staff_name')
   $form.Add([System.Net.Http.StringContent]::new([string]$TransferId), 'transfer_id')
@@ -45,7 +59,7 @@ function Add-TransferPhoto {
   }
 }
 
-$context = Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=context&staff_name=$([uri]::EscapeDataString($StaffName))" -Headers $headers
+$context = Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=context&staff_name=$([uri]::EscapeDataString($StaffName))" -Headers $sourceHeaders
 if (-not $context.ok -or @($context.stores).Count -ne 4 -or -not $context.staff.can_transfer_all_stores) {
   throw 'Transfer context did not authorize all four POS stores.'
 }
@@ -68,10 +82,40 @@ if ($dispatch.transfer.id -ne $dispatchRetry.transfer.id -or $dispatch.transfer.
 
 $transferId = [long]$dispatch.transfer.id
 $transferItemId = [long]$dispatch.transfer.items[0].id
+$search = [uri]::EscapeDataString([string]$dispatch.transfer.transfer_number)
+$sourceList = Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=list&staff_name=$([uri]::EscapeDataString($StaffName))&status=all&search=$search" -Headers $sourceHeaders
+$destinationList = Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=list&staff_name=$([uri]::EscapeDataString($StaffName))&status=all&search=$search" -Headers $destinationHeaders
+$unrelatedList = Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=list&staff_name=$([uri]::EscapeDataString($StaffName))&status=all&search=$search" -Headers $unrelatedHeaders
+if (@($sourceList.transfers).Count -ne 1 -or @($destinationList.transfers).Count -ne 1 -or @($unrelatedList.transfers).Count -ne 0) {
+  throw 'Transfer list store scoping is incorrect.'
+}
+$sourceDetail = Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=detail&staff_name=$([uri]::EscapeDataString($StaffName))&id=$transferId" -Headers $sourceHeaders
+if ($sourceDetail.transfer.current_store_role -ne 'source') { throw 'Source store detail role is incorrect.' }
+
+$unrelatedDetailRejected = $false
+try {
+  Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=detail&staff_name=$([uri]::EscapeDataString($StaffName))&id=$transferId" -Headers $unrelatedHeaders | Out-Null
+} catch {
+  $unrelatedDetailRejected = $_.Exception.Response.StatusCode.value__ -eq 404
+}
+if (-not $unrelatedDetailRejected) { throw 'Unrelated store could read transfer detail.' }
+
+$sourceReceiveRejected = $false
+try {
+  Invoke-TransferJson -Headers $sourceJsonHeaders -Body @{
+    action = 'receive'; staff_name = $StaffName; transfer_id = $transferId
+    receipt_key = [string][guid]::NewGuid(); finalize = $false; note = 'Source must not receive'
+    lines = @(@{ transfer_item_id = $transferItemId; good_quantity = 1; damaged_quantity = 0; missing_quantity = 0 })
+  } | Out-Null
+} catch {
+  $sourceReceiveRejected = $_.ErrorDetails.Message -match 'destination store'
+}
+if (-not $sourceReceiveRejected) { throw 'Source store was allowed to receive.' }
+
 $photoRequiredKey = [guid]::NewGuid()
 $missingPhotoRejected = $false
 try {
-  Invoke-TransferJson @{
+  Invoke-TransferJson -Headers $destinationJsonHeaders -Body @{
     action = 'receive'; staff_name = $StaffName; transfer_id = $transferId
     receipt_key = [string]$photoRequiredKey; finalize = $false; note = 'Must fail without photo'
     lines = @(@{ transfer_item_id = $transferItemId; good_quantity = 1; damaged_quantity = 0 })
@@ -87,29 +131,29 @@ $partialPhotoTwo = Add-TransferPhoto -TransferId $transferId -ReceiptKey $partia
 $partialBody = @{
   action = 'receive'; staff_name = $StaffName; transfer_id = $transferId
   receipt_key = [string]$partialKey; finalize = $false; note = 'API partial receipt'
-  lines = @(@{ transfer_item_id = $transferItemId; good_quantity = 2; damaged_quantity = 1 })
+  lines = @(@{ transfer_item_id = $transferItemId; good_quantity = 1; damaged_quantity = 1; missing_quantity = 0 })
 }
-$partial = Invoke-TransferJson $partialBody
-$partialRetry = Invoke-TransferJson $partialBody
-if ($partial.transfer.status -ne 'partially_received' -or $partial.transfer.items[0].remaining_quantity -ne 1) {
+$partial = Invoke-TransferJson -Body $partialBody -Headers $destinationJsonHeaders
+$partialRetry = Invoke-TransferJson -Body $partialBody -Headers $destinationJsonHeaders
+if ($partial.transfer.status -ne 'partially_received' -or $partial.transfer.items[0].remaining_quantity -ne 2) {
   throw 'Partial receipt totals or status are incorrect.'
 }
-if ($partialRetry.transfer.items[0].received_good_quantity -ne 2 -or @($partialRetry.transfer.photos).Count -ne 2) {
+if ($partialRetry.transfer.items[0].received_good_quantity -ne 1 -or @($partialRetry.transfer.photos).Count -ne 2) {
   throw 'Receipt idempotency or multiple-photo retention failed.'
 }
 
 $finalKey = [guid]::NewGuid()
 $finalPhoto = Add-TransferPhoto -TransferId $transferId -ReceiptKey $finalKey
-$final = Invoke-TransferJson @{
+$final = Invoke-TransferJson -Headers $destinationJsonHeaders -Body @{
   action = 'receive'; staff_name = $StaffName; transfer_id = $transferId
   receipt_key = [string]$finalKey; finalize = $true; note = 'API final receipt'
   lines = @(@{ transfer_item_id = $transferItemId; good_quantity = 1; damaged_quantity = 0 })
 }
-if ($final.transfer.status -ne 'completed_with_issues' -or $final.transfer.items[0].received_good_quantity -ne 3 -or $final.transfer.items[0].received_damaged_quantity -ne 1) {
+if ($final.transfer.status -ne 'completed_with_issues' -or $final.transfer.items[0].received_good_quantity -ne 2 -or $final.transfer.items[0].received_damaged_quantity -ne 1 -or $final.transfer.items[0].returned_quantity -ne 1 -or $final.transfer.items[0].missing_quantity -ne 0) {
   throw 'Final issue receipt totals or status are incorrect.'
 }
 
-$detail = Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=detail&staff_name=$([uri]::EscapeDataString($StaffName))&id=$transferId" -Headers $headers
+$detail = Invoke-RestMethod -Method Get -Uri "$endpoint`?mode=detail&staff_name=$([uri]::EscapeDataString($StaffName))&id=$transferId" -Headers $destinationHeaders
 if (-not $detail.ok -or @($detail.transfer.photos).Count -ne 3 -or @($detail.transfer.receipts).Count -ne 2) {
   throw 'Transfer detail did not include receipts and photos.'
 }
@@ -125,4 +169,5 @@ if (-not $detail.ok -or @($detail.transfer.photos).Count -ne 3 -or @($detail.tra
   destination_store = $detail.transfer.destination_store.slug
   received_good = $detail.transfer.items[0].received_good_quantity
   received_damaged = $detail.transfer.items[0].received_damaged_quantity
+  returned_to_source = $detail.transfer.items[0].returned_quantity
 } | ConvertTo-Json -Depth 8
