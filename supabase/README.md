@@ -83,7 +83,17 @@ supabase/website-migrations/20260805024500_index_grouped_product_compatibility.s
 
 The migrations add product groups, fit profiles, directional device compatibility, and variant/source fields without changing existing product visibility. New imported catalogue rows must begin hidden with zero product stock and no store-inventory rows. Zero stock is informational and does not block POS checkout or online ordering.
 
-The current tablet-case catalogue contains 287 products under 67 groups. All are active and visible in POS; online visibility remains off until the matching public-storefront grouping change is deployed. `TM8-TAB-10064` was deliberately removed because neither the variant nor its product group had a usable image. All Twist Leather Cases cost $5, all Z-Fold and Z-Flip Cases cost $4, Hard and Bubble Hard Cases cost $15, and the 16 owner-confirmed exception costs are persisted in `outputs/product-catalog-rebuild/TECHM8_Tablet_Case_Cost_Overrides.json`. No imported product remains blocked by missing cost.
+The current tablet-case catalogue contains 283 active products. Four duplicate RepairDesk source rows and `TM8-TAB-10064` are deliberately excluded. All approved variants are active and visible in POS; online visibility remains off until the matching public-storefront grouping change is deployed. All Twist Leather Cases cost $5, all Z-Fold and Z-Flip Cases cost $4, Hard and Bubble Hard Cases cost $15, and the 16 owner-confirmed exception costs are persisted in `outputs/product-catalog-rebuild/TECHM8_Tablet_Case_Cost_Overrides.json`. No imported product remains blocked by missing cost.
+
+The complete phone-case reconciliation is stored in:
+
+```text
+supabase/website-migrations/20260819125528_reconcile_missing_phone_cases.sql
+outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Import.json
+outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Final_Review.xlsx
+```
+
+It preserves the previous 915 phone-case variants and adds 826 missing variants, for 1,741 active POS variants under 829 product groups. All added products use RepairDesk images, remain hidden online, and start with zero product stock and no store-inventory rows. Explicitly removed products, AirPods/AirTag accessories, duplicate source rows, one model-ambiguous EFM case, and three EFM Aspen rows without a reliable cost remain excluded.
 
 The computer-product catalogue import is stored in:
 

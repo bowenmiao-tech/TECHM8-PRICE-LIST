@@ -105,6 +105,14 @@ POS product hierarchy:
 | Other Electronics | Drones & Accessories; Personal Fans; Lighting & Clocks; Tracker Cases; Other Electronics |
 | Uncategorized | Products display immediately without a second-level category |
 
+Phone and tablet case catalogue reconciliation completed on 19 August 2026:
+- The complete RepairDesk export was checked only for `5. Phone Cases` and `6. iPad & Tablet Cases`; every other product category was left unchanged.
+- The active phone-case catalogue now contains 1,741 sellable variants under 829 product groups. The previous 915 variants were preserved and 826 missing variants were added.
+- All 283 approved tablet-case variants were already present, so no tablet product was changed. Four duplicate source rows and `TM8-TAB-10064` remain excluded.
+- The explicitly removed `iPhone 12 Pro Max EFM Phone Case` and `Universal Cartoon Case` remain excluded. AirPods/AirTag accessories, one model-ambiguous EFM case, and three EFM Aspen rows without a reliable cost were not imported.
+- Every added product has a RepairDesk image, a unique SKU/barcode/source ID, a positive cost below retail, POS visibility enabled, online visibility disabled, and zero starting stock with no store-inventory rows.
+- The repeatable reconciliation is `supabase/website-migrations/20260819125528_reconcile_missing_phone_cases.sql`; its full reviewed payload and exception workbook are under `outputs/phone-case-catalog-reconciliation-20260819/`.
+
 Computer product catalogue import completed on 12 August 2026:
 - The reviewed source contained 183 products. The 41 owner-marked red rows were excluded and the 5 exact existing DualSense products were preserved without changes.
 - 137 products were imported: 135 approved new rows plus the 2 owner-confirmed MSI A13 products that remain separate from the existing catalogue items.

@@ -2,3 +2,7 @@
 .codex-temp/
 .codex-tmp/
 outputs/crazyparts-price-monitor/
+outputs/phone-case-catalog-reconciliation-20260819/*.inspect.ndjson
+outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Case_Reconciliation*
+outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Final_Review.png
+outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Migration_Preview.sql

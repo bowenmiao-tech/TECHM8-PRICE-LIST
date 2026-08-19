@@ -3,10 +3,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { FileBlob, SpreadsheetFile, Workbook } from '@oai/artifact-tool';
 
-const sourcePaths = [
-  'E:/ontimefile/products case1).xlsx',
-  'E:/ontimefile/products (case2).xlsx',
-];
+const sourcePaths = process.env.PHONE_CASE_SOURCE_PATHS
+  ? process.env.PHONE_CASE_SOURCE_PATHS.split(';').map((item) => item.trim()).filter(Boolean)
+  : [
+      'E:/ontimefile/products case1).xlsx',
+      'E:/ontimefile/products (case2).xlsx',
+    ];
 const imageMapPath = 'D:/program/TECHM8 PRICE LIST/.codex-temp/phone-case-catalog-import/repairdesk-phone-case-images.json';
 const reviewInputPaths = [
   'D:/program/TECHM8 PRICE LIST/outputs/phone-case-catalog-20260817/TECHM8_Phone_Cases_Needs_Review.xlsx',
@@ -38,6 +40,11 @@ const SPECIAL_ORDER_VARIANTS = new Map([
 const SKYLINE_UNIVERSAL_IMAGE = 'https://skylinemobile.com.au/cdn/shop/files/20210103162546.jpg?v=1778040935';
 const GOOSPERY_AQUA_IMAGE = 'https://dghyt15qon7us.cloudfront.net/images/productTheme/Inventory/small/1685674421.jpg';
 const APPLE_LOGO_DARK_GREEN_IMAGE = 'https://oztechm8.com.au/assets/products/phone-cases/iphone-12-12-pro-apple-logo-dark-green.jpg';
+const FIXED_REPAIRDESK_IMAGES = new Map([
+  ['7182', 'https://dghyt15qon7us.cloudfront.net/images/productTheme/Inventory/small/1664762715.jpg'],
+  ['7116', 'https://dghyt15qon7us.cloudfront.net/images/productTheme/Inventory/small/1663814324.jpg'],
+  ['6839', 'https://dghyt15qon7us.cloudfront.net/images/productTheme/Inventory/small/1659061232.jpg'],
+]);
 
 const normalize = (value) => String(value ?? '')
   .normalize('NFKD')
@@ -162,10 +169,12 @@ const categoryDeviceMap = new Map(Object.entries({
   'samsung s22p': ['Samsung', 'Samsung Galaxy S22 Plus', 'SAMSUNG-S22-PLUS'],
   'samsung s22u': ['Samsung', 'Samsung Galaxy S22 Ultra', 'SAMSUNG-S22-ULTRA'],
   'samsung s21': ['Samsung', 'Samsung Galaxy S21', 'SAMSUNG-S21'],
+  'samsung s21fe': ['Samsung', 'Samsung Galaxy S21 FE', 'SAMSUNG-S21-FE'],
   'samsung s21 plus': ['Samsung', 'Samsung Galaxy S21 Plus', 'SAMSUNG-S21-PLUS'],
   'samsung note 20': ['Samsung', 'Samsung Galaxy Note 20', 'SAMSUNG-NOTE-20'],
   'samsung z flip5': ['Samsung', 'Samsung Galaxy Z Flip5', 'SAMSUNG-Z-FLIP5'],
   'samsung z fold4': ['Samsung', 'Samsung Galaxy Z Fold4', 'SAMSUNG-Z-FOLD4'],
+  'samsung zfold 8': ['Samsung', 'Samsung Galaxy Z Fold8', 'SAMSUNG-Z-FOLD8'],
   'samsung s23': ['Samsung', 'Samsung Galaxy S23', 'SAMSUNG-S23'],
   'samsung s23 fe': ['Samsung', 'Samsung Galaxy S23 FE', 'SAMSUNG-S23-FE'],
   'samsung s23 plus': ['Samsung', 'Samsung Galaxy S23 Plus', 'SAMSUNG-S23-PLUS'],
@@ -229,8 +238,11 @@ const nameDevicePatterns = [
   [/iphone\s*11\s*pro/i, ['Apple', 'iPhone 11 Pro', 'IPHONE-11-PRO']],
   [/iphone\s*11/i, ['Apple', 'iPhone 11', 'IPHONE-11']],
   [/iphone\s*xs\s*max/i, ['Apple', 'iPhone XS Max', 'IPHONE-XS-MAX']],
+  [/iphone\s*xs\b/i, ['Apple', 'iPhone X / XS', 'IPHONE-X-XS']],
   [/iphone\s*x\s*\/\s*xs/i, ['Apple', 'iPhone X / XS', 'IPHONE-X-XS']],
   [/iphone\s*xr/i, ['Apple', 'iPhone XR', 'IPHONE-XR']],
+  [/iphone\s*7\s*\/\s*8\s*(?:plus|\+)/i, ['Apple', 'iPhone 6 Plus / 7 Plus / 8 Plus', 'IPHONE-6P-7P-8P']],
+  [/iphone\s*7\s*\/\s*8\b/i, ['Apple', 'iPhone 6 / 7 / 8', 'IPHONE-6-7-8']],
   [/iphone\s*6\+?\s*\/\s*7\+?\s*\/\s*8\+/i, ['Apple', 'iPhone 6 Plus / 7 Plus / 8 Plus', 'IPHONE-6P-7P-8P']],
   [/iphone\s*6\s*\/\s*7\s*\/\s*8/i, ['Apple', 'iPhone 6 / 7 / 8', 'IPHONE-6-7-8']],
   [/samsung\s*s25u|\bs25\s*ultra\b/i, ['Samsung', 'Samsung Galaxy S25 Ultra', 'SAMSUNG-S25-ULTRA']],
@@ -243,12 +255,21 @@ const nameDevicePatterns = [
   [/samsung\s*s23\s*ultra/i, ['Samsung', 'Samsung Galaxy S23 Ultra', 'SAMSUNG-S23-ULTRA']],
   [/samsung\s*s23\b/i, ['Samsung', 'Samsung Galaxy S23', 'SAMSUNG-S23']],
   [/samsung\s*(?:galaxy\s*)?z\s*flip\s*5/i, ['Samsung', 'Samsung Galaxy Z Flip5', 'SAMSUNG-Z-FLIP5']],
+  [/(?:samsung\s*)?(?:galaxy\s*)?z\s*flip\s*3(?:\s*5g)?/i, ['Samsung', 'Samsung Galaxy Z Flip3', 'SAMSUNG-Z-FLIP3']],
+  [/(?:samsung\s*)?(?:galaxy\s*)?z\s*fold\s*5/i, ['Samsung', 'Samsung Galaxy Z Fold5', 'SAMSUNG-Z-FOLD5']],
+  [/(?:samsung\s*)?(?:galaxy\s*)?z\s*fold\s*3/i, ['Samsung', 'Samsung Galaxy Z Fold3', 'SAMSUNG-Z-FOLD3']],
   [/samsung\s*(?:galaxy\s*)?z\s*fold\s*4/i, ['Samsung', 'Samsung Galaxy Z Fold4', 'SAMSUNG-Z-FOLD4']],
+  [/samsung\s*(?:galaxy\s*)?z\s*fold\s*8/i, ['Samsung', 'Samsung Galaxy Z Fold8', 'SAMSUNG-Z-FOLD8']],
   [/samsung\s*(?:galaxy\s*)?note\s*20/i, ['Samsung', 'Samsung Galaxy Note 20', 'SAMSUNG-NOTE-20']],
+  [/\bnote\s*20\b/i, ['Samsung', 'Samsung Galaxy Note 20', 'SAMSUNG-NOTE-20']],
+  [/(?:samsung\s*)?(?:galaxy\s*)?note\s*10\b/i, ['Samsung', 'Samsung Galaxy Note 10', 'SAMSUNG-NOTE-10']],
+  [/(?:samsung\s*)?(?:galaxy\s*)?s20\s*(?:plus|\+)/i, ['Samsung', 'Samsung Galaxy S20 Plus', 'SAMSUNG-S20-PLUS']],
+  [/(?:samsung\s*)?(?:galaxy\s*)?s20\b/i, ['Samsung', 'Samsung Galaxy S20', 'SAMSUNG-S20']],
   [/samsung\s*(?:galaxy\s*)?s22\s*(?:plus|\+)/i, ['Samsung', 'Samsung Galaxy S22 Plus', 'SAMSUNG-S22-PLUS']],
   [/samsung\s*(?:galaxy\s*)?s22\s*ultra/i, ['Samsung', 'Samsung Galaxy S22 Ultra', 'SAMSUNG-S22-ULTRA']],
   [/samsung\s*(?:galaxy\s*)?s22\b/i, ['Samsung', 'Samsung Galaxy S22', 'SAMSUNG-S22']],
   [/samsung\s*(?:galaxy\s*)?s21\s*(?:plus|\+)/i, ['Samsung', 'Samsung Galaxy S21 Plus', 'SAMSUNG-S21-PLUS']],
+  [/samsung\s*(?:galaxy\s*)?s21\s*fe/i, ['Samsung', 'Samsung Galaxy S21 FE', 'SAMSUNG-S21-FE']],
   [/samsung\s*(?:galaxy\s*)?s21\b/i, ['Samsung', 'Samsung Galaxy S21', 'SAMSUNG-S21']],
 ];
 
@@ -307,6 +328,7 @@ function directImageUrl(value) {
 }
 
 function reviewedImageUrl(itemId, overrideValue, sourceImageUrl) {
+  if (FIXED_REPAIRDESK_IMAGES.has(itemId)) return FIXED_REPAIRDESK_IMAGES.get(itemId);
   if (itemId === '8365') return APPLE_LOGO_DARK_GREEN_IMAGE;
   if (itemId === '7159') return SKYLINE_UNIVERSAL_IMAGE;
   if (['8085', '8073', '8067'].includes(itemId)) return SKYLINE_UNIVERSAL_IMAGE;
@@ -527,6 +549,7 @@ for (const sourcePath of sourcePaths) {
   for (const row of rows.slice(1)) {
     const record = Object.fromEntries(headers.map((header, index) => [header, row[index]]));
     if (!record['Item ID'] || String(record['Item ID']).startsWith('This column')) continue;
+    if (!String(record.Category ?? '').trim().toLowerCase().startsWith('5. phone cases')) continue;
     records.push({ ...record, _source_file: path.basename(sourcePath) });
   }
 }
@@ -653,6 +676,39 @@ for (const candidate of candidates) {
   candidate.proposedName = `${candidate.groupName}${candidate.variantName === 'Standard' ? '' : ` - ${candidate.variantName}`}`;
 }
 
+const representativeImagesByGroup = new Map();
+const representativeImagesByStyle = new Map();
+for (const candidate of candidates.filter((item) => item.userInclude && item.imageUrl && item.groupKey)) {
+  if (!representativeImagesByGroup.has(candidate.groupKey)) representativeImagesByGroup.set(candidate.groupKey, candidate.imageUrl);
+  if (!representativeImagesByStyle.has(candidate.styleCostKey)) representativeImagesByStyle.set(candidate.styleCostKey, candidate.imageUrl);
+}
+for (const candidate of candidates.filter((item) => item.userInclude && !item.imageUrl && item.groupKey)) {
+  const groupImage = representativeImagesByGroup.get(candidate.groupKey);
+  const styleImage = representativeImagesByStyle.get(candidate.styleCostKey);
+  candidate.imageUrl = groupImage || styleImage || '';
+  if (candidate.imageUrl) candidate.imageFallback = groupImage ? 'repairdesk_group' : 'repairdesk_style';
+}
+
+const groupRetailModes = new Map();
+const styleRetailModes = new Map();
+for (const candidate of candidates.filter((item) => item.groupKey && item.retailPrice > 0)) {
+  if (!groupRetailModes.has(candidate.groupKey)) groupRetailModes.set(candidate.groupKey, []);
+  if (!styleRetailModes.has(candidate.styleCostKey)) styleRetailModes.set(candidate.styleCostKey, []);
+  groupRetailModes.get(candidate.groupKey).push(candidate.retailPrice);
+  styleRetailModes.get(candidate.styleCostKey).push(candidate.retailPrice);
+}
+for (const [key, values] of groupRetailModes) groupRetailModes.set(key, chooseMode(values));
+for (const [key, values] of styleRetailModes) styleRetailModes.set(key, chooseMode(values));
+for (const candidate of candidates.filter((item) => item.groupKey && !(item.retailPrice > 0))) {
+  const groupMode = groupRetailModes.get(candidate.groupKey);
+  const styleMode = styleRetailModes.get(candidate.styleCostKey);
+  const fallbackRetail = groupMode?.decisive ? groupMode.value : styleMode?.decisive ? styleMode.value : null;
+  if (fallbackRetail > 0) {
+    candidate.retailPrice = fallbackRetail;
+    candidate.retailRule = groupMode?.decisive ? 'Matched product-group retail price' : 'Matched case-style retail price';
+  }
+}
+
 const groupCostStats = new Map();
 for (const candidate of candidates.filter((item) => item.groupKey)) {
   if (!groupCostStats.has(candidate.groupKey)) groupCostStats.set(candidate.groupKey, []);
@@ -714,6 +770,32 @@ const invalidMarginStyleKeys = new Set(
 for (const candidate of candidates.filter((item) => invalidMarginStyleKeys.has(item.styleCostKey))) {
   candidate.finalCost = null;
   candidate.costRule = 'Cost must be confirmed because the comparable style cost is not below every retail price';
+}
+
+const confirmedStyleCosts = new Map([
+  ['OZTECHM8|back cover', 1],
+  ['OtterBox|otterbox fre waterproof magsafe case', 59.07],
+  ['EFM|efm aspen case', 45],
+  ['OZTECHM8|color doc magsafe case', 8.5],
+  ['OZTECHM8|daub hearts magsafe case', 5],
+  ['OZTECHM8|8 magsafe case', 3],
+  ['EFM|efm 13 pro max aspen armour crystalex case', 45],
+  ['EFM|efm 5g aspen state case', 45],
+  ['EFM|efm samsung note 20 aspen case', 45],
+  ['EFM|efm samsung note 20 aspen state case', 45],
+  ['EFM|efm note 20 case', 45],
+  ['OZTECHM8|15 pro max back case', 1],
+  ['OZTECHM8|hard case', 3],
+  ['OZTECHM8|ricky case', 3],
+  ['OZTECHM8|smiling magsafe case', 5],
+  ['OZTECHM8|tartan design case', 3],
+]);
+for (const candidate of candidates.filter((item) => item.styleCostKey)) {
+  const confirmedCost = confirmedStyleCosts.get(candidate.styleCostKey);
+  if (confirmedCost > 0 && confirmedCost < candidate.retailPrice) {
+    candidate.finalCost = confirmedCost;
+    candidate.costRule = 'Confirmed against the existing POS case-style cost';
+  }
 }
 
 const reviewRows = [...forcedReview];
@@ -873,7 +955,9 @@ const products = readyCandidates.map((candidate) => {
       source_cost: candidate.sourceCost,
       variant_type: candidate.variantType,
       review_notes: candidate.userNotes,
-      image_source: candidate.itemId === '8365'
+      image_source: candidate.imageFallback
+        ? candidate.imageFallback
+        : candidate.itemId === '8365'
         ? 'user_provided_asset'
         : ['7159', '8085', '8073', '8067'].includes(candidate.itemId)
           ? 'skyline_mobile'
@@ -947,6 +1031,9 @@ const migrationPayload = {
   product_groups: migrationGroups,
   products: migrationProducts,
 };
+const expectedActiveProductCount = baselineSkus.size
+  ? baselineSkus.size + migrationProducts.length
+  : products.length;
 
 const staleArchiveSql = baselineSkus.size ? '' : `
 update public.products product
@@ -1165,7 +1252,7 @@ ${staleArchiveSql}
 
 do $$
 begin
-  if (select count(*) from public.products where source_system = 'repairdesk_phone_cases' and import_status = 'active') <> ${products.length} then
+  if (select count(*) from public.products where source_system = 'repairdesk_phone_cases' and import_status = 'active') <> ${expectedActiveProductCount} then
     raise exception 'Phone case database count does not match the import.';
   end if;
   if exists (
