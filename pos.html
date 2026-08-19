@@ -937,6 +937,10 @@
       grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
     }
 
+    .product-grid.model-layout {
+      grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+    }
+
     .category-card {
       position: relative;
       min-width: 0;
@@ -970,6 +974,96 @@
     .category-card:focus-visible {
       outline: 3px solid rgba(7, 137, 111, 0.2);
       outline-offset: 2px;
+    }
+
+    .phone-model-card {
+      position: relative;
+      min-width: 0;
+      height: 132px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 9px;
+      padding: 15px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      color: var(--tm-ink);
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(13, 25, 32, 0.045);
+      text-align: left;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .phone-model-card:hover {
+      border-color: rgba(7, 137, 111, 0.42);
+      box-shadow: 0 12px 26px rgba(13, 25, 32, 0.075);
+      transform: translateY(-1px);
+    }
+
+    .phone-model-card:focus-visible {
+      outline: 3px solid rgba(7, 137, 111, 0.2);
+      outline-offset: 2px;
+    }
+
+    .phone-model-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: var(--tm-green-dark);
+      background: #e7f7f3;
+      font-size: 17px;
+    }
+
+    .phone-model-name {
+      align-self: end;
+      min-width: 0;
+      display: -webkit-box;
+      overflow: hidden;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.25;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .phone-model-count {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .phone-case-style-filters {
+      position: sticky;
+      z-index: 4;
+      top: 0;
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 8px;
+      min-width: 0;
+      overflow-x: auto;
+      padding: 2px 2px 10px;
+      background: var(--tm-bg);
+      scrollbar-width: thin;
+    }
+
+    .phone-case-style-chip {
+      flex: 0 0 auto;
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 999px;
+      color: #334b48;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .phone-case-style-chip.active {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
     }
 
     .category-icon {
@@ -4369,6 +4463,7 @@
       }
 
       .product-grid.category-layout,
+      .product-grid.model-layout,
       .product-grid.product-layout {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -4676,6 +4771,11 @@
       .category-card {
         height: 160px;
         padding: 13px;
+      }
+
+      .phone-model-card {
+        height: 118px;
+        padding: 12px;
       }
 
       .category-icon {
@@ -6201,11 +6301,24 @@
     ];
 
     const POS_PRODUCT_CATEGORY_NAMES = new Set(POS_PRODUCT_CATEGORIES.map(category => category.name));
+    const PHONE_CASE_MODEL_SUBCATEGORIES = new Set(['Apple iPhone', 'Samsung Galaxy', 'Google Pixel']);
+    const PHONE_CASE_STYLE_ORDER = [
+      'All',
+      'MagSafe',
+      'Clear & Back Cover',
+      'Shockproof',
+      'Wallet',
+      'Flip',
+      'Fashion',
+      'Other'
+    ];
 
     const state = {
       products: [],
       productBrowseMode: 'categories',
       subcategory: '',
+      phoneCaseModel: '',
+      phoneCaseStyle: 'All',
       productLoading: false,
       productLoadPromise: null,
       productRequestId: 0,
@@ -8310,6 +8423,8 @@
           product_group_name: String(item.product_group_name || productGroup.name || ''),
           product_group_image_url: normalizeImageUrl(item.product_group_image_url || productGroup.image_url || ''),
           product_family: String(item.product_family || productGroup.product_family || ''),
+          model: String(item.model || ''),
+          compatibility: String(item.compatibility || ''),
           pos_sort_order: Number.isInteger(Number(item.pos_sort_order ?? productGroup.pos_sort_order))
             ? Number(item.pos_sort_order ?? productGroup.pos_sort_order)
             : null,
@@ -11496,6 +11611,8 @@
         els.searchInput.value = '';
         state.category = 'All';
         state.subcategory = '';
+        state.phoneCaseModel = '';
+        state.phoneCaseStyle = 'All';
         state.productBrowseMode = 'categories';
         state.arrangementSnapshot = arrangementSnapshot();
         state.arrangementChanges = { categories: null, subcategories: new Map(), products: new Map() };
@@ -11652,13 +11769,156 @@
       return categoryDefinition(categoryName)?.subcategories || [];
     }
 
+    function usesPhoneCaseModelBrowser(category = state.category, subcategory = state.subcategory) {
+      return category === 'Phone Cases' && PHONE_CASE_MODEL_SUBCATEGORIES.has(subcategory);
+    }
+
+    function phoneCaseModelLabel(product) {
+      const candidates = [
+        product?.fit_profile_name,
+        product?.model,
+        product?.compatibility,
+        ...(product?.compatible_devices || []).map(device => device.name)
+      ];
+      const direct = candidates.map(value => String(value || '').trim()).find(value => (
+        value && !/model (?:recorded|confirmed|required)|special order/i.test(value)
+      ));
+      if (direct) return direct;
+
+      const source = [product?.product_group_name, product?.name].filter(Boolean).join(' ');
+      const productSubcategory = String(product?.subcategory || state.subcategory || '');
+      const marker = productSubcategory === 'Apple iPhone'
+        ? /\biPhone\s+(.+?)(?:\s+-\s+(?:Black|Blue|Brown|Clear|Gold|Green|Grey|Gray|Pink|Purple|Red|Silver|White|Yellow|Dark|Light|Rose|Navy)\b|$)/i
+        : productSubcategory === 'Samsung Galaxy'
+          ? /\bSamsung Galaxy\s+(.+?)(?:\s+-\s+(?:Black|Blue|Brown|Clear|Gold|Green|Grey|Gray|Pink|Purple|Red|Silver|White|Yellow)\b|$)/i
+          : /\bGoogle Pixel\s+(.+?)(?:\s+-\s+(?:Black|Blue|Brown|Clear|Gold|Green|Grey|Gray|Pink|Purple|Red|Silver|White|Yellow)\b|$)/i;
+      const match = source.match(marker);
+      if (!match) return 'Other Models';
+      const prefix = productSubcategory === 'Apple iPhone'
+        ? 'iPhone '
+        : productSubcategory === 'Samsung Galaxy'
+          ? 'Samsung Galaxy '
+          : 'Google Pixel ';
+      return `${prefix}${match[1]}`.trim();
+    }
+
+    function phoneCaseModelKey(value) {
+      return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
+    function phoneCaseStyle(product) {
+      const value = [product?.product_family, product?.product_group_name, product?.name]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      if (/magsafe|mag safe/.test(value)) return 'MagSafe';
+      if (/wallet|card case|card holder|purse/.test(value)) return 'Wallet';
+      if (/shockproof|rugged|armou?r|survivor|defender|grip case/.test(value)) return 'Shockproof';
+      if (/flip case|folio/.test(value)) return 'Flip';
+      if (/clear|transparent|back cover/.test(value)) return 'Clear & Back Cover';
+      if (/fashion|logo|cartoon|glitter|emoji|flower|pattern|lux|designer|one piece/.test(value)) return 'Fashion';
+      return 'Other';
+    }
+
+    function phoneCaseStyleFilters(products) {
+      const styles = new Set(products.map(phoneCaseStyle));
+      return PHONE_CASE_STYLE_ORDER
+        .filter(style => style === 'All' || styles.has(style))
+        .map(style => ({
+          name: style,
+          count: productTiles(style === 'All' ? products : products.filter(product => phoneCaseStyle(product) === style)).length
+        }));
+    }
+
+    function phoneCaseModelSortParts(label, subcategory = state.subcategory) {
+      const normalized = String(label || '').toLowerCase();
+      const numbers = (normalized.match(/\d+/g) || []).map(Number);
+      const generation = numbers.length ? Math.max(...numbers) : (/\b(?:x|xs|xr)\b/.test(normalized) ? 10 : 0);
+      const variantRank = /pro max|ultra/.test(normalized)
+        ? 4
+        : /\bpro\b|edge/.test(normalized)
+          ? 3
+          : /plus|\+/.test(normalized)
+            ? 2
+            : /\b(?:air|e|fe)\b/.test(normalized)
+              ? 1
+              : 0;
+      const familyRank = subcategory === 'Samsung Galaxy'
+        ? (/galaxy s/.test(normalized) ? 4 : /galaxy z/.test(normalized) ? 3 : /galaxy a/.test(normalized) ? 2 : 1)
+        : 1;
+      return { familyRank, generation, variantRank };
+    }
+
+    function comparePhoneCaseModels(left, right) {
+      const a = phoneCaseModelSortParts(left.label);
+      const b = phoneCaseModelSortParts(right.label);
+      return b.familyRank - a.familyRank
+        || b.generation - a.generation
+        || a.variantRank - b.variantRank
+        || left.label.localeCompare(right.label, undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    function phoneCaseModelGroups() {
+      const grouped = new Map();
+      state.products.filter(product => (
+        product.category === state.category && product.subcategory === state.subcategory
+      )).forEach(product => {
+        const label = phoneCaseModelLabel(product);
+        const key = phoneCaseModelKey(label);
+        if (!grouped.has(key)) grouped.set(key, { label, products: [] });
+        grouped.get(key).products.push(product);
+      });
+      return Array.from(grouped.values()).map(group => ({
+        ...group,
+        count: productTiles(group.products).length
+      })).sort(comparePhoneCaseModels);
+    }
+
+    function compactProductSearch(value) {
+      return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    }
+
+    function phoneCaseSearchAliases(product) {
+      const model = phoneCaseModelLabel(product);
+      const aliases = [];
+      const iphone = model.match(/iPhone\s+(\d+)(?:\s+(Pro Max|Pro|Plus|Air|e))?/i);
+      if (iphone) {
+        const suffix = ({ 'pro max': 'pm', pro: 'pro', plus: 'plus', air: 'air', e: 'e' })[String(iphone[2] || '').toLowerCase()] || '';
+        aliases.push(`${iphone[1]}${suffix}`, `ip${iphone[1]}${suffix}`);
+      }
+      const samsung = model.match(/Galaxy\s+([SAZ]\d+)(?:\s+(Ultra|Plus|Edge|FE))?/i);
+      if (samsung) {
+        const suffix = ({ ultra: 'u', plus: 'p', edge: 'e', fe: 'fe' })[String(samsung[2] || '').toLowerCase()] || '';
+        aliases.push(`${samsung[1]}${suffix}`.toLowerCase());
+      }
+      return aliases;
+    }
+
+    function phoneCaseDisplayName(product) {
+      if (state.productBrowseMode !== 'model' || !state.phoneCaseModel) return product.name;
+      const model = String(state.phoneCaseModel).trim();
+      const escapedModel = model.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const shortened = String(product.name || '')
+        .replace(new RegExp(`\\s+for\\s+${escapedModel}\\s*$`, 'i'), '')
+        .replace(new RegExp(`\\s+-\\s+${escapedModel}\\s*$`, 'i'), '')
+        .trim();
+      const genericName = /^(?:phone\s+)?(?:case|cover)$/i.test(shortened);
+      return shortened.length >= 4 && !genericName ? shortened : product.name;
+    }
+
     function filteredProducts() {
       const query = state.search.trim().toLowerCase();
       return state.products.filter(product => {
+        const scopedModes = new Set(['category', 'subcategory', 'models', 'model']);
         const inCategory = query
-          || (state.productBrowseMode !== 'category' && state.productBrowseMode !== 'subcategory')
+          || !scopedModes.has(state.productBrowseMode)
           || (product.category === state.category
-            && (state.productBrowseMode !== 'subcategory' || product.subcategory === state.subcategory));
+            && (!['subcategory', 'models', 'model'].includes(state.productBrowseMode) || product.subcategory === state.subcategory)
+            && (state.productBrowseMode !== 'model'
+              || phoneCaseModelKey(phoneCaseModelLabel(product)) === phoneCaseModelKey(state.phoneCaseModel))
+            && (state.productBrowseMode !== 'model'
+              || state.phoneCaseStyle === 'All'
+              || phoneCaseStyle(product) === state.phoneCaseStyle));
         const searchable = [
           product.name,
           product.sku,
@@ -11671,10 +11931,16 @@
           product.product_family,
           product.variant_name,
           product.variant_color,
+          product.model,
+          product.compatibility,
           product.fit_profile_name,
           ...(product.compatible_devices || []).map(device => device.name)
         ].join(' ').toLowerCase();
-        return inCategory && (!query || searchable.includes(query));
+        const compactQuery = compactProductSearch(query);
+        const compactSearchable = compactProductSearch(searchable);
+        const aliasMatch = compactQuery && phoneCaseSearchAliases(product).includes(compactQuery);
+        const compactMatch = compactQuery.length >= 2 && compactSearchable.includes(compactQuery);
+        return inCategory && (!query || searchable.includes(query) || compactMatch || aliasMatch);
       }).sort((a, b) => getProductStock(b) - getProductStock(a) || a.name.localeCompare(b.name, undefined, { numeric: true }));
     }
 
@@ -11978,6 +12244,10 @@
       const categoryModeActive = state.productBrowseMode !== 'all';
       const context = query
         ? `<span class="browse-context-copy"><strong>Search results</strong> - ${displayedProducts().length} products</span>`
+        : state.productBrowseMode === 'model'
+          ? `<button class="browse-back" type="button" data-category-back title="Change model" aria-label="Change phone model"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.phoneCaseModel)}</strong> - ${displayedProducts().length} styles</span>`
+          : state.productBrowseMode === 'models'
+            ? `<button class="browse-back" type="button" data-category-back title="Back to Phone Cases" aria-label="Back to Phone Cases"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.subcategory)}</strong> - ${phoneCaseModelGroups().length} models</span>`
         : state.productBrowseMode === 'subcategory'
           ? `<button class="browse-back" type="button" data-category-back title="Back to ${escapeHtml(state.category)}" aria-label="Back to ${escapeHtml(state.category)}"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> / ${escapeHtml(state.subcategory)} - ${displayedProducts().length} products</span>`
           : state.productBrowseMode === 'subcategories'
@@ -12054,14 +12324,63 @@
         return;
       }
 
+      if (!query && state.productBrowseMode === 'models') {
+        const models = phoneCaseModelGroups();
+        els.productGrid.className = 'product-grid model-layout';
+        els.productGrid.setAttribute('aria-label', `${state.subcategory} phone models`);
+        if (!models.length) {
+          els.productGrid.innerHTML = `
+            <div class="empty-state">
+              <div>
+                <div class="cart-empty-icon"><i class="bi bi-phone"></i></div>
+                <strong>No phone models found</strong>
+              </div>
+            </div>
+          `;
+          return;
+        }
+        els.productGrid.innerHTML = models.map(model => `
+          <button class="phone-model-card" type="button" data-open-phone-model="${escapeHtml(model.label)}" aria-label="Open ${escapeHtml(model.label)}, ${model.count} styles">
+            <span class="phone-model-icon"><i class="bi bi-phone"></i></span>
+            <span class="phone-model-name">${escapeHtml(model.label)}</span>
+            <span class="phone-model-count">${model.count} ${model.count === 1 ? 'style' : 'styles'}</span>
+          </button>
+        `).join('');
+        return;
+      }
+
+      let styleFiltersHtml = '';
+      if (!query && state.productBrowseMode === 'model') {
+        const modelProducts = state.products.filter(product => (
+          product.category === state.category
+          && product.subcategory === state.subcategory
+          && phoneCaseModelKey(phoneCaseModelLabel(product)) === phoneCaseModelKey(state.phoneCaseModel)
+        ));
+        const styleFilters = phoneCaseStyleFilters(modelProducts);
+        if (!styleFilters.some(style => style.name === state.phoneCaseStyle)) state.phoneCaseStyle = 'All';
+        styleFiltersHtml = `
+          <div class="phone-case-style-filters" role="group" aria-label="Case styles">
+            ${styleFilters.map(style => `
+              <button class="phone-case-style-chip ${state.phoneCaseStyle === style.name ? 'active' : ''}" type="button" data-phone-case-style="${escapeHtml(style.name)}" aria-pressed="${state.phoneCaseStyle === style.name}">
+                ${escapeHtml(style.name)} <span>${style.count}</span>
+              </button>
+            `).join('')}
+          </div>
+        `;
+      }
+
       const products = displayedProducts();
       els.productGrid.className = 'product-grid product-layout';
       els.productGrid.setAttribute('aria-label', query
         ? 'Product search results'
-        : (state.productBrowseMode === 'subcategory' ? `${state.category}, ${state.subcategory}` : 'All products'));
+        : (state.productBrowseMode === 'model'
+          ? `${state.phoneCaseModel} phone cases`
+          : (state.productBrowseMode === 'subcategory' ? `${state.category}, ${state.subcategory}` : 'All products')));
       if (!products.length) {
-        const emptyCategory = !query && (state.productBrowseMode === 'category' || state.productBrowseMode === 'subcategory');
-        const emptyLabel = state.productBrowseMode === 'subcategory' ? 'subcategory' : 'category';
+        const emptyCategory = !query && ['category', 'subcategory', 'model'].includes(state.productBrowseMode);
+        const emptyLabel = state.productBrowseMode === 'model'
+          ? 'model and style'
+          : (state.productBrowseMode === 'subcategory' ? 'subcategory' : 'category');
         els.productGrid.innerHTML = `
           <div class="empty-state">
             <div>
@@ -12074,9 +12393,10 @@
         return;
       }
 
-      els.productGrid.innerHTML = products.map((product, index) => {
+      els.productGrid.innerHTML = styleFiltersHtml + products.map((product, index) => {
         const stock = displayProductStock(product);
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
+        const productName = phoneCaseDisplayName(product);
         const actionAttribute = product.is_product_group
           ? `data-open-product-group="${escapeHtml(product.product_group_code)}"`
           : `data-add="${escapeHtml(product.id)}"`;
@@ -12098,11 +12418,11 @@
         const sizes = productSizes(product);
         const sizeLabel = sizes.length ? `. Available sizes: ${sizes.join(', ')}` : '';
         return `
-          <article class="product-card ${isWatchBandProduct(product) ? 'watch-band-card' : ''} ${imageVariant ? 'image-variant-card' : ''}" ${actionAttribute} ${arrangeAttribute} role="button" tabindex="${state.arrangementMode ? '-1' : '0'}" aria-label="${actionLabel} ${escapeHtml(product.name)}${escapeHtml(colourLabel)}${escapeHtml(optionLabel)}${escapeHtml(sizeLabel)}">
+          <article class="product-card ${isWatchBandProduct(product) ? 'watch-band-card' : ''} ${imageVariant ? 'image-variant-card' : ''}" ${actionAttribute} ${arrangeAttribute} role="button" tabindex="${state.arrangementMode ? '-1' : '0'}" aria-label="${actionLabel} ${escapeHtml(productName)}${escapeHtml(colourLabel)}${escapeHtml(optionLabel)}${escapeHtml(sizeLabel)}">
             ${arrangeAttribute ? '<span class="arrangement-drag-handle" aria-label="Drag product"><i class="bi bi-grip-vertical"></i></span>' : ''}
-            <img class="product-image" src="${escapeHtml(productImage(product))}" alt="${escapeHtml(product.name)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" ${index < 4 ? 'fetchpriority="high"' : ''} data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
+            <img class="product-image" src="${escapeHtml(productImage(product))}" alt="${escapeHtml(productName)}" loading="${index < 6 ? 'eager' : 'lazy'}" decoding="async" ${index < 4 ? 'fetchpriority="high"' : ''} data-fallback="${escapeHtml(productPlaceholderImage(product))}" onerror="this.onerror=null;this.src=this.dataset.fallback;">
             <div class="product-info">
-              <h2 class="product-name">${escapeHtml(product.name)}</h2>
+              <h2 class="product-name">${escapeHtml(productName)}</h2>
               ${productColourSwatches(product)}
               ${productImageVariantPreviews(product)}
               ${productSizeOptions(product)}
@@ -12997,6 +13317,91 @@
           store_inventory: [{ store_slug: 'park-ridge', quantity: 2 }]
         },
         {
+          id: 1004,
+          sku: 'TM8-PC-1004',
+          name: 'Apple Logo Case for iPhone 12 / 12 Pro - Dark Green',
+          pos_category_name: 'Phone Cases',
+          pos_subcategory_name: 'Apple iPhone',
+          cost_price: 5.5,
+          sale_price: 49,
+          barcode: '2999000010048',
+          product_family: 'Fashion Case',
+          product_group_code: 'TM8-GRP-PC-IP12-LOGO',
+          product_group_name: 'Apple Logo Case for iPhone 12 / 12 Pro',
+          variant_color: 'Dark Green',
+          fit_profile: {
+            code: 'PHONE-IPHONE-12-12-PRO',
+            display_name: 'iPhone 12 / 12 Pro',
+            compatible_devices: [
+              { code: 'IPHONE-12', display_name: 'iPhone 12' },
+              { code: 'IPHONE-12-PRO', display_name: 'iPhone 12 Pro' }
+            ]
+          },
+          stock_quantity: 0
+        },
+        {
+          id: 1005,
+          sku: 'TM8-PC-1005',
+          name: 'MagSafe Case for iPhone 12 / 12 Pro - Clear',
+          pos_category_name: 'Phone Cases',
+          pos_subcategory_name: 'Apple iPhone',
+          cost_price: 7,
+          sale_price: 45,
+          barcode: '2999000010055',
+          product_family: 'MagSafe Case',
+          product_group_code: 'TM8-GRP-PC-IP12-MAGSAFE',
+          product_group_name: 'MagSafe Case for iPhone 12 / 12 Pro',
+          variant_color: 'Clear',
+          fit_profile: {
+            code: 'PHONE-IPHONE-12-12-PRO',
+            display_name: 'iPhone 12 / 12 Pro',
+            compatible_devices: [
+              { code: 'IPHONE-12', display_name: 'iPhone 12' },
+              { code: 'IPHONE-12-PRO', display_name: 'iPhone 12 Pro' }
+            ]
+          },
+          stock_quantity: 0
+        },
+        {
+          id: 1006,
+          sku: 'TM8-PC-1006',
+          name: 'Shockproof Case for iPhone 15 Pro Max - Black',
+          pos_category_name: 'Phone Cases',
+          pos_subcategory_name: 'Apple iPhone',
+          cost_price: 9,
+          sale_price: 49,
+          barcode: '2999000010062',
+          product_family: 'Shockproof Case',
+          product_group_code: 'TM8-GRP-PC-IP15PM-SHOCK',
+          product_group_name: 'Shockproof Case for iPhone 15 Pro Max',
+          variant_color: 'Black',
+          fit_profile: {
+            code: 'PHONE-IPHONE-15-PRO-MAX',
+            display_name: 'iPhone 15 Pro Max',
+            compatible_devices: [{ code: 'IPHONE-15-PRO-MAX', display_name: 'iPhone 15 Pro Max' }]
+          },
+          stock_quantity: 0
+        },
+        {
+          id: 1007,
+          sku: 'TM8-PC-1007',
+          name: 'Clear Case for Samsung Galaxy S24 Ultra',
+          pos_category_name: 'Phone Cases',
+          pos_subcategory_name: 'Samsung Galaxy',
+          cost_price: 6,
+          sale_price: 39,
+          barcode: '2999000010079',
+          product_family: 'Clear Case',
+          product_group_code: 'TM8-GRP-PC-S24U-CLEAR',
+          product_group_name: 'Clear Case for Samsung Galaxy S24 Ultra',
+          fit_profile: {
+            code: 'PHONE-SAMSUNG-S24-ULTRA',
+            display_name: 'Samsung Galaxy S24 Ultra',
+            compatible_devices: [{ code: 'SAMSUNG-S24-ULTRA', display_name: 'Samsung Galaxy S24 Ultra' }]
+          },
+          stock_quantity: 0
+        },
+        {
           id: 1003,
           sku: 'TM8-MISC-1003',
           name: 'Uncategorized Accessory',
@@ -13112,6 +13517,35 @@
       state.search = '2999000010024';
       renderProductBrowser();
       const exactBarcodeDirectCard = Boolean(document.querySelector('[data-add="1002"]'));
+
+      state.search = '';
+      state.category = 'Phone Cases';
+      state.subcategory = 'Apple iPhone';
+      state.phoneCaseModel = '';
+      state.phoneCaseStyle = 'All';
+      state.productBrowseMode = 'models';
+      renderProductBrowser();
+      const phoneModelCards = Array.from(els.productGrid.querySelectorAll('[data-open-phone-model]'));
+      const phoneModelNames = phoneModelCards.map(card => card.dataset.openPhoneModel);
+      const phoneModelLatestFirst = phoneModelNames[0] === 'iPhone 15 Pro Max';
+      const sharedPhoneModelCard = phoneModelCards.find(card => card.dataset.openPhoneModel === 'iPhone 12 / 12 Pro');
+      sharedPhoneModelCard?.click();
+      const phoneModelModeOpened = state.productBrowseMode === 'model'
+        && state.phoneCaseModel === 'iPhone 12 / 12 Pro';
+      const phoneModelStyleNames = Array.from(els.productGrid.querySelectorAll('[data-phone-case-style]'))
+        .map(button => button.dataset.phoneCaseStyle);
+      const phoneModelProductNames = Array.from(els.productGrid.querySelectorAll('.product-name'))
+        .map(element => element.textContent.trim());
+      const phoneModelTitlesShortened = phoneModelProductNames.includes('Apple Logo Case')
+        && phoneModelProductNames.includes('MagSafe Case');
+      els.productGrid.querySelector('[data-phone-case-style="MagSafe"]')?.click();
+      const phoneModelMagSafeCardCount = els.productGrid.querySelectorAll('.product-card').length;
+      const phoneModelMagSafeOnly = Array.from(els.productGrid.querySelectorAll('.product-name'))
+        .every(element => /magsafe/i.test(element.textContent));
+      state.search = '15pm';
+      state.productBrowseMode = 'all';
+      renderProductBrowser();
+      const phoneModelAliasSearchRendered = Boolean(document.querySelector('[data-add="1006"], [data-open-product-group="TM8-GRP-PC-IP15PM-SHOCK"]'));
 
       const universalPatternNames = [
         'MagSafe Flower',
@@ -13261,6 +13695,14 @@
         zeroStockAdded,
         modalClosedAfterAdd: !els.productVariantModal.classList.contains('show'),
         exactBarcodeDirectCard,
+        phoneModelNames,
+        phoneModelLatestFirst,
+        phoneModelModeOpened,
+        phoneModelStyleNames,
+        phoneModelTitlesShortened,
+        phoneModelMagSafeCardCount,
+        phoneModelMagSafeOnly,
+        phoneModelAliasSearchRendered,
         universalPatternTileCount: universalPatternTiles.length,
         universalPatternCardRendered: Boolean(universalPatternCard),
         universalPatternThumbnailCount,
@@ -13305,6 +13747,26 @@
         state.search = '';
         renderProductBrowser();
         openProductVariantModal('TM8-GRP-IPAD10-HDC');
+      } else if (catalogTestParams.has('catalog-phone-models')) {
+        state.products = products;
+        state.search = '';
+        state.category = 'Phone Cases';
+        state.subcategory = 'Apple iPhone';
+        state.phoneCaseModel = '';
+        state.phoneCaseStyle = 'All';
+        state.productBrowseMode = 'models';
+        setActiveView('products');
+        renderProductBrowser();
+      } else if (catalogTestParams.has('catalog-phone-products')) {
+        state.products = products;
+        state.search = '';
+        state.category = 'Phone Cases';
+        state.subcategory = 'Apple iPhone';
+        state.phoneCaseModel = 'iPhone 12 / 12 Pro';
+        state.phoneCaseStyle = 'All';
+        state.productBrowseMode = 'model';
+        setActiveView('products');
+        renderProductBrowser();
       } else if (catalogTestParams.has('catalog-arrangement')) {
         const arrangementTestStaff = catalogTestParams.get('catalog-arrangement-staff') || 'Bowen';
         const arrangementTestAuthorized = staffIdentityKey(arrangementTestStaff) === 'bowen';
@@ -14828,14 +15290,26 @@
         state.productBrowseMode = modeButton.dataset.browseMode;
         state.category = 'All';
         state.subcategory = '';
+        state.phoneCaseModel = '';
+        state.phoneCaseStyle = 'All';
       } else if (backButton) {
-        if (state.productBrowseMode === 'subcategory') {
+        if (state.productBrowseMode === 'model') {
+          state.productBrowseMode = 'models';
+          state.phoneCaseModel = '';
+          state.phoneCaseStyle = 'All';
+        } else if (state.productBrowseMode === 'models') {
+          state.productBrowseMode = 'subcategories';
+          state.subcategory = '';
+          state.phoneCaseModel = '';
+        } else if (state.productBrowseMode === 'subcategory') {
           state.productBrowseMode = 'subcategories';
           state.subcategory = '';
         } else {
           state.productBrowseMode = 'categories';
           state.category = 'All';
           state.subcategory = '';
+          state.phoneCaseModel = '';
+          state.phoneCaseStyle = 'All';
         }
       } else {
         return;
@@ -14849,6 +15323,8 @@
       if (categoryCard) {
         state.category = categoryCard.dataset.openCategory;
         state.subcategory = '';
+        state.phoneCaseModel = '';
+        state.phoneCaseStyle = 'All';
         state.productBrowseMode = categoryDefinition(state.category)?.directProducts ? 'category' : 'subcategories';
         els.productGrid.scrollTop = 0;
         renderProductBrowser();
@@ -14857,7 +15333,27 @@
       const subcategoryCard = event.target.closest('[data-open-subcategory]');
       if (subcategoryCard) {
         state.subcategory = subcategoryCard.dataset.openSubcategory;
-        state.productBrowseMode = 'subcategory';
+        state.phoneCaseModel = '';
+        state.phoneCaseStyle = 'All';
+        state.productBrowseMode = !state.arrangementMode && usesPhoneCaseModelBrowser()
+          ? 'models'
+          : 'subcategory';
+        els.productGrid.scrollTop = 0;
+        renderProductBrowser();
+        return;
+      }
+      const phoneModelCard = event.target.closest('[data-open-phone-model]');
+      if (phoneModelCard) {
+        state.phoneCaseModel = phoneModelCard.dataset.openPhoneModel;
+        state.phoneCaseStyle = 'All';
+        state.productBrowseMode = 'model';
+        els.productGrid.scrollTop = 0;
+        renderProductBrowser();
+        return;
+      }
+      const phoneCaseStyle = event.target.closest('[data-phone-case-style]');
+      if (phoneCaseStyle) {
+        state.phoneCaseStyle = phoneCaseStyle.dataset.phoneCaseStyle;
         els.productGrid.scrollTop = 0;
         renderProductBrowser();
         return;

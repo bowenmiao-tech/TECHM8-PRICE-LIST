@@ -69,6 +69,8 @@ Completed product-sale flow:
 - Search supports product name, SKU, and barcode.
 - The POS always shows these fixed retail groups, including empty groups: `Phone Cases`, `Tablet Cases`, `Screen Protection`, `Cables & Adapters`, `Charging & Power`, `Audio`, `Mounts & Holders`, `Watch Accessories`, `Computer & Gaming`, `Other Electronics`, and `Uncategorized`.
 - Each main group opens a fixed second-level category grid before showing products. Empty second-level groups remain visible.
+- `Phone Cases > Apple iPhone`, `Samsung Galaxy`, and `Google Pixel` open a model grid before product cards, using the catalogue fit profile so shared-fit cases remain one product group.
+- A selected phone model can be filtered by case style (`MagSafe`, clear/back cover, shockproof, wallet, flip, fashion, or other). Global name, SKU, barcode, and compact model searches such as `15pm` or `S24U` bypass the navigation layers and return products directly.
 - Existing API categories are mapped into the hierarchy in the POS display layer. Source product records are not renamed or rewritten, and search still includes the original category and subcategory.
 - `Computer & Gaming > Keyboards, Mice & Accessories` contains the 41 reviewed keyboards, mice, keyboard/mouse sets, keycaps, and mouse pads. `Other Computer Accessories` contains the 1 webcam and 8 laptop bags/sleeves.
 - Bowen can open `Arrange POS` directly to drag and save the display order of main categories, second-level categories, and products. No second login is required; the control is hidden from all other staff and every save is rechecked by the backend.
