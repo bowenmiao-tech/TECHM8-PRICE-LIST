@@ -1845,6 +1845,14 @@
       font-size: 14px;
     }
 
+    .product-variant-choice {
+      max-width: 100%;
+      justify-content: flex-start;
+      line-height: 1.25;
+      text-align: left;
+      white-space: normal;
+    }
+
     .product-variant-option-name {
       min-height: 34px;
       color: #3d4e55;
@@ -6304,6 +6312,7 @@
     const PHONE_CASE_MODEL_SUBCATEGORIES = new Set(['Apple iPhone', 'Samsung Galaxy', 'Google Pixel']);
     const PHONE_CASE_STYLE_ORDER = [
       'All',
+      'Premium Brands',
       'MagSafe',
       'Clear & Back Cover',
       'Shockproof',
@@ -11807,6 +11816,12 @@
     }
 
     function phoneCaseStyle(product) {
+      const family = String(product?.product_family || '').trim().toLowerCase();
+      if (family === 'branded case collection') {
+        return String(product?.brand || '').trim().toLowerCase() === 'casetify'
+          ? 'Fashion'
+          : 'Premium Brands';
+      }
       const value = [product?.product_family, product?.product_group_name, product?.name]
         .filter(Boolean)
         .join(' ')
@@ -12018,11 +12033,14 @@
 
     function isImageVariantProduct(product) {
       const family = String(product?.product_family || '').trim().toLowerCase();
-      return family === 'universal pattern case' || family === 'special order case';
+      return family === 'universal pattern case'
+        || family === 'special order case'
+        || family === 'branded case collection';
     }
 
     function productImageVariantPreviews(product) {
-      if (!isImageVariantProduct(product)) return '';
+      const family = String(product?.product_family || '').trim().toLowerCase();
+      if (family !== 'universal pattern case' && family !== 'special order case') return '';
       const variants = Array.isArray(product.variant_options) ? product.variant_options : [product];
       const previews = variants.filter(variant => variant.image_url).slice(0, 5);
       const remaining = Math.max(0, variants.length - previews.length);
@@ -13192,6 +13210,13 @@
             return productVariantSizeName(a).localeCompare(productVariantSizeName(b), undefined, { numeric: true })
               || String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true });
           }
+          if (isImageVariantProduct(a) || isImageVariantProduct(b)) {
+            return String(a.variant_name || a.name || '').localeCompare(
+              String(b.variant_name || b.name || ''),
+              undefined,
+              { numeric: true, sensitivity: 'base' }
+            );
+          }
           return getProductStock(b) - getProductStock(a)
             || String(a.variant_color || a.variant_name || a.name).localeCompare(
               String(b.variant_color || b.variant_name || b.name),
@@ -13225,7 +13250,9 @@
       const fitCopy = watchBandGroup
         ? (state.stocktakeMode ? 'Choose the size to edit' : 'Choose the size to add')
         : imageVariantGroup
-          ? (String(first.product_family || '').toLowerCase() === 'universal pattern case'
+          ? (String(first.product_family || '').toLowerCase() === 'branded case collection'
+            ? (state.stocktakeMode ? 'Choose the exact case to edit' : 'Choose the exact case to add')
+            : String(first.product_family || '').toLowerCase() === 'universal pattern case'
             ? (state.stocktakeMode ? 'Choose the pattern to edit' : 'Choose a pattern, then confirm the phone model')
             : (state.stocktakeMode ? 'Choose the case type to edit' : 'Choose a case type and record the phone model'))
         : compatibleDevices.length
@@ -13250,7 +13277,7 @@
         const optionMeta = watchBandGroup
           ? `<span class="product-variant-size">${escapeHtml(optionName)}</span>`
           : imageVariantGroup
-            ? `<span class="product-variant-size">${escapeHtml(optionName)}</span>`
+            ? `<span class="product-variant-size product-variant-choice">${escapeHtml(optionName)}</span>`
             : `<span class="product-variant-colour">${productColourSwatch(optionName)}<span>${escapeHtml(optionName)}</span></span>`;
         return `
           <button class="product-variant-option" type="button" data-add-variant="${escapeHtml(variant.id)}" aria-label="${state.stocktakeMode ? 'Edit' : 'Add'} ${escapeHtml(variant.name)}, ${stock} in stock">
@@ -13595,6 +13622,97 @@
       const universalPatternModalUsesColourLabels = els.productVariantList.querySelectorAll('.product-variant-colour').length > 0;
       closeProductVariantModal();
 
+      const brandedCaseProducts = normalizeProducts({ rows: [
+        {
+          id: 4001,
+          sku: 'TM8-PC-BRAND-4001',
+          name: 'NBA MagSafe Case for iPhone 17 Pro Max',
+          brand: 'CASETiFY',
+          category_name: 'Phone Cases',
+          subcategory_name: 'Apple iPhone',
+          cost_price: 5,
+          sale_price: 59,
+          stock_quantity: 0,
+          image_url: 'https://example.com/casetify-nba.jpg',
+          product_group_code: 'TM8-GRP-PC-IP17PM-CASETIFY',
+          product_group_name: 'CASETiFY Cases for iPhone 17 Pro Max',
+          product_family: 'Branded Case Collection',
+          variant_name: 'NBA MagSafe Case',
+          fit_profile: { code: 'PHONE-IPHONE-17-PRO-MAX', display_name: 'iPhone 17 Pro Max', compatible_devices: [] }
+        },
+        {
+          id: 4002,
+          sku: 'TM8-PC-BRAND-4002',
+          name: 'Snake MagSafe Case for iPhone 17 Pro Max',
+          brand: 'CASETiFY',
+          category_name: 'Phone Cases',
+          subcategory_name: 'Apple iPhone',
+          cost_price: 5,
+          sale_price: 59,
+          stock_quantity: 0,
+          image_url: 'https://example.com/casetify-snake.jpg',
+          product_group_code: 'TM8-GRP-PC-IP17PM-CASETIFY',
+          product_group_name: 'CASETiFY Cases for iPhone 17 Pro Max',
+          product_family: 'Branded Case Collection',
+          variant_name: 'Snake MagSafe Case',
+          fit_profile: { code: 'PHONE-IPHONE-17-PRO-MAX', display_name: 'iPhone 17 Pro Max', compatible_devices: [] }
+        },
+        {
+          id: 4003,
+          sku: 'TM8-PC-BRAND-4003',
+          name: 'EFM Alta Case for iPhone 17 Pro Max',
+          brand: 'EFM',
+          category_name: 'Phone Cases',
+          subcategory_name: 'Apple iPhone',
+          cost_price: 30,
+          sale_price: 60,
+          stock_quantity: 0,
+          image_url: 'https://example.com/efm-alta.jpg',
+          product_group_code: 'TM8-GRP-PC-IP17PM-EFM',
+          product_group_name: 'EFM Cases for iPhone 17 Pro Max',
+          product_family: 'Branded Case Collection',
+          variant_name: 'EFM Alta Case',
+          fit_profile: { code: 'PHONE-IPHONE-17-PRO-MAX', display_name: 'iPhone 17 Pro Max', compatible_devices: [] }
+        },
+        {
+          id: 4004,
+          sku: 'TM8-PC-BRAND-4004',
+          name: 'EFM Aspen Armour Case for iPhone 17 Pro Max',
+          brand: 'EFM',
+          category_name: 'Phone Cases',
+          subcategory_name: 'Apple iPhone',
+          cost_price: 45,
+          sale_price: 70,
+          stock_quantity: 0,
+          image_url: 'https://example.com/efm-aspen.jpg',
+          product_group_code: 'TM8-GRP-PC-IP17PM-EFM',
+          product_group_name: 'EFM Cases for iPhone 17 Pro Max',
+          product_family: 'Branded Case Collection',
+          variant_name: 'EFM Aspen Armour Case',
+          fit_profile: { code: 'PHONE-IPHONE-17-PRO-MAX', display_name: 'iPhone 17 Pro Max', compatible_devices: [] }
+        }
+      ] });
+      state.products = brandedCaseProducts;
+      state.search = '';
+      state.productBrowseMode = 'all';
+      renderProductBrowser();
+      const brandedCaseTiles = productTiles(state.products);
+      const casetifyCollectionCard = document.querySelector('[data-open-product-group="TM8-GRP-PC-IP17PM-CASETIFY"]');
+      const casetifyCollectionMainImages = casetifyCollectionCard?.querySelectorAll('.product-image').length || 0;
+      const casetifyCollectionPreviewImages = casetifyCollectionCard?.querySelectorAll('.product-pattern-thumbnail').length || 0;
+      openProductVariantModal('TM8-GRP-PC-IP17PM-CASETIFY');
+      const casetifyCollectionModalOptions = els.productVariantList.querySelectorAll('[data-add-variant]').length;
+      const casetifyCollectionModalTitles = Array.from(els.productVariantList.querySelectorAll('.product-variant-option-name'))
+        .map(element => element.textContent.trim());
+      const casetifyCollectionUsesImageChoices = els.productVariantList.querySelectorAll('.product-variant-choice').length === 2
+        && els.productVariantList.querySelectorAll('.product-variant-option-image').length === 2;
+      closeProductVariantModal();
+      openProductVariantModal('TM8-GRP-PC-IP17PM-EFM');
+      const efmCollectionModalOptions = els.productVariantList.querySelectorAll('[data-add-variant]').length;
+      const efmCollectionModalTitles = Array.from(els.productVariantList.querySelectorAll('.product-variant-option-name'))
+        .map(element => element.textContent.trim());
+      closeProductVariantModal();
+
       const watchBandProducts = normalizeProducts({ rows: [
         {
           id: 2001,
@@ -13711,6 +13829,17 @@
         universalPatternModalImageCount,
         universalPatternModalTitles,
         universalPatternModalUsesColourLabels,
+        brandedCaseTileCount: brandedCaseTiles.length,
+        casetifyCollectionCardRendered: Boolean(casetifyCollectionCard),
+        casetifyCollectionMainImages,
+        casetifyCollectionPreviewImages,
+        casetifyCollectionModalOptions,
+        casetifyCollectionModalTitles,
+        casetifyCollectionUsesImageChoices,
+        casetifyCollectionStyle: phoneCaseStyle(brandedCaseProducts[0]),
+        efmCollectionModalOptions,
+        efmCollectionModalTitles,
+        efmCollectionStyle: phoneCaseStyle(brandedCaseProducts[2]),
         watchBandTileCount: watchBandTiles.length,
         watchBandCardRendered: Boolean(watchBandCard),
         watchBandSizeChips,

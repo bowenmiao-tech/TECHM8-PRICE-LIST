@@ -45,6 +45,19 @@ const FIXED_REPAIRDESK_IMAGES = new Map([
   ['7116', 'https://dghyt15qon7us.cloudfront.net/images/productTheme/Inventory/small/1663814324.jpg'],
   ['6839', 'https://dghyt15qon7us.cloudfront.net/images/productTheme/Inventory/small/1659061232.jpg'],
 ]);
+const EXCLUDED_PHONE_CASE_SOURCE_IDS = new Set([
+  '6688', // Universal Cartoon Case
+  '7112', // iPhone 12 Pro Max EFM Phone Case
+  '7143', // iPhone EFM Phone Case (device model is ambiguous)
+  '7679', // Samsung S20 Plus EFM Aspen Clear
+  '7680', // Samsung S20 EFM Aspen Clear
+  '7681', // Samsung S21 Ultra EFM Aspen Clear
+]);
+const BRANDED_CASE_COLLECTIONS = new Map([
+  ['CASETiFY', { key: 'casetify-case-collection', name: 'CASETiFY Cases', sort: 5 }],
+  ['EFM', { key: 'efm-case-collection', name: 'EFM Cases', sort: 1 }],
+  ['OtterBox', { key: 'otterbox-case-collection', name: 'OtterBox Cases', sort: 0 }],
+]);
 
 const normalize = (value) => String(value ?? '')
   .normalize('NFKD')
@@ -263,11 +276,13 @@ const nameDevicePatterns = [
   [/samsung\s*(?:galaxy\s*)?note\s*20/i, ['Samsung', 'Samsung Galaxy Note 20', 'SAMSUNG-NOTE-20']],
   [/\bnote\s*20\b/i, ['Samsung', 'Samsung Galaxy Note 20', 'SAMSUNG-NOTE-20']],
   [/(?:samsung\s*)?(?:galaxy\s*)?note\s*10\b/i, ['Samsung', 'Samsung Galaxy Note 10', 'SAMSUNG-NOTE-10']],
+  [/(?:samsung\s*)?(?:galaxy\s*)?s20\s*ultra/i, ['Samsung', 'Samsung Galaxy S20 Ultra', 'SAMSUNG-S20-ULTRA']],
   [/(?:samsung\s*)?(?:galaxy\s*)?s20\s*(?:plus|\+)/i, ['Samsung', 'Samsung Galaxy S20 Plus', 'SAMSUNG-S20-PLUS']],
   [/(?:samsung\s*)?(?:galaxy\s*)?s20\b/i, ['Samsung', 'Samsung Galaxy S20', 'SAMSUNG-S20']],
   [/samsung\s*(?:galaxy\s*)?s22\s*(?:plus|\+)/i, ['Samsung', 'Samsung Galaxy S22 Plus', 'SAMSUNG-S22-PLUS']],
   [/samsung\s*(?:galaxy\s*)?s22\s*ultra/i, ['Samsung', 'Samsung Galaxy S22 Ultra', 'SAMSUNG-S22-ULTRA']],
   [/samsung\s*(?:galaxy\s*)?s22\b/i, ['Samsung', 'Samsung Galaxy S22', 'SAMSUNG-S22']],
+  [/samsung\s*(?:galaxy\s*)?s21\s*ultra/i, ['Samsung', 'Samsung Galaxy S21 Ultra', 'SAMSUNG-S21-ULTRA']],
   [/samsung\s*(?:galaxy\s*)?s21\s*(?:plus|\+)/i, ['Samsung', 'Samsung Galaxy S21 Plus', 'SAMSUNG-S21-PLUS']],
   [/samsung\s*(?:galaxy\s*)?s21\s*fe/i, ['Samsung', 'Samsung Galaxy S21 FE', 'SAMSUNG-S21-FE']],
   [/samsung\s*(?:galaxy\s*)?s21\b/i, ['Samsung', 'Samsung Galaxy S21', 'SAMSUNG-S21']],
@@ -403,6 +418,7 @@ function detectStyle(name, sourceCategory = '') {
 
   if (/otter\s*box|otterbox/.test(lower) || /otter box|life proof/.test(sourceLeaf)) brand = 'OtterBox';
   else if (/\befm\b/.test(lower) || sourceLeaf === 'efm') brand = 'EFM';
+  else if (/^c\b/.test(lower)) brand = 'CASETiFY';
   else if (/\bhanman\b/.test(lower)) brand = 'Hanman';
   else if (/goospery/.test(lower)) brand = 'Goospery';
   else if (/rich diary/.test(lower)) brand = 'Rich Diary';
@@ -563,6 +579,7 @@ for (const record of records) {
   const name = String(record['Item Name']).trim();
   const category = String(record.Category).trim();
   const itemId = String(record['Item ID']).trim();
+  if (EXCLUDED_PHONE_CASE_SOURCE_IDS.has(itemId)) continue;
   const userOverride = previousReviewInputs.productOverrides.get(itemId);
   const leaf = normalize(categoryLeaf(category));
   if (/air pods|air tag/.test(leaf)) {
@@ -662,28 +679,39 @@ for (const group of duplicateGroups.values()) {
 
 for (const candidate of candidates) {
   if (!candidate.device) continue;
-  candidate.groupKey = `${candidate.device.code}|${candidate.style.key}`;
+  const collection = BRANDED_CASE_COLLECTIONS.get(candidate.style.brand) ?? null;
+  candidate.costGroupKey = `${candidate.device.code}|${candidate.style.key}`;
+  candidate.groupKey = `${candidate.device.code}|${collection?.key ?? candidate.style.key}`;
   const costStyleKey = candidate.style.key === 'otterbox defender magsafe case'
     ? 'otterbox defender case'
     : candidate.style.key === 'efm aspen state case'
       ? 'efm aspen case'
       : candidate.style.key;
-  candidate.styleCostKey = `${candidate.style.brand}|${costStyleKey}`;
-  candidate.groupCode = `TM8-GRP-PC-${codePart(candidate.device.code, 22)}-${shortHash(candidate.style.key)}`;
-  candidate.groupName = ['Universal Phone Pouch', 'Universal Flower & Pattern Phone Case', 'Special Order Phone Case'].includes(candidate.style.display)
+  const costBrand = candidate.style.brand === 'CASETiFY' ? 'OZTECHM8' : candidate.style.brand;
+  candidate.styleCostKey = `${costBrand}|${costStyleKey}`;
+  candidate.collection = collection;
+  candidate.groupCode = `TM8-GRP-PC-${codePart(candidate.device.code, 22)}-${shortHash(collection?.key ?? candidate.style.key)}`;
+  const styleGroupName = ['Universal Phone Pouch', 'Universal Flower & Pattern Phone Case', 'Special Order Phone Case'].includes(candidate.style.display)
     ? (candidate.style.display === 'Universal Phone Pouch' ? candidate.device.displayName : candidate.style.display)
     : `${candidate.style.display} for ${candidate.device.displayName}`;
-  candidate.proposedName = `${candidate.groupName}${candidate.variantName === 'Standard' ? '' : ` - ${candidate.variantName}`}`;
+  candidate.groupName = collection ? `${collection.name} for ${candidate.device.displayName}` : styleGroupName;
+  candidate.proposedName = `${styleGroupName}${candidate.variantName === 'Standard' ? '' : ` - ${candidate.variantName}`}`;
+  if (collection) {
+    candidate.variantName = candidate.variantName === 'Standard'
+      ? candidate.style.display
+      : `${candidate.style.display} - ${candidate.variantName}`;
+    candidate.variantType = 'image';
+  }
 }
 
 const representativeImagesByGroup = new Map();
 const representativeImagesByStyle = new Map();
-for (const candidate of candidates.filter((item) => item.userInclude && item.imageUrl && item.groupKey)) {
-  if (!representativeImagesByGroup.has(candidate.groupKey)) representativeImagesByGroup.set(candidate.groupKey, candidate.imageUrl);
+for (const candidate of candidates.filter((item) => item.userInclude && item.imageUrl && item.costGroupKey)) {
+  if (!representativeImagesByGroup.has(candidate.costGroupKey)) representativeImagesByGroup.set(candidate.costGroupKey, candidate.imageUrl);
   if (!representativeImagesByStyle.has(candidate.styleCostKey)) representativeImagesByStyle.set(candidate.styleCostKey, candidate.imageUrl);
 }
-for (const candidate of candidates.filter((item) => item.userInclude && !item.imageUrl && item.groupKey)) {
-  const groupImage = representativeImagesByGroup.get(candidate.groupKey);
+for (const candidate of candidates.filter((item) => item.userInclude && !item.imageUrl && item.costGroupKey)) {
+  const groupImage = representativeImagesByGroup.get(candidate.costGroupKey);
   const styleImage = representativeImagesByStyle.get(candidate.styleCostKey);
   candidate.imageUrl = groupImage || styleImage || '';
   if (candidate.imageUrl) candidate.imageFallback = groupImage ? 'repairdesk_group' : 'repairdesk_style';
@@ -691,16 +719,16 @@ for (const candidate of candidates.filter((item) => item.userInclude && !item.im
 
 const groupRetailModes = new Map();
 const styleRetailModes = new Map();
-for (const candidate of candidates.filter((item) => item.groupKey && item.retailPrice > 0)) {
-  if (!groupRetailModes.has(candidate.groupKey)) groupRetailModes.set(candidate.groupKey, []);
+for (const candidate of candidates.filter((item) => item.costGroupKey && item.retailPrice > 0)) {
+  if (!groupRetailModes.has(candidate.costGroupKey)) groupRetailModes.set(candidate.costGroupKey, []);
   if (!styleRetailModes.has(candidate.styleCostKey)) styleRetailModes.set(candidate.styleCostKey, []);
-  groupRetailModes.get(candidate.groupKey).push(candidate.retailPrice);
+  groupRetailModes.get(candidate.costGroupKey).push(candidate.retailPrice);
   styleRetailModes.get(candidate.styleCostKey).push(candidate.retailPrice);
 }
 for (const [key, values] of groupRetailModes) groupRetailModes.set(key, chooseMode(values));
 for (const [key, values] of styleRetailModes) styleRetailModes.set(key, chooseMode(values));
-for (const candidate of candidates.filter((item) => item.groupKey && !(item.retailPrice > 0))) {
-  const groupMode = groupRetailModes.get(candidate.groupKey);
+for (const candidate of candidates.filter((item) => item.costGroupKey && !(item.retailPrice > 0))) {
+  const groupMode = groupRetailModes.get(candidate.costGroupKey);
   const styleMode = styleRetailModes.get(candidate.styleCostKey);
   const fallbackRetail = groupMode?.decisive ? groupMode.value : styleMode?.decisive ? styleMode.value : null;
   if (fallbackRetail > 0) {
@@ -710,25 +738,25 @@ for (const candidate of candidates.filter((item) => item.groupKey && !(item.reta
 }
 
 const groupCostStats = new Map();
-for (const candidate of candidates.filter((item) => item.groupKey)) {
-  if (!groupCostStats.has(candidate.groupKey)) groupCostStats.set(candidate.groupKey, []);
+for (const candidate of candidates.filter((item) => item.costGroupKey)) {
+  if (!groupCostStats.has(candidate.costGroupKey)) groupCostStats.set(candidate.costGroupKey, []);
   const validSourceCost = candidate.sourceCost > 0 && candidate.sourceCost < candidate.retailPrice
     ? candidate.sourceCost
     : 0;
-  groupCostStats.get(candidate.groupKey).push(candidate.reviewedCost || validSourceCost);
+  groupCostStats.get(candidate.costGroupKey).push(candidate.reviewedCost || validSourceCost);
 }
 const groupCostModes = new Map(Array.from(groupCostStats, ([key, values]) => [key, chooseMode(values)]));
 const styleKnownCosts = new Map();
-for (const candidate of candidates.filter((item) => item.groupKey)) {
-  const mode = groupCostModes.get(candidate.groupKey);
+for (const candidate of candidates.filter((item) => item.costGroupKey)) {
+  const mode = groupCostModes.get(candidate.costGroupKey);
   if (!mode?.decisive || mode.value == null) continue;
   if (!styleKnownCosts.has(candidate.styleCostKey)) styleKnownCosts.set(candidate.styleCostKey, []);
   styleKnownCosts.get(candidate.styleCostKey).push(mode.value);
 }
 const styleCostModes = new Map(Array.from(styleKnownCosts, ([key, values]) => [key, chooseMode(values)]));
 
-for (const candidate of candidates.filter((item) => item.groupKey)) {
-  const groupMode = groupCostModes.get(candidate.groupKey);
+for (const candidate of candidates.filter((item) => item.costGroupKey)) {
+  const groupMode = groupCostModes.get(candidate.costGroupKey);
   const styleMode = styleCostModes.get(candidate.styleCostKey);
   if (candidate.reviewedCost > 0) {
     candidate.finalCost = candidate.reviewedCost;
@@ -817,8 +845,20 @@ const productDataReviewRows = reviewRows.filter((item) => item.userInclude && (
   || !(item.retailPrice > 0)
   || /Duplicate product/.test(item.forcedIssue ?? '')
 ));
+
+const collectionOptions = new Map();
+for (const candidate of readyCandidates.filter((item) => item.collection)) {
+  const key = `${candidate.groupCode}|${normalize(candidate.variantName)}`;
+  if (!collectionOptions.has(key)) collectionOptions.set(key, []);
+  collectionOptions.get(key).push(candidate);
+}
+for (const duplicateOptions of collectionOptions.values()) {
+  if (duplicateOptions.length < 2) continue;
+  for (const candidate of duplicateOptions) candidate.variantName = candidate.originalName;
+}
+
 const costQuestionMap = new Map();
-for (const item of reviewRows.filter((candidate) => !(candidate.finalCost > 0) && candidate.styleCostKey)) {
+for (const item of reviewRows.filter((candidate) => candidate.userInclude && !(candidate.finalCost > 0) && candidate.styleCostKey)) {
   if (!costQuestionMap.has(item.styleCostKey)) costQuestionMap.set(item.styleCostKey, []);
   costQuestionMap.get(item.styleCostKey).push(item);
 }
@@ -858,12 +898,12 @@ function chooseGroupImage(variants) {
 
 const productGroups = Array.from(readyGroupMap, ([code, variants]) => {
   const first = variants[0];
-  const sortOrder = deviceSort(first.device) + (familyOrder.get(first.style.family) ?? 99);
+  const sortOrder = deviceSort(first.device) + (first.collection?.sort ?? familyOrder.get(first.style.family) ?? 99);
   return {
     code,
     slug: slugify(code),
     name: first.groupName,
-    product_family: first.style.family,
+    product_family: first.collection ? 'Branded Case Collection' : first.style.family,
     fit_profile_code: first.device.profileCode,
     main_image_url: chooseGroupImage(variants),
     pos_main_category: 'Phone Cases',
@@ -968,7 +1008,7 @@ const products = readyCandidates.map((candidate) => {
 
 const costCrossChecks = Array.from(new Set(candidates.filter((item) => item.styleCostKey).map((item) => item.styleCostKey))).map((key) => {
   const rows = candidates.filter((item) => item.styleCostKey === key);
-  const groupCosts = unique(rows.map((item) => item.groupKey).filter(Boolean)).map((groupKey) => groupCostModes.get(groupKey)?.value).filter((value) => value != null);
+  const groupCosts = unique(rows.map((item) => item.costGroupKey).filter(Boolean)).map((groupKey) => groupCostModes.get(groupKey)?.value).filter((value) => value != null);
   const mode = styleCostModes.get(key);
   return {
     brand: rows[0]?.style.brand ?? '',
@@ -1327,7 +1367,9 @@ summarySheet.getRange('D4:H10').values = [
 ];
 summarySheet.getRange('D4:H10').format = { fill: '#F5FAF8', wrapText: true, font: { color: '#274640' } };
 summarySheet.getRange('A14:H14').merge();
-summarySheet.getRange('A14').values = [['Cost To Confirm: enter the cost in the yellow Confirmed Cost column. Needs Your Input: follow column C and edit only the yellow columns D-H.']];
+summarySheet.getRange('A14').values = [[costQuestions.length || productDataReviewRows.length
+  ? 'Cost To Confirm: enter the cost in the yellow Confirmed Cost column. Needs Your Input: follow column C and edit only the yellow columns D-H.'
+  : 'No additional product information or cost confirmation is required.']];
 summarySheet.getRange('A14:H14').format = { fill: '#FFF3CD', font: { bold: true, color: '#664D03' }, wrapText: true };
 summarySheet.getRange('A:A').format.columnWidth = 42;
 summarySheet.getRange('B:B').format.columnWidth = 18;

@@ -93,7 +93,7 @@ outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Import.jso
 outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Final_Review.xlsx
 ```
 
-It preserves the previous 915 phone-case variants and adds 826 missing variants, for 1,741 active POS variants under 829 product groups. All added products use RepairDesk images, remain hidden online, and start with zero product stock and no store-inventory rows. Explicitly removed products, AirPods/AirTag accessories, duplicate source rows, one model-ambiguous EFM case, and three EFM Aspen rows without a reliable cost remain excluded.
+It preserves the previous 915 phone-case variants and adds 826 missing variants, for 1,741 active POS variants under 829 product groups. All added products use RepairDesk images, remain hidden online, and start with zero product stock and no store-inventory rows. The two previously removed products, the model-ambiguous `iPhone EFM Phone Case`, and the three EFM Aspen rows without a reliable cost are permanently excluded from the import catalogue. AirPods/AirTag accessories and duplicate source rows also remain excluded.
 
 The computer-product catalogue import is stored in:
 
