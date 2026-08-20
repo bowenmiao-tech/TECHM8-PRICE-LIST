@@ -291,7 +291,8 @@ Required POS migrations, in order:
 13. `20260812111500_add_pos_stocktake_permissions.sql`
 14. `20260820145225_add_staff_email_first_login_credentials.sql`
 15. `20260820151527_disable_legacy_shared_staff_password_rpc.sql`
-16. `20260821010000_make_pos_customers_global.sql`
+16. `20260820152151_configure_bowen_staff_login.sql`
+17. `20260821010000_make_pos_customers_global.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`

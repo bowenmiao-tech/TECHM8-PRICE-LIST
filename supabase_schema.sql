@@ -6497,6 +6497,17 @@ where active = true
   and coalesce(trim(email), '') <> ''
   and login_password_hash is null;
 
+-- Bowen uses a separate temporary password; only its bcrypt hash is stored here.
+update public.staff_directory
+set email = 'techm8contact@gmail.com',
+    login_password_hash = '$2a$10$7Ulu7jfyiXtlSwzEcg8aXOkamQ2AimWCAMLl.A6iWmCXEwrAg/7VC',
+    pin_hash = null,
+    credentials_initialized_at = null,
+    last_login_at = null,
+    active = true,
+    updated_at = now()
+where lower(trim(display_name)) = 'bowen';
+
 create or replace function public.is_valid_staff_session(session_token text)
 returns boolean
 language plpgsql
@@ -6659,6 +6670,10 @@ begin
 
   if selected_staff.id is null then
     raise exception 'Invalid staff session';
+  end if;
+  if selected_staff.login_password_hash is not null
+     and extensions.crypt(new_password, selected_staff.login_password_hash) = selected_staff.login_password_hash then
+    raise exception 'Choose a new password different from the temporary password';
   end if;
 
   update public.staff_directory
