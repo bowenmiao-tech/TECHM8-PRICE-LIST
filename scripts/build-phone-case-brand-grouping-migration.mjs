@@ -11,7 +11,7 @@ const outputPath = process.env.PHONE_CASE_GROUPING_MIGRATION_PATH
 
 const before = JSON.parse(fs.readFileSync(beforePath, "utf8"));
 const after = JSON.parse(fs.readFileSync(afterPath, "utf8"));
-const collectionBrands = new Set(["CASETiFY", "EFM", "OtterBox"]);
+const collectionBrands = new Set(["CTFY", "EFM", "OtterBox"]);
 const expectedExcludedSourceIds = ["6688", "7112", "7143", "7679", "7680", "7681"];
 
 function jsonLiteral(tag, value) {
@@ -283,7 +283,7 @@ commit;
 select
   count(*) as branded_products,
   count(distinct product.product_group_id) as branded_groups,
-  count(*) filter (where product.brand = 'CASETiFY') as casetify_products,
+  count(*) filter (where product.brand = 'CTFY') as ctfy_products,
   count(*) filter (where product.brand = 'EFM') as efm_products,
   count(*) filter (where product.brand = 'OtterBox') as otterbox_products
 from public.products product

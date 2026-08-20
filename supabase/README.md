@@ -91,11 +91,12 @@ The complete phone-case reconciliation is stored in:
 ```text
 supabase/website-migrations/20260819125528_reconcile_missing_phone_cases.sql
 supabase/website-migrations/20260820093000_regroup_branded_phone_cases.sql
+supabase/website-migrations/20260820101457_rename_casetify_to_ctfy.sql
 outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Import.json
 outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Final_Review.xlsx
 ```
 
-It preserves the previous 915 phone-case variants and adds 826 missing variants, for 1,741 active POS variants under 505 product groups. The branded regroup keeps 477 exact SKUs independent while presenting them as 105 model-and-brand cards: 25 CASETiFY, 23 EFM, and 57 OtterBox groups. Each child retains its own cost, sale price, image, barcode, and store inventory. All added products use RepairDesk images, remain hidden online, and start with zero product stock and no store-inventory rows. The two previously removed products, the model-ambiguous `iPhone EFM Phone Case`, and the three EFM Aspen rows without a reliable cost are permanently excluded from the import catalogue. AirPods/AirTag accessories and duplicate source rows also remain excluded.
+It preserves the previous 915 phone-case variants and adds 826 missing variants, for 1,741 active POS variants under 505 product groups. The branded regroup keeps 477 exact SKUs independent while presenting them as 105 model-and-brand cards: 25 CTFY, 23 EFM, and 57 OtterBox groups. Each child retains its own cost, sale price, image, barcode, and store inventory. CTFY card titles and receipts use the short `CTFY` label. All added products use RepairDesk images, remain hidden online, and start with zero product stock and no store-inventory rows. The two previously removed products, the model-ambiguous `iPhone EFM Phone Case`, and the three EFM Aspen rows without a reliable cost are permanently excluded from the import catalogue. AirPods/AirTag accessories and duplicate source rows also remain excluded.
 
 Deploy the product-project API after changing fields returned to POS:
 

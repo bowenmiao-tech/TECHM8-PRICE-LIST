@@ -116,6 +116,13 @@ function invoiceNumberText(order: JsonRecord): string {
     : "Pending";
 }
 
+function receiptItemDisplayName(item: JsonRecord): string {
+  const rawName = String(item.name || "Product").trim() || "Product";
+  return /^(?:CTFY|CASETiFY)(?:\b|\s*[·-])/i.test(rawName)
+    ? "CTFY"
+    : rawName.replace(/\bCASETiFY(?:\s+Cases)?\b/gi, "CTFY");
+}
+
 function receiptTermsHtml(profile: StoreProfile, hasRepair: boolean): string {
   return `
     <div style="font-weight:900;font-size:16px;color:#14231e;">Terms &amp; Condition</div>
@@ -153,7 +160,7 @@ function receiptEmailHtml(order: JsonRecord, note: string): string {
   const itemRows = items.map((item) => `
     <tr>
       <td style="padding:14px 0;border-bottom:1px solid #e2e8e6;">
-        <div style="font-weight:800;color:#14231e;">${escapeHtml(item.name || "Product")}</div>
+        <div style="font-weight:800;color:#14231e;">${escapeHtml(receiptItemDisplayName(item))}</div>
         ${item.sku ? `<div style="margin-top:4px;font-size:12px;color:#708078;">SKU: ${escapeHtml(item.sku)}</div>` : ""}
       </td>
       <td style="padding:14px 8px;border-bottom:1px solid #e2e8e6;text-align:center;color:#52625b;">${escapeHtml(item.qty || 1)}</td>

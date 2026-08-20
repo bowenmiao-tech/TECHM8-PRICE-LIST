@@ -1724,6 +1724,40 @@
       white-space: nowrap;
     }
 
+    .product-option-preview {
+      min-height: 46px;
+      display: flex;
+      align-content: flex-start;
+      flex-wrap: wrap;
+      gap: 5px;
+      overflow: hidden;
+    }
+
+    .product-option-chip {
+      max-width: 100%;
+      min-width: 0;
+      height: 21px;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border: 1px solid #cbd8dc;
+      border-radius: 5px;
+      color: #29434d;
+      background: #f4f8f9;
+      font-size: 10px;
+      font-weight: 850;
+      line-height: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .product-option-chip.more {
+      color: #08765f;
+      border-color: #b9ddd4;
+      background: #e9f7f3;
+    }
+
     .product-colour-swatch {
       width: 14px;
       height: 14px;
@@ -11819,7 +11853,7 @@
     function phoneCaseStyle(product) {
       const family = String(product?.product_family || '').trim().toLowerCase();
       if (family === 'branded case collection') {
-        return String(product?.brand || '').trim().toLowerCase() === 'casetify'
+        return ['ctfy', 'casetify'].includes(String(product?.brand || '').trim().toLowerCase())
           ? 'Fashion'
           : 'Premium Brands';
       }
@@ -12036,6 +12070,15 @@
       return String(product?.product_family || '').trim().toLowerCase() === 'branded case collection';
     }
 
+    function isCtfyProduct(product) {
+      const brand = String(product?.brand || '').trim().toLowerCase();
+      const groupName = String(product?.product_group_name || '').trim().toLowerCase();
+      return brand === 'ctfy'
+        || brand === 'casetify'
+        || /^casetify\s+cases\b/.test(groupName)
+        || /^ctfy\b/.test(groupName);
+    }
+
     function isImageVariantProduct(product) {
       const family = String(product?.product_family || '').trim().toLowerCase();
       return family === 'universal pattern case'
@@ -12045,6 +12088,20 @@
 
     function productImageVariantPreviews(product) {
       const family = String(product?.product_family || '').trim().toLowerCase();
+      if (family === 'branded case collection') {
+        const variants = Array.isArray(product.variant_options) ? product.variant_options : [product];
+        const labels = variants
+          .map(variant => String(variant.variant_name || variant.name || '').trim())
+          .filter(Boolean);
+        const visible = labels.slice(0, 3);
+        const remaining = Math.max(0, labels.length - visible.length);
+        return `
+          <div class="product-option-preview" aria-label="Available options: ${escapeHtml(labels.join(', '))}">
+            ${visible.map(label => `<span class="product-option-chip" title="${escapeHtml(label)}">${escapeHtml(label)}</span>`).join('')}
+            ${remaining ? `<span class="product-option-chip more">+${remaining} more</span>` : ''}
+          </div>
+        `;
+      }
       if (family !== 'universal pattern case' && family !== 'special order case') return '';
       const variants = Array.isArray(product.variant_options) ? product.variant_options : [product];
       const previews = variants.filter(variant => variant.image_url).slice(0, 5);
@@ -13633,7 +13690,7 @@
           id: 4001,
           sku: 'TM8-PC-BRAND-4001',
           name: 'NBA MagSafe Case for iPhone 17 Pro Max',
-          brand: 'CASETiFY',
+          brand: 'CTFY',
           category_name: 'Phone Cases',
           subcategory_name: 'Apple iPhone',
           cost_price: 5,
@@ -13641,7 +13698,7 @@
           stock_quantity: 0,
           image_url: 'https://example.com/casetify-nba.jpg',
           product_group_code: 'TM8-GRP-PC-IP17PM-CASETIFY',
-          product_group_name: 'CASETiFY Cases for iPhone 17 Pro Max',
+          product_group_name: 'CTFY for iPhone 17 Pro Max',
           product_family: 'Branded Case Collection',
           variant_name: 'NBA MagSafe Case',
           fit_profile: { code: 'PHONE-IPHONE-17-PRO-MAX', display_name: 'iPhone 17 Pro Max', compatible_devices: [] }
@@ -13650,7 +13707,7 @@
           id: 4002,
           sku: 'TM8-PC-BRAND-4002',
           name: 'Snake MagSafe Case for iPhone 17 Pro Max',
-          brand: 'CASETiFY',
+          brand: 'CTFY',
           category_name: 'Phone Cases',
           subcategory_name: 'Apple iPhone',
           cost_price: 5,
@@ -13658,7 +13715,7 @@
           stock_quantity: 0,
           image_url: 'https://example.com/casetify-snake.jpg',
           product_group_code: 'TM8-GRP-PC-IP17PM-CASETIFY',
-          product_group_name: 'CASETiFY Cases for iPhone 17 Pro Max',
+          product_group_name: 'CTFY for iPhone 17 Pro Max',
           product_family: 'Branded Case Collection',
           variant_name: 'Snake MagSafe Case',
           fit_profile: { code: 'PHONE-IPHONE-17-PRO-MAX', display_name: 'iPhone 17 Pro Max', compatible_devices: [] }
@@ -13706,6 +13763,8 @@
       const casetifyCollectionCard = document.querySelector('[data-open-product-group="TM8-GRP-PC-IP17PM-CASETIFY"]');
       const casetifyCollectionMainImages = casetifyCollectionCard?.querySelectorAll('.product-image').length || 0;
       const casetifyCollectionPreviewImages = casetifyCollectionCard?.querySelectorAll('.product-pattern-thumbnail').length || 0;
+      const casetifyCollectionOptionChips = Array.from(casetifyCollectionCard?.querySelectorAll('.product-option-chip') || [])
+        .map(element => element.textContent.trim());
       openProductVariantModal('TM8-GRP-PC-IP17PM-CASETIFY');
       const casetifyCollectionModalOptions = els.productVariantList.querySelectorAll('[data-add-variant]').length;
       const casetifyCollectionModalTitles = Array.from(els.productVariantList.querySelectorAll('.product-variant-option-name'))
@@ -13718,6 +13777,13 @@
       const efmCollectionModalTitles = Array.from(els.productVariantList.querySelectorAll('.product-variant-option-name'))
         .map(element => element.textContent.trim());
       closeProductVariantModal();
+      const previousBrowseMode = state.productBrowseMode;
+      const previousPhoneCaseModel = state.phoneCaseModel;
+      state.productBrowseMode = 'model';
+      state.phoneCaseModel = 'iPhone 17 Pro Max';
+      const ctfyModelCardTitle = phoneCaseDisplayName(brandedCaseTiles.find(product => isCtfyProduct(product)));
+      state.productBrowseMode = previousBrowseMode;
+      state.phoneCaseModel = previousPhoneCaseModel;
 
       const watchBandProducts = normalizeProducts({ rows: [
         {
@@ -13839,6 +13905,7 @@
         casetifyCollectionCardRendered: Boolean(casetifyCollectionCard),
         casetifyCollectionMainImages,
         casetifyCollectionPreviewImages,
+        casetifyCollectionOptionChips,
         casetifyCollectionModalOptions,
         casetifyCollectionModalTitles,
         casetifyCollectionUsesImageChoices,
@@ -13846,6 +13913,9 @@
         efmCollectionModalOptions,
         efmCollectionModalTitles,
         efmCollectionStyle: phoneCaseStyle(brandedCaseProducts[2]),
+        ctfyModelCardTitle,
+        ctfyReceiptName: receiptItemDisplayName({ name: 'CTFY · NBA MagSafe Case' }),
+        legacyCasetifyReceiptName: receiptItemDisplayName({ name: 'CASETiFY Cases' }),
         watchBandTileCount: watchBandTiles.length,
         watchBandCardRendered: Boolean(watchBandCard),
         watchBandSizeChips,
@@ -14770,6 +14840,13 @@
       `;
     }
 
+    function receiptItemDisplayName(item) {
+      const rawName = String(item?.name || 'Product').trim() || 'Product';
+      return /^(?:CTFY|CASETiFY)(?:\b|\s*[·-])/i.test(rawName)
+        ? 'CTFY'
+        : rawName.replace(/\bCASETiFY(?:\s+Cases)?\b/gi, 'CTFY');
+    }
+
     function thermalReceiptContent(order) {
       const profile = receiptProfileForOrder(order);
       const items = Array.isArray(order.items) ? order.items : [];
@@ -14782,7 +14859,7 @@
       const subtotalExGst = roundedMoneyValue(total - gst);
       const itemRows = items.map(item => `
         <div class="receipt-item">
-          <div class="receipt-item-name">${escapeHtml(item.name || 'Product')}</div>
+          <div class="receipt-item-name">${escapeHtml(receiptItemDisplayName(item))}</div>
           ${item.sku ? `<div class="receipt-item-sku">SKU: ${escapeHtml(item.sku)}</div>` : ''}
           <div class="receipt-item-line">
             <span>${Math.max(1, Number(item.qty || 1))} x ${money(item.unit_price)}</span>
@@ -15212,7 +15289,9 @@
         items: state.cart.map(item => ({
           product_id: item.id,
           sku: item.sku,
-          name: item.name,
+          name: isCtfyProduct(item)
+            ? `CTFY · ${String(item.variant_name || item.name || '').trim()}`
+            : item.name,
           category: item.category || '',
           is_repair: Boolean(item.is_repair),
           is_special: Boolean(item.is_special),

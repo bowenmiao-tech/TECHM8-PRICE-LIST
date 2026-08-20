@@ -54,7 +54,7 @@ const EXCLUDED_PHONE_CASE_SOURCE_IDS = new Set([
   '7681', // Samsung S21 Ultra EFM Aspen Clear
 ]);
 const BRANDED_CASE_COLLECTIONS = new Map([
-  ['CASETiFY', { key: 'casetify-case-collection', name: 'CASETiFY Cases', sort: 5 }],
+  ['CTFY', { key: 'casetify-case-collection', name: 'CTFY', sort: 5 }],
   ['EFM', { key: 'efm-case-collection', name: 'EFM Cases', sort: 1 }],
   ['OtterBox', { key: 'otterbox-case-collection', name: 'OtterBox Cases', sort: 0 }],
 ]);
@@ -418,7 +418,7 @@ function detectStyle(name, sourceCategory = '') {
 
   if (/otter\s*box|otterbox/.test(lower) || /otter box|life proof/.test(sourceLeaf)) brand = 'OtterBox';
   else if (/\befm\b/.test(lower) || sourceLeaf === 'efm') brand = 'EFM';
-  else if (/^c\b/.test(lower)) brand = 'CASETiFY';
+  else if (/^c\b/.test(lower)) brand = 'CTFY';
   else if (/\bhanman\b/.test(lower)) brand = 'Hanman';
   else if (/goospery/.test(lower)) brand = 'Goospery';
   else if (/rich diary/.test(lower)) brand = 'Rich Diary';
@@ -687,7 +687,7 @@ for (const candidate of candidates) {
     : candidate.style.key === 'efm aspen state case'
       ? 'efm aspen case'
       : candidate.style.key;
-  const costBrand = candidate.style.brand === 'CASETiFY' ? 'OZTECHM8' : candidate.style.brand;
+  const costBrand = candidate.style.brand === 'CTFY' ? 'OZTECHM8' : candidate.style.brand;
   candidate.styleCostKey = `${costBrand}|${costStyleKey}`;
   candidate.collection = collection;
   candidate.groupCode = `TM8-GRP-PC-${codePart(candidate.device.code, 22)}-${shortHash(collection?.key ?? candidate.style.key)}`;
@@ -1357,7 +1357,7 @@ summarySheet.getRange('D3').values = [['Import Rules Applied']];
 summarySheet.getRange('D3:H3').format = { fill: '#DFF4EF', font: { bold: true, color: '#075E54' } };
 summarySheet.getRange('D4:H10').merge(true);
 summarySheet.getRange('D4:H10').values = [
-  ['Standard cases use one card per device/style; CASETiFY, EFM, and OtterBox use one card per device/brand with exact SKU choices.'],
+  ['Standard cases use one card per device/style; CTFY, EFM, and OtterBox use one card per device/brand with exact SKU choices.'],
   ['The same device and case style uses one cost. Zero costs are filled only from a reliable matching group or style.'],
   ['Conflicting costs, costs at or above retail, missing images, ambiguous device models, and zero retail prices are not imported.'],
   ['All four stores and the online store start at zero stock. Zero stock can still be sold.'],
