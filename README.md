@@ -194,7 +194,8 @@ Completed Today Progress / Target flow:
 - Each staff-confirmed Google Review earns 5 points. The event is saved centrally with an idempotency key and can only be recorded during the store's open shift.
 - A paid invoice earns device-bundle points only when it contains at least one device and one normal product: each device earns 5 points and each accessory earns 5 points. A device sold alone earns 0; refunds reduce the qualifying net quantities.
 - An explicit store/date/staff daily point target takes priority. Otherwise a matching monthly target is converted into an adaptive daily target from the points still required and the calendar days remaining, rounded up to the next 5 points.
-- The embedded quote loads the same live repair-price rows as the Repair Board, includes IMEI, S/N, and Apple A-model lookup tools, and carries the selected quote directly into `repair_workflow.html`.
+- The embedded quote loads the same live repair-price rows as the Repair Board, includes IMEI, S/N, and Apple A-model lookup tools, and opens the POS `Create Repair Ticket` flow with the selected quote prefilled.
+- Ticket creation searches the shared customer directory, requires a valid customer name and contact number, and requires staff to confirm those details before the repair ticket can be created.
 - The page refreshes from Supabase on entry, staff/store change, checkout, manual refresh, and every 30 seconds while visible. A labelled local cache is used only as a temporary offline display.
 - End Shift writes a finalized per-staff result snapshot. Closed shifts show the frozen result instead of recalculating historical performance.
 

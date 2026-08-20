@@ -2994,6 +2994,113 @@
       box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
     }
 
+    .ticket-create-modal {
+      width: min(780px, 100%);
+      max-height: calc(100vh - 36px);
+      gap: 12px;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .ticket-customer-fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ticket-repair-fields {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ticket-create-modal .special-fields input,
+    .ticket-create-modal .special-fields select {
+      height: 46px;
+    }
+
+    .ticket-create-modal .special-error:empty {
+      min-height: 0;
+    }
+
+    .ticket-quote-summary {
+      padding: 12px 14px;
+      border: 1px solid #cfe8e2;
+      border-radius: 14px;
+      color: #36534d;
+      background: #f1fbf8;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .ticket-section-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--tm-ink);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .ticket-section-heading i {
+      color: var(--tm-green);
+      font-size: 16px;
+    }
+
+    .ticket-customer-status {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 12px;
+      border: 1px solid #dce6e9;
+      border-radius: 12px;
+      color: #62747c;
+      background: #f7fafb;
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.4;
+    }
+
+    .ticket-customer-status[data-state="matched"] {
+      border-color: #b8e7dc;
+      color: #087761;
+      background: #edfbf7;
+    }
+
+    .ticket-customer-status[data-state="changed"] {
+      border-color: #f2d7a7;
+      color: #9b6300;
+      background: #fff9ed;
+    }
+
+    .ticket-verify-row {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 12px 13px;
+      border: 1px solid #cfe0e4;
+      border-radius: 13px;
+      color: #33464e;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.4;
+      cursor: pointer;
+    }
+
+    .ticket-verify-row input {
+      width: 18px;
+      height: 18px;
+      margin: 1px 0 0;
+      accent-color: var(--tm-green);
+    }
+
+    @media (max-width: 720px) {
+      .ticket-customer-fields,
+      .ticket-repair-fields {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .customer-modal {
       width: min(720px, 100%);
     }
@@ -6224,14 +6331,6 @@
       <h2 id="specialProductTitle">Special Products</h2>
       <div class="special-fields">
         <label>
-          Customer name *
-          <input id="ticketCustomerName" class="repair-input" type="text" autocomplete="name" required>
-        </label>
-        <label>
-          Customer phone *
-          <input id="ticketCustomerPhone" class="repair-input" type="tel" autocomplete="tel" required>
-        </label>
-        <label>
           Product name
           <input id="specialProductName" type="text" autocomplete="off" placeholder="Custom product name">
         </label>
@@ -6270,9 +6369,27 @@
   </div>
 
   <div id="ticketDetailsModal" class="modal-backdrop" aria-hidden="true">
-    <form id="ticketDetailsForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="ticketDetailsTitle">
+    <form id="ticketDetailsForm" class="special-modal ticket-create-modal" role="dialog" aria-modal="true" aria-labelledby="ticketDetailsTitle">
       <h2 id="ticketDetailsTitle">Create Repair Ticket</h2>
-      <div class="special-fields">
+      <div id="ticketQuoteSummary" class="ticket-quote-summary"></div>
+      <div class="ticket-section-heading"><i class="bi bi-person-check"></i>Verify customer details</div>
+      <div class="special-fields ticket-customer-fields">
+        <label>
+          Customer name *
+          <input id="ticketCustomerName" class="repair-input" type="text" list="customerSuggestions" autocomplete="name" placeholder="Search or enter customer name" required>
+        </label>
+        <label>
+          Customer phone *
+          <input id="ticketCustomerPhone" class="repair-input" type="tel" autocomplete="tel" inputmode="tel" placeholder="0400 000 000" required>
+        </label>
+      </div>
+      <div id="ticketCustomerStatus" class="ticket-customer-status" data-state="empty"><i class="bi bi-search"></i><span>Search for an existing customer or enter new customer details.</span></div>
+      <label class="ticket-verify-row">
+        <input id="ticketCustomerVerified" type="checkbox">
+        <span>I have confirmed the customer's name and phone number.</span>
+      </label>
+      <div class="ticket-section-heading"><i class="bi bi-tools"></i>Repair setup</div>
+      <div class="special-fields ticket-repair-fields">
         <label>
           Need to order parts?
           <select id="ticketNeedOrder" class="repair-select">
@@ -7176,8 +7293,11 @@
       ticketNeedOrder: document.getElementById('ticketNeedOrder'),
       ticketDeviceInStore: document.getElementById('ticketDeviceInStore'),
       ticketMotherboardRepair: document.getElementById('ticketMotherboardRepair'),
+      ticketQuoteSummary: document.getElementById('ticketQuoteSummary'),
       ticketCustomerName: document.getElementById('ticketCustomerName'),
       ticketCustomerPhone: document.getElementById('ticketCustomerPhone'),
+      ticketCustomerStatus: document.getElementById('ticketCustomerStatus'),
+      ticketCustomerVerified: document.getElementById('ticketCustomerVerified'),
       ticketDetailsError: document.getElementById('ticketDetailsError'),
       ticketDetailsCancel: document.getElementById('ticketDetailsCancel'),
       repairPatternModal: document.getElementById('repairPatternModal'),
@@ -8505,26 +8625,33 @@
       return text || 'Contact us';
     }
 
-    function dashboardQuoteDeviceType(item = {}) {
-      const text = [item.brand, item.model, item.issue].join(' ').toLowerCase();
-      if (/ipad|tablet|\btab\b/.test(text)) return 'Tablet';
-      if (/macbook|laptop|notebook|imac|mac mini|computer|\bpc\b/.test(text)) return 'Computer';
-      if (/watch/.test(text)) return 'Watch';
-      if (/playstation|ps4|ps5|xbox|switch|console/.test(text)) return 'Console';
-      return 'Phone';
-    }
+    function beginDashboardRepair(item, manual = false) {
+      if (state.repair.intakeOpen) {
+        setActiveView('repair');
+        showToast('Finish or clear the current repair ticket before starting another one.');
+        return;
+      }
 
-    function dashboardWorkflowUrl(item, manual = false) {
-      const params = new URLSearchParams({
-        brand: item.brand || '',
-        model: item.model || '',
-        issue: manual ? '' : (item.issue || ''),
-        price: manual ? '' : dashboardQuotePrice(item.price),
-        time: manual ? 'N/A' : (item.time || ''),
-        deviceType: dashboardQuoteDeviceType(item)
+      resetRepairState();
+      state.repair.started = true;
+      state.repair.brand = item.brand || '';
+      state.repair.model = item.model || '';
+      state.repair.issue = manual ? '' : (item.issue || '');
+      state.repair.quote = manual ? null : { ...item };
+      state.repair.quotedPrice = manual ? '' : quotePriceLabel(item.price);
+      setActiveView('repair');
+
+      if (manual) {
+        openSpecialRepairModal();
+        els.specialRepairName.value = [item.brand, item.model].filter(Boolean).join(' ');
+        els.specialRepairName.focus();
+        return;
+      }
+
+      openTicketDetailsModal({
+        specialOrder: false,
+        quote: { ...item }
       });
-      if (manual) params.set('manual', '1');
-      return `./repair_workflow.html?${params.toString()}`;
     }
 
     function dashboardQuoteOptionHtml(values, selected, placeholder, valueGetter = value => value, labelGetter = value => value) {
@@ -10784,6 +10911,10 @@
     }
 
     async function loadRepairTickets() {
+      if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) {
+        state.repairSearchLoading = false;
+        return;
+      }
       const url = new URL(POS_REPAIR_TICKETS_ENDPOINT);
       url.searchParams.set('store_code', repairTicketStoreCode());
       url.searchParams.set('q', state.repairSearch || '');
@@ -10833,6 +10964,11 @@
 
     async function persistRepairTicket(ticket) {
       if (!ticket || !ticket.id) return false;
+      if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) {
+        ticket.syncPending = false;
+        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+        return true;
+      }
       try {
         const response = await fetch(POS_REPAIR_TICKETS_ENDPOINT, {
           method: 'PUT',
@@ -11301,19 +11437,71 @@
       });
     }
 
+    function repairCustomerPhone(customer) {
+      if (!customer) return '';
+      return String(customer.phone || customer.phone_number || customer.alert_number || '').trim();
+    }
+
+    function validRepairCustomerPhone(value) {
+      const digits = String(value || '').replace(/\D/g, '');
+      return digits.length >= 8 && digits.length <= 12;
+    }
+
+    function updateTicketCustomerVerification(options = {}) {
+      const name = els.ticketCustomerName.value.trim();
+      const matchedCustomer = customerDetailsForOrder(name);
+      const savedPhone = repairCustomerPhone(matchedCustomer);
+
+      if (matchedCustomer && options.fillPhone && savedPhone) {
+        els.ticketCustomerPhone.value = savedPhone;
+      }
+
+      const phone = els.ticketCustomerPhone.value.trim();
+      const phoneDigits = phone.replace(/\D/g, '');
+      const savedDigits = savedPhone.replace(/\D/g, '');
+      let stateName = 'empty';
+      let icon = 'bi-search';
+      let message = 'Search for an existing customer or enter new customer details.';
+
+      if (name && matchedCustomer && savedDigits && phoneDigits === savedDigits) {
+        stateName = 'matched';
+        icon = 'bi-person-check-fill';
+        message = 'Existing customer found. Check the saved name and phone, then confirm below.';
+      } else if (name && matchedCustomer) {
+        stateName = 'changed';
+        icon = 'bi-exclamation-circle';
+        message = savedPhone
+          ? 'Existing customer found, but the phone differs from the saved record. Confirm the correct number.'
+          : 'Existing customer found without a saved phone. Enter and confirm the correct number.';
+      } else if (name) {
+        stateName = 'changed';
+        icon = 'bi-person-plus';
+        message = 'New customer details. Confirm the name and contact number before creating the ticket.';
+      }
+
+      els.ticketCustomerStatus.dataset.state = stateName;
+      els.ticketCustomerStatus.innerHTML = `<i class="bi ${icon}"></i><span>${message}</span>`;
+    }
+
     function openTicketDetailsModal(draft) {
       state.pendingRepairDraft = draft;
       const customerName = els.customerInput.value.trim();
       const customer = customerDetailsForOrder(customerName);
       els.ticketCustomerName.value = customerName && customerName !== 'Walk-in Customer' ? customerName : '';
-      els.ticketCustomerPhone.value = customer ? (customer.phone || customer.phone_number || customer.alert_number || '') : '';
+      els.ticketCustomerPhone.value = repairCustomerPhone(customer);
+      els.ticketCustomerVerified.checked = false;
+      const quote = draft && draft.quote ? draft.quote : {};
+      const quoteName = [quote.brand, quote.model].filter(Boolean).join(' ') || draft.specialName || 'Repair service';
+      const quoteDetails = [quoteName, quote.issue, quotePriceLabel(quote.price || draft.specialPrice)].filter(value => value && value !== 'N/A');
+      els.ticketQuoteSummary.textContent = quoteDetails.join(' · ');
+      updateTicketCustomerVerification();
       els.ticketDetailsError.textContent = '';
       els.ticketNeedOrder.value = 'no';
       els.ticketDeviceInStore.value = 'yes';
       els.ticketMotherboardRepair.value = 'no';
       els.ticketDetailsModal.classList.add('show');
       els.ticketDetailsModal.setAttribute('aria-hidden', 'false');
-      els.ticketNeedOrder.focus();
+      els.ticketCustomerName.focus();
     }
 
     function closeTicketDetailsModal() {
@@ -11335,6 +11523,16 @@
       if (!customerPhone) {
         els.ticketDetailsError.textContent = 'Customer phone is required for every repair ticket.';
         els.ticketCustomerPhone.focus();
+        return;
+      }
+      if (!validRepairCustomerPhone(customerPhone)) {
+        els.ticketDetailsError.textContent = 'Enter a valid customer contact number.';
+        els.ticketCustomerPhone.focus();
+        return;
+      }
+      if (!els.ticketCustomerVerified.checked) {
+        els.ticketDetailsError.textContent = 'Confirm that the customer name and phone number have been checked.';
+        els.ticketCustomerVerified.focus();
         return;
       }
       const status = els.ticketNeedOrder.value === 'yes' ? 'need_to_order' : 'repairing';
@@ -17046,7 +17244,7 @@
       const quoteContinueButton = event.target.closest('[data-quote-continue]');
       if (quoteContinueButton) {
         const quote = currentDashboardQuote();
-        if (quote) window.location.href = dashboardWorkflowUrl(quote);
+        if (quote) beginDashboardRepair(quote);
         return;
       }
       const quoteManualButton = event.target.closest('[data-quote-manual]');
@@ -17056,7 +17254,7 @@
           model: state.dashboardQuote.manualModel || state.dashboardQuote.model,
           issue: ''
         };
-        if (manualItem.model) window.location.href = dashboardWorkflowUrl(manualItem, true);
+        if (manualItem.model) beginDashboardRepair(manualItem, true);
         return;
       }
       const quoteResetButton = event.target.closest('[data-quote-reset]');
@@ -17241,6 +17439,19 @@
     els.ticketDetailsForm.addEventListener('submit', event => {
       event.preventDefault();
       createRepairTicketFromDraft();
+    });
+    els.ticketCustomerName.addEventListener('input', () => {
+      els.ticketCustomerVerified.checked = false;
+      updateTicketCustomerVerification({ fillPhone: true });
+      els.ticketDetailsError.textContent = '';
+    });
+    els.ticketCustomerPhone.addEventListener('input', () => {
+      els.ticketCustomerVerified.checked = false;
+      updateTicketCustomerVerification();
+      els.ticketDetailsError.textContent = '';
+    });
+    els.ticketCustomerVerified.addEventListener('change', () => {
+      els.ticketDetailsError.textContent = '';
     });
     els.ticketDetailClose.addEventListener('click', closeTicketDetailModal);
     els.ticketDetailModal.addEventListener('click', event => {
