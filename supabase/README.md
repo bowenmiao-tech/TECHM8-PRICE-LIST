@@ -197,18 +197,18 @@ Apply the Today Progress migrations after the used-device migrations:
 20260719011727_fix_pos_today_progress_category.sql
 20260719013325_fix_pos_today_progress_repair_attribution.sql
 20260719013856_index_pos_daily_target_results_shift_code.sql
+20260820135124_redesign_daily_scorecard.sql
 ```
 
 `mode=today-progress` calls `get_pos_today_progress` and requires `store_code` and `staff_name`; `business_date` is optional and defaults to the current Brisbane date. It returns:
 
-- gross sales, refunds attributed to the original selling staff member, and net sales
-- invoice count and average invoice value
-- net `Screen Protectors` units after refunds
-- distinct repaired tickets completed by the staff member
-- active database targets, points earned, maximum points, and projected bonus
+- Google Review count and points (5 points per staff-confirmed review)
+- qualifying device-bundle orders, net device/accessory quantities, and points (5 per device plus 5 per accessory; device-only sales score 0)
+- the active daily point target and its source: an explicit daily override, an adaptive monthly-target calculation, a staff/store default, or the system default
+- points earned and points remaining for the day
 - `projected` status during an open shift or a frozen `finalized` result after End Shift
 
-`pos_daily_targets` stores store/date/staff overrides. `pos_daily_target_results` stores immutable operational snapshots generated when a store shift closes. Both tables are protected by RLS and are not exposed directly to browser roles; staff access is through the session-validating RPC and Edge Function only.
+`pos_daily_targets` stores store/date/staff daily overrides, `pos_monthly_targets` stores monthly point goals, `pos_google_review_events` stores the manual review confirmations, and `pos_daily_target_results` stores immutable operational snapshots generated when a store shift closes. All tables are protected by RLS and are not exposed directly to browser roles; staff access is through the session-validating RPC and Edge Function only.
 
 Repair completion is attributed to the employee recorded in the ticket activity that moved the job to Waiting pickup. A later checkout by another employee does not transfer the repair credit; `updated_by` is used only as a fallback for older tickets without status activity.
 
@@ -216,10 +216,22 @@ Repair completion is attributed to the employee recorded in the ticket activity 
 
 `pos-shared-state` stores customer records, held carts, and store shifts in the staff/POS database. Every operation validates `x-staff-session`; the tables themselves are not exposed to browser roles.
 
+Customer records are company-wide rather than store-owned. `store_id` records the home or creation store, while every active POS store can search the same customer master by name, phone, email, company, POS customer ID, or original RepairDesk customer code. The browser requests a small result set as the employee types instead of preloading the full customer table.
+
+RepairDesk customer imports preserve each original source record in `pos_customer_sources`, including its source store and source customer code. This source table is service-role only; sensitive fields such as driving licence details are never included in the browser customer payload. Brassall customer history can therefore remain searchable without adding Brassall as an active POS store.
+
+Build a repeatable import from the RepairDesk customer workbook with:
+
+```text
+node scripts/build-repairdesk-customer-import.mjs <customers.xlsx> <temporary-output-directory>
+```
+
+The importer removes only identical duplicate source records, merges canonical records only when normalized name plus phone (or name plus email) match, and keeps every source row for later invoice reconciliation. Generated SQL contains customer personal information and must remain in a temporary local directory; do not commit it to Git.
+
 Browser calls:
 
 ```text
-GET  .../pos-shared-state?resource=customers&store_code=parkridge
+GET  .../pos-shared-state?resource=customers&store_code=parkridge&q=customer&limit=80
 POST .../pos-shared-state  resource=customer, action=save
 GET  .../pos-shared-state?resource=holds&store_code=parkridge
 POST .../pos-shared-state  resource=hold, action=save|restore

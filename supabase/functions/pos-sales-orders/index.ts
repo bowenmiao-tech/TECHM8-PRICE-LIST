@@ -76,6 +76,21 @@ Deno.serve(async (request) => {
       if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
         return jsonResponse({ ok: false, message: "Order payload must be an object." }, 400);
       }
+      const url = new URL(request.url);
+      if ((url.searchParams.get("mode") || "") === "google-review") {
+        const storeCode = String((payload as JsonRecord).store_code || "");
+        const staffName = String((payload as JsonRecord).staff_name || "");
+        const eventCode = String((payload as JsonRecord).event_code || "");
+        if (!storeCode || !staffName || !eventCode) {
+          return jsonResponse({ ok: false, message: "store_code, staff_name, and event_code are required." }, 400);
+        }
+        return await rpcResponse(request, "record_pos_google_review", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          target_staff_name: staffName,
+          event_code: eventCode,
+        });
+      }
       return await rpcResponse(request, "save_pos_sales_order", {
         session_token: sessionToken,
         payload,

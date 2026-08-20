@@ -190,12 +190,11 @@ Completed receipt flow:
 
 Completed Today Progress / Target flow:
 - The staff-facing POS Report page is removed. The existing aggregate report RPC remains available for a future management-only page.
-- Progress is calculated from saved database invoices, immutable refunds, normalized invoice lines, and Repair Board history; browser-local orders are not authoritative.
-- Net sales are gross sales minus refunds. A refund is deducted from the staff member who made the original sale, not the staff member who processed the refund.
-- Invoice count and average sale use the original paid invoices for the selected staff, store, and Brisbane business date.
-- Tempered-glass progress counts net units whose saved category is exactly `Screen Protectors`, after refunded quantities are deducted.
-- Repair progress counts distinct repaired tickets when they first reach Waiting pickup; cancelled and returned-unrepaired tickets do not count.
-- Revenue, repair, and tempered-glass targets, points, and the dollar-per-point rate are database configuration. Staff can view but cannot edit them in the POS.
+- The page is a compact daily scorecard plus the complete Instant Quote flow; unused sales, repair, glass, refund, and bonus panels are no longer shown.
+- Each staff-confirmed Google Review earns 5 points. The event is saved centrally with an idempotency key and can only be recorded during the store's open shift.
+- A paid invoice earns device-bundle points only when it contains at least one device and one normal product: each device earns 5 points and each accessory earns 5 points. A device sold alone earns 0; refunds reduce the qualifying net quantities.
+- An explicit store/date/staff daily point target takes priority. Otherwise a matching monthly target is converted into an adaptive daily target from the points still required and the calendar days remaining, rounded up to the next 5 points.
+- The embedded quote loads the same live repair-price rows as the Repair Board, includes IMEI, S/N, and Apple A-model lookup tools, and carries the selected quote directly into `repair_workflow.html`.
 - The page refreshes from Supabase on entry, staff/store change, checkout, manual refresh, and every 30 seconds while visible. A labelled local cache is used only as a temporary offline display.
 - End Shift writes a finalized per-staff result snapshot. Closed shifts show the frozen result instead of recalculating historical performance.
 

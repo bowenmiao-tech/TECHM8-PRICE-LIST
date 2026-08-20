@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-pos-build" content="2026-08-13-watch-band-card-layout">
+  <meta name="techm8-pos-build" content="2026-08-21-daily-scorecard-instant-quote">
   <title>TECHM8 POS</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
@@ -681,6 +681,495 @@
       color: var(--tm-green-dark);
       background: #e7f8f2;
     }
+
+    /* Daily scorecard and embedded instant quote. */
+    .target-page {
+      align-content: start;
+      gap: 14px;
+    }
+
+    .target-page-head,
+    .target-card-head,
+    .target-review-top,
+    .target-bundle-top,
+    .target-quote-head,
+    .target-quote-footer,
+    .target-result-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .target-page-title {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.1;
+      font-weight: 950;
+    }
+
+    .target-page-subtitle {
+      margin: 5px 0 0;
+      color: var(--tm-muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .target-head-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+      color: #53666e;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .target-head-meta span,
+    .target-source-pill,
+    .target-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 9px;
+      border-radius: 999px;
+      background: #e9eff1;
+    }
+
+    .target-refresh-btn {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border-radius: 12px;
+    }
+
+    .target-refresh-btn:disabled { opacity: .55; cursor: wait; }
+
+    .target-overview-grid {
+      display: grid;
+      grid-template-columns: minmax(420px, 1.45fr) minmax(280px, .72fr);
+      gap: 14px;
+    }
+
+    .target-score-card,
+    .target-review-card,
+    .target-bundle-card,
+    .target-quote-panel {
+      border: 1px solid #dce6e9;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(18, 38, 47, .06);
+    }
+
+    .target-score-card {
+      min-height: 268px;
+      padding: 22px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 82% 18%, rgba(45, 189, 153, .38), transparent 28%),
+        linear-gradient(135deg, #162a32 0%, #203c43 48%, #087d68 100%);
+      box-shadow: 0 18px 38px rgba(18, 43, 48, .18);
+    }
+
+    .target-score-card .target-card-head { align-items: flex-start; }
+
+    .target-score-kicker {
+      margin-bottom: 7px;
+      color: rgba(255,255,255,.68);
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .target-score-number {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      font-size: 46px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .target-score-number span {
+      color: rgba(255,255,255,.7);
+      font-size: 18px;
+      font-weight: 850;
+    }
+
+    .target-status-pill {
+      color: #064e40;
+      background: #c9f3e7;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .target-status-pill.finalized { color: #42545d; background: #e7edef; }
+
+    .target-score-track {
+      height: 12px;
+      margin: 22px 0 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+    }
+
+    .target-score-track span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ffc168, #fff0b3);
+      box-shadow: 0 0 18px rgba(255, 205, 115, .4);
+      transition: width .25s ease;
+    }
+
+    .target-score-progress-copy {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: rgba(255,255,255,.72);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .target-score-progress-copy strong { color: #fff; }
+
+    .target-score-breakdown {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .target-score-chip {
+      padding: 12px 13px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 14px;
+      background: rgba(255,255,255,.09);
+      backdrop-filter: blur(8px);
+    }
+
+    .target-score-chip span {
+      display: block;
+      color: rgba(255,255,255,.66);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .target-score-chip strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .target-score-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      color: rgba(255,255,255,.72);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .target-source-pill {
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.1);
+      font-weight: 900;
+    }
+
+    .target-action-stack { display: grid; gap: 12px; }
+
+    .target-review-card,
+    .target-bundle-card { padding: 17px; }
+
+    .target-action-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      color: #9b5508;
+      background: #fff0d8;
+      font-size: 19px;
+    }
+
+    .target-bundle-card .target-action-icon { color: var(--tm-green-dark); background: #ddf5ed; }
+
+    .target-action-copy { min-width: 0; flex: 1; }
+
+    .target-action-label {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .target-action-value {
+      margin-top: 3px;
+      font-size: 22px;
+      line-height: 1.05;
+      font-weight: 950;
+    }
+
+    .target-review-button,
+    .target-link-button,
+    .target-quote-primary,
+    .target-quote-secondary {
+      min-height: 42px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 13px;
+      font-weight: 950;
+      text-decoration: none;
+    }
+
+    .target-review-button,
+    .target-quote-primary {
+      border: 0;
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .target-review-button {
+      width: 100%;
+      margin-top: 13px;
+      background: #e46f08;
+    }
+
+    .target-review-button:disabled { opacity: .58; cursor: wait; }
+
+    .target-action-note {
+      margin-top: 9px;
+      color: var(--tm-muted);
+      font-size: 11px;
+      line-height: 1.4;
+      font-weight: 750;
+    }
+
+    .target-bundle-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 13px;
+    }
+
+    .target-bundle-stat {
+      padding: 9px;
+      border-radius: 11px;
+      color: #4f636b;
+      background: #f0f5f6;
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .target-bundle-stat strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--tm-ink);
+      font-size: 17px;
+    }
+
+    .target-bundle-actions { display: flex; gap: 7px; margin-top: 12px; }
+
+    .target-link-button,
+    .target-quote-secondary {
+      border: 1px solid var(--tm-line);
+      color: #324850;
+      background: #fff;
+    }
+
+    .target-link-button { min-height: 36px; flex: 1; padding: 0 8px; font-size: 11px; }
+
+    .target-sync-warning { border-radius: 12px; }
+
+    .target-quote-panel { padding: 20px; }
+
+    .target-quote-title {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 950;
+    }
+
+    .target-quote-subtitle {
+      margin: 4px 0 0;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .target-lookup-links { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    .target-lookup-links a {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 11px;
+      border: 1px solid var(--tm-line);
+      border-radius: 11px;
+      color: #31454d;
+      background: #f9fbfb;
+      font-size: 11px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .target-quote-grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 1.2fr) minmax(280px, .8fr);
+      gap: 16px;
+      margin-top: 17px;
+    }
+
+    .target-quote-form {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 11px;
+      align-content: start;
+    }
+
+    .target-quote-field { min-width: 0; display: grid; gap: 6px; }
+
+    .target-quote-field > span {
+      color: #445962;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .target-quote-field select,
+    .target-quote-field input {
+      width: 100%;
+      height: 46px;
+      min-width: 0;
+      border: 1px solid #d3dfe3;
+      border-radius: 12px;
+      padding: 0 12px;
+      color: var(--tm-ink);
+      background: #fff;
+      outline: none;
+    }
+
+    .target-quote-field select:focus,
+    .target-quote-field input:focus {
+      border-color: rgba(7,137,111,.5);
+      box-shadow: 0 0 0 3px rgba(7,137,111,.08);
+    }
+
+    .target-quote-field select:disabled { color: #839198; background: #edf1f3; }
+
+    .target-a-model { grid-column: span 2; position: relative; }
+
+    .target-a-model-panel {
+      position: absolute;
+      z-index: 3;
+      left: 0;
+      right: 0;
+      top: calc(100% + 5px);
+      overflow: hidden;
+      border: 1px solid #cddde1;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 16px 34px rgba(17, 38, 47, .16);
+    }
+
+    .target-a-model-item {
+      width: 100%;
+      display: block;
+      padding: 10px 12px;
+      border: 0;
+      border-bottom: 1px solid #e7edef;
+      color: inherit;
+      background: #fff;
+      text-align: left;
+    }
+
+    .target-a-model-item:last-child { border-bottom: 0; }
+    .target-a-model-item:hover { background: #edf9f5; }
+    .target-a-model-item strong { display: block; font-size: 12px; }
+    .target-a-model-item span { display: block; margin-top: 2px; color: var(--tm-muted); font-size: 10px; }
+
+    .target-manual-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid #dde7ea;
+      border-radius: 14px;
+      background: #f6f9fa;
+    }
+
+    .target-manual-row .target-quote-field { grid-column: 1; }
+    .target-manual-row .target-quote-secondary { align-self: end; }
+
+    .target-quote-result {
+      min-height: 178px;
+      display: grid;
+      align-content: center;
+      gap: 9px;
+      padding: 18px;
+      border: 1px solid #cfe2dd;
+      border-radius: 16px;
+      background: linear-gradient(145deg, #f3fbf8, #fff);
+    }
+
+    .target-result-kicker {
+      color: var(--tm-green-dark);
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .target-result-price {
+      font-size: 36px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .target-result-issue { font-size: 15px; font-weight: 950; }
+
+    .target-result-meta {
+      color: var(--tm-muted);
+      font-size: 11px;
+      line-height: 1.45;
+      font-weight: 750;
+    }
+
+    .target-result-actions { justify-content: flex-start; margin-top: 4px; }
+
+    .target-quote-empty {
+      min-height: 178px;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      border: 1px dashed #cbd9dd;
+      border-radius: 16px;
+      color: var(--tm-muted);
+      background: #fafcfc;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .target-quote-empty i { display: block; margin-bottom: 8px; color: #91a4ab; font-size: 28px; }
+
+    .target-quote-footer {
+      align-items: flex-end;
+      margin-top: 13px;
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .target-quote-error { color: #a3462f; }
 
     .topbar {
       display: grid;
@@ -4377,6 +4866,10 @@
         grid-template-columns: 1fr;
       }
 
+      .target-overview-grid {
+        grid-template-columns: 1fr;
+      }
+
       .target-stat-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -4640,6 +5133,31 @@
       .target-task-action {
         grid-column: 1 / -1;
         width: 100%;
+      }
+
+      .target-page-head,
+      .target-quote-head,
+      .target-quote-footer {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .target-head-meta {
+        justify-content: flex-start;
+      }
+
+      .target-quote-grid,
+      .target-quote-form {
+        grid-template-columns: 1fr;
+      }
+
+      .target-a-model,
+      .target-manual-row {
+        grid-column: auto;
+      }
+
+      .target-manual-row {
+        grid-template-columns: 1fr;
       }
 
       .repair-head,
@@ -6421,6 +6939,20 @@
       todayProgressLoading: false,
       todayProgressError: '',
       todayProgressLastLoaded: '',
+      googleReviewSaving: false,
+      dashboardQuote: {
+        rows: [],
+        appleModelMap: {},
+        loading: false,
+        loaded: false,
+        error: '',
+        brand: '',
+        model: '',
+        issueKey: '',
+        appleSearch: '',
+        manualModel: '',
+        lastLoadedAt: ''
+      },
       usedDeviceTab: 'inventory',
       usedDeviceSearch: '',
       usedDeviceStatus: '',
@@ -7932,55 +8464,215 @@
       }).format(date);
     }
 
-    function buildLiveTargetTasks(progress) {
-      const target = progress && progress.target ? progress.target : {};
-      const metrics = progress && progress.metrics ? progress.metrics : {};
-      const taskDefinitions = [
-        {
-          id: 'sales',
-          label: 'Complete today net sales target',
-          icon: 'bi-bullseye',
-          nav: 'products',
-          current: numberValue(metrics.net_sales),
-          target: numberValue(target.revenue),
-          points: Number(target.revenue_points || 0),
-          money: true
-        },
-        {
-          id: 'glass',
-          label: `Sell ${Number(target.glass || 0)} tempered glass`,
-          icon: 'bi-phone-flip',
-          nav: 'products',
-          current: Number(metrics.glass_count || 0),
-          target: Number(target.glass || 0),
-          points: Number(target.glass_points || 0)
-        },
-        {
-          id: 'repairs',
-          label: `Complete ${Number(target.repairs || 0)} repair jobs`,
-          icon: 'bi-tools',
-          nav: 'repair',
-          current: Number(metrics.repair_count || 0),
-          target: Number(target.repairs || 0),
-          points: Number(target.repair_points || 0)
-        }
-      ];
+    function dashboardQuoteKey(item) {
+      return [item.brand, item.model, item.issue].join('|||');
+    }
 
-      return taskDefinitions.filter(task => task.target > 0).map(task => {
-        const complete = task.current >= task.target;
-        const remaining = Math.max(0, task.target - task.current);
-        return {
-          ...task,
-          complete,
-          progressPercent: liveTargetProgressPercent(task.current, task.target),
-          progressText: task.money
-            ? `${money(task.current)} / ${money(task.target)}`
-            : `${task.current} / ${task.target}`,
-          statusText: complete
-            ? 'Complete'
-            : task.money ? `Need ${money(remaining)}` : `${remaining} more`
-        };
+    function dashboardQuoteRows() {
+      return Array.isArray(state.dashboardQuote.rows) ? state.dashboardQuote.rows : [];
+    }
+
+    function dashboardQuoteBrands() {
+      return uniqueSorted(dashboardQuoteRows().map(item => item.brand).filter(Boolean));
+    }
+
+    function dashboardQuoteModels() {
+      if (!state.dashboardQuote.brand) return [];
+      return uniqueSorted(dashboardQuoteRows()
+        .filter(item => item.brand === state.dashboardQuote.brand)
+        .map(item => item.model)
+        .filter(Boolean));
+    }
+
+    function dashboardQuoteIssues() {
+      if (!state.dashboardQuote.brand || !state.dashboardQuote.model) return [];
+      return dashboardQuoteRows()
+        .filter(item => item.brand === state.dashboardQuote.brand && item.model === state.dashboardQuote.model)
+        .map(item => ({ ...item, key: dashboardQuoteKey(item) }))
+        .sort((a, b) => String(a.issue).localeCompare(String(b.issue), undefined, { numeric: true, sensitivity: 'base' }));
+    }
+
+    function currentDashboardQuote() {
+      if (!state.dashboardQuote.issueKey) return null;
+      return dashboardQuoteRows().find(item => dashboardQuoteKey(item) === state.dashboardQuote.issueKey) || null;
+    }
+
+    function dashboardQuotePrice(value) {
+      const text = String(value ?? '').trim();
+      const values = text.match(/\d+(?:\.\d+)?/g);
+      if (values && values.length >= 2) return `$${Number(values[0])} - $${Number(values[1])}`;
+      if (values && values.length === 1) return `$${Number(values[0])}`;
+      return text || 'Contact us';
+    }
+
+    function dashboardQuoteDeviceType(item = {}) {
+      const text = [item.brand, item.model, item.issue].join(' ').toLowerCase();
+      if (/ipad|tablet|\btab\b/.test(text)) return 'Tablet';
+      if (/macbook|laptop|notebook|imac|mac mini|computer|\bpc\b/.test(text)) return 'Computer';
+      if (/watch/.test(text)) return 'Watch';
+      if (/playstation|ps4|ps5|xbox|switch|console/.test(text)) return 'Console';
+      return 'Phone';
+    }
+
+    function dashboardWorkflowUrl(item, manual = false) {
+      const params = new URLSearchParams({
+        brand: item.brand || '',
+        model: item.model || '',
+        issue: manual ? '' : (item.issue || ''),
+        price: manual ? '' : dashboardQuotePrice(item.price),
+        time: manual ? 'N/A' : (item.time || ''),
+        deviceType: dashboardQuoteDeviceType(item)
       });
+      if (manual) params.set('manual', '1');
+      return `./repair_workflow.html?${params.toString()}`;
+    }
+
+    function dashboardQuoteOptionHtml(values, selected, placeholder, valueGetter = value => value, labelGetter = value => value) {
+      return `<option value="">${escapeHtml(placeholder)}</option>` + values.map(value => {
+        const optionValue = String(valueGetter(value) || '');
+        return `<option value="${escapeHtml(optionValue)}" ${optionValue === selected ? 'selected' : ''}>${escapeHtml(labelGetter(value))}</option>`;
+      }).join('');
+    }
+
+    function normalizedDashboardAppleSearch() {
+      const digits = String(state.dashboardQuote.appleSearch || '').toUpperCase().replace(/[^0-9]/g, '').slice(0, 4);
+      return digits ? `A${digits}` : '';
+    }
+
+    function normalizeDashboardAppleModel(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replace(/\([^)]*\)/g, ' ')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\b(wifi|cellular|generation|inch|model|retina|display|only|ports?)\b/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function bestDashboardApplePriceModel(displayModel) {
+      const appleModels = uniqueSorted(dashboardQuoteRows()
+        .filter(item => /apple/i.test(item.brand))
+        .map(item => item.model)
+        .filter(Boolean));
+      const search = normalizeDashboardAppleModel(displayModel);
+      return appleModels.find(model => normalizeDashboardAppleModel(model) === search)
+        || appleModels.find(model => {
+          const normalized = normalizeDashboardAppleModel(model);
+          return normalized.includes(search) || search.includes(normalized);
+        })
+        || '';
+    }
+
+    function dashboardAppleFamilyLabel(key) {
+      return ({
+        iphone: 'iPhone',
+        ipad: 'iPad',
+        macbook_air: 'MacBook Air',
+        macbook_pro: 'MacBook Pro',
+        macbook: 'MacBook',
+        mac_mini: 'Mac mini',
+        imac: 'iMac',
+        mac_studio: 'Mac Studio',
+        mac_pro: 'Mac Pro'
+      })[key] || key;
+    }
+
+    function dashboardAppleMatches() {
+      const search = normalizedDashboardAppleSearch();
+      if (!search) return [];
+      const rows = [];
+      Object.entries(state.dashboardQuote.appleModelMap || {}).forEach(([familyKey, familyMap]) => {
+        Object.entries(familyMap || {}).forEach(([aNumber, displayModel]) => {
+          if (!String(aNumber).startsWith(search)) return;
+          rows.push({
+            aNumber,
+            displayModel,
+            familyLabel: dashboardAppleFamilyLabel(familyKey),
+            priceListModel: bestDashboardApplePriceModel(displayModel)
+          });
+        });
+      });
+      return rows.sort((a, b) => String(a.aNumber).localeCompare(String(b.aNumber), undefined, { numeric: true })).slice(0, 5);
+    }
+
+    async function loadDashboardAppleMap() {
+      if (Object.keys(state.dashboardQuote.appleModelMap || {}).length) return;
+      try {
+        const supabase = window.TECHM8_SUPABASE || null;
+        if (supabase) {
+          const response = await fetch(
+            `${supabase.url}/rest/v1/apple_model_map?select=a_number,family_key,model_name&order=family_key.asc&order=a_number.asc`,
+            { headers: { apikey: supabase.anonKey, Authorization: `Bearer ${supabase.anonKey}` } }
+          );
+          if (response.ok) {
+            const rows = await response.json();
+            state.dashboardQuote.appleModelMap = rows.reduce((map, row) => {
+              if (!map[row.family_key]) map[row.family_key] = {};
+              map[row.family_key][row.a_number] = row.model_name;
+              return map;
+            }, {});
+            renderLiveTargetDashboard();
+            return;
+          }
+        }
+
+        const response = await fetch('./apple_a_model_map.json', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        const flattened = {};
+        if (data.iphone) flattened.iphone = data.iphone;
+        if (data.ipad) flattened.ipad = data.ipad;
+        if (data.mac) {
+          Object.entries(data.mac).forEach(([key, value]) => {
+            if (key !== 'normalization_notes' && value && typeof value === 'object') flattened[key] = value;
+          });
+        }
+        state.dashboardQuote.appleModelMap = flattened;
+        renderLiveTargetDashboard();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function recordGoogleReview() {
+      if (state.googleReviewSaving || state.todayProgress?.status === 'finalized') return;
+      if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) {
+        state.todayProgress.metrics.google_review_count += 1;
+        state.todayProgress.metrics.google_review_points += 5;
+        state.todayProgress.score.earned_points += 5;
+        state.todayProgress.score.remaining_points = Math.max(0, state.todayProgress.target.points - state.todayProgress.score.earned_points);
+        state.todayProgress.last_updated_at = new Date().toISOString();
+        renderLiveTargetDashboard();
+        showToast('Google review recorded. +5 points');
+        return;
+      }
+      state.googleReviewSaving = true;
+      renderLiveTargetDashboard();
+      try {
+        const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+        url.searchParams.set('mode', 'google-review');
+        const response = await fetch(url.toString(), {
+          method: 'POST',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify({
+            store_code: repairTicketStoreCode(),
+            staff_name: state.selectedStaffName,
+            event_code: crypto.randomUUID()
+          })
+        });
+        const payload = await parsePosApiResponse(response, 'Google review could not be recorded.');
+        state.todayProgress = payload;
+        state.todayProgressError = '';
+        state.todayProgressLastLoaded = payload.last_updated_at || new Date().toISOString();
+        localStorage.setItem(todayProgressCacheKey(), JSON.stringify(payload));
+        showToast('Google review recorded. +5 points');
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Google review could not be recorded.');
+      } finally {
+        state.googleReviewSaving = false;
+        renderLiveTargetDashboard();
+      }
     }
 
     async function loadTodayProgress(options = {}) {
@@ -8035,6 +8727,178 @@
     }
 
     function renderLiveTargetDashboard() {
+      if (!els.targetDashboard) return;
+
+      if (!state.selectedStaffName) {
+        els.targetDashboard.innerHTML = '<div class="empty-state"><div><strong>Select a staff member</strong><div>Today score is linked to the signed-in staff member and store.</div></div></div>';
+        return;
+      }
+
+      const progress = state.todayProgress || {};
+      const target = progress.target || {};
+      const metrics = progress.metrics || {};
+      const score = progress.score || {};
+      const store = storeById(state.storeId);
+      const targetPoints = Math.max(0, Number(target.points ?? score.max_points ?? 70));
+      const earnedPoints = Math.max(0, Number(score.earned_points || 0));
+      const remainingPoints = Math.max(0, Number(score.remaining_points ?? (targetPoints - earnedPoints)));
+      const progressPercent = targetPoints > 0 ? Math.max(0, Math.min(100, earnedPoints / targetPoints * 100)) : (earnedPoints > 0 ? 100 : 0);
+      const reviewCount = Number(metrics.google_review_count || 0);
+      const reviewPoints = Number(metrics.google_review_points || reviewCount * 5);
+      const bundleOrders = Number(metrics.bundle_order_count || 0);
+      const bundleDevices = Number(metrics.bundle_device_count || 0);
+      const bundleAccessories = Number(metrics.bundle_accessory_count || 0);
+      const bundlePoints = Number(metrics.bundle_points || 0);
+      const isFinalized = progress.status === 'finalized';
+      const syncTime = formatTargetSyncTime(progress.last_updated_at || state.todayProgressLastLoaded);
+      const scope = target.source || progress.target_scope || 'system_default';
+      const targetSource = ({
+        staff_date: 'Manager-set target',
+        store_date: 'Manager-set target',
+        staff_month: 'Calculated from monthly target',
+        store_month: 'Calculated from monthly target',
+        staff_default: 'Staff default target',
+        store_default: 'Store default target',
+        system_default: 'System default target'
+      })[scope] || 'Daily target';
+      const monthlyNote = Number(target.monthly_points || 0) > 0
+        ? `${Number(target.monthly_remaining_points || 0)} monthly points left · ${Number(target.remaining_days || 1)} days remaining`
+        : `Set by ${target.updated_by || 'system'}`;
+
+      const quote = state.dashboardQuote;
+      const quoteRows = dashboardQuoteRows();
+      const brands = dashboardQuoteBrands();
+      const models = dashboardQuoteModels();
+      const issues = dashboardQuoteIssues();
+      const selectedQuote = currentDashboardQuote();
+      const appleMatches = dashboardAppleMatches();
+      const manualModel = String(quote.manualModel || quote.model || '').trim();
+
+      const appleMatchesHtml = quote.appleSearch ? `
+        <div class="target-a-model-panel">
+          ${appleMatches.length ? appleMatches.map(match => `
+            <button class="target-a-model-item" type="button" data-quote-apple-model="${escapeHtml(match.priceListModel || '')}" data-quote-apple-display="${escapeHtml(match.displayModel)}">
+              <strong>${escapeHtml(match.displayModel)}</strong>
+              <span>${escapeHtml(match.aNumber)} · ${escapeHtml(match.familyLabel)}${match.priceListModel ? ` · Price list: ${escapeHtml(match.priceListModel)}` : ''}</span>
+            </button>
+          `).join('') : '<div class="target-a-model-item"><strong>No matching Apple A-model yet</strong><span>Enter the full four-digit A-number.</span></div>'}
+        </div>
+      ` : '';
+
+      const quoteResultHtml = selectedQuote ? `
+        <div class="target-quote-result">
+          <div class="target-result-kicker">Quote ready</div>
+          <div class="target-result-price">${escapeHtml(dashboardQuotePrice(selectedQuote.price))}</div>
+          <div class="target-result-issue">${escapeHtml(selectedQuote.issue)}</div>
+          <div class="target-result-meta">${escapeHtml(selectedQuote.brand)} · ${escapeHtml(selectedQuote.model)}${selectedQuote.time ? ` · ${escapeHtml(selectedQuote.time)}` : ''}</div>
+          <div class="target-result-actions">
+            <button class="target-quote-primary" type="button" data-quote-continue><i class="bi bi-arrow-right-circle"></i> Next: Create Repair Job</button>
+          </div>
+        </div>
+      ` : `
+        <div class="target-quote-empty">
+          <div><i class="bi bi-receipt-cutoff"></i><strong>${quote.loading ? 'Loading latest prices...' : 'Choose brand, model, and repair type'}</strong><div style="margin-top:5px">The price and next step will appear here.</div></div>
+        </div>
+      `;
+
+      els.targetDashboard.innerHTML = `
+        ${state.todayProgressError ? `<div class="target-sync-warning"><i class="bi bi-cloud-slash"></i>${escapeHtml(state.todayProgressError)}</div>` : ''}
+        <header class="target-page-head">
+          <div>
+            <h1 class="target-page-title">Today</h1>
+            <p class="target-page-subtitle">Earn points, check a repair price, and move straight into intake.</p>
+          </div>
+          <div class="target-head-meta">
+            <span><i class="bi bi-calendar3"></i>${escapeHtml(todayDisplayDate())}</span>
+            <span><i class="bi bi-person-badge"></i>${escapeHtml(progress.staff_name || state.selectedStaffName)}</span>
+            <span><i class="bi bi-shop"></i>${escapeHtml(progress.store_name || store.name)}</span>
+            <button class="target-refresh-btn" type="button" data-target-refresh title="Refresh today score" ${state.todayProgressLoading ? 'disabled' : ''}><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+        </header>
+
+        <section class="target-overview-grid" aria-label="Today score">
+          <article class="target-score-card">
+            <div class="target-card-head">
+              <div>
+                <div class="target-score-kicker">Today's score</div>
+                <div class="target-score-number">${earnedPoints}<span>/ ${targetPoints} pts</span></div>
+              </div>
+              <span class="target-status-pill ${isFinalized ? 'finalized' : ''}"><i class="bi ${isFinalized ? 'bi-lock-fill' : state.todayProgressLoading ? 'bi-arrow-repeat' : 'bi-broadcast'}"></i>${isFinalized ? 'Finalized' : state.todayProgressLoading ? 'Updating' : 'Live'}</span>
+            </div>
+            <div class="target-score-track" aria-label="${Math.round(progressPercent)} percent of target"><span style="width:${progressPercent}%"></span></div>
+            <div class="target-score-progress-copy"><span>${remainingPoints > 0 ? `${remainingPoints} points to today's target` : 'Today target reached'}</span><strong>${Math.round(progressPercent)}%</strong></div>
+            <div class="target-score-breakdown">
+              <div class="target-score-chip"><span>Google reviews</span><strong>+${reviewPoints} pts</strong></div>
+              <div class="target-score-chip"><span>Device bundles</span><strong>+${bundlePoints} pts</strong></div>
+            </div>
+            <div class="target-score-footer">
+              <span class="target-source-pill"><i class="bi bi-bullseye"></i>${escapeHtml(targetSource)}</span>
+              <span>${escapeHtml(monthlyNote)}</span>
+              <span>Updated ${escapeHtml(syncTime)}</span>
+            </div>
+          </article>
+
+          <div class="target-action-stack">
+            <article class="target-review-card">
+              <div class="target-review-top">
+                <div class="target-action-icon"><i class="bi bi-google"></i></div>
+                <div class="target-action-copy"><div class="target-action-label">Google Review</div><div class="target-action-value">${reviewCount} today · +${reviewPoints} pts</div></div>
+              </div>
+              <button class="target-review-button" type="button" data-google-review-add ${isFinalized || state.googleReviewSaving || state.todayProgressLoading || !state.todayProgress ? 'disabled' : ''}><i class="bi ${state.googleReviewSaving ? 'bi-arrow-repeat' : 'bi-plus-circle'}"></i>${state.googleReviewSaving ? 'Saving...' : 'Review completed · +5 pts'}</button>
+              <div class="target-action-note">Tap once after the customer has submitted one Google Review.</div>
+            </article>
+
+            <article class="target-bundle-card">
+              <div class="target-bundle-top">
+                <div class="target-action-icon"><i class="bi bi-phone"></i></div>
+                <div class="target-action-copy"><div class="target-action-label">Device + accessories</div><div class="target-action-value">+${bundlePoints} pts</div></div>
+              </div>
+              <div class="target-bundle-stats">
+                <div class="target-bundle-stat"><strong>${bundleOrders}</strong>bundles</div>
+                <div class="target-bundle-stat"><strong>${bundleDevices}</strong>devices</div>
+                <div class="target-bundle-stat"><strong>${bundleAccessories}</strong>accessories</div>
+              </div>
+              <div class="target-action-note">Device alone = 0. With an accessory: device +5 and each accessory +5. Paid invoices update this automatically.</div>
+              <div class="target-bundle-actions">
+                <button class="target-link-button" type="button" data-target-nav="used-devices"><i class="bi bi-phone"></i>Used devices</button>
+                <button class="target-link-button" type="button" data-target-nav="products"><i class="bi bi-bag"></i>Accessories</button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="target-quote-panel" aria-label="Instant quote">
+          <div class="target-quote-head">
+            <div><h2 class="target-quote-title">Instant Quote</h2><p class="target-quote-subtitle">Check the price here, then create the repair job without starting over.</p></div>
+            <div class="target-lookup-links">
+              <a href="https://www.imei.info/" target="_blank" rel="noopener noreferrer"><i class="bi bi-search"></i>IMEI Lookup</a>
+              <a href="https://iunlocker.com/check_imei/samsung/" target="_blank" rel="noopener noreferrer"><i class="bi bi-upc-scan"></i>S/N Lookup</a>
+            </div>
+          </div>
+
+          <div class="target-quote-grid">
+            <div class="target-quote-form">
+              <label class="target-quote-field"><span>Select Brand</span><select data-quote-brand ${quote.loading ? 'disabled' : ''}>${dashboardQuoteOptionHtml(brands, quote.brand, quote.loading ? 'Loading brands...' : 'Choose a brand')}</select></label>
+              <label class="target-quote-field"><span>Select Model</span><select data-quote-model ${!quote.brand ? 'disabled' : ''}>${dashboardQuoteOptionHtml(models, quote.model, 'Choose a model')}</select></label>
+              <label class="target-quote-field"><span>Select Repair Type</span><select data-quote-issue ${!quote.model ? 'disabled' : ''}>${dashboardQuoteOptionHtml(issues, quote.issueKey, 'Choose a repair type', item => item.key, item => item.issue)}</select></label>
+              <label class="target-quote-field target-a-model"><span>Apple A-model quick search</span><input type="search" data-quote-apple-search value="${escapeHtml(quote.appleSearch)}" placeholder="Example: A2337" autocomplete="off">${appleMatchesHtml}</label>
+              <div class="target-manual-row">
+                <label class="target-quote-field"><span>Model not in the price list?</span><input type="text" data-quote-manual-model value="${escapeHtml(quote.manualModel)}" placeholder="Enter the model manually"></label>
+                <button class="target-quote-secondary" type="button" data-quote-manual ${manualModel ? '' : 'disabled'}><i class="bi bi-pencil-square"></i>Manual Entry</button>
+              </div>
+            </div>
+            ${quoteResultHtml}
+          </div>
+
+          <div class="target-quote-footer">
+            <span class="${quote.error ? 'target-quote-error' : ''}">${quote.error ? escapeHtml(quote.error) : `${quoteRows.length} repair prices available.`}</span>
+            <button class="target-quote-secondary" type="button" data-quote-reset><i class="bi bi-arrow-counterclockwise"></i>Reset</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderLegacyLiveTargetDashboard() {
       if (!els.targetDashboard) return;
       const progress = state.todayProgress;
 
@@ -8748,6 +9612,9 @@
     }
 
     async function loadRepairQuotes() {
+      state.dashboardQuote.loading = true;
+      state.dashboardQuote.error = '';
+      if (state.activeView === 'target') renderLiveTargetDashboard();
       try {
         let rows = [];
         const supabase = window.TECHM8_SUPABASE || null;
@@ -8784,12 +9651,26 @@
           const text = await response.text();
           rows = JSON.parse(text.replace(/^\uFEFF/, ''));
         }
-        state.repairQuotes = Array.isArray(rows) ? rows : [];
+        state.repairQuotes = Array.isArray(rows) ? rows.map(row => ({
+          brand: String(row.brand || '').trim(),
+          model: String(row.model || '').trim(),
+          issue: String(row.issue || '').trim(),
+          price: row.price == null ? '' : String(row.price).trim(),
+          time: String(row.time || row.turnaround_time || '').trim()
+        })).filter(row => row.brand && row.model && row.issue) : [];
+        state.dashboardQuote.rows = state.repairQuotes;
+        state.dashboardQuote.loaded = true;
+        state.dashboardQuote.lastLoadedAt = new Date().toISOString();
       } catch (error) {
         state.repairQuotes = [];
+        state.dashboardQuote.rows = [];
+        state.dashboardQuote.error = error.message || 'Repair prices unavailable.';
         showToast(error.message || 'Repair prices unavailable.');
+      } finally {
+        state.dashboardQuote.loading = false;
       }
       renderRepairWorkspace();
+      renderLiveTargetDashboard();
     }
 
     const TRANSFER_STATUS_FILTERS = [
@@ -9855,7 +10736,11 @@
       els.usedDeviceNavBtn.classList.toggle('active', view === 'used-devices');
       els.transferNavBtn.classList.toggle('active', view === 'transfers');
       els.ordersNavBtn.classList.toggle('active', view === 'orders');
-      if (view === 'target') loadTodayProgress();
+      if (view === 'target') {
+        loadTodayProgress();
+        loadDashboardAppleMap();
+        if (!state.dashboardQuote.loaded && !state.dashboardQuote.loading) loadRepairQuotes();
+      }
       if (view === 'repair') {
         loadRepairTickets().then(() => {
           if (!state.repair.started) renderRepairWorkspace();
@@ -10122,45 +11007,58 @@
       return ticket;
     }
 
-    async function loadCustomers() {
-      const cached = readLocalArray(POS_CUSTOMERS_KEY)
-        .filter(customer => !customer.store_id || customer.store_id === state.storeId);
-      state.customers = cached;
-      renderCustomerSuggestions();
+    async function loadCustomers(searchQuery = '', options = {}) {
+      const query = String(searchQuery || '').trim();
+      const cached = readLocalArray(POS_CUSTOMERS_KEY);
+      const requestId = (loadCustomers.requestId || 0) + 1;
+      loadCustomers.requestId = requestId;
+
+      if (!query && options.useCache !== false) {
+        state.customers = cached;
+        renderCustomerSuggestions();
+      }
       if (!state.selectedStaffName) return;
 
       const pending = cached.filter(customer => customer.sync_pending);
-      for (const customer of pending) {
-        try {
-          const payload = await postSharedState('customer', 'save', {
-            ...customer,
-            store_code: repairTicketStoreCode(),
-            staff_name: state.selectedStaffName
-          });
-          customer.sync_pending = false;
-          if (payload.customer) Object.assign(customer, payload.customer, { store_id: state.storeId });
-        } catch (error) {
-          console.error(error);
+      if (options.syncPending !== false) {
+        for (const customer of pending) {
+          try {
+            const payload = await postSharedState('customer', 'save', {
+              ...customer,
+              store_code: repairTicketStoreCode(),
+              staff_name: state.selectedStaffName
+            });
+            customer.sync_pending = false;
+            if (payload.customer) Object.assign(customer, payload.customer);
+          } catch (error) {
+            console.error(error);
+          }
         }
       }
 
       try {
-        const payload = await getSharedState('customers');
+        const payload = await getSharedState('customers', {
+          q: query,
+          limit: query ? 80 : 100
+        });
+        if (requestId !== loadCustomers.requestId) return;
         const remote = (Array.isArray(payload.customers) ? payload.customers : [])
-          .map(customer => ({ ...customer, store_id: state.storeId, sync_pending: false }));
+          .map(customer => ({ ...customer, sync_pending: false }));
         const stillPending = pending.filter(customer => customer.sync_pending);
         state.customers = [...stillPending, ...remote.filter(customer => !stillPending.some(item => item.id === customer.id))];
         saveCustomers();
         renderCustomerSuggestions();
       } catch (error) {
-        console.error(error);
+        if (requestId === loadCustomers.requestId) console.error(error);
       }
     }
 
     function saveCustomers() {
-      const existingOtherStores = readLocalArray(POS_CUSTOMERS_KEY)
-        .filter(customer => customer.store_id && customer.store_id !== state.storeId);
-      localStorage.setItem(POS_CUSTOMERS_KEY, JSON.stringify([...state.customers, ...existingOtherStores].slice(0, 1000)));
+      const existing = readLocalArray(POS_CUSTOMERS_KEY);
+      const combined = [...state.customers, ...existing]
+        .filter((customer, index, customers) => customer && customer.id
+          && customers.findIndex(item => item && item.id === customer.id) === index);
+      localStorage.setItem(POS_CUSTOMERS_KEY, JSON.stringify(combined.slice(0, 300)));
     }
 
     function renderCustomerSuggestions() {
@@ -10168,8 +11066,19 @@
       els.customerSuggestions.innerHTML = state.customers.map(customer => {
         const name = [customer.first_name, customer.last_name].filter(Boolean).join(' ');
         const details = [customer.phone, customer.company].filter(Boolean).join(' - ');
-        return `<option value="${escapeHtml(name)}">${escapeHtml(details)}</option>`;
+        return `<option value="${escapeHtml(name)}" label="${escapeHtml(details)}"></option>`;
       }).join('');
+    }
+
+    function queueCustomerSearch() {
+      clearTimeout(loadCustomers.searchTimer);
+      const query = els.customerInput.value.trim();
+      loadCustomers.searchTimer = setTimeout(() => {
+        loadCustomers(query.length >= 2 ? query : '', {
+          syncPending: false,
+          useCache: query.length < 2
+        });
+      }, 250);
     }
 
     function openCustomerModal() {
@@ -10232,13 +11141,13 @@
       try {
         const payload = await postSharedState('customer', 'save', customer);
         if (!payload.customer) throw new Error('Customer response is incomplete.');
-        Object.assign(customer, payload.customer, { store_id: state.storeId, sync_pending: false });
+        Object.assign(customer, payload.customer, { sync_pending: false });
         state.customers.unshift(customer);
         saveCustomers();
         renderCustomerSuggestions();
         els.customerInput.value = [firstName, lastName].filter(Boolean).join(' ');
         closeCustomerModal();
-        showToast('Customer saved for this store.');
+        showToast('Customer saved and shared across all stores.');
       } catch (error) {
         console.error(error);
         state.customers.unshift(customer);
@@ -15931,6 +16840,10 @@
     els.endShiftBtn.addEventListener('click', openEndShiftModal);
     els.switchUserBtn.addEventListener('click', () => openStaffModal({ canCancel: true }));
     els.customerAddBtn.addEventListener('click', openCustomerModal);
+    els.customerInput.addEventListener('input', queueCustomerSearch);
+    els.customerInput.addEventListener('focus', () => {
+      if (!els.customerInput.value.trim()) queueCustomerSearch();
+    });
     els.newRepairBtn.addEventListener('click', startRepairTicket);
     els.specialRepairBtn.addEventListener('click', openSpecialRepairModal);
     els.clearRepairBtn.addEventListener('click', clearRepairTicket);
@@ -16114,8 +17027,90 @@
         loadTodayProgress();
         return;
       }
+      const reviewButton = event.target.closest('[data-google-review-add]');
+      if (reviewButton) {
+        recordGoogleReview();
+        return;
+      }
+      const appleModelButton = event.target.closest('[data-quote-apple-model]');
+      if (appleModelButton) {
+        const appleBrand = dashboardQuoteBrands().find(brand => /apple/i.test(brand)) || 'Apple';
+        state.dashboardQuote.brand = appleBrand;
+        state.dashboardQuote.model = appleModelButton.dataset.quoteAppleModel || '';
+        state.dashboardQuote.issueKey = '';
+        state.dashboardQuote.manualModel = state.dashboardQuote.model || appleModelButton.dataset.quoteAppleDisplay || '';
+        state.dashboardQuote.appleSearch = '';
+        renderLiveTargetDashboard();
+        return;
+      }
+      const quoteContinueButton = event.target.closest('[data-quote-continue]');
+      if (quoteContinueButton) {
+        const quote = currentDashboardQuote();
+        if (quote) window.location.href = dashboardWorkflowUrl(quote);
+        return;
+      }
+      const quoteManualButton = event.target.closest('[data-quote-manual]');
+      if (quoteManualButton) {
+        const manualItem = {
+          brand: state.dashboardQuote.brand,
+          model: state.dashboardQuote.manualModel || state.dashboardQuote.model,
+          issue: ''
+        };
+        if (manualItem.model) window.location.href = dashboardWorkflowUrl(manualItem, true);
+        return;
+      }
+      const quoteResetButton = event.target.closest('[data-quote-reset]');
+      if (quoteResetButton) {
+        Object.assign(state.dashboardQuote, {
+          brand: '', model: '', issueKey: '', appleSearch: '', manualModel: ''
+        });
+        renderLiveTargetDashboard();
+        return;
+      }
       const navButton = event.target.closest('[data-target-nav]');
       if (navButton) setActiveView(navButton.dataset.targetNav);
+    });
+
+    els.targetDashboard.addEventListener('change', event => {
+      if (event.target.matches('[data-quote-brand]')) {
+        state.dashboardQuote.brand = event.target.value;
+        state.dashboardQuote.model = '';
+        state.dashboardQuote.issueKey = '';
+        renderLiveTargetDashboard();
+        return;
+      }
+      if (event.target.matches('[data-quote-model]')) {
+        state.dashboardQuote.model = event.target.value;
+        state.dashboardQuote.issueKey = '';
+        const issues = dashboardQuoteIssues();
+        if (issues.length === 1) state.dashboardQuote.issueKey = issues[0].key;
+        renderLiveTargetDashboard();
+        return;
+      }
+      if (event.target.matches('[data-quote-issue]')) {
+        state.dashboardQuote.issueKey = event.target.value;
+        renderLiveTargetDashboard();
+      }
+    });
+
+    els.targetDashboard.addEventListener('input', event => {
+      if (event.target.matches('[data-quote-manual-model]')) {
+        state.dashboardQuote.manualModel = event.target.value;
+        const manualButton = els.targetDashboard.querySelector('[data-quote-manual]');
+        if (manualButton) manualButton.disabled = !String(event.target.value || state.dashboardQuote.model || '').trim();
+        return;
+      }
+      if (event.target.matches('[data-quote-apple-search]')) {
+        state.dashboardQuote.appleSearch = event.target.value;
+        renderLiveTargetDashboard();
+        requestAnimationFrame(() => {
+          const input = els.targetDashboard.querySelector('[data-quote-apple-search]');
+          if (input) {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+          }
+        });
+      }
     });
 
     els.payBtn.addEventListener('click', openPaymentModal);
@@ -16456,12 +17451,72 @@
       }
     });
 
+    function initializeLocalDashboardUiTest() {
+      state.storeId = 'toowong';
+      state.selectedStaffName = 'Bowen';
+      state.todayProgress = {
+        ok: true,
+        status: 'projected',
+        store_code: 'toowong',
+        store_name: 'Toowong Village Shopping Centre',
+        business_date: brisbaneDateIso(),
+        staff_name: 'Bowen',
+        target_scope: 'staff_month',
+        target: {
+          points: 70,
+          source: 'staff_month',
+          updated_by: 'Bowen',
+          monthly_points: 1400,
+          monthly_remaining_points: 630,
+          remaining_days: 11,
+          review_points_per_item: 5,
+          device_points_per_item: 5,
+          accessory_points_per_item: 5
+        },
+        metrics: {
+          google_review_count: 2,
+          google_review_points: 10,
+          bundle_order_count: 1,
+          bundle_device_count: 1,
+          bundle_accessory_count: 2,
+          bundle_points: 15
+        },
+        score: {
+          earned_points: 25,
+          max_points: 70,
+          remaining_points: 45
+        },
+        last_updated_at: new Date().toISOString()
+      };
+      state.todayProgressLastLoaded = state.todayProgress.last_updated_at;
+      state.dashboardQuote.rows = [
+        { brand: 'Apple', model: 'iPhone 15 Pro', issue: 'Screen Replacement', price: '349', time: '2-3 hours' },
+        { brand: 'Apple', model: 'iPhone 15 Pro', issue: 'Battery Replacement', price: '159', time: '1-2 hours' },
+        { brand: 'Apple', model: 'iPhone 14', issue: 'Screen Replacement', price: '249', time: '2-3 hours' },
+        { brand: 'Samsung', model: 'Galaxy S24 Ultra', issue: 'Screen Replacement', price: '499', time: '3-5 days' },
+        { brand: 'Google', model: 'Pixel 9 Pro', issue: 'Screen Replacement', price: '429', time: '3-5 days' }
+      ];
+      state.dashboardQuote.loaded = true;
+      state.dashboardQuote.brand = 'Apple';
+      state.dashboardQuote.model = 'iPhone 15 Pro';
+      state.dashboardQuote.issueKey = dashboardQuoteKey(state.dashboardQuote.rows[0]);
+      state.dashboardQuote.appleModelMap = { iphone: { A3102: 'iPhone 15 Pro' } };
+      updateStoreBadge();
+      updateStaffButton();
+      renderAll();
+      document.body.dataset.dashboardTestReady = 'true';
+    }
+
+    const localDashboardTestMode = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      && new URLSearchParams(window.location.search).has('dashboard-test');
     const localCatalogTestMode = ['localhost', '127.0.0.1'].includes(window.location.hostname)
       && new URLSearchParams(window.location.search).has('catalog-test');
     const localTransferTestMode = ['localhost', '127.0.0.1'].includes(window.location.hostname)
       && new URLSearchParams(window.location.search).has('transfer-test');
 
-    if (localTransferTestMode) {
+    if (localDashboardTestMode) {
+      initializeLocalDashboardUiTest();
+    } else if (localTransferTestMode) {
       initializeLocalTransferUiTest();
     } else if (localCatalogTestMode) {
       runProductCatalogSelfTest();
@@ -16482,15 +17537,16 @@
         renderRepairWorkspace();
         await loadTodayProgress();
         await productLoad;
+        loadDashboardAppleMap();
         loadRepairQuotes();
       });
     }
 
     window.setInterval(() => {
-      if (state.activeView === 'target' && document.visibilityState === 'visible') {
+      if (!localDashboardTestMode && state.activeView === 'target' && document.visibilityState === 'visible') {
         loadTodayProgress({ silent: true });
       }
-      if (state.selectedStaffName && document.visibilityState === 'visible' && !localTransferTestMode) {
+      if (state.selectedStaffName && document.visibilityState === 'visible' && !localTransferTestMode && !localDashboardTestMode) {
         loadStocktakeContext({ silent: true });
       }
     }, 30000);
