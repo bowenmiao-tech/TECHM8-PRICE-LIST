@@ -86,7 +86,8 @@ Completed product-sale flow:
 - The entire product card adds the item to the cart.
 - Zero-stock products are intentionally allowed to be sold.
 - Grouped products use one POS/website card and one main image. Sellable colours remain separate product rows with their own SKU, barcode, cost, price, and store stock.
-- Clicking a multi-colour product group opens a compact colour selector. Watch bands open a size selector even when a style currently has only one available size; ordinary one-variant groups and legacy products still add directly.
+- CASETiFY, EFM, and OtterBox phone cases use one card per device model and brand. Clicking a multi-option brand card opens the exact case images, titles, prices, and store stock while retaining every original SKU as an independent sellable child option.
+- Clicking a multi-colour product group opens a compact colour selector. Watch bands open a size selector even when a style currently has only one available size; branded case collections open an image selector; ordinary one-variant groups and legacy products still add directly.
 - An exact SKU or barcode search bypasses grouping and returns the precise sellable variant.
 
 POS product hierarchy:
@@ -107,11 +108,12 @@ POS product hierarchy:
 
 Phone and tablet case catalogue reconciliation completed on 19 August 2026:
 - The complete RepairDesk export was checked only for `5. Phone Cases` and `6. iPad & Tablet Cases`; every other product category was left unchanged.
-- The active phone-case catalogue now contains 1,741 sellable variants under 829 product groups. The previous 915 variants were preserved and 826 missing variants were added.
+- The active phone-case catalogue now contains 1,741 sellable variants under 505 product groups. The previous 915 variants were preserved and 826 missing variants were added.
+- The 477 branded variants are consolidated into 105 model-and-brand cards: 267 CASETiFY variants under 25 cards, 71 EFM variants under 23 cards, and 139 OtterBox variants under 57 cards. Cost, sale price, image, barcode, and per-store stock remain independent on every exact SKU.
 - All 283 approved tablet-case variants were already present, so no tablet product was changed. Four duplicate source rows and `TM8-TAB-10064` remain excluded.
 - The explicitly removed `iPhone 12 Pro Max EFM Phone Case`, `Universal Cartoon Case`, model-ambiguous `iPhone EFM Phone Case`, and three EFM Aspen rows without a reliable cost are permanently excluded from the import catalogue. AirPods/AirTag accessories remain excluded because they are not phone cases.
 - Every added product has a RepairDesk image, a unique SKU/barcode/source ID, a positive cost below retail, POS visibility enabled, online visibility disabled, and zero starting stock with no store-inventory rows.
-- The repeatable reconciliation is `supabase/website-migrations/20260819125528_reconcile_missing_phone_cases.sql`; its full reviewed payload and exception workbook are under `outputs/phone-case-catalog-reconciliation-20260819/`.
+- The repeatable reconciliation is `supabase/website-migrations/20260819125528_reconcile_missing_phone_cases.sql`; the branded collection regroup is `supabase/website-migrations/20260820093000_regroup_branded_phone_cases.sql`; the full reviewed payload and exception workbook are under `outputs/phone-case-catalog-reconciliation-20260819/`.
 
 Computer product catalogue import completed on 12 August 2026:
 - The reviewed source contained 183 products. The 41 owner-marked red rows were excluded and the 5 exact existing DualSense products were preserved without changes.

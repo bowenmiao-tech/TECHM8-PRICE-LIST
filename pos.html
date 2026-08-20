@@ -8417,6 +8417,7 @@
           id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
           sku: item.sku || '',
           name: item.name || item.product_name || 'Unnamed product',
+          brand: String(item.brand || ''),
           category,
           subcategory: posSubcategoryName
             || canonicalProductSubcategory(item, category, sourceCategory, sourceSubcategory),
@@ -12031,11 +12032,15 @@
         || String(product?.product_group_code || '').toUpperCase().startsWith('TM8-GRP-WB-');
     }
 
+    function isBrandedCaseCollection(product) {
+      return String(product?.product_family || '').trim().toLowerCase() === 'branded case collection';
+    }
+
     function isImageVariantProduct(product) {
       const family = String(product?.product_family || '').trim().toLowerCase();
       return family === 'universal pattern case'
         || family === 'special order case'
-        || family === 'branded case collection';
+        || isBrandedCaseCollection(product);
     }
 
     function productImageVariantPreviews(product) {
@@ -12187,7 +12192,7 @@
       });
 
       grouped.forEach((variants, groupCode) => {
-        if (variants.length === 1 && !isWatchBandProduct(variants[0])) {
+        if (variants.length === 1 && !isWatchBandProduct(variants[0]) && !isBrandedCaseCollection(variants[0])) {
           tiles.push({
             ...variants[0],
             name: variants[0].product_group_name || variants[0].name,
@@ -13231,7 +13236,8 @@
       if (!variants.length) return;
       const watchBandGroup = isWatchBandProduct(variants[0]);
       const imageVariantGroup = isImageVariantProduct(variants[0]);
-      if (variants.length === 1 && !watchBandGroup) {
+      const brandedCaseGroup = isBrandedCaseCollection(variants[0]);
+      if (variants.length === 1 && !watchBandGroup && !brandedCaseGroup) {
         if (state.stocktakeMode) {
           openStocktakeEditor(variants[0].id);
         } else {
@@ -13861,6 +13867,28 @@
         setActiveView('products');
         renderProductBrowser();
         renderCart();
+      } else if (catalogTestParams.has('catalog-branded')) {
+        const brandedTestMode = catalogTestParams.get('catalog-branded');
+        state.products = brandedTestMode === 'many'
+          ? Array.from({ length: 17 }, (_, index) => ({
+              ...brandedCaseProducts[index % 2],
+              id: `branded-many-${index + 1}`,
+              sku: `TM8-PC-BRAND-MANY-${index + 1}`,
+              name: `Pattern ${index + 1} MagSafe Case for iPhone 17 Pro Max`,
+              variant_name: `Pattern ${index + 1} MagSafe Case`
+            }))
+          : brandedTestMode === 'single'
+            ? [brandedCaseProducts[2]]
+          : brandedCaseProducts;
+        state.search = '';
+        state.cart = [];
+        state.productBrowseMode = 'all';
+        setActiveView('products');
+        renderProductBrowser();
+        renderCart();
+        openProductVariantModal(brandedTestMode === 'efm' || brandedTestMode === 'single'
+          ? 'TM8-GRP-PC-IP17PM-EFM'
+          : 'TM8-GRP-PC-IP17PM-CASETIFY');
       } else if (catalogTestParams.has('catalog-pattern')) {
         state.products = universalPatternProducts;
         state.search = '';

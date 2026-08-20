@@ -1357,7 +1357,7 @@ summarySheet.getRange('D3').values = [['Import Rules Applied']];
 summarySheet.getRange('D3:H3').format = { fill: '#DFF4EF', font: { bold: true, color: '#075E54' } };
 summarySheet.getRange('D4:H10').merge(true);
 summarySheet.getRange('D4:H10').values = [
-  ['Each device and case style is one POS card; colours are selectable variants.'],
+  ['Standard cases use one card per device/style; CASETiFY, EFM, and OtterBox use one card per device/brand with exact SKU choices.'],
   ['The same device and case style uses one cost. Zero costs are filled only from a reliable matching group or style.'],
   ['Conflicting costs, costs at or above retail, missing images, ambiguous device models, and zero retail prices are not imported.'],
   ['All four stores and the online store start at zero stock. Zero stock can still be sold.'],

@@ -17,6 +17,9 @@ type ProductRow = {
   sku: string | null
   slug: string | null
   name: string | null
+  brand: string | null
+  model: string | null
+  compatibility: string | null
   upc: string | null
   cost_price: number | string | null
   retail_price: number | string | null
@@ -225,7 +228,7 @@ Deno.serve(async (req) => {
 
     let productsQuery = supabaseAdmin
       .from('products')
-      .select('id, sku, slug, name, upc, cost_price, retail_price, compare_at_price, image_url, stock_quantity, updated_at, is_visible, is_pos_visible, product_group_id, variant_name, variant_color, source_system, source_external_id, pos_category_id, pos_sort_order, pos_category_taxonomy(id, category_name, subcategory_name), categories(id, slug, name)', { count: 'exact' })
+      .select('id, sku, slug, name, brand, model, compatibility, upc, cost_price, retail_price, compare_at_price, image_url, stock_quantity, updated_at, is_visible, is_pos_visible, product_group_id, variant_name, variant_color, source_system, source_external_id, pos_category_id, pos_sort_order, pos_category_taxonomy(id, category_name, subcategory_name), categories(id, slug, name)', { count: 'exact' })
       .order('updated_at', { ascending: false })
       .order('id', { ascending: false })
       .range(from, to)
@@ -368,6 +371,9 @@ Deno.serve(async (req) => {
         sku: product.sku,
         slug: product.slug,
         name: product.name,
+        brand: product.brand,
+        model: product.model,
+        compatibility: product.compatibility,
         category: product.categories
           ? {
               id: product.categories.id,
