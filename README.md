@@ -248,7 +248,8 @@ Database-backed and shared between terminals:
 - receipt email audit fields
 - per-store invoice counters
 - formal POS report aggregates and database-backed Today Progress targets/results
-- per-store customer directory
+- company-wide customer directory shared by all active POS stores; home/source store remains historical metadata
+- 11,863 canonical RepairDesk customer masters linked to 12,144 protected source records from Toowong, Park Ridge, Fairfield, North Lakes, and Brassall
 - per-store held carts
 - per-store opening cash, active shift, and end-shift reconciliation
 - second-hand seller acquisitions, unique device inventory, status history, and buy/sell ledger
@@ -286,6 +287,7 @@ Required POS migrations, in order:
 11. `20260719013325_fix_pos_today_progress_repair_attribution.sql`
 12. `20260719013856_index_pos_daily_target_results_shift_code.sql`
 13. `20260812111500_add_pos_stocktake_permissions.sql`
+14. `20260821010000_make_pos_customers_global.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
