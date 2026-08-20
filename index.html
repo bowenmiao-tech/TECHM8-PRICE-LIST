@@ -3,409 +3,387 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TECHM8 Staff Portal</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta name="techm8-build" content="2026-08-21-staff-email-login">
+  <title>TECHM8 Staff Login</title>
+  <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="./supabase-config.js"></script>
-  <script src="./staff-auth.js"></script>
+  <script src="./staff-auth.js?v=20260821"></script>
   <style>
     :root {
-      --tm-dark: #163129;
-      --tm-dark-2: #23453b;
-      --tm-accent: #ef7204;
-      --tm-bg: #f4f7f9;
-      --tm-border: #dce5e9;
-      --tm-muted: #667781;
+      --ink: #10262b;
+      --green: #087f6a;
+      --green-dark: #123c35;
+      --green-deep: #0b2f2b;
+      --lime: #c8f17a;
+      --muted: #6a7b82;
+      --line: #d8e2e5;
+      --soft: #f3f7f8;
+      --orange: #ef7204;
     }
-
     * { box-sizing: border-box; }
-
     body {
-      margin: 0;
       min-height: 100vh;
-      background:
-        radial-gradient(circle at top left, rgba(239,114,4,0.12), transparent 26%),
-        radial-gradient(circle at top right, rgba(22,49,41,0.14), transparent 28%),
-        linear-gradient(180deg, #f6f8fa 0%, #eef3f6 100%);
-      color: #16242b;
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-
-    .page-wrap {
+    button, input { font: inherit; }
+    .login-page {
       min-height: 100vh;
-      padding: 24px 14px 36px;
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(430px, 46%) minmax(0, 1fr);
+    }
+    .login-side {
+      display: grid;
+      place-items: center;
+      padding: 48px;
+      background: #fff;
+    }
+    .login-card { width: min(430px, 100%); }
+    .brand {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
+      gap: 11px;
+      margin-bottom: 34px;
+      color: #31524c;
+      font-size: 23px;
+      font-weight: 850;
+      letter-spacing: -.02em;
     }
-
-    .shell {
-      width: 100%;
-      max-width: 1180px;
-      background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(220,229,233,0.9);
-      border-radius: 32px;
-      overflow: hidden;
-      box-shadow: 0 28px 70px rgba(12, 21, 29, 0.14);
-      backdrop-filter: blur(10px);
-    }
-
-    .hero {
-      padding: 34px 30px 26px;
-      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
       color: #fff;
+      background: linear-gradient(135deg, var(--green), #12a68a);
+      box-shadow: 0 9px 22px rgba(8,127,106,.25);
     }
-
-    .hero-top {
+    h1 {
+      margin: 0 0 8px;
+      color: #064f5c;
+      font-size: clamp(38px, 4vw, 52px);
+      line-height: 1;
+      letter-spacing: -.04em;
+    }
+    .intro {
+      margin: 0 0 30px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .form-stack { display: grid; gap: 17px; }
+    .field {
+      display: grid;
+      gap: 8px;
+      color: #3b5159;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .field input {
+      width: 100%;
+      min-height: 52px;
+      padding: 0 15px;
+      border: 1px solid #cfdadd;
+      border-radius: 5px;
+      color: var(--ink);
+      outline: none;
+      background: #fff;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+    .field input:focus {
+      border-color: rgba(8,127,106,.65);
+      box-shadow: 0 0 0 4px rgba(8,127,106,.09);
+    }
+    .password-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      color: #596b72;
+      font-size: 13px;
+    }
+    .show-password {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .show-password input { accent-color: var(--green); }
+    .login-button {
+      width: fit-content;
+      min-width: 108px;
+      min-height: 46px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 5px;
+      color: #fff;
+      background: #064c56;
+      font-weight: 850;
+      cursor: pointer;
+      box-shadow: 0 12px 26px rgba(6,76,86,.18);
+    }
+    .login-button:hover { background: #033e47; }
+    .login-button:disabled { opacity: .62; cursor: wait; }
+    .form-error {
+      min-height: 20px;
+      color: #c23f32;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .first-login-note {
+      display: flex;
+      gap: 10px;
+      padding: 13px 14px;
+      border: 1px solid #cce7df;
+      border-radius: 12px;
+      color: #176c5b;
+      background: #effaf7;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .pin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .visual-side {
+      position: relative;
+      min-height: 100vh;
+      padding: 7vh 5vw;
+      display: grid;
+      align-items: center;
+      overflow: hidden;
+      color: #fff;
+      background:
+        radial-gradient(circle at 18% 15%, rgba(200,241,122,.22), transparent 18%),
+        radial-gradient(circle at 78% 82%, rgba(21,169,139,.34), transparent 28%),
+        linear-gradient(145deg, #15584e 0%, #0a332f 54%, #062824 100%);
+    }
+    .visual-side::before,
+    .visual-side::after {
+      content: "";
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 50%;
+    }
+    .visual-side::before { top: -210px; right: -80px; }
+    .visual-side::after { bottom: -250px; left: -90px; }
+    .visual-frame {
+      position: relative;
+      z-index: 1;
+      width: min(820px, 100%);
+      margin: auto;
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,.23);
+      border-radius: 28px;
+      background: rgba(255,255,255,.13);
+      box-shadow: 0 30px 80px rgba(0,0,0,.28);
+      backdrop-filter: blur(14px);
+    }
+    .visual-window {
+      min-height: 620px;
+      padding: 34px;
+      border-radius: 22px;
+      background: rgba(8,51,46,.92);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.07);
+    }
+    .visual-brand {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.10);
-      font-size: 12px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      font-weight: 700;
-    }
-
-    .pos-entry-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 40px;
-      padding: 0 14px;
-      border-radius: 999px;
-      background: #ffffff;
-      color: var(--tm-dark);
-      text-decoration: none;
-      font-size: 13px;
+      gap: 15px;
+      margin-bottom: 58px;
+      font-size: 25px;
       font-weight: 800;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.16);
-      transition: transform .18s ease, box-shadow .18s ease;
     }
-
-    .pos-entry-button:hover {
-      transform: translateY(-2px);
-      color: var(--tm-dark);
-      box-shadow: 0 16px 34px rgba(0,0,0,0.2);
-    }
-
-    .hero-title {
-      margin: 18px 0 12px;
-      font-size: clamp(30px, 4.6vw, 54px);
-      line-height: 1;
-      font-weight: 800;
-      max-width: 760px;
-    }
-
-    .hero-title .accent { color: #ff9c46; }
-
-    .hero-text {
-      margin: 0;
-      max-width: 760px;
-      color: rgba(255,255,255,0.82);
-      line-height: 1.75;
-      font-size: 15px;
-    }
-
-    .hero-meta {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .hero-meta-item {
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.12);
-    }
-
-    .hero-meta-label {
+    .visual-pill {
+      padding: 8px 13px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 999px;
       font-size: 11px;
+      letter-spacing: .1em;
       text-transform: uppercase;
-      letter-spacing: .08em;
-      opacity: .72;
-      margin-bottom: 6px;
     }
-
-    .hero-meta-value {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .content {
-      padding: 24px;
-    }
-
-    .section-head {
-      margin-bottom: 18px;
-    }
-
-    .section-title {
-      margin: 0 0 6px;
-      font-size: 24px;
-      font-weight: 800;
-    }
-
-    .section-subtitle {
-      margin: 0;
-      color: var(--tm-muted);
-      font-size: 14px;
-      line-height: 1.7;
-      max-width: 760px;
-    }
-
-    .portal-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 18px;
-    }
-
-    .portal-card {
-      position: relative;
-      min-height: 330px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      border-radius: 26px;
-      overflow: hidden;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--tm-border);
-      background:
-        radial-gradient(circle at top right, rgba(239,114,4,0.14), transparent 28%),
-        linear-gradient(180deg, #ffffff 0%, #f7fafb 100%);
-      box-shadow: 0 18px 40px rgba(13, 25, 32, 0.08);
-      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    }
-
-    .portal-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 24px 50px rgba(13, 25, 32, 0.12);
-      border-color: #c8d6dc;
-    }
-
-    .portal-icon {
-      width: 62px;
-      height: 62px;
-      display: inline-grid;
-      place-items: center;
-      border-radius: 18px;
-      font-size: 28px;
-      color: #fff;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, var(--tm-dark) 0%, #2f5649 100%);
-      box-shadow: 0 14px 30px rgba(22,49,41,0.28);
-    }
-
-    .portal-label {
-      font-size: 12px;
-      letter-spacing: .08em;
+    .visual-kicker {
+      color: var(--lime);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .13em;
       text-transform: uppercase;
-      color: #8a979f;
-      font-weight: 700;
-      margin-bottom: 8px;
     }
-
-    .portal-title {
-      font-size: 34px;
-      line-height: 1.04;
-      font-weight: 800;
-      margin: 0 0 12px;
-      max-width: 420px;
+    .visual-title {
+      max-width: 650px;
+      margin: 14px 0 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(38px, 4vw, 60px);
+      line-height: 1.03;
     }
-
-    .portal-text {
-      margin: 0;
-      max-width: 460px;
-      color: #53636b;
-      line-height: 1.8;
-      font-size: 15px;
+    .visual-copy {
+      max-width: 640px;
+      color: rgba(255,255,255,.76);
+      font-size: 17px;
+      line-height: 1.55;
     }
-
-    .portal-list {
-      margin: 18px 0 0;
-      padding: 0;
-      list-style: none;
+    .visual-features {
       display: grid;
-      gap: 10px;
-      color: #2b3b43;
-      font-size: 14px;
-      flex: 1 1 auto;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 54px;
     }
-
-    .portal-list li {
+    .visual-feature {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      padding: 17px;
+      border: 1px solid rgba(255,255,255,.19);
+      border-radius: 15px;
+      color: rgba(255,255,255,.88);
+      background: rgba(255,255,255,.05);
+      font-size: 14px;
+      font-weight: 750;
     }
-
-    .portal-list i { color: var(--tm-accent); }
-
-    .portal-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      border-radius: 999px;
-      background: #163129;
-      color: #fff;
-      font-weight: 700;
-      margin-top: 22px;
-      width: fit-content;
+    .visual-feature i { color: var(--lime); font-size: 20px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1000px) {
+      .login-page { grid-template-columns: 1fr; }
+      .visual-side { display: none; }
+      .login-side { min-height: 100vh; padding: 32px 22px; }
     }
-
-    @media (max-width: 991px) {
-      .portal-card { min-height: 300px; }
-    }
-
-    @media (max-width: 640px) {
-      .hero, .content { padding: 18px; }
-      .portal-title { font-size: 28px; }
-      .portal-card { min-height: 280px; }
+    @media (max-width: 520px) {
+      .pin-grid { grid-template-columns: 1fr; }
+      .brand { margin-bottom: 28px; }
     }
   </style>
 </head>
 <body>
-  <div class="page-wrap" data-auth-protected>
-    <div class="shell">
-      <div class="hero">
-        <div class="hero-top">
-          <div class="hero-badge">
-            <i class="bi bi-grid-1x2-fill"></i>
-            TECHM8 Staff Portal
-          </div>
-          <a class="pos-entry-button" href="./pos.html">
-            <i class="bi bi-shop-window"></i>
-            Open POS
-          </a>
-        </div>
-        <h1 class="hero-title">Choose the <span class="accent">workflow</span> you need.</h1>
-        <p class="hero-text">
-          Start from quote and intake when the customer already knows the device issue, or open problem solving when
-          the job needs diagnosis steps, activation help, or guided troubleshooting.
-        </p>
-
-        <div class="hero-meta">
-          <div class="hero-meta-item">
-            <div class="hero-meta-label">Quote Desk</div>
-            <div class="hero-meta-value">Pricing + Intake</div>
-          </div>
-          <div class="hero-meta-item">
-            <div class="hero-meta-label">Problem Solving</div>
-            <div class="hero-meta-value">Guides + Quick Fixes</div>
-          </div>
-          <div class="hero-meta-item">
-            <div class="hero-meta-label">Documents</div>
-            <div class="hero-meta-value">Forms + Examples</div>
+  <main class="login-page">
+    <section class="login-side" aria-label="Staff login">
+      <div class="login-card">
+        <div class="brand"><span class="brand-mark">T</span><span>TECHM8</span></div>
+        <section id="loginStep">
+          <h1>Welcome Back!</h1>
+          <p class="intro">Sign in with your staff email and account password.</p>
+          <form id="loginForm" class="form-stack">
+            <label class="field">Email<input id="loginEmail" type="email" autocomplete="username" placeholder="Enter your staff email" required></label>
+            <label class="field">Password<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Enter your password" required></label>
+            <div class="password-options">
+              <label class="show-password"><input id="showPassword" type="checkbox">Show password</label>
+              <span>First login uses the temporary password.</span>
+            </div>
+            <button id="loginButton" class="login-button" type="submit">Login</button>
+            <div id="loginError" class="form-error" role="alert"></div>
+          </form>
+        </section>
+        <section id="setupStep" hidden>
+          <h1>Secure Your Account</h1>
+          <p id="setupIntro" class="intro">Create your private password and POS PIN.</p>
+          <form id="setupForm" class="form-stack">
+            <div class="first-login-note"><i class="bi bi-shield-lock"></i><span>This is required once, on your first login. Your four-digit PIN is used when selecting your name in POS.</span></div>
+            <label class="field">New account password<input id="newPassword" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required></label>
+            <label class="field">Confirm account password<input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" placeholder="Repeat your password" required></label>
+            <div class="pin-grid">
+              <label class="field">New 4-digit PIN<input id="newPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="new-password" placeholder="4 digits" required></label>
+              <label class="field">Confirm PIN<input id="confirmPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="new-password" placeholder="Repeat PIN" required></label>
+            </div>
+            <button id="setupButton" class="login-button" type="submit">Save & Continue</button>
+            <div id="setupError" class="form-error" role="alert"></div>
+          </form>
+        </section>
+      </div>
+    </section>
+    <aside class="visual-side" aria-label="TECHM8 staff workspace">
+      <div class="visual-frame">
+        <div class="visual-window">
+          <div class="visual-brand"><span><i class="bi bi-tools"></i> TECHM8 Staff Workspace</span><span class="visual-pill">Internal</span></div>
+          <div class="visual-kicker">One staff account</div>
+          <h2 class="visual-title">Quote, repair and manage the day from one place.</h2>
+          <p class="visual-copy">Use your own account to open POS, check live repair prices, create repair tickets and access the internal staff tools.</p>
+          <div class="visual-features">
+            <div class="visual-feature"><i class="bi bi-receipt-cutoff"></i>Instant repair quotes</div>
+            <div class="visual-feature"><i class="bi bi-clipboard2-check"></i>Repair intake workflow</div>
+            <div class="visual-feature"><i class="bi bi-lightbulb"></i>Problem solving guides</div>
+            <div class="visual-feature"><i class="bi bi-file-earmark-text"></i>Reports and documents</div>
           </div>
         </div>
       </div>
-
-      <div class="content">
-        <div class="section-head">
-          <h2 class="section-title">Staff Entry</h2>
-          <p class="section-subtitle">
-            Use the pricing side for quoting and booking repairs. Use problem solving when the device needs step-by-step
-            instructions before you can quote or complete the job.
-          </p>
-        </div>
-
-        <div class="portal-grid">
-          <a class="portal-card" href="./quote.html">
-            <div class="portal-icon"><i class="bi bi-receipt-cutoff"></i></div>
-            <div class="portal-label">Quote</div>
-            <h3 class="portal-title"> Quote Page</h3>
-            <p class="portal-text">
-              Search repair prices, confirm the selected issue, and continue directly into the intake workflow with the
-              customer and device details prefilled.
-            </p>
-            <ul class="portal-list">
-              <li><i class="bi bi-check-circle-fill"></i> Brand / model / repair selection</li>
-              <li><i class="bi bi-check-circle-fill"></i> IMEI lookup and Apple A-model search</li>
-              <li><i class="bi bi-check-circle-fill"></i> Continue into workflow intake</li>
-            </ul>
-            <span class="portal-cta">Enter Quote <i class="bi bi-arrow-right"></i></span>
-          </a>
-
-          <a class="portal-card" href="./problem-solving.html">
-            <div class="portal-icon"><i class="bi bi-tools"></i></div>
-            <div class="portal-label">Problem Solving</div>
-            <h3 class="portal-title"> Problem Solving</h3>
-            <p class="portal-text">
-              Access simplified internal guides for activation, startup, common Windows issues, and other diagnosis tasks
-              that staff may need at the counter or on the bench.
-            </p>
-            <ul class="portal-list">
-              <li><i class="bi bi-check-circle-fill"></i> Internal repair and troubleshooting guides</li>
-              <li><i class="bi bi-check-circle-fill"></i> Simplified step-by-step instructions</li>
-              <li><i class="bi bi-check-circle-fill"></i> Quick reference for common jobs</li>
-            </ul>
-            <span class="portal-cta">Enter Problem Solving <i class="bi bi-arrow-right"></i></span>
-          </a>
-
-          <a class="portal-card" href="./daily-report.html">
-            <div class="portal-icon"><i class="bi bi-clipboard-data"></i></div>
-            <div class="portal-label">Daily Report + LCD Count</div>
-            <h3 class="portal-title">Daily Report And LCD Count</h3>
-            <p class="portal-text">
-              Select the store and staff name, submit today's completed repair rows, and use the same page for the
-              weekly LCD inventory count.
-            </p>
-            <ul class="portal-list">
-              <li><i class="bi bi-check-circle-fill"></i> Store and staff selection before entry</li>
-              <li><i class="bi bi-check-circle-fill"></i> Dynamic repair rows for daily work</li>
-              <li><i class="bi bi-check-circle-fill"></i> LCD sold / send to other / faulty / broken deduction</li>
-            </ul>
-            <span class="portal-cta">Enter Report And LCD Count <i class="bi bi-arrow-right"></i></span>
-          </a>
-
-          <a class="portal-card" href="./staff-documents.html">
-            <div class="portal-icon"><i class="bi bi-folder2-open"></i></div>
-            <div class="portal-label">Documents + Examples</div>
-            <h3 class="portal-title">Documents</h3>
-            <p class="portal-text">
-              Access internal document templates and completed-report examples for repair paperwork, buyback, insurance
-              reports, and virus reports.
-            </p>
-            <ul class="portal-list">
-              <li><i class="bi bi-check-circle-fill"></i> Repair document references</li>
-              <li><i class="bi bi-check-circle-fill"></i> Buyback document references</li>
-              <li><i class="bi bi-check-circle-fill"></i> Insurance and virus report examples</li>
-            </ul>
-            <span class="portal-cta">Enter Documents <i class="bi bi-arrow-right"></i></span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
+    </aside>
+  </main>
   <script>
-    window.Techm8StaffAuth.init({
-      rootSelector: '[data-auth-protected]',
-      title: 'Staff Access',
-      subtitle: 'This page is for TECHM8 staff only. If you are looking for the public company website, use the official website button below.',
-      extraHtml: `
-        <div class="tm-auth-note">
-          This is the internal staff website. Customers should use the official TECHM8 website instead.
-        </div>
-        <a class="tm-auth-link" href="https://www.techm8australia.com/" target="_blank" rel="noopener noreferrer">
-          <i class="bi bi-box-arrow-up-right"></i>
-          Open Official Website
-        </a>
-      `
+    const loginStep = document.getElementById('loginStep');
+    const setupStep = document.getElementById('setupStep');
+    const loginForm = document.getElementById('loginForm');
+    const setupForm = document.getElementById('setupForm');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginButton = document.getElementById('loginButton');
+    const loginError = document.getElementById('loginError');
+    const setupButton = document.getElementById('setupButton');
+    const setupError = document.getElementById('setupError');
+
+    function openPos() { window.location.replace('./pos.html'); }
+    function showSetup(profile) {
+      loginStep.hidden = true;
+      setupStep.hidden = false;
+      document.getElementById('setupIntro').textContent = `${profile.staff_name || profile.staff_email || 'Staff'}, create your private password and POS PIN.`;
+      document.getElementById('newPassword').focus();
+    }
+
+    document.getElementById('showPassword').addEventListener('change', event => {
+      loginPassword.type = event.target.checked ? 'text' : 'password';
     });
+
+    loginForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      loginButton.disabled = true;
+      loginButton.textContent = 'Checking...';
+      loginError.textContent = '';
+      try {
+        const profile = await window.Techm8StaffAuth.login(loginEmail.value, loginPassword.value);
+        if (profile.must_change_credentials) showSetup(profile);
+        else openPos();
+      } catch (error) {
+        loginError.textContent = error.message || 'Login failed.';
+      } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = 'Login';
+      }
+    });
+
+    setupForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const password = document.getElementById('newPassword').value;
+      const confirmedPassword = document.getElementById('confirmPassword').value;
+      const pin = document.getElementById('newPin').value.trim();
+      const confirmedPin = document.getElementById('confirmPin').value.trim();
+      setupError.textContent = '';
+      if (password.length < 8) { setupError.textContent = 'Password must be at least 8 characters.'; return; }
+      if (password === '123456') { setupError.textContent = 'Choose a password different from the temporary password.'; return; }
+      if (password !== confirmedPassword) { setupError.textContent = 'The account passwords do not match.'; return; }
+      if (!/^\d{4}$/.test(pin)) { setupError.textContent = 'PIN must contain exactly four digits.'; return; }
+      if (pin !== confirmedPin) { setupError.textContent = 'The PINs do not match.'; return; }
+      setupButton.disabled = true;
+      setupButton.textContent = 'Saving...';
+      try {
+        await window.Techm8StaffAuth.completeFirstLogin(password, pin);
+        openPos();
+      } catch (error) {
+        setupError.textContent = error.message || 'Credentials could not be updated.';
+      } finally {
+        setupButton.disabled = false;
+        setupButton.textContent = 'Save & Continue';
+      }
+    });
+
+    window.Techm8StaffAuth.verify().then(profile => {
+      if (!profile) return;
+      if (profile.must_change_credentials) showSetup(profile);
+      else openPos();
+    }).catch(() => {});
   </script>
 </body>
 </html>

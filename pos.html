@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="techm8-pos-build" content="2026-08-21-daily-scorecard-instant-quote">
   <title>TECHM8 POS</title>
+  <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
-  <script src="./staff-auth.js"></script>
+  <script src="./staff-auth.js?v=20260821"></script>
   <script src="./vendor/sortable.min.js"></script>
   <style>
     :root {
@@ -108,7 +109,16 @@
     }
 
     .rail-bottom {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      justify-items: center;
+    }
+
+    .rail-shortcuts {
       margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--tm-line);
       display: grid;
       gap: 10px;
       width: 100%;
@@ -1842,6 +1852,11 @@
       gap: 12px;
     }
 
+    .customer-card.needs-customer .customer-row {
+      border-color: var(--tm-red);
+      box-shadow: 0 0 0 4px rgba(216, 75, 62, 0.12);
+    }
+
     .customer-row {
       height: 54px;
       display: grid;
@@ -2992,113 +3007,6 @@
     .special-fields textarea:focus {
       border-color: rgba(7, 137, 111, 0.45);
       box-shadow: 0 0 0 4px rgba(7, 137, 111, 0.08);
-    }
-
-    .ticket-create-modal {
-      width: min(780px, 100%);
-      max-height: calc(100vh - 36px);
-      gap: 12px;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .ticket-customer-fields {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .ticket-repair-fields {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .ticket-create-modal .special-fields input,
-    .ticket-create-modal .special-fields select {
-      height: 46px;
-    }
-
-    .ticket-create-modal .special-error:empty {
-      min-height: 0;
-    }
-
-    .ticket-quote-summary {
-      padding: 12px 14px;
-      border: 1px solid #cfe8e2;
-      border-radius: 14px;
-      color: #36534d;
-      background: #f1fbf8;
-      font-size: 13px;
-      font-weight: 800;
-      line-height: 1.45;
-    }
-
-    .ticket-section-heading {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--tm-ink);
-      font-size: 14px;
-      font-weight: 900;
-    }
-
-    .ticket-section-heading i {
-      color: var(--tm-green);
-      font-size: 16px;
-    }
-
-    .ticket-customer-status {
-      min-height: 40px;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 9px 12px;
-      border: 1px solid #dce6e9;
-      border-radius: 12px;
-      color: #62747c;
-      background: #f7fafb;
-      font-size: 12px;
-      font-weight: 750;
-      line-height: 1.4;
-    }
-
-    .ticket-customer-status[data-state="matched"] {
-      border-color: #b8e7dc;
-      color: #087761;
-      background: #edfbf7;
-    }
-
-    .ticket-customer-status[data-state="changed"] {
-      border-color: #f2d7a7;
-      color: #9b6300;
-      background: #fff9ed;
-    }
-
-    .ticket-verify-row {
-      display: grid;
-      grid-template-columns: 20px minmax(0, 1fr);
-      gap: 10px;
-      align-items: start;
-      padding: 12px 13px;
-      border: 1px solid #cfe0e4;
-      border-radius: 13px;
-      color: #33464e;
-      background: #fff;
-      font-size: 13px;
-      font-weight: 800;
-      line-height: 1.4;
-      cursor: pointer;
-    }
-
-    .ticket-verify-row input {
-      width: 18px;
-      height: 18px;
-      margin: 1px 0 0;
-      accent-color: var(--tm-green);
-    }
-
-    @media (max-width: 720px) {
-      .ticket-customer-fields,
-      .ticket-repair-fields {
-        grid-template-columns: 1fr;
-      }
     }
 
     .customer-modal {
@@ -5182,6 +5090,7 @@
       }
 
       .rail-nav,
+      .rail-shortcuts,
       .rail-bottom {
         display: grid;
         gap: 8px;
@@ -6026,13 +5935,18 @@
         <button id="transferNavBtn" class="rail-button" type="button" title="Stock transfer"><i class="bi bi-truck"></i></button>
         <button id="ordersNavBtn" class="rail-button" type="button" title="Invoices"><i class="bi bi-receipt"></i></button>
       </nav>
+      <nav class="rail-shortcuts" aria-label="Staff tools">
+        <a class="rail-button" href="./problem-solving.html" title="Problem Solving"><i class="bi bi-lightbulb"></i></a>
+        <a class="rail-button" href="./daily-report.html" title="Daily Report"><i class="bi bi-clipboard2-data"></i></a>
+        <a class="rail-button" href="./staff-documents.html" title="Staff Documents"><i class="bi bi-folder2-open"></i></a>
+      </nav>
       <div class="rail-bottom">
         <button id="endShiftBtn" class="rail-button" type="button" title="End shift"><i class="bi bi-box-arrow-right"></i></button>
         <button id="switchUserBtn" class="rail-button rail-user-button" type="button" title="Switch user">
           <i class="bi bi-person-circle"></i>
           <span id="currentStaffName" class="rail-user-name">User</span>
         </button>
-        <a class="rail-button" href="./index.html" title="Back to portal"><i class="bi bi-grid-1x2-fill"></i></a>
+        <button id="staffLogoutBtn" class="rail-button" type="button" title="Log out"><i class="bi bi-door-open"></i></button>
       </div>
     </aside>
 
@@ -6369,27 +6283,9 @@
   </div>
 
   <div id="ticketDetailsModal" class="modal-backdrop" aria-hidden="true">
-    <form id="ticketDetailsForm" class="special-modal ticket-create-modal" role="dialog" aria-modal="true" aria-labelledby="ticketDetailsTitle">
+    <form id="ticketDetailsForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="ticketDetailsTitle">
       <h2 id="ticketDetailsTitle">Create Repair Ticket</h2>
-      <div id="ticketQuoteSummary" class="ticket-quote-summary"></div>
-      <div class="ticket-section-heading"><i class="bi bi-person-check"></i>Verify customer details</div>
-      <div class="special-fields ticket-customer-fields">
-        <label>
-          Customer name *
-          <input id="ticketCustomerName" class="repair-input" type="text" list="customerSuggestions" autocomplete="name" placeholder="Search or enter customer name" required>
-        </label>
-        <label>
-          Customer phone *
-          <input id="ticketCustomerPhone" class="repair-input" type="tel" autocomplete="tel" inputmode="tel" placeholder="0400 000 000" required>
-        </label>
-      </div>
-      <div id="ticketCustomerStatus" class="ticket-customer-status" data-state="empty"><i class="bi bi-search"></i><span>Search for an existing customer or enter new customer details.</span></div>
-      <label class="ticket-verify-row">
-        <input id="ticketCustomerVerified" type="checkbox">
-        <span>I have confirmed the customer's name and phone number.</span>
-      </label>
-      <div class="ticket-section-heading"><i class="bi bi-tools"></i>Repair setup</div>
-      <div class="special-fields ticket-repair-fields">
+      <div class="special-fields">
         <label>
           Need to order parts?
           <select id="ticketNeedOrder" class="repair-select">
@@ -7070,6 +6966,7 @@
         manualModel: '',
         lastLoadedAt: ''
       },
+      repairQuotePromise: null,
       usedDeviceTab: 'inventory',
       usedDeviceSearch: '',
       usedDeviceStatus: '',
@@ -7293,11 +7190,6 @@
       ticketNeedOrder: document.getElementById('ticketNeedOrder'),
       ticketDeviceInStore: document.getElementById('ticketDeviceInStore'),
       ticketMotherboardRepair: document.getElementById('ticketMotherboardRepair'),
-      ticketQuoteSummary: document.getElementById('ticketQuoteSummary'),
-      ticketCustomerName: document.getElementById('ticketCustomerName'),
-      ticketCustomerPhone: document.getElementById('ticketCustomerPhone'),
-      ticketCustomerStatus: document.getElementById('ticketCustomerStatus'),
-      ticketCustomerVerified: document.getElementById('ticketCustomerVerified'),
       ticketDetailsError: document.getElementById('ticketDetailsError'),
       ticketDetailsCancel: document.getElementById('ticketDetailsCancel'),
       repairPatternModal: document.getElementById('repairPatternModal'),
@@ -7335,6 +7227,7 @@
       posStaffPin: document.getElementById('posStaffPin'),
       posStaffCancel: document.getElementById('posStaffCancel'),
       posStaffError: document.getElementById('posStaffError'),
+      staffLogoutBtn: document.getElementById('staffLogoutBtn'),
       storeSwitchModal: document.getElementById('storeSwitchModal'),
       storeSwitchList: document.getElementById('storeSwitchList'),
       storeSwitchCancel: document.getElementById('storeSwitchCancel'),
@@ -7444,7 +7337,6 @@
     const POS_STAFF_KEY = 'techm8_pos_staff_name';
     const POS_STORE_ASSIGNMENTS_KEY = 'techm8_pos_staff_store_assignments';
     const POS_STORE_KEY = 'techm8_pos_store_id';
-    const POS_STAFF_PINS_KEY = 'techm8_pos_staff_pins';
     const POS_STAFF_SCHEDULE_KEY = 'techm8_pos_staff_schedule';
     const POS_OPENINGS_KEY = 'techm8_pos_openings';
     const POS_ACTIVE_SHIFT_KEY = 'techm8_pos_active_shift';
@@ -7452,6 +7344,7 @@
     const POS_HELD_ORDERS_KEY = 'techm8_pos_held_orders';
     const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
     const POS_PRODUCTS_CACHE_KEY = 'techm8_pos_products_cache_v3';
+    const POS_REPAIR_QUOTES_CACHE_KEY = 'techm8_pos_repair_quotes_cache_v1';
     const POS_PAYMENT_METHODS = [
       { key: 'cash', label: 'Cash' },
       { key: 'card', label: 'Card' },
@@ -7509,6 +7402,7 @@
       Fiona: ['PR', 'NL', 'FF', 'TW'],
       Jinny: ['PR', 'NL', 'FF', 'TW'],
       'Joanna Chen': ['PR', 'NL', 'FF', 'TW'],
+      Lydia: ['PR', 'NL', 'FF', 'TW'],
       Bowen: ['PR', 'NL', 'FF', 'TW']
     };
 
@@ -7519,6 +7413,7 @@
       Fiona: 'female',
       Jinny: 'female',
       'Joanna Chen': 'female',
+      Lydia: 'female',
       Bowen: 'male'
     };
 
@@ -7528,16 +7423,6 @@
       Fiona: 'manager',
       'Joanna Chen': 'manager',
       Bowen: 'admin'
-    };
-
-    const POS_DEFAULT_STAFF_PINS = {
-      Andy: '0000',
-      Anna: '0000',
-      Bonnie: '0000',
-      Fiona: '0000',
-      Jinny: '0000',
-      'Joanna Chen': '0000',
-      Bowen: '0000'
     };
 
     const POS_INACTIVE_STAFF_NAMES = new Set(['henry ang', 'janaphy', 'steven t']);
@@ -7967,14 +7852,6 @@
       }
     }
 
-    function loadStaffPins() {
-      const pins = { ...POS_DEFAULT_STAFF_PINS };
-      staffChoiceRecords().forEach(staff => {
-        pins[staff.displayName] = '0000';
-      });
-      return pins;
-    }
-
     function loadStaffSchedule() {
       return readLocalJson(POS_STAFF_SCHEDULE_KEY, {});
     }
@@ -8232,6 +8109,14 @@
     function resumeActiveShift() {
       const activeShift = readActiveShift();
       if (!activeShift) return false;
+      const signedInProfile = window.Techm8StaffAuth && window.Techm8StaffAuth.getProfile
+        ? window.Techm8StaffAuth.getProfile()
+        : null;
+      const signedInName = signedInProfile && (signedInProfile.staff_name || signedInProfile.display_name);
+      const shiftStaffName = activeShift.currentStaffName || activeShift.lastStaffName || activeShift.staffName;
+      if (signedInName && shiftStaffName && staffIdentityKey(signedInName) !== staffIdentityKey(shiftStaffName)) {
+        return false;
+      }
       const savedStaff = state.selectedStaffName
         || localStorage.getItem(POS_STAFF_KEY)
         || sessionStorage.getItem(POS_STAFF_KEY)
@@ -8252,7 +8137,7 @@
       return true;
     }
 
-    function applySelectedStaff(staffName, storeId) {
+    async function applySelectedStaff(staffName, storeId) {
       const selectedName = staffDisplayName(staffName).trim();
       const selectedStoreId = String(storeId || '').trim();
       const pin = String(els.posStaffPin.value || '').trim();
@@ -8268,12 +8153,26 @@
         els.posStaffError.textContent = 'Enter the 4-digit staff PIN.';
         return false;
       }
-      const pins = loadStaffPins();
-      const pinStaffKey = Object.keys(pins).find(name => staffIdentityKey(name) === staffIdentityKey(selectedName));
-      if (!pinStaffKey || String(pins[pinStaffKey]) !== pin) {
-        els.posStaffError.textContent = 'Incorrect PIN or PIN is not configured in Schedule Admin.';
+      els.posStaffError.textContent = 'Checking PIN…';
+      let pinVerified = false;
+      try {
+        const token = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+          ? window.Techm8StaffAuth.getToken()
+          : '';
+        const result = await window.Techm8StaffAuth.callRpc('verify_staff_pin', {
+          session_token: token,
+          target_staff_name: selectedName,
+          input_pin: pin
+        });
+        pinVerified = Boolean(result && result.ok);
+      } catch (error) {
+        console.error(error);
+      }
+      if (!pinVerified) {
+        els.posStaffError.textContent = 'Incorrect PIN. Ask the staff member to use the PIN created at first login.';
         return false;
       }
+      els.posStaffError.textContent = '';
       const activeShift = readActiveShift();
       const canSwitchStore = staffCanSwitchStore(selectedName);
       const effectiveStoreId = activeShift && !canSwitchStore ? activeShift.storeId : selectedStoreId;
@@ -8631,6 +8530,8 @@
         showToast('Finish or clear the current repair ticket before starting another one.');
         return;
       }
+      const customer = selectedRepairCustomer();
+      if (!customer) return;
 
       resetRepairState();
       state.repair.started = true;
@@ -8651,7 +8552,7 @@
       openTicketDetailsModal({
         specialOrder: false,
         quote: { ...item }
-      });
+      }, customer);
     }
 
     function dashboardQuoteOptionHtml(values, selected, placeholder, valueGetter = value => value, labelGetter = value => value) {
@@ -9005,7 +8906,7 @@
 
           <div class="target-quote-grid">
             <div class="target-quote-form">
-              <label class="target-quote-field"><span>Select Brand</span><select data-quote-brand ${quote.loading ? 'disabled' : ''}>${dashboardQuoteOptionHtml(brands, quote.brand, quote.loading ? 'Loading brands...' : 'Choose a brand')}</select></label>
+              <label class="target-quote-field"><span>Select Brand</span><select data-quote-brand ${quote.loading && !quoteRows.length ? 'disabled' : ''}>${dashboardQuoteOptionHtml(brands, quote.brand, quote.loading && !quoteRows.length ? 'Loading brands...' : 'Choose a brand')}</select></label>
               <label class="target-quote-field"><span>Select Model</span><select data-quote-model ${!quote.brand ? 'disabled' : ''}>${dashboardQuoteOptionHtml(models, quote.model, 'Choose a model')}</select></label>
               <label class="target-quote-field"><span>Select Repair Type</span><select data-quote-issue ${!quote.model ? 'disabled' : ''}>${dashboardQuoteOptionHtml(issues, quote.issueKey, 'Choose a repair type', item => item.key, item => item.issue)}</select></label>
               <label class="target-quote-field target-a-model"><span>Apple A-model quick search</span><input type="search" data-quote-apple-search value="${escapeHtml(quote.appleSearch)}" placeholder="Example: A2337" autocomplete="off">${appleMatchesHtml}</label>
@@ -9738,66 +9639,99 @@
       `;
     }
 
+    function normalizeRepairQuoteRows(rows) {
+      return Array.isArray(rows) ? rows.map(row => ({
+        brand: String(row.brand || '').trim(),
+        model: String(row.model || '').trim(),
+        issue: String(row.issue || '').trim(),
+        price: row.price == null ? '' : String(row.price).trim(),
+        time: String(row.time || row.turnaround_time || '').trim()
+      })).filter(row => row.brand && row.model && row.issue) : [];
+    }
+
+    function applyRepairQuoteRows(rows, loadedAt = new Date().toISOString()) {
+      const normalized = normalizeRepairQuoteRows(rows);
+      if (!normalized.length) return false;
+      state.repairQuotes = normalized;
+      state.dashboardQuote.rows = normalized;
+      state.dashboardQuote.loaded = true;
+      state.dashboardQuote.lastLoadedAt = loadedAt;
+      return true;
+    }
+
     async function loadRepairQuotes() {
-      state.dashboardQuote.loading = true;
-      state.dashboardQuote.error = '';
-      if (state.activeView === 'target') renderLiveTargetDashboard();
-      try {
-        let rows = [];
-        const supabase = window.TECHM8_SUPABASE || null;
-        if (supabase) {
-          const pageSize = 1000;
-          let from = 0;
-          while (true) {
-            const response = await fetch(
-              supabase.url + '/rest/v1/repair_prices?select=brand,model,issue,price,turnaround_time&order=brand.asc&order=model.asc&order=issue.asc&limit=' + pageSize + '&offset=' + from,
-              {
+      if (state.repairQuotePromise) return state.repairQuotePromise;
+      state.repairQuotePromise = (async () => {
+        let hasCachedRows = false;
+        try {
+          const cached = JSON.parse(localStorage.getItem(POS_REPAIR_QUOTES_CACHE_KEY) || 'null');
+          hasCachedRows = Boolean(cached && applyRepairQuoteRows(cached.rows, cached.savedAt));
+        } catch (error) {
+          console.error(error);
+        }
+
+        state.dashboardQuote.loading = true;
+        state.dashboardQuote.error = '';
+        renderRepairWorkspace();
+        if (state.activeView === 'target') renderLiveTargetDashboard();
+
+        try {
+          let rows = [];
+          const supabase = window.TECHM8_SUPABASE || null;
+          if (supabase) {
+            const pageSize = 1000;
+            const endpoint = supabase.url + '/rest/v1/repair_prices?select=brand,model,issue,price&order=brand.asc,model.asc,issue.asc';
+            const fetchPage = async (offset, includeCount = false) => {
+              const response = await fetch(`${endpoint}&limit=${pageSize}&offset=${offset}`, {
                 headers: {
                   apikey: supabase.anonKey,
-                  Authorization: 'Bearer ' + supabase.anonKey
+                  Authorization: 'Bearer ' + supabase.anonKey,
+                  ...(includeCount ? { Prefer: 'count=exact' } : {})
                 }
-              }
-            );
-            if (!response.ok) break;
-            const pageRows = await response.json();
-            if (!Array.isArray(pageRows) || !pageRows.length) break;
-            rows.push(...pageRows.map(row => ({
-              brand: row.brand,
-              model: row.model,
-              issue: row.issue,
-              price: row.price,
-              time: row.turnaround_time || ''
-            })));
-            if (pageRows.length < pageSize) break;
-            from += pageSize;
+              });
+              if (!response.ok) throw new Error('Repair price update failed.');
+              return { rows: await response.json(), range: response.headers.get('content-range') || '' };
+            };
+
+            const firstPage = await fetchPage(0, true);
+            rows = Array.isArray(firstPage.rows) ? firstPage.rows : [];
+            const totalMatch = firstPage.range.match(/\/(\d+)$/);
+            const total = totalMatch ? Number(totalMatch[1]) : rows.length;
+            if (total > pageSize) {
+              const offsets = [];
+              for (let offset = pageSize; offset < total; offset += pageSize) offsets.push(offset);
+              const remainingPages = await Promise.all(offsets.map(offset => fetchPage(offset)));
+              remainingPages.forEach(page => rows.push(...(Array.isArray(page.rows) ? page.rows : [])));
+            }
           }
+
+          if (!rows.length) {
+            const response = await fetch('./data.json', { cache: 'default' });
+            if (!response.ok) throw new Error('Repair prices unavailable.');
+            const text = await response.text();
+            rows = JSON.parse(text.replace(/^\uFEFF/, ''));
+          }
+
+          if (!applyRepairQuoteRows(rows)) throw new Error('Repair prices unavailable.');
+          localStorage.setItem(POS_REPAIR_QUOTES_CACHE_KEY, JSON.stringify({
+            savedAt: state.dashboardQuote.lastLoadedAt,
+            rows: state.repairQuotes
+          }));
+        } catch (error) {
+          console.error(error);
+          if (!hasCachedRows && !state.dashboardQuote.rows.length) {
+            state.dashboardQuote.error = error.message || 'Repair prices unavailable.';
+            showToast(state.dashboardQuote.error);
+          }
+        } finally {
+          state.dashboardQuote.loading = false;
+          renderRepairWorkspace();
+          renderLiveTargetDashboard();
         }
-        if (!rows.length) {
-          const response = await fetch('./data.json', { cache: 'no-store' });
-          if (!response.ok) throw new Error('Repair prices unavailable');
-          const text = await response.text();
-          rows = JSON.parse(text.replace(/^\uFEFF/, ''));
-        }
-        state.repairQuotes = Array.isArray(rows) ? rows.map(row => ({
-          brand: String(row.brand || '').trim(),
-          model: String(row.model || '').trim(),
-          issue: String(row.issue || '').trim(),
-          price: row.price == null ? '' : String(row.price).trim(),
-          time: String(row.time || row.turnaround_time || '').trim()
-        })).filter(row => row.brand && row.model && row.issue) : [];
-        state.dashboardQuote.rows = state.repairQuotes;
-        state.dashboardQuote.loaded = true;
-        state.dashboardQuote.lastLoadedAt = new Date().toISOString();
-      } catch (error) {
-        state.repairQuotes = [];
-        state.dashboardQuote.rows = [];
-        state.dashboardQuote.error = error.message || 'Repair prices unavailable.';
-        showToast(error.message || 'Repair prices unavailable.');
-      } finally {
-        state.dashboardQuote.loading = false;
-      }
-      renderRepairWorkspace();
-      renderLiveTargetDashboard();
+      })().finally(() => {
+        state.repairQuotePromise = null;
+      });
+      return state.repairQuotePromise;
     }
 
     const TRANSFER_STATUS_FILTERS = [
@@ -11207,6 +11141,7 @@
     }
 
     function queueCustomerSearch() {
+      if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) return;
       clearTimeout(loadCustomers.searchTimer);
       const query = els.customerInput.value.trim();
       loadCustomers.searchTimer = setTimeout(() => {
@@ -11282,6 +11217,7 @@
         saveCustomers();
         renderCustomerSuggestions();
         els.customerInput.value = [firstName, lastName].filter(Boolean).join(' ');
+        els.customerInput.closest('.customer-card')?.classList.remove('needs-customer');
         closeCustomerModal();
         showToast('Customer saved and shared across all stores.');
       } catch (error) {
@@ -11290,6 +11226,7 @@
         saveCustomers();
         renderCustomerSuggestions();
         els.customerInput.value = [firstName, lastName].filter(Boolean).join(' ');
+        els.customerInput.closest('.customer-card')?.classList.remove('needs-customer');
         closeCustomerModal();
         showToast('Customer saved locally. Database sync is pending.');
       }
@@ -11447,61 +11384,49 @@
       return digits.length >= 8 && digits.length <= 12;
     }
 
-    function updateTicketCustomerVerification(options = {}) {
-      const name = els.ticketCustomerName.value.trim();
-      const matchedCustomer = customerDetailsForOrder(name);
-      const savedPhone = repairCustomerPhone(matchedCustomer);
-
-      if (matchedCustomer && options.fillPhone && savedPhone) {
-        els.ticketCustomerPhone.value = savedPhone;
+    function flagRepairCustomer(message, options = {}) {
+      const card = els.customerInput.closest('.customer-card');
+      if (card) card.classList.add('needs-customer');
+      if (options.notify !== false) showToast(message);
+      if (options.focus !== false) {
+        els.customerInput.focus();
+        els.customerInput.select();
       }
-
-      const phone = els.ticketCustomerPhone.value.trim();
-      const phoneDigits = phone.replace(/\D/g, '');
-      const savedDigits = savedPhone.replace(/\D/g, '');
-      let stateName = 'empty';
-      let icon = 'bi-search';
-      let message = 'Search for an existing customer or enter new customer details.';
-
-      if (name && matchedCustomer && savedDigits && phoneDigits === savedDigits) {
-        stateName = 'matched';
-        icon = 'bi-person-check-fill';
-        message = 'Existing customer found. Check the saved name and phone, then confirm below.';
-      } else if (name && matchedCustomer) {
-        stateName = 'changed';
-        icon = 'bi-exclamation-circle';
-        message = savedPhone
-          ? 'Existing customer found, but the phone differs from the saved record. Confirm the correct number.'
-          : 'Existing customer found without a saved phone. Enter and confirm the correct number.';
-      } else if (name) {
-        stateName = 'changed';
-        icon = 'bi-person-plus';
-        message = 'New customer details. Confirm the name and contact number before creating the ticket.';
-      }
-
-      els.ticketCustomerStatus.dataset.state = stateName;
-      els.ticketCustomerStatus.innerHTML = `<i class="bi ${icon}"></i><span>${message}</span>`;
     }
 
-    function openTicketDetailsModal(draft) {
-      state.pendingRepairDraft = draft;
+    function selectedRepairCustomer(options = {}) {
       const customerName = els.customerInput.value.trim();
       const customer = customerDetailsForOrder(customerName);
-      els.ticketCustomerName.value = customerName && customerName !== 'Walk-in Customer' ? customerName : '';
-      els.ticketCustomerPhone.value = repairCustomerPhone(customer);
-      els.ticketCustomerVerified.checked = false;
-      const quote = draft && draft.quote ? draft.quote : {};
-      const quoteName = [quote.brand, quote.model].filter(Boolean).join(' ') || draft.specialName || 'Repair service';
-      const quoteDetails = [quoteName, quote.issue, quotePriceLabel(quote.price || draft.specialPrice)].filter(value => value && value !== 'N/A');
-      els.ticketQuoteSummary.textContent = quoteDetails.join(' · ');
-      updateTicketCustomerVerification();
+      if (!customer) {
+        flagRepairCustomer('Select an existing customer in the top-right field, or add the customer first.', options);
+        return null;
+      }
+      const customerPhone = repairCustomerPhone(customer);
+      if (!validRepairCustomerPhone(customerPhone)) {
+        flagRepairCustomer('The selected customer is missing a valid phone number. Update the customer record first.', options);
+        return null;
+      }
+      const card = els.customerInput.closest('.customer-card');
+      if (card) card.classList.remove('needs-customer');
+      return {
+        id: customer.id || '',
+        name: customerName,
+        phone: customerPhone
+      };
+    }
+
+    function openTicketDetailsModal(draft, selectedCustomer = null) {
+      const customer = selectedCustomer || selectedRepairCustomer();
+      if (!customer) return false;
+      state.pendingRepairDraft = { ...draft, customer };
       els.ticketDetailsError.textContent = '';
       els.ticketNeedOrder.value = 'no';
       els.ticketDeviceInStore.value = 'yes';
       els.ticketMotherboardRepair.value = 'no';
       els.ticketDetailsModal.classList.add('show');
       els.ticketDetailsModal.setAttribute('aria-hidden', 'false');
-      els.ticketCustomerName.focus();
+      els.ticketNeedOrder.focus();
+      return true;
     }
 
     function closeTicketDetailsModal() {
@@ -11513,28 +11438,15 @@
     async function createRepairTicketFromDraft() {
       const draft = state.pendingRepairDraft;
       if (!draft || !draft.quote) return;
-      const customerName = els.ticketCustomerName.value.trim();
-      const customerPhone = els.ticketCustomerPhone.value.trim();
-      if (!customerName || customerName.toLowerCase() === 'walk-in customer') {
-        els.ticketDetailsError.textContent = 'Customer name is required for every repair ticket.';
-        els.ticketCustomerName.focus();
+      const currentCustomer = selectedRepairCustomer({ notify: false, focus: false });
+      if (!currentCustomer
+        || currentCustomer.name.toLowerCase() !== draft.customer.name.toLowerCase()
+        || currentCustomer.phone.replace(/\D/g, '') !== draft.customer.phone.replace(/\D/g, '')) {
+        els.ticketDetailsError.textContent = 'The selected customer has changed. Close this window and choose the customer again.';
         return;
       }
-      if (!customerPhone) {
-        els.ticketDetailsError.textContent = 'Customer phone is required for every repair ticket.';
-        els.ticketCustomerPhone.focus();
-        return;
-      }
-      if (!validRepairCustomerPhone(customerPhone)) {
-        els.ticketDetailsError.textContent = 'Enter a valid customer contact number.';
-        els.ticketCustomerPhone.focus();
-        return;
-      }
-      if (!els.ticketCustomerVerified.checked) {
-        els.ticketDetailsError.textContent = 'Confirm that the customer name and phone number have been checked.';
-        els.ticketCustomerVerified.focus();
-        return;
-      }
+      const customerName = draft.customer.name;
+      const customerPhone = draft.customer.phone;
       const status = els.ticketNeedOrder.value === 'yes' ? 'need_to_order' : 'repairing';
       const deviceInStore = els.ticketDeviceInStore.value === 'yes';
       const motherboardRepair = els.ticketMotherboardRepair.value === 'yes';
@@ -17037,8 +16949,14 @@
     els.storeSwitchBtn.addEventListener('click', openStoreSwitchModal);
     els.endShiftBtn.addEventListener('click', openEndShiftModal);
     els.switchUserBtn.addEventListener('click', () => openStaffModal({ canCancel: true }));
+    els.staffLogoutBtn.addEventListener('click', () => {
+      window.Techm8StaffAuth.logout({ redirectTo: './index.html' });
+    });
     els.customerAddBtn.addEventListener('click', openCustomerModal);
-    els.customerInput.addEventListener('input', queueCustomerSearch);
+    els.customerInput.addEventListener('input', () => {
+      els.customerInput.closest('.customer-card')?.classList.remove('needs-customer');
+      queueCustomerSearch();
+    });
     els.customerInput.addEventListener('focus', () => {
       if (!els.customerInput.value.trim()) queueCustomerSearch();
     });
@@ -17440,19 +17358,6 @@
       event.preventDefault();
       createRepairTicketFromDraft();
     });
-    els.ticketCustomerName.addEventListener('input', () => {
-      els.ticketCustomerVerified.checked = false;
-      updateTicketCustomerVerification({ fillPhone: true });
-      els.ticketDetailsError.textContent = '';
-    });
-    els.ticketCustomerPhone.addEventListener('input', () => {
-      els.ticketCustomerVerified.checked = false;
-      updateTicketCustomerVerification();
-      els.ticketDetailsError.textContent = '';
-    });
-    els.ticketCustomerVerified.addEventListener('change', () => {
-      els.ticketDetailsError.textContent = '';
-    });
     els.ticketDetailClose.addEventListener('click', closeTicketDetailModal);
     els.ticketDetailModal.addEventListener('click', event => {
       if (event.target === els.ticketDetailModal) closeTicketDetailModal();
@@ -17540,9 +17445,15 @@
     document.addEventListener('touchend', () => {
       repairPatternDrawing = false;
     });
-    els.posStaffForm.addEventListener('submit', event => {
+    els.posStaffForm.addEventListener('submit', async event => {
       event.preventDefault();
-      applySelectedStaff(els.posStaffSelect.value, els.posStoreChoice.value);
+      const submitButton = els.posStaffForm.querySelector('[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+      try {
+        await applySelectedStaff(els.posStaffSelect.value, els.posStoreChoice.value);
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
     });
     els.posStaffCancel.addEventListener('click', closeStaffModal);
     els.posStoreSearch.addEventListener('input', event => {
@@ -17665,6 +17576,12 @@
     function initializeLocalDashboardUiTest() {
       state.storeId = 'toowong';
       state.selectedStaffName = 'Bowen';
+      state.customers = [{
+        id: 'CUS-TEST-1',
+        first_name: 'Alex',
+        last_name: 'Customer',
+        phone: '0400 123 456'
+      }];
       state.todayProgress = {
         ok: true,
         status: 'projected',
@@ -17712,6 +17629,7 @@
       state.dashboardQuote.model = 'iPhone 15 Pro';
       state.dashboardQuote.issueKey = dashboardQuoteKey(state.dashboardQuote.rows[0]);
       state.dashboardQuote.appleModelMap = { iphone: { A3102: 'iPhone 15 Pro' } };
+      renderCustomerSuggestions();
       updateStoreBadge();
       updateStaffButton();
       renderAll();
@@ -17727,6 +17645,14 @@
 
     if (localDashboardTestMode) {
       initializeLocalDashboardUiTest();
+      if (new URLSearchParams(window.location.search).has('live-price-test')) {
+        state.repairQuotes = [];
+        state.dashboardQuote.rows = [];
+        state.dashboardQuote.loaded = false;
+        loadRepairQuotes().then(() => {
+          document.body.dataset.livePriceCount = String(state.dashboardQuote.rows.length);
+        });
+      }
     } else if (localTransferTestMode) {
       initializeLocalTransferUiTest();
     } else if (localCatalogTestMode) {
@@ -17735,8 +17661,10 @@
       window.Techm8StaffAuth.init({
         rootSelector: '[data-auth-protected]',
         title: 'POS Access',
-        subtitle: 'Enter the staff password to open the TECHM8 point of sale.'
+        subtitle: 'Sign in with your staff email to open the TECHM8 point of sale.'
       }).then(async () => {
+        loadRepairQuotes();
+        loadDashboardAppleMap();
         await ensureStaffStoreAccess();
         const productLoad = loadProducts();
         await syncCurrentShiftWithDatabase();
@@ -17748,8 +17676,6 @@
         renderRepairWorkspace();
         await loadTodayProgress();
         await productLoad;
-        loadDashboardAppleMap();
-        loadRepairQuotes();
       });
     }
 

@@ -10,7 +10,7 @@ This repo is the internal staff site, not the public website.
 ## Core Entry Points
 
 Front-end staff pages:
-- `index.html` - staff portal home
+- `index.html` - staff email login; successful login opens POS
 - `pos.html` - Today Progress, store POS, Repair Board, Used Devices, and Invoice History
 - `quote.html` - repair quote lookup
 - `repair_workflow.html` - intake / workflow page
@@ -37,9 +37,10 @@ Database / auth:
 ## Authentication Rules
 
 Staff access:
-- Staff-facing pages use the shared staff password flow from `staff-auth.js`.
-- The login overlay on `index.html` must clearly state this is the internal staff site.
-- The login overlay on `index.html` must include a button linking to the public website.
+- Staff-facing pages use the individual email/password session flow from `staff-auth.js`.
+- Every new staff account starts with the temporary password `123456`.
+- First login is blocked until the staff member creates a private account password and four-digit POS PIN.
+- The four-digit PIN is verified by the database when a staff name is selected in POS; PINs are never stored in browser storage.
 
 Admin access:
 - Admin must enter through `admin.html`.
@@ -51,9 +52,9 @@ Admin access:
 - Do not expose admin pages as open pages.
 
 Password rules:
-- Keep current password behavior unchanged unless explicitly requested.
-- `price-admin.html` keeps the front-end staff password update feature.
-- Do not add a general admin password edit UI unless explicitly requested.
+- Staff passwords and POS PINs are individual credentials, not one shared front-end password.
+- `price-admin.html` does not change staff credentials.
+- Do not expose password hashes or PIN hashes in browser-readable tables or API responses.
 
 ## POS System
 
@@ -194,8 +195,8 @@ Completed Today Progress / Target flow:
 - Each staff-confirmed Google Review earns 5 points. The event is saved centrally with an idempotency key and can only be recorded during the store's open shift.
 - A paid invoice earns device-bundle points only when it contains at least one device and one normal product: each device earns 5 points and each accessory earns 5 points. A device sold alone earns 0; refunds reduce the qualifying net quantities.
 - An explicit store/date/staff daily point target takes priority. Otherwise a matching monthly target is converted into an adaptive daily target from the points still required and the calendar days remaining, rounded up to the next 5 points.
-- The embedded quote loads the same live repair-price rows as the Repair Board, includes IMEI, S/N, and Apple A-model lookup tools, and opens the POS `Create Repair Ticket` flow with the selected quote prefilled.
-- Ticket creation searches the shared customer directory, requires a valid customer name and contact number, and requires staff to confirm those details before the repair ticket can be created.
+- The embedded quote uses a cached first display plus a parallel live refresh of all repair-price pages, includes IMEI, S/N, and Apple A-model lookup tools, and opens the POS `Create Repair Ticket` flow with the selected quote prefilled.
+- Ticket creation validates the customer already selected in the top-right shared customer field. The selected record must exist and contain a valid phone number before the original three-question ticket modal opens.
 - The page refreshes from Supabase on entry, staff/store change, checkout, manual refresh, and every 30 seconds while visible. A labelled local cache is used only as a temporary offline display.
 - End Shift writes a finalized per-staff result snapshot. Closed shifts show the frozen result instead of recalculating historical performance.
 
@@ -288,7 +289,9 @@ Required POS migrations, in order:
 11. `20260719013325_fix_pos_today_progress_repair_attribution.sql`
 12. `20260719013856_index_pos_daily_target_results_shift_code.sql`
 13. `20260812111500_add_pos_stocktake_permissions.sql`
-14. `20260821010000_make_pos_customers_global.sql`
+14. `20260820145225_add_staff_email_first_login_credentials.sql`
+15. `20260820151527_disable_legacy_shared_staff_password_rpc.sql`
+16. `20260821010000_make_pos_customers_global.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
