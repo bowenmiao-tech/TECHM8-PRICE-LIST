@@ -201,7 +201,9 @@ Completed Today Progress / Target flow:
 - End Shift writes a finalized per-staff result snapshot. Closed shifts show the frozen result instead of recalculating historical performance.
 
 Completed multi-terminal state:
-- Customer records are shared within the selected store and cached locally for temporary network failure.
+- Customer records are company-wide and cached locally only for temporary network failure.
+- The top-right customer field remains empty until at least two characters are entered, then searches name, email, and phone with tolerant matching instead of listing the full directory.
+- New Customer checks the normalized phone number before saving; an existing match can be selected to fill the complete customer record and continue the current sale or repair flow.
 - Held carts are shared within the selected store and cached locally until database sync succeeds.
 - One open store shift is shared by all terminals at that store.
 - Opening cash entered on one terminal is visible to the others.
@@ -292,7 +294,8 @@ Required POS migrations, in order:
 14. `20260820145225_add_staff_email_first_login_credentials.sql`
 15. `20260820151527_disable_legacy_shared_staff_password_rpc.sql`
 16. `20260820152151_configure_bowen_staff_login.sql`
-17. `20260821010000_make_pos_customers_global.sql`
+17. `20260820153840_require_customer_search_query.sql`
+18. `20260821010000_make_pos_customers_global.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`

@@ -1848,6 +1848,8 @@
     }
 
     .customer-card {
+      position: relative;
+      z-index: 60;
       display: grid;
       gap: 12px;
     }
@@ -2522,6 +2524,67 @@
       font-weight: 800;
     }
 
+    .customer-search-results {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      z-index: 80;
+      max-height: min(420px, calc(100vh - 150px));
+      overflow-y: auto;
+      padding: 6px;
+      border: 1px solid #aebdc4;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 18px 40px rgba(18, 43, 49, 0.2);
+    }
+
+    .customer-search-results[hidden] {
+      display: none;
+    }
+
+    .customer-search-option {
+      width: 100%;
+      padding: 10px 11px;
+      border: 0;
+      border-radius: 9px;
+      display: grid;
+      gap: 3px;
+      color: var(--tm-ink);
+      background: transparent;
+      text-align: left;
+    }
+
+    .customer-search-option:hover,
+    .customer-search-option.active,
+    .customer-search-option:focus-visible {
+      background: #eaf7f4;
+      outline: none;
+    }
+
+    .customer-search-name {
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .customer-search-detail {
+      color: #53656e;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .customer-search-email {
+      color: var(--tm-green-dark);
+    }
+
+    .customer-search-status {
+      padding: 14px 11px;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+      text-align: center;
+    }
+
     .stocktake-field select:focus,
     .stocktake-field input:focus {
       border-color: rgba(7, 137, 111, 0.55);
@@ -3011,6 +3074,8 @@
 
     .customer-modal {
       width: min(720px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
     }
 
     .customer-modal-header {
@@ -3067,6 +3132,54 @@
 
     .customer-field-grid .span-2 {
       grid-column: 1 / -1;
+    }
+
+    .customer-duplicate-match {
+      padding: 12px;
+      border: 1px solid #f2b8b2;
+      border-radius: 14px;
+      display: grid;
+      gap: 9px;
+      background: #fff7f6;
+    }
+
+    .customer-duplicate-match[hidden] {
+      display: none;
+    }
+
+    .customer-duplicate-title {
+      color: var(--tm-red);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .customer-duplicate-card {
+      padding: 10px;
+      border: 1px solid var(--tm-line);
+      border-radius: 11px;
+      display: grid;
+      gap: 4px;
+      background: #fff;
+    }
+
+    .customer-duplicate-card strong {
+      font-size: 14px;
+    }
+
+    .customer-duplicate-card span {
+      color: var(--tm-muted);
+      font-size: 12px;
+    }
+
+    .customer-duplicate-select {
+      justify-self: start;
+      min-height: 38px;
+      padding: 0 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      color: var(--tm-green-dark);
+      background: #fff;
+      font-weight: 900;
     }
 
     .special-error {
@@ -6105,10 +6218,10 @@
       <div class="customer-card">
         <div class="customer-row">
           <i class="bi bi-person"></i>
-          <input id="customerInput" class="customer-input" list="customerSuggestions" placeholder="Walk-in Customer">
-          <datalist id="customerSuggestions"></datalist>
-          <button id="customerAddBtn" class="customer-add-button" type="button" title="Add customer"><i class="bi bi-person-plus"></i></button>
+          <input id="customerInput" class="customer-input" type="search" autocomplete="off" placeholder="Walk-in Customer" aria-label="Search customer" aria-autocomplete="list" aria-controls="customerSearchResults" aria-expanded="false">
+          <button id="customerAddBtn" class="customer-add-button" type="button" title="Add customer" aria-label="Add customer"><i class="bi bi-person-plus"></i></button>
         </div>
+        <div id="customerSearchResults" class="customer-search-results" role="listbox" aria-label="Customer search results" hidden></div>
       </div>
 
       <div id="cartArea" class="cart-scroll"></div>
@@ -6653,6 +6766,7 @@
           <textarea id="customerNotes" placeholder="Customer notes"></textarea>
         </label>
       </div>
+      <div id="customerDuplicateMatch" class="customer-duplicate-match" aria-live="polite" hidden></div>
       <div id="customerError" class="special-error"></div>
       <div class="special-actions">
         <button id="customerCancelBtn" class="soft-action" type="button">Cancel</button>
@@ -6917,6 +7031,12 @@
       repairSearchLoading: false,
       pendingRepairDraft: null,
       customers: [],
+      selectedCustomerId: '',
+      customerSearchLoading: false,
+      customerSearchActiveIndex: -1,
+      customerSearchFixture: [],
+      customerDuplicateMatch: null,
+      customerDuplicateLoading: false,
       cart: [],
         category: 'All',
         search: '',
@@ -7096,7 +7216,7 @@
       summaryGst: document.getElementById('summaryGst'),
       summaryTotal: document.getElementById('summaryTotal'),
       customerInput: document.getElementById('customerInput'),
-      customerSuggestions: document.getElementById('customerSuggestions'),
+      customerSearchResults: document.getElementById('customerSearchResults'),
       customerAddBtn: document.getElementById('customerAddBtn'),
       customerModal: document.getElementById('customerModal'),
       customerForm: document.getElementById('customerForm'),
@@ -7110,6 +7230,7 @@
       customerEmail: document.getElementById('customerEmail'),
       customerGroup: document.getElementById('customerGroup'),
       customerNotes: document.getElementById('customerNotes'),
+      customerDuplicateMatch: document.getElementById('customerDuplicateMatch'),
       customerError: document.getElementById('customerError'),
       payBtn: document.getElementById('payBtn'),
       holdBtn: document.getElementById('holdBtn'),
@@ -11083,14 +11204,8 @@
       const requestId = (loadCustomers.requestId || 0) + 1;
       loadCustomers.requestId = requestId;
 
-      if (!query && options.useCache !== false) {
-        state.customers = cached;
-        renderCustomerSuggestions();
-      }
-      if (!state.selectedStaffName) return;
-
       const pending = cached.filter(customer => customer.sync_pending);
-      if (options.syncPending !== false) {
+      if (state.selectedStaffName && options.syncPending !== false) {
         for (const customer of pending) {
           try {
             const payload = await postSharedState('customer', 'save', {
@@ -11106,10 +11221,36 @@
         }
       }
 
+      if (query.length < 2) {
+        state.customers = [];
+        state.customerSearchLoading = false;
+        state.customerSearchActiveIndex = -1;
+        renderCustomerSuggestions();
+        return;
+      }
+
+      if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) {
+        state.customers = fuzzyCustomerMatches(state.customerSearchFixture, query).slice(0, 80);
+        state.customerSearchLoading = false;
+        state.customerSearchActiveIndex = -1;
+        renderCustomerSuggestions();
+        return;
+      }
+
+      state.customers = fuzzyCustomerMatches(cached, query).slice(0, 30);
+      state.customerSearchLoading = true;
+      state.customerSearchActiveIndex = -1;
+      renderCustomerSuggestions();
+      if (!state.selectedStaffName) {
+        state.customerSearchLoading = false;
+        renderCustomerSuggestions();
+        return;
+      }
+
       try {
         const payload = await getSharedState('customers', {
           q: query,
-          limit: query ? 80 : 100
+          limit: 80
         });
         if (requestId !== loadCustomers.requestId) return;
         const remote = (Array.isArray(payload.customers) ? payload.customers : [])
@@ -11117,9 +11258,13 @@
         const stillPending = pending.filter(customer => customer.sync_pending);
         state.customers = [...stillPending, ...remote.filter(customer => !stillPending.some(item => item.id === customer.id))];
         saveCustomers();
-        renderCustomerSuggestions();
       } catch (error) {
         if (requestId === loadCustomers.requestId) console.error(error);
+      } finally {
+        if (requestId === loadCustomers.requestId) {
+          state.customerSearchLoading = false;
+          renderCustomerSuggestions();
+        }
       }
     }
 
@@ -11131,37 +11276,239 @@
       localStorage.setItem(POS_CUSTOMERS_KEY, JSON.stringify(combined.slice(0, 300)));
     }
 
+    function customerSearchName(customer) {
+      return String(customer && (customer.name
+        || [customer.firstName || customer.first_name, customer.lastName || customer.last_name].filter(Boolean).join(' ')) || '').trim();
+    }
+
+    function customerSearchPhone(customer) {
+      return String(customer && (customer.phone || customer.phone_number || customer.alert_number) || '').trim();
+    }
+
+    function normalizeCustomerSearch(value) {
+      return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    }
+
+    function fuzzyCustomerMatches(customers, query) {
+      const rawQuery = String(query || '').trim().toLowerCase();
+      const compactQuery = normalizeCustomerSearch(query);
+      if (rawQuery.length < 2) return [];
+      return (Array.isArray(customers) ? customers : []).filter(customer => {
+        const values = [
+          customerSearchName(customer),
+          customer && customer.email,
+          customerSearchPhone(customer),
+          customer && customer.alert_number,
+          customer && customer.company
+        ].filter(Boolean);
+        return values.some(value => String(value).toLowerCase().includes(rawQuery)
+          || (compactQuery && normalizeCustomerSearch(value).includes(compactQuery)));
+      }).sort((left, right) => {
+        const leftName = customerSearchName(left).toLowerCase();
+        const rightName = customerSearchName(right).toLowerCase();
+        const leftRank = leftName === rawQuery ? 0 : leftName.startsWith(rawQuery) ? 1 : 2;
+        const rightRank = rightName === rawQuery ? 0 : rightName.startsWith(rawQuery) ? 1 : 2;
+        return leftRank - rightRank || leftName.localeCompare(rightName);
+      });
+    }
+
+    function closeCustomerSearchResults() {
+      state.customerSearchActiveIndex = -1;
+      els.customerSearchResults.hidden = true;
+      els.customerInput.setAttribute('aria-expanded', 'false');
+    }
+
     function renderCustomerSuggestions() {
-      if (!els.customerSuggestions) return;
-      els.customerSuggestions.innerHTML = state.customers.map(customer => {
-        const name = [customer.first_name, customer.last_name].filter(Boolean).join(' ');
-        const details = [customer.phone, customer.company].filter(Boolean).join(' - ');
-        return `<option value="${escapeHtml(name)}" label="${escapeHtml(details)}"></option>`;
-      }).join('');
+      const query = els.customerInput.value.trim();
+      if (query.length < 2) {
+        els.customerSearchResults.innerHTML = '';
+        closeCustomerSearchResults();
+        return;
+      }
+
+      if (!state.customers.length) {
+        els.customerSearchResults.innerHTML = `<div class="customer-search-status">${state.customerSearchLoading ? 'Searching customers…' : 'No matching customers found.'}</div>`;
+      } else {
+        els.customerSearchResults.innerHTML = state.customers.map((customer, index) => {
+          const name = customerSearchName(customer) || 'Unnamed customer';
+          const phone = customerSearchPhone(customer);
+          const email = String(customer.email || '').trim();
+          return `
+            <button class="customer-search-option ${index === state.customerSearchActiveIndex ? 'active' : ''}" type="button" role="option" aria-selected="${index === state.customerSearchActiveIndex ? 'true' : 'false'}" data-customer-id="${escapeHtml(String(customer.id || ''))}" data-customer-index="${index}">
+              <span class="customer-search-name">${escapeHtml(name)}</span>
+              ${phone ? `<span class="customer-search-detail">Mob: ${escapeHtml(phone)}</span>` : ''}
+              ${email ? `<span class="customer-search-detail customer-search-email">${escapeHtml(email)}</span>` : ''}
+            </button>
+          `;
+        }).join('');
+      }
+      els.customerSearchResults.hidden = false;
+      els.customerInput.setAttribute('aria-expanded', 'true');
+    }
+
+    function selectCustomerSearchResult(customer) {
+      if (!customer) return;
+      if (!state.customers.some(item => String(item.id || '') === String(customer.id || ''))) {
+        state.customers.unshift(customer);
+      }
+      state.selectedCustomerId = String(customer.id || '');
+      els.customerInput.value = customerSearchName(customer);
+      els.customerInput.closest('.customer-card')?.classList.remove('needs-customer');
+      closeCustomerSearchResults();
     }
 
     function queueCustomerSearch() {
-      if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) return;
       clearTimeout(loadCustomers.searchTimer);
       const query = els.customerInput.value.trim();
+      state.selectedCustomerId = '';
+      state.customerSearchActiveIndex = -1;
+      if (query.length < 2) {
+        loadCustomers.requestId = (loadCustomers.requestId || 0) + 1;
+        state.customers = [];
+        state.customerSearchLoading = false;
+        renderCustomerSuggestions();
+        return;
+      }
+      state.customerSearchLoading = true;
+      state.customers = fuzzyCustomerMatches(readLocalArray(POS_CUSTOMERS_KEY), query).slice(0, 30);
+      renderCustomerSuggestions();
       loadCustomers.searchTimer = setTimeout(() => {
-        loadCustomers(query.length >= 2 ? query : '', {
+        loadCustomers(query, {
           syncPending: false,
-          useCache: query.length < 2
         });
       }, 250);
+    }
+
+    function canonicalCustomerPhone(value) {
+      let digits = String(value || '').replace(/\D/g, '');
+      if (digits.startsWith('001161')) digits = digits.slice(4);
+      if (digits.startsWith('61') && digits.length === 11) digits = `0${digits.slice(2)}`;
+      if (digits.startsWith('4') && digits.length === 9) digits = `0${digits}`;
+      return digits;
+    }
+
+    function customerMatchesPhone(customer, phone) {
+      const target = canonicalCustomerPhone(phone);
+      if (!target) return false;
+      return [customer && customer.phone, customer && customer.phone_number, customer && customer.alert_number]
+        .filter(Boolean)
+        .some(value => canonicalCustomerPhone(value) === target);
+    }
+
+    function resetCustomerDuplicateMatch() {
+      state.customerDuplicateMatch = null;
+      state.customerDuplicateLoading = false;
+      els.customerDuplicateMatch.hidden = true;
+      els.customerDuplicateMatch.innerHTML = '';
+    }
+
+    function renderCustomerDuplicateMatch() {
+      if (state.customerDuplicateLoading) {
+        els.customerDuplicateMatch.hidden = false;
+        els.customerDuplicateMatch.innerHTML = '<div class="customer-search-status">Checking this phone number…</div>';
+        return;
+      }
+      const customer = state.customerDuplicateMatch;
+      if (!customer) {
+        els.customerDuplicateMatch.hidden = true;
+        els.customerDuplicateMatch.innerHTML = '';
+        return;
+      }
+      const name = customerSearchName(customer) || 'Existing customer';
+      const phone = customerSearchPhone(customer);
+      const email = String(customer.email || '').trim();
+      els.customerDuplicateMatch.hidden = false;
+      els.customerDuplicateMatch.innerHTML = `
+        <div class="customer-duplicate-title">This phone number already exists.</div>
+        <div class="customer-duplicate-card">
+          <strong>${escapeHtml(name)}</strong>
+          ${phone ? `<span>Mob: ${escapeHtml(phone)}</span>` : ''}
+          ${email ? `<span>${escapeHtml(email)}</span>` : ''}
+        </div>
+        <button class="customer-duplicate-select" type="button" data-select-duplicate-customer>Select this Customer</button>
+      `;
+    }
+
+    async function lookupExistingCustomerByPhone(phone) {
+      const canonicalPhone = canonicalCustomerPhone(phone);
+      const requestId = (lookupExistingCustomerByPhone.requestId || 0) + 1;
+      lookupExistingCustomerByPhone.requestId = requestId;
+      if (canonicalPhone.length < 8) {
+        resetCustomerDuplicateMatch();
+        return null;
+      }
+
+      state.customerDuplicateLoading = true;
+      renderCustomerDuplicateMatch();
+      const searchDigits = canonicalPhone.slice(-8);
+      let candidates = [
+        ...readLocalArray(POS_CUSTOMERS_KEY),
+        ...(Array.isArray(state.customerSearchFixture) ? state.customerSearchFixture : [])
+      ];
+
+      if (!(typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) && state.selectedStaffName) {
+        try {
+          const payload = await getSharedState('customers', { q: searchDigits, limit: 20 });
+          if (requestId !== lookupExistingCustomerByPhone.requestId) return null;
+          candidates = [...(Array.isArray(payload.customers) ? payload.customers : []), ...candidates];
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      if (requestId !== lookupExistingCustomerByPhone.requestId) return null;
+      const match = candidates.find(customer => customerMatchesPhone(customer, canonicalPhone)) || null;
+      state.customerDuplicateMatch = match;
+      state.customerDuplicateLoading = false;
+      renderCustomerDuplicateMatch();
+      return match;
+    }
+
+    function queueCustomerPhoneLookup() {
+      clearTimeout(lookupExistingCustomerByPhone.searchTimer);
+      lookupExistingCustomerByPhone.requestId = (lookupExistingCustomerByPhone.requestId || 0) + 1;
+      const phone = els.customerPhone.value.trim();
+      if (canonicalCustomerPhone(phone).length < 8) {
+        resetCustomerDuplicateMatch();
+        return;
+      }
+      lookupExistingCustomerByPhone.searchTimer = setTimeout(() => {
+        lookupExistingCustomerByPhone(phone);
+      }, 300);
+    }
+
+    function selectDuplicateCustomer() {
+      const customer = state.customerDuplicateMatch;
+      if (!customer) return;
+      els.customerFirstName.value = customer.first_name || customer.firstName || '';
+      els.customerLastName.value = customer.last_name || customer.lastName || '';
+      els.customerCompany.value = customer.company || '';
+      els.customerPhone.value = customer.phone || customer.phone_number || '';
+      els.customerAlertNumber.value = customer.alert_number || '';
+      els.customerEmail.value = customer.email || '';
+      if (Array.from(els.customerGroup.options).some(option => option.value === customer.group)) {
+        els.customerGroup.value = customer.group;
+      }
+      els.customerNotes.value = customer.notes || '';
+      selectCustomerSearchResult(customer);
+      closeCustomerModal();
+      showToast('Existing customer selected and details completed.');
     }
 
     function openCustomerModal() {
       els.customerForm.reset();
       els.customerGroup.value = 'Regular Customer';
       els.customerError.textContent = '';
+      resetCustomerDuplicateMatch();
       els.customerModal.classList.add('show');
       els.customerModal.setAttribute('aria-hidden', 'false');
       els.customerFirstName.focus();
     }
 
     function closeCustomerModal() {
+      clearTimeout(lookupExistingCustomerByPhone.searchTimer);
+      lookupExistingCustomerByPhone.requestId = (lookupExistingCustomerByPhone.requestId || 0) + 1;
+      resetCustomerDuplicateMatch();
       els.customerModal.classList.remove('show');
       els.customerModal.setAttribute('aria-hidden', 'true');
     }
@@ -11191,6 +11538,13 @@
         els.customerPhone.focus();
         return;
       }
+      if (phone) {
+        const existingCustomer = await lookupExistingCustomerByPhone(phone);
+        if (existingCustomer) {
+          els.customerError.textContent = 'This phone number already belongs to an existing customer. Select that customer instead.';
+          return;
+        }
+      }
 
       const customer = {
         id: 'CUS-' + Date.now(),
@@ -11215,18 +11569,14 @@
         Object.assign(customer, payload.customer, { sync_pending: false });
         state.customers.unshift(customer);
         saveCustomers();
-        renderCustomerSuggestions();
-        els.customerInput.value = [firstName, lastName].filter(Boolean).join(' ');
-        els.customerInput.closest('.customer-card')?.classList.remove('needs-customer');
+        selectCustomerSearchResult(customer);
         closeCustomerModal();
         showToast('Customer saved and shared across all stores.');
       } catch (error) {
         console.error(error);
         state.customers.unshift(customer);
         saveCustomers();
-        renderCustomerSuggestions();
-        els.customerInput.value = [firstName, lastName].filter(Boolean).join(' ');
-        els.customerInput.closest('.customer-card')?.classList.remove('needs-customer');
+        selectCustomerSearchResult(customer);
         closeCustomerModal();
         showToast('Customer saved locally. Database sync is pending.');
       }
@@ -15791,6 +16141,10 @@
     function customerDetailsForOrder(customerName) {
       const target = String(customerName || '').trim().toLowerCase();
       if (!target || target === 'walk-in customer') return null;
+      if (state.selectedCustomerId) {
+        const selected = state.customers.find(customer => String(customer.id || '') === String(state.selectedCustomerId));
+        if (selected && customerSearchName(selected).toLowerCase() === target) return selected;
+      }
       return state.customers.find(customer => {
         const fullName = customer.name
           || [customer.firstName || customer.first_name, customer.lastName || customer.last_name].filter(Boolean).join(' ');
@@ -16952,13 +17306,46 @@
     els.staffLogoutBtn.addEventListener('click', () => {
       window.Techm8StaffAuth.logout({ redirectTo: './index.html' });
     });
-    els.customerAddBtn.addEventListener('click', openCustomerModal);
+    els.customerAddBtn.addEventListener('click', () => {
+      closeCustomerSearchResults();
+      openCustomerModal();
+    });
     els.customerInput.addEventListener('input', () => {
       els.customerInput.closest('.customer-card')?.classList.remove('needs-customer');
       queueCustomerSearch();
     });
     els.customerInput.addEventListener('focus', () => {
-      if (!els.customerInput.value.trim()) queueCustomerSearch();
+      if (els.customerInput.value.trim().length >= 2) renderCustomerSuggestions();
+    });
+    els.customerInput.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closeCustomerSearchResults();
+        return;
+      }
+      if (!['ArrowDown', 'ArrowUp', 'Enter'].includes(event.key) || els.customerSearchResults.hidden) return;
+      if (event.key === 'Enter') {
+        const customer = state.customers[state.customerSearchActiveIndex];
+        if (customer) {
+          event.preventDefault();
+          selectCustomerSearchResult(customer);
+        }
+        return;
+      }
+      event.preventDefault();
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      const count = state.customers.length;
+      if (!count) return;
+      state.customerSearchActiveIndex = (state.customerSearchActiveIndex + direction + count) % count;
+      renderCustomerSuggestions();
+      els.customerSearchResults.querySelector('.customer-search-option.active')?.scrollIntoView({ block: 'nearest' });
+    });
+    els.customerSearchResults.addEventListener('click', event => {
+      const option = event.target.closest('[data-customer-index]');
+      if (!option) return;
+      selectCustomerSearchResult(state.customers[Number(option.dataset.customerIndex)]);
+    });
+    document.addEventListener('pointerdown', event => {
+      if (!event.target.closest('.customer-card')) closeCustomerSearchResults();
     });
     els.newRepairBtn.addEventListener('click', startRepairTicket);
     els.specialRepairBtn.addEventListener('click', openSpecialRepairModal);
@@ -17526,6 +17913,13 @@
     els.customerModal.addEventListener('click', event => {
       if (event.target === els.customerModal) closeCustomerModal();
     });
+    els.customerPhone.addEventListener('input', () => {
+      els.customerError.textContent = '';
+      queueCustomerPhoneLookup();
+    });
+    els.customerDuplicateMatch.addEventListener('click', event => {
+      if (event.target.closest('[data-select-duplicate-customer]')) selectDuplicateCustomer();
+    });
     els.customerForm.addEventListener('submit', event => {
       event.preventDefault();
       addCustomer();
@@ -17576,12 +17970,14 @@
     function initializeLocalDashboardUiTest() {
       state.storeId = 'toowong';
       state.selectedStaffName = 'Bowen';
-      state.customers = [{
-        id: 'CUS-TEST-1',
-        first_name: 'Alex',
-        last_name: 'Customer',
-        phone: '0400 123 456'
-      }];
+      state.customers = [];
+      state.customerSearchFixture = [
+        { id: 'CUS-TEST-1', first_name: 'Alex', last_name: 'Customer', phone: '0400 123 456', email: 'alex.customer@example.com', group: 'Regular Customer' },
+        { id: 'CUS-TEST-2', first_name: 'Sandy', last_name: 'Lai', phone: '+61 434 095 850', email: 'sandy@example.com' },
+        { id: 'CUS-TEST-3', first_name: 'Mandy', last_name: 'Riley', phone: '+61 457 392 888', email: 'mandy@example.com' },
+        { id: 'CUS-TEST-4', first_name: 'Cassy', last_name: 'Taylor', phone: '+61 422 595 360', email: 'cassy@example.com' },
+        { id: 'CUS-TEST-5', first_name: 'Brassall', last_name: 'Techm8', phone: '+61 403 999 366', email: 'techm8.brassall@gmail.com' }
+      ];
       state.todayProgress = {
         ok: true,
         status: 'projected',

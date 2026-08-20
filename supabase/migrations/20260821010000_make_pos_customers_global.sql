@@ -109,6 +109,10 @@ begin
     and store_location.store_code <> 'warehouse';
   if not found then raise exception 'Store not found'; end if;
 
+  if char_length(query_value) < 2 then
+    return jsonb_build_object('ok', true, 'customers', '[]'::jsonb);
+  end if;
+
   select coalesce(jsonb_agg(
     public.pos_customer_payload(customer.customer_row)
     order by customer.search_rank,
