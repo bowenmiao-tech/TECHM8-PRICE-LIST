@@ -773,9 +773,35 @@
         margin-left: 0;
       }
     }
+
+    body.pos-embedded {
+      min-height: 100%;
+      background: #fff;
+    }
+
+    body.pos-embedded #app {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body.pos-embedded .shell {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    body.pos-embedded .hero {
+      padding: 24px;
+    }
+
+    body.pos-embedded .hero-title {
+      font-size: clamp(28px, 3vw, 38px);
+    }
   </style>
 </head>
 <body>
+  <script>if (new URLSearchParams(window.location.search).get('embed') === 'pos') document.body.classList.add('pos-embedded');</script>
   <div id="app" data-auth-protected>
     <div class="shell">
       <div class="hero">

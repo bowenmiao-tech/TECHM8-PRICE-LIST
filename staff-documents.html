@@ -205,9 +205,41 @@
       .document-card { min-height: 270px; }
       .document-title { font-size: 23px; }
     }
+
+    body.pos-embedded {
+      min-height: 100%;
+      background: #fff;
+    }
+
+    body.pos-embedded .page-wrap {
+      min-height: 100%;
+      padding: 0;
+      display: block;
+    }
+
+    body.pos-embedded .shell {
+      max-width: none;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    body.pos-embedded .back-link {
+      display: none;
+    }
+
+    body.pos-embedded .hero {
+      padding: 24px;
+    }
+
+    body.pos-embedded .hero h1 {
+      margin-top: 0;
+      font-size: clamp(28px, 3vw, 38px);
+    }
   </style>
 </head>
 <body>
+  <script>if (new URLSearchParams(window.location.search).get('embed') === 'pos') document.body.classList.add('pos-embedded');</script>
   <div class="page-wrap" data-auth-protected>
     <div class="shell">
       <div class="hero">

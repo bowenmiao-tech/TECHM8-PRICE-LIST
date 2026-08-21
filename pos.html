@@ -5543,12 +5543,161 @@
       grid-template-rows: minmax(0, 1fr);
     }
 
-    .pos-app.transfer-mode {
+    .pos-app.transfer-mode,
+    .pos-app.internal-tool-mode {
       grid-template-columns: 64px minmax(0, 1fr);
     }
 
-    .pos-app.transfer-mode .checkout-panel {
+    .pos-app.transfer-mode .checkout-panel,
+    .pos-app.internal-tool-mode .checkout-panel {
       display: none;
+    }
+
+    .internal-tool-view {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .internal-tool-shell {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--tm-line);
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 18px 46px rgba(13, 25, 32, 0.10);
+    }
+
+    .internal-tool-toolbar {
+      min-width: 0;
+      min-height: 72px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--tm-line);
+      background: #fff;
+    }
+
+    .internal-tool-heading,
+    .internal-tool-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .internal-tool-mark {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--tm-green), #10a383);
+      font-size: 20px;
+      box-shadow: 0 10px 24px rgba(7, 137, 111, 0.20);
+    }
+
+    .internal-tool-copy {
+      min-width: 0;
+    }
+
+    .internal-tool-copy h1 {
+      margin: 0;
+      color: var(--tm-ink);
+      font-size: 19px;
+      line-height: 1.2;
+    }
+
+    .internal-tool-copy p {
+      margin: 4px 0 0;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .internal-tool-action {
+      height: 42px;
+      padding: 0 15px;
+      border: 1px solid var(--tm-line);
+      border-radius: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #294047;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .internal-tool-action.primary {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .internal-tool-frame-wrap {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      background: #f4f7f9;
+    }
+
+    .internal-tool-frame {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: 0;
+      background: #fff;
+    }
+
+    .internal-tool-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      color: var(--tm-muted);
+      background: #f4f7f9;
+      font-size: 14px;
+      font-weight: 800;
+      transition: opacity .18s ease;
+    }
+
+    .internal-tool-loading span {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .internal-tool-frame-wrap.is-loaded .internal-tool-loading {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 720px) {
+      .internal-tool-toolbar {
+        align-items: flex-start;
+      }
+
+      .internal-tool-copy p,
+      .internal-tool-action span {
+        display: none;
+      }
+
+      .internal-tool-action {
+        width: 42px;
+        padding: 0;
+      }
     }
 
     .transfer-page {
@@ -6051,9 +6200,9 @@
         <button id="ordersNavBtn" class="rail-button" type="button" title="Invoices"><i class="bi bi-receipt"></i></button>
       </nav>
       <nav class="rail-shortcuts" aria-label="Staff tools">
-        <a class="rail-button" href="./problem-solving.html" title="Problem Solving"><i class="bi bi-lightbulb"></i></a>
-        <a class="rail-button" href="./daily-report.html" title="Daily Report"><i class="bi bi-clipboard2-data"></i></a>
-        <a class="rail-button" href="./staff-documents.html" title="Staff Documents"><i class="bi bi-folder2-open"></i></a>
+        <button id="problemSolvingToolBtn" class="rail-button" type="button" title="Problem Solving" aria-label="Open Problem Solving inside POS"><i class="bi bi-lightbulb"></i></button>
+        <button id="dailyReportToolBtn" class="rail-button" type="button" title="Daily Report" aria-label="Open Daily Report inside POS"><i class="bi bi-clipboard2-data"></i></button>
+        <button id="staffDocumentsToolBtn" class="rail-button" type="button" title="Staff Documents" aria-label="Open Staff Documents inside POS"><i class="bi bi-folder2-open"></i></button>
       </nav>
       <div class="rail-bottom">
         <button id="endShiftBtn" class="rail-button" type="button" title="End shift"><i class="bi bi-box-arrow-right"></i></button>
@@ -6211,6 +6360,28 @@
             </div>
           </div>
           <div id="invoiceList" class="invoice-list"></div>
+        </div>
+      </section>
+
+      <section id="internalToolView" class="workspace-view internal-tool-view" aria-label="POS staff tool">
+        <div class="internal-tool-shell">
+          <header class="internal-tool-toolbar">
+            <div class="internal-tool-heading">
+              <div class="internal-tool-mark" aria-hidden="true"><i id="internalToolIcon" class="bi bi-lightbulb"></i></div>
+              <div class="internal-tool-copy">
+                <h1 id="internalToolTitle">Staff Tool</h1>
+                <p id="internalToolSubtitle">Displayed securely inside the POS</p>
+              </div>
+            </div>
+            <div class="internal-tool-actions">
+              <button id="internalToolRefreshBtn" class="internal-tool-action" type="button" title="Refresh tool"><i class="bi bi-arrow-clockwise"></i><span>Refresh</span></button>
+              <button id="internalToolBackBtn" class="internal-tool-action primary" type="button"><i class="bi bi-arrow-left"></i><span>Back to POS</span></button>
+            </div>
+          </header>
+          <div id="internalToolFrameWrap" class="internal-tool-frame-wrap">
+            <div class="internal-tool-loading" aria-live="polite"><span><i class="bi bi-arrow-repeat"></i> Loading staff tool…</span></div>
+            <iframe id="internalToolFrame" class="internal-tool-frame" title="POS staff tool" referrerpolicy="same-origin"></iframe>
+          </div>
         </div>
       </section>
 
@@ -7063,6 +7234,8 @@
       },
       lastCompletedOrder: null,
       activeView: 'target',
+      previousPosView: 'target',
+      activeInternalTool: '',
       invoiceSearch: '',
       invoiceDateMode: 'day',
       invoiceDateFrom: brisbaneDateIso(),
@@ -7153,6 +7326,26 @@
     const POS_USED_DEVICES_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-used-devices';
     const POS_STOCK_TRANSFERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-stock-transfers';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
+    const INTERNAL_TOOLS = {
+      'problem-solving': {
+        title: 'Problem Solving',
+        subtitle: 'Repair, setup, and diagnostics guides',
+        icon: 'bi-lightbulb',
+        url: './problem-solving.html?embed=pos'
+      },
+      'daily-report': {
+        title: 'Daily Report',
+        subtitle: 'Complete and submit today\'s store report',
+        icon: 'bi-clipboard2-data',
+        url: './daily-report.html?embed=pos'
+      },
+      'staff-documents': {
+        title: 'Staff Documents',
+        subtitle: 'Internal forms, files, and report examples',
+        icon: 'bi-folder2-open',
+        url: './staff-documents.html?embed=pos'
+      }
+    };
     const els = {
       productGrid: document.getElementById('productGrid'),
       storeSwitchBtn: document.getElementById('storeSwitchBtn'),
@@ -7166,6 +7359,14 @@
       usedDeviceView: document.getElementById('usedDeviceView'),
       transferView: document.getElementById('transferView'),
       ordersView: document.getElementById('ordersView'),
+      internalToolView: document.getElementById('internalToolView'),
+      internalToolFrame: document.getElementById('internalToolFrame'),
+      internalToolFrameWrap: document.getElementById('internalToolFrameWrap'),
+      internalToolIcon: document.getElementById('internalToolIcon'),
+      internalToolTitle: document.getElementById('internalToolTitle'),
+      internalToolSubtitle: document.getElementById('internalToolSubtitle'),
+      internalToolRefreshBtn: document.getElementById('internalToolRefreshBtn'),
+      internalToolBackBtn: document.getElementById('internalToolBackBtn'),
       repairWorkspace: document.getElementById('repairWorkspace'),
       targetNavBtn: document.getElementById('targetNavBtn'),
       productNavBtn: document.getElementById('productNavBtn'),
@@ -7173,6 +7374,9 @@
       usedDeviceNavBtn: document.getElementById('usedDeviceNavBtn'),
       transferNavBtn: document.getElementById('transferNavBtn'),
       ordersNavBtn: document.getElementById('ordersNavBtn'),
+      problemSolvingToolBtn: document.getElementById('problemSolvingToolBtn'),
+      dailyReportToolBtn: document.getElementById('dailyReportToolBtn'),
+      staffDocumentsToolBtn: document.getElementById('staffDocumentsToolBtn'),
       newTransferBtn: document.getElementById('newTransferBtn'),
       transferReloadBtn: document.getElementById('transferReloadBtn'),
       transferSummary: document.getElementById('transferSummary'),
@@ -10951,21 +11155,59 @@
       setActiveView('transfers');
     }
 
+    function openInternalTool(toolKey) {
+      const tool = INTERNAL_TOOLS[toolKey];
+      if (!tool) return;
+      if (state.activeView !== 'internal-tool') {
+        state.previousPosView = state.activeView || 'target';
+      }
+      state.activeInternalTool = toolKey;
+      els.internalToolTitle.textContent = tool.title;
+      els.internalToolSubtitle.textContent = tool.subtitle;
+      els.internalToolIcon.className = `bi ${tool.icon}`;
+      els.internalToolFrame.title = `${tool.title} inside POS`;
+      if (els.internalToolFrame.dataset.tool !== toolKey) {
+        els.internalToolFrameWrap.classList.remove('is-loaded');
+        els.internalToolFrame.dataset.tool = toolKey;
+        els.internalToolFrame.src = tool.url;
+      }
+      setActiveView('internal-tool');
+    }
+
+    function closeInternalTool() {
+      const returnView = state.previousPosView && state.previousPosView !== 'internal-tool'
+        ? state.previousPosView
+        : 'target';
+      setActiveView(returnView);
+    }
+
+    function refreshInternalTool() {
+      if (!state.activeInternalTool || !els.internalToolFrame.src) return;
+      els.internalToolFrameWrap.classList.remove('is-loaded');
+      els.internalToolFrame.src = INTERNAL_TOOLS[state.activeInternalTool].url;
+    }
+
     function setActiveView(view) {
       state.activeView = view;
-      document.querySelector('.pos-app')?.classList.toggle('transfer-mode', view === 'transfers');
+      const posApp = document.querySelector('.pos-app');
+      posApp?.classList.toggle('transfer-mode', view === 'transfers');
+      posApp?.classList.toggle('internal-tool-mode', view === 'internal-tool');
       els.targetView.classList.toggle('active', view === 'target');
       els.productView.classList.toggle('active', view === 'products');
       els.repairView.classList.toggle('active', view === 'repair');
       els.usedDeviceView.classList.toggle('active', view === 'used-devices');
       els.transferView.classList.toggle('active', view === 'transfers');
       els.ordersView.classList.toggle('active', view === 'orders');
+      els.internalToolView.classList.toggle('active', view === 'internal-tool');
       els.targetNavBtn.classList.toggle('active', view === 'target');
       els.productNavBtn.classList.toggle('active', view === 'products');
       els.repairNavBtn.classList.toggle('active', view === 'repair');
       els.usedDeviceNavBtn.classList.toggle('active', view === 'used-devices');
       els.transferNavBtn.classList.toggle('active', view === 'transfers');
       els.ordersNavBtn.classList.toggle('active', view === 'orders');
+      els.problemSolvingToolBtn.classList.toggle('active', view === 'internal-tool' && state.activeInternalTool === 'problem-solving');
+      els.dailyReportToolBtn.classList.toggle('active', view === 'internal-tool' && state.activeInternalTool === 'daily-report');
+      els.staffDocumentsToolBtn.classList.toggle('active', view === 'internal-tool' && state.activeInternalTool === 'staff-documents');
       if (view === 'target') {
         loadTodayProgress();
         loadDashboardAppleMap();
@@ -17051,6 +17293,12 @@
     els.usedDeviceNavBtn.addEventListener('click', () => setActiveView('used-devices'));
     els.transferNavBtn.addEventListener('click', () => setActiveView('transfers'));
     els.ordersNavBtn.addEventListener('click', () => setActiveView('orders'));
+    els.problemSolvingToolBtn.addEventListener('click', () => openInternalTool('problem-solving'));
+    els.dailyReportToolBtn.addEventListener('click', () => openInternalTool('daily-report'));
+    els.staffDocumentsToolBtn.addEventListener('click', () => openInternalTool('staff-documents'));
+    els.internalToolBackBtn.addEventListener('click', closeInternalTool);
+    els.internalToolRefreshBtn.addEventListener('click', refreshInternalTool);
+    els.internalToolFrame.addEventListener('load', () => els.internalToolFrameWrap.classList.add('is-loaded'));
     els.newTransferBtn.addEventListener('click', openNewTransfer);
     els.transferReloadBtn.addEventListener('click', () => loadTransfers());
     els.transferStatusTabs.addEventListener('click', event => {
