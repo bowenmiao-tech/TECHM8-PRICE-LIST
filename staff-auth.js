@@ -16,38 +16,81 @@ window.Techm8StaffAuth = (function () {
       .replace(/'/g, '&#039;');
   }
 
-  function getToken() {
-    return sessionStorage.getItem(activeSessionKey) || '';
+  function expiryKey() {
+    return activeSessionKey + '_expires_at';
   }
 
-  function setToken(token) {
-    if (token) {
-      sessionStorage.setItem(activeSessionKey, token);
+  function profileKey() {
+    return activeSessionKey === DEFAULT_SESSION_KEY
+      ? DEFAULT_PROFILE_KEY
+      : activeSessionKey + '_profile';
+  }
+
+  function sessionStores() {
+    return activeSessionKey === DEFAULT_SESSION_KEY
+      ? [sessionStorage, localStorage]
+      : [sessionStorage];
+  }
+
+  function getToken() {
+    for (const storage of sessionStores()) {
+      const token = storage.getItem(activeSessionKey) || '';
+      if (!token) continue;
+      const expiresAt = storage.getItem(expiryKey()) || '';
+      if (expiresAt && Date.parse(expiresAt) <= Date.now()) {
+        storage.removeItem(activeSessionKey);
+        storage.removeItem(expiryKey());
+        storage.removeItem(profileKey());
+        continue;
+      }
+      if (activeSessionKey === DEFAULT_SESSION_KEY && storage === localStorage) {
+        sessionStorage.setItem(activeSessionKey, token);
+        if (expiresAt) sessionStorage.setItem(expiryKey(), expiresAt);
+      }
+      return token;
     }
+    return '';
+  }
+
+  function setToken(token, expiresAt) {
+    if (!token) return;
+    sessionStores().forEach(storage => {
+      storage.setItem(activeSessionKey, token);
+      if (expiresAt) storage.setItem(expiryKey(), expiresAt);
+      else storage.removeItem(expiryKey());
+    });
   }
 
   function getProfile() {
-    try {
-      return JSON.parse(sessionStorage.getItem(DEFAULT_PROFILE_KEY) || 'null');
-    } catch (error) {
-      return null;
+    for (const storage of sessionStores()) {
+      try {
+        const profile = JSON.parse(storage.getItem(profileKey()) || 'null');
+        if (profile) return profile;
+      } catch (error) {
+        storage.removeItem(profileKey());
+      }
     }
+    return null;
   }
 
   function setProfile(profile) {
     if (!profile) return;
-    sessionStorage.setItem(DEFAULT_PROFILE_KEY, JSON.stringify({
+    const storedProfile = JSON.stringify({
       staff_id: profile.staff_id,
       staff_name: profile.staff_name || '',
       staff_email: profile.staff_email || '',
       job_role: profile.job_role || '',
       must_change_credentials: Boolean(profile.must_change_credentials)
-    }));
+    });
+    sessionStores().forEach(storage => storage.setItem(profileKey(), storedProfile));
   }
 
   function clearToken() {
-    sessionStorage.removeItem(activeSessionKey);
-    sessionStorage.removeItem(DEFAULT_PROFILE_KEY);
+    sessionStores().forEach(storage => {
+      storage.removeItem(activeSessionKey);
+      storage.removeItem(expiryKey());
+      storage.removeItem(profileKey());
+    });
   }
 
   async function callRpc(name, payload) {
@@ -379,7 +422,7 @@ window.Techm8StaffAuth = (function () {
     if (!result || !result.ok || !result.session_token) {
       throw new Error((result && result.message) || 'Incorrect email or password.');
     }
-    setToken(result.session_token);
+    setToken(result.session_token, result.expires_at);
     setProfile(result);
     return result;
   }
@@ -441,7 +484,7 @@ window.Techm8StaffAuth = (function () {
         if (!result || !result.ok || !result.session_token) {
           throw new Error((result && result.message) || 'Incorrect password.');
         }
-        setToken(result.session_token);
+        setToken(result.session_token, result.expires_at);
         setProfile(result);
         resolve(result);
       });

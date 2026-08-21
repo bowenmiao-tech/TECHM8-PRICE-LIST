@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TECHM8 Daily Report</title>
   <script src="./supabase-config.js"></script>
-  <script src="./staff-auth.js?v=20260821"></script>
+  <script src="./staff-auth.js?v=20260821.2"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
   <script src="https://unpkg.com/element-ui/lib/index.js"></script>
@@ -1955,7 +1955,7 @@
             try {
               const result = await window.Techm8StaffAuth.callRpc('get_daily_report_setup', {
                 session_token: window.Techm8StaffAuth.getToken(),
-                target_store_code: storeCode || null
+                target_store_code: storeCode || '__setup_only__'
               });
               this.stores = Array.isArray(result.stores) ? result.stores : [];
               this.staffMembers = Array.isArray(result.staff) ? result.staff : [];

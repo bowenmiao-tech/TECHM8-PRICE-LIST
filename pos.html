@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
-  <script src="./staff-auth.js?v=20260821"></script>
+  <script src="./staff-auth.js?v=20260821.2"></script>
   <script src="./vendor/sortable.min.js"></script>
   <style>
     :root {
@@ -22,6 +22,8 @@
       --tm-red: #d84b3e;
       --tm-yellow: #f3b23c;
       --tm-card: #ffffff;
+      --pos-viewport-height: 100vh;
+      --pos-system-overlap: 0px;
     }
 
     * { box-sizing: border-box; }
@@ -48,7 +50,7 @@
     }
 
     .pos-app {
-      height: 100vh;
+      height: var(--pos-viewport-height, 100vh);
       display: grid;
       grid-template-columns: 64px minmax(0, 1fr) 390px;
       background: var(--tm-soft);
@@ -1841,7 +1843,7 @@
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
       gap: 14px;
-      padding: 22px 18px 18px;
+      padding: 22px 18px max(env(safe-area-inset-bottom), calc(18px + var(--pos-system-overlap, 0px)));
       background: #fff;
       border-left: 1px solid var(--tm-line);
       overflow: hidden;
@@ -4985,7 +4987,7 @@
       body { overflow: hidden; }
 
       .pos-app {
-        height: 100vh;
+        height: var(--pos-viewport-height, 100vh);
         min-height: 0;
         grid-template-columns: 58px minmax(0, 1fr) minmax(320px, 340px);
       }
@@ -5037,7 +5039,7 @@
         min-height: 0;
         border-left: 1px solid var(--tm-line);
         border-top: 0;
-        padding: 18px 14px 14px;
+        padding: 18px 14px max(env(safe-area-inset-bottom), calc(14px + var(--pos-system-overlap, 0px)));
       }
 
       .product-grid {
@@ -7553,6 +7555,21 @@
     let repairPatternPath = [];
     let repairPatternDrawing = false;
 
+    function syncPosViewportSize() {
+      const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const availableTop = Number(window.screen && window.screen.availTop) || 0;
+      const availableBottom = availableTop + (Number(window.screen && window.screen.availHeight) || viewportHeight);
+      const browserChromeHeight = Math.max(0, window.outerHeight - window.innerHeight);
+      const contentBottom = window.screenY + browserChromeHeight + viewportHeight;
+      const systemOverlap = Math.min(96, Math.max(0, Math.ceil(contentBottom - availableBottom)));
+      document.documentElement.style.setProperty('--pos-viewport-height', `${Math.floor(viewportHeight)}px`);
+      document.documentElement.style.setProperty('--pos-system-overlap', `${systemOverlap}px`);
+    }
+
+    syncPosViewportSize();
+    window.addEventListener('resize', syncPosViewportSize);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', syncPosViewportSize);
+
     function money(value) {
       return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value || 0));
     }
@@ -7585,6 +7602,13 @@
 
     function staffIdentityKey(staff) {
       return normalizeStaffKey(staffDisplayName(staff));
+    }
+
+    function signedInStaffName() {
+      const profile = window.Techm8StaffAuth && window.Techm8StaffAuth.getProfile
+        ? window.Techm8StaffAuth.getProfile()
+        : null;
+      return staffDisplayName(profile).trim();
     }
 
     function staffRoleFor(staff) {
@@ -8132,7 +8156,7 @@
         const token = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken ? window.Techm8StaffAuth.getToken() : '';
         const result = await window.Techm8StaffAuth.callRpc('get_daily_report_setup', {
           session_token: token,
-          target_store_code: null
+          target_store_code: '__setup_only__'
         });
         state.staffMembers = Array.isArray(result.staff) ? result.staff : [];
       } catch (error) {
@@ -8149,8 +8173,10 @@
       if (els.posStaffSearch) els.posStaffSearch.value = '';
       els.posStaffPin.value = '';
       const activeShift = readActiveShift();
+      const accountStaff = signedInStaffName();
       const savedStore = (activeShift && activeShift.storeId) || localStorage.getItem(POS_STORE_KEY) || state.storeId || posStores[0].id;
-      const savedStaff = state.selectedStaffName
+      const savedStaff = accountStaff
+        || state.selectedStaffName
         || localStorage.getItem(POS_STAFF_KEY)
         || sessionStorage.getItem(POS_STAFF_KEY)
         || (activeShift && (activeShift.currentStaffName || activeShift.lastStaffName || activeShift.staffName));
@@ -8270,28 +8296,31 @@
         els.posStaffError.textContent = 'Choose a staff member.';
         return false;
       }
-      if (!/^\d{4}$/.test(pin)) {
-        els.posStaffError.textContent = 'Enter the 4-digit staff PIN.';
-        return false;
-      }
-      els.posStaffError.textContent = 'Checking PIN…';
-      let pinVerified = false;
-      try {
-        const token = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
-          ? window.Techm8StaffAuth.getToken()
-          : '';
-        const result = await window.Techm8StaffAuth.callRpc('verify_staff_pin', {
-          session_token: token,
-          target_staff_name: selectedName,
-          input_pin: pin
-        });
-        pinVerified = Boolean(result && result.ok);
-      } catch (error) {
-        console.error(error);
-      }
-      if (!pinVerified) {
-        els.posStaffError.textContent = 'Incorrect PIN. Ask the staff member to use the PIN created at first login.';
-        return false;
+      const isSignedInStaff = staffIdentityKey(selectedName) === staffIdentityKey(signedInStaffName());
+      if (!isSignedInStaff) {
+        if (!/^\d{4}$/.test(pin)) {
+          els.posStaffError.textContent = 'Enter the 4-digit staff PIN.';
+          return false;
+        }
+        els.posStaffError.textContent = 'Checking PIN…';
+        try {
+          const token = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+            ? window.Techm8StaffAuth.getToken()
+            : '';
+          const result = await window.Techm8StaffAuth.callRpc('verify_staff_pin', {
+            session_token: token,
+            target_staff_name: selectedName,
+            input_pin: pin
+          });
+          if (!result || !result.ok) {
+            els.posStaffError.textContent = (result && result.message) || 'Incorrect PIN.';
+            return false;
+          }
+        } catch (error) {
+          console.error(error);
+          els.posStaffError.textContent = error.message || 'PIN could not be checked. Please try again.';
+          return false;
+        }
       }
       els.posStaffError.textContent = '';
       const activeShift = readActiveShift();
@@ -8332,6 +8361,25 @@
     async function ensureStaffStoreAccess() {
       await loadPosStaffSetup();
       if (resumeActiveShift()) return true;
+      const accountStaff = signedInStaffName();
+      const activeShift = readActiveShift();
+      if (accountStaff) {
+        const preferredStoreId = (activeShift && activeShift.storeId)
+          || localStorage.getItem(POS_STORE_KEY)
+          || staffDefaultStoreId(accountStaff)
+          || posStores[0].id;
+        const context = staffContextFor(accountStaff, preferredStoreId, { ignoreSchedule: Boolean(activeShift) });
+        if (context.ok) {
+          if (activeShift && !staffCanSwitchStore(accountStaff)) {
+            context.allowedStoreIds = [activeShift.storeId];
+            context.nextStoreId = activeShift.storeId;
+          } else if (context.allowedStoreIds.includes(preferredStoreId)) {
+            context.nextStoreId = preferredStoreId;
+          }
+          setStaffContext(context, { keepOpeningConfirmed: Boolean(activeShift) });
+          return true;
+        }
+      }
       return new Promise(resolve => {
         staffAccessResolve = resolve;
         openStaffModal({ canCancel: false });
