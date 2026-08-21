@@ -1966,6 +1966,53 @@
       font-weight: 700;
     }
 
+    .cart-price-editor {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      width: fit-content;
+      margin-top: 8px;
+      color: #34474f;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .cart-price-input-wrap {
+      display: inline-flex;
+      align-items: center;
+      min-width: 92px;
+      height: 34px;
+      padding-left: 9px;
+      border: 1px solid #cddcdf;
+      border-radius: 10px;
+      background: #f8fbfb;
+      color: var(--tm-green);
+    }
+
+    .cart-price-input-wrap:focus-within {
+      border-color: var(--tm-green);
+      box-shadow: 0 0 0 3px rgba(0, 137, 111, .12);
+      background: #fff;
+    }
+
+    .cart-price-input {
+      width: 70px;
+      height: 32px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--tm-ink);
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .cart-price-override {
+      margin-top: 5px;
+      color: #a15316;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
     .qty-control {
       display: inline-grid;
       grid-template-columns: 30px 36px 30px;
@@ -6258,7 +6305,7 @@
         <div class="repair-head">
           <div>
             <h1 class="repair-title">Repair Follow-up / Add Ticket</h1>
-            <div class="repair-subtitle">Create a repair ticket, choose Brand - Model - Issue, then complete the device check.</div>
+            <div class="repair-subtitle">Choose Brand - Model - Issue, complete every required device check, then create the ticket.</div>
           </div>
           <div class="repair-actions">
             <button id="newRepairBtn" class="repair-action primary" type="button"><i class="bi bi-plus-circle"></i> New Repair</button>
@@ -6570,7 +6617,7 @@
 
   <div id="ticketDetailsModal" class="modal-backdrop" aria-hidden="true">
     <form id="ticketDetailsForm" class="special-modal" role="dialog" aria-modal="true" aria-labelledby="ticketDetailsTitle">
-      <h2 id="ticketDetailsTitle">Create Repair Ticket</h2>
+      <h2 id="ticketDetailsTitle">Start Repair Check</h2>
       <div class="special-fields">
         <label>
           Need to order parts?
@@ -6597,7 +6644,7 @@
       <div id="ticketDetailsError" class="special-error"></div>
       <div class="special-actions">
         <button id="ticketDetailsCancel" class="soft-action" type="button">Cancel</button>
-        <button class="pay-action" type="submit">Create Ticket</button>
+        <button class="pay-action" type="submit">Continue to Device Check</button>
       </div>
     </form>
   </div>
@@ -11954,7 +12001,10 @@
         testProfile: 'mobile',
         tests: {},
         media: [],
-        addedToCart: false
+        addedToCart: false,
+        customerId: '',
+        customerName: '',
+        customerPhone: ''
       };
     }
 
@@ -12078,7 +12128,7 @@
       state.pendingRepairDraft = null;
     }
 
-    async function createRepairTicketFromDraft() {
+    function beginRepairIntakeFromDraft() {
       const draft = state.pendingRepairDraft;
       if (!draft || !draft.quote) return;
       const currentCustomer = selectedRepairCustomer({ notify: false, focus: false });
@@ -12093,53 +12143,10 @@
       const status = els.ticketNeedOrder.value === 'yes' ? 'need_to_order' : 'repairing';
       const deviceInStore = els.ticketDeviceInStore.value === 'yes';
       const motherboardRepair = els.ticketMotherboardRepair.value === 'yes';
-      const ticketId = 'RPR-' + Date.now();
       const quote = draft.quote;
-      const createdAt = new Date().toISOString();
-      const initialStatusLabel = repairStatusText(status);
-      const currentStore = storeById(state.storeId);
-      const ticket = {
-        id: ticketId,
-        store_id: currentStore.id,
-        storeId: currentStore.id,
-        store_code: currentStore.code,
-        storeCode: currentStore.code,
-        store_name: currentStore.name,
-        title: draft.specialOrder ? draft.specialName : `${quote.brand} ${quote.model}`,
-        issue: quote.issue,
-        price: quotePriceLabel(quote.price),
-        status,
-        deviceInStore,
-        motherboardRepair,
-        specialOrder: Boolean(draft.specialOrder),
-        customerName,
-        customerPhone,
-        customerContact: customerPhone,
-        createdBy: currentStaffName(),
-        createdAt,
-        statusUpdatedAt: createdAt,
-        activity: [{
-          id: 'ACT-' + createdAt,
-          type: 'created',
-          text: `created this repair ticket in ${initialStatusLabel} at ${currentStore.code}`,
-          staffName: currentStaffName(),
-          at: createdAt
-        }],
-        comments: [],
-        intake: {
-          quote: { ...quote },
-          quotedPrice: quotePriceLabel(quote.price),
-          testProfile: 'mobile',
-          tests: {},
-          media: []
-        }
-      };
-
-      state.repairTickets.unshift(ticket);
       resetRepairState();
       state.repair.started = true;
       state.repair.intakeOpen = true;
-      state.repair.ticketId = ticketId;
       state.repair.status = status;
       state.repair.deviceInStore = deviceInStore;
       state.repair.motherboardRepair = motherboardRepair;
@@ -12151,14 +12158,84 @@
       state.repair.model = quote.model || '';
       state.repair.issue = quote.issue || '';
       state.repair.quotedPrice = quotePriceLabel(quote.price);
+      state.repair.customerId = draft.customer.id || '';
+      state.repair.customerName = customerName;
+      state.repair.customerPhone = customerPhone;
       els.customerInput.value = customerName;
-      const syncedTicket = syncCurrentRepairTicketSnapshot({ persist: false }) || ticket;
-      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
-      await persistRepairTicket(syncedTicket);
       closeTicketDetailsModal();
       setActiveView('repair');
       renderRepairWorkspace();
-      showToast(status === 'need_to_order' ? 'Ticket created in Need to order.' : 'Ticket created in Repairing.');
+      showToast('Repair check opened as a draft. It is not a ticket until all required details are complete.');
+    }
+
+    async function createRepairTicketAfterIntake() {
+      if (!state.repair.intakeOpen || state.repair.ticketId) return;
+      if (!validateRepairIntake()) {
+        showToast('Complete every required repair detail before creating the ticket.');
+        return;
+      }
+
+      const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
+      if (price <= 0 || price > 1000000) {
+        showToast('Enter a valid repair price before creating the ticket.');
+        const priceInput = els.repairWorkspace.querySelector('#repairQuotedPrice');
+        if (priceInput) priceInput.focus();
+        return;
+      }
+
+      const currentCustomer = selectedRepairCustomer({ notify: false, focus: false });
+      if (!currentCustomer
+        || currentCustomer.name.toLowerCase() !== String(state.repair.customerName || '').toLowerCase()
+        || currentCustomer.phone.replace(/\D/g, '') !== String(state.repair.customerPhone || '').replace(/\D/g, '')) {
+        showToast('The selected customer changed. Clear this draft and start again with the correct customer.');
+        return;
+      }
+
+      const ticketId = 'RPR-' + Date.now();
+      const quote = state.repair.quote || {};
+      const createdAt = new Date().toISOString();
+      const currentStore = storeById(state.storeId);
+      const ticket = {
+        id: ticketId,
+        store_id: currentStore.id,
+        storeId: currentStore.id,
+        store_code: currentStore.code,
+        storeCode: currentStore.code,
+        store_name: currentStore.name,
+        title: state.repair.specialOrder ? state.repair.specialName : `${quote.brand || ''} ${quote.model || ''}`.trim(),
+        issue: quote.issue || state.repair.issue,
+        price: money(price),
+        status: state.repair.status,
+        deviceInStore: state.repair.deviceInStore,
+        motherboardRepair: state.repair.motherboardRepair,
+        specialOrder: Boolean(state.repair.specialOrder),
+        customerName: state.repair.customerName,
+        customerPhone: state.repair.customerPhone,
+        customerContact: state.repair.customerPhone,
+        createdBy: currentStaffName(),
+        createdAt,
+        statusUpdatedAt: createdAt,
+        activity: [{
+          id: 'ACT-' + createdAt,
+          type: 'created',
+          text: `created this completed repair ticket in ${repairStatusText(state.repair.status)} at ${currentStore.code}`,
+          staffName: currentStaffName(),
+          at: createdAt
+        }],
+        comments: [],
+        intake: {}
+      };
+
+      state.repair.ticketId = ticketId;
+      state.repair.quotedPrice = money(price);
+      state.repairTickets.unshift(ticket);
+      const completedTicket = syncCurrentRepairTicketSnapshot({ persist: false }) || ticket;
+      localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
+      const saved = await persistRepairTicket(completedTicket);
+      renderRepairWorkspace();
+      showToast(saved
+        ? `Ticket ${ticketId} created after the device check was completed.`
+        : `Ticket ${ticketId} is complete and saved locally; database sync is pending.`);
     }
 
     function clearRepairTicket() {
@@ -12272,10 +12349,10 @@
           <div class="repair-details-header">
             <div>
               <h2 class="repair-panel-title">Repair Details</h2>
-              <p class="repair-panel-text">Selected repair for this ticket.</p>
+              <p class="repair-panel-text">${state.repair.ticketId ? 'Saved repair ticket.' : 'Unsaved draft — refreshing or leaving clears it.'}</p>
             </div>
             <div class="ticket-tags">
-              <span class="ticket-tag">${escapeHtml(repairStatusLabel(state.repair.status))}</span>
+              <span class="ticket-tag">${state.repair.ticketId ? escapeHtml(repairStatusLabel(state.repair.status)) : 'Draft · not created'}</span>
               ${state.repair.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
               ${state.repair.deviceInStore ? '<span class="ticket-tag">Device in store</span>' : '<span class="ticket-tag warn">Device not in store</span>'}
               ${state.repair.motherboardRepair ? '<span class="ticket-tag danger">Mainboard</span>' : ''}
@@ -12582,7 +12659,7 @@
           <div class="repair-stack">
             <div class="repair-panel">
               <h2 class="repair-panel-title">Repair Board</h2>
-              <p class="repair-panel-text">Tickets are grouped by status. New Repair and Special Order create a ticket and open the inspection form.</p>
+              <p class="repair-panel-text">Tickets are grouped by status. New Repair and Special Order open an unsaved inspection draft; a ticket is created only after every required field is complete.</p>
               ${repairBoardHtml()}
             </div>
           </div>
@@ -12755,11 +12832,17 @@
         <div class="repair-panel repair-cart-panel">
           <div>
             <div class="repair-cart-title">${escapeHtml(currentRepairCartName())}</div>
-            <div class="repair-cart-meta">Ticket ${escapeHtml(state.repair.ticketId)} · ${cartPrice > 0 ? money(cartPrice) : 'No valid price'}</div>
+            <div class="repair-cart-meta">${state.repair.ticketId ? `Ticket ${escapeHtml(state.repair.ticketId)}` : 'Unsaved draft'} · ${cartPrice > 0 ? money(cartPrice) : 'No valid price'}</div>
           </div>
-          <button id="addRepairToCartBtn" class="repair-action primary" type="button" ${state.repair.addedToCart || cartPrice <= 0 ? 'disabled' : ''}>
-            ${state.repair.addedToCart ? 'Added to Cart' : 'Add to Cart'}
-          </button>
+          ${state.repair.ticketId ? `
+            <button id="addRepairToCartBtn" class="repair-action primary" type="button" ${state.repair.addedToCart || cartPrice <= 0 ? 'disabled' : ''}>
+              ${state.repair.addedToCart ? 'Added to Cart' : 'Add to Cart'}
+            </button>
+          ` : `
+            <button id="createRepairTicketBtn" class="repair-action primary" type="button" ${cartPrice > 0 ? '' : 'disabled'}>
+              Create Ticket
+            </button>
+          `}
         </div>
       `;
     }
@@ -14758,6 +14841,78 @@
       showToast('Used device added to checkout.');
     }
 
+    function cartOriginalUnitPrice(item) {
+      const original = Number(item && item.original_unit_price);
+      return Number.isFinite(original) && original >= 0
+        ? roundedMoneyValue(original)
+        : roundedMoneyValue(item && item.sale_price);
+    }
+
+    function posOrderLineFromCartItem(item) {
+      return {
+        product_id: item.id,
+        sku: item.sku,
+        name: isCtfyProduct(item)
+          ? `CTFY · ${String(item.variant_name || item.name || '').trim()}`
+          : item.name,
+        category: item.category || '',
+        is_repair: Boolean(item.is_repair),
+        is_special: Boolean(item.is_special),
+        is_used_device: Boolean(item.is_used_device),
+        used_device_id: item.used_device_id || '',
+        buyer_name: item.buyer_name || '',
+        buyer_phone: item.buyer_phone || '',
+        buyer_address: item.buyer_address || '',
+        ticket_id: item.ticket_id || '',
+        qty: item.qty,
+        unit_price: item.sale_price,
+        original_unit_price: cartOriginalUnitPrice(item),
+        price_overridden: Boolean(item.price_overridden),
+        price_override_by: item.price_overridden ? (item.price_override_by || state.selectedStaffName) : '',
+        price_override_at: item.price_overridden ? (item.price_override_at || new Date().toISOString()) : '',
+        line_total: roundedMoneyValue(item.sale_price * item.qty)
+      };
+    }
+
+    function updateCartItemPrice(productId, rawValue) {
+      const item = state.cart.find(cartItem => String(cartItem.id) === String(productId));
+      if (!item) return false;
+      const nextPrice = Number(rawValue);
+      if (!Number.isFinite(nextPrice) || nextPrice < 0 || nextPrice > 1000000) {
+        showToast('Enter a valid unit price between $0.00 and $1,000,000.00.');
+        renderCart();
+        return false;
+      }
+
+      const originalPrice = cartOriginalUnitPrice(item);
+      const roundedPrice = roundedMoneyValue(nextPrice);
+      item.original_unit_price = originalPrice;
+      item.sale_price = roundedPrice;
+      if (Math.abs(roundedPrice - originalPrice) < 0.005) {
+        item.price_overridden = false;
+        delete item.price_override_by;
+        delete item.price_override_at;
+      } else {
+        item.price_overridden = true;
+        item.price_override_by = currentStaffName();
+        item.price_override_at = new Date().toISOString();
+      }
+      renderCart();
+      showToast(item.price_overridden
+        ? `Unit price changed from ${money(originalPrice)} to ${money(roundedPrice)}.`
+        : `Unit price restored to ${money(originalPrice)}.`);
+      return true;
+    }
+
+    function cartPriceOverrideText(item) {
+      if (!item.price_overridden) return '';
+      const originalPrice = cartOriginalUnitPrice(item);
+      const difference = roundedMoneyValue(originalPrice - Number(item.sale_price || 0));
+      if (difference > 0) return `Original ${money(originalPrice)} · Discount ${money(difference)}`;
+      if (difference < 0) return `Original ${money(originalPrice)} · Increased ${money(Math.abs(difference))}`;
+      return '';
+    }
+
     function renderCart() {
       if (!state.cart.length) {
         els.cartArea.innerHTML = `
@@ -14772,29 +14927,40 @@
       } else {
         els.cartArea.innerHTML = `
           <div class="cart-list">
-            ${state.cart.map(item => `
-              <div class="cart-item">
-                <div>
-                  <h3 class="cart-name">${escapeHtml(item.name)}</h3>
-                  <div class="cart-small">${escapeHtml(item.sku || 'No SKU')} · ${money(item.sale_price)} each</div>
-                  ${item.is_used_device || item.is_repair ? `
-                    <div class="qty-control"><span>1 unique item</span></div>
-                  ` : `
-                    <div class="qty-control">
-                      <button type="button" data-qty="${item.id}" data-dir="-1">-</button>
-                      <span>${item.qty}</span>
-                      <button type="button" data-qty="${item.id}" data-dir="1">+</button>
-                    </div>
-                  `}
+            ${state.cart.map(item => {
+              const overrideText = cartPriceOverrideText(item);
+              return `
+                <div class="cart-item">
+                  <div>
+                    <h3 class="cart-name">${escapeHtml(item.name)}</h3>
+                    <div class="cart-small">${escapeHtml(item.sku || 'No SKU')}</div>
+                    <label class="cart-price-editor">
+                      <span>Unit price</span>
+                      <span class="cart-price-input-wrap">
+                        <span>$</span>
+                        <input class="cart-price-input" type="number" min="0" max="1000000" step="0.01" value="${roundedMoneyValue(item.sale_price).toFixed(2)}" data-cart-price="${escapeHtml(item.id)}" aria-label="Unit price for ${escapeHtml(item.name)}">
+                      </span>
+                    </label>
+                    ${overrideText ? `<div class="cart-price-override">${escapeHtml(overrideText)}</div>` : ''}
+                    ${item.is_used_device || item.is_repair ? `
+                      <div class="qty-control"><span>1 unique item</span></div>
+                    ` : `
+                      <div class="qty-control">
+                        <button type="button" data-qty="${escapeHtml(item.id)}" data-dir="-1">-</button>
+                        <span>${item.qty}</span>
+                        <button type="button" data-qty="${escapeHtml(item.id)}" data-dir="1">+</button>
+                      </div>
+                    `}
+                  </div>
+                  <div class="cart-side">
+                    <div class="cart-line-total">${money(item.sale_price * item.qty)}</div>
+                    <button class="icon-action" type="button" data-remove="${escapeHtml(item.id)}" title="Remove item">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
                 </div>
-                <div class="cart-side">
-                  <div class="cart-line-total">${money(item.sale_price * item.qty)}</div>
-                  <button class="icon-action" type="button" data-remove="${item.id}" title="Remove item">
-                    <i class="bi bi-x-lg"></i>
-                  </button>
-                </div>
-              </div>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
         `;
       }
@@ -16952,25 +17118,7 @@
         payment_method: paymentSummary,
         payments: normalizedPayments,
         total,
-        items: state.cart.map(item => ({
-          product_id: item.id,
-          sku: item.sku,
-          name: isCtfyProduct(item)
-            ? `CTFY · ${String(item.variant_name || item.name || '').trim()}`
-            : item.name,
-          category: item.category || '',
-          is_repair: Boolean(item.is_repair),
-          is_special: Boolean(item.is_special),
-          is_used_device: Boolean(item.is_used_device),
-          used_device_id: item.used_device_id || '',
-          buyer_name: item.buyer_name || '',
-          buyer_phone: item.buyer_phone || '',
-          buyer_address: item.buyer_address || '',
-          ticket_id: item.ticket_id || '',
-          qty: item.qty,
-          unit_price: item.sale_price,
-          line_total: roundedMoneyValue(item.sale_price * item.qty)
-        })),
+        items: state.cart.map(posOrderLineFromCartItem),
         created_at: new Date().toISOString(),
         sync_pending: true
       };
@@ -17702,6 +17850,7 @@
       const cameraButton = event.target.closest('#repairCameraBtn');
       const videoButton = event.target.closest('#repairVideoBtn');
       const patternButton = event.target.closest('#repairOpenPatternBtn');
+      const createTicketButton = event.target.closest('#createRepairTicketBtn');
       const addRepairButton = event.target.closest('#addRepairToCartBtn');
       const repairChip = event.target.closest('.repair-chip');
       const testOption = event.target.closest('.test-option');
@@ -17717,6 +17866,7 @@
         return;
       }
       if (confirmButton) confirmRepairSelection();
+      if (createTicketButton) createRepairTicketAfterIntake();
       if (addRepairButton) addCurrentRepairToCart();
       if (cameraButton) {
         const input = els.repairWorkspace.querySelector('#repairPhotoInput');
@@ -17807,6 +17957,19 @@
       const removeButton = event.target.closest('[data-remove]');
       if (qtyButton) changeQty(qtyButton.dataset.qty, qtyButton.dataset.dir);
       if (removeButton) removeFromCart(removeButton.dataset.remove);
+    });
+
+    els.cartArea.addEventListener('change', event => {
+      const priceInput = event.target.closest('[data-cart-price]');
+      if (priceInput) updateCartItemPrice(priceInput.dataset.cartPrice, priceInput.value);
+    });
+
+    els.cartArea.addEventListener('keydown', event => {
+      const priceInput = event.target.closest('[data-cart-price]');
+      if (priceInput && event.key === 'Enter') {
+        event.preventDefault();
+        priceInput.blur();
+      }
     });
 
     els.searchInput.addEventListener('input', event => {
@@ -18042,7 +18205,7 @@
     });
     els.ticketDetailsForm.addEventListener('submit', event => {
       event.preventDefault();
-      createRepairTicketFromDraft();
+      beginRepairIntakeFromDraft();
     });
     els.ticketDetailClose.addEventListener('click', closeTicketDetailModal);
     els.ticketDetailModal.addEventListener('click', event => {
