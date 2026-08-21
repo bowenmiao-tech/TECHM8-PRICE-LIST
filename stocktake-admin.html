@@ -246,7 +246,7 @@
         return;
       }
       els.staffList.innerHTML = staffRows.map(row => {
-        const meta = [row.job_role ? String(row.job_role).replace(/_/g, ' ') : '', row.default_store_name || 'No default store'].filter(Boolean).join(' · ');
+        const meta = [row.job_role || 'staff', row.email || '', row.default_store_name || 'No default store'].filter(Boolean).join(' · ');
         return `
           <div class="staff-row" data-staff-row="${Number(row.staff_id)}">
             <div class="staff-avatar"><i class="bi bi-person-badge"></i></div>

@@ -7744,13 +7744,7 @@
       Bowen: 'male'
     };
 
-    const POS_STAFF_ROLES = {
-      Anna: 'manager',
-      Bonnie: 'manager',
-      Fiona: 'manager',
-      'Joanna Chen': 'manager',
-      Bowen: 'admin'
-    };
+    const POS_ADMIN_EMAIL = 'techm8contact@gmail.com';
 
     const POS_INACTIVE_STAFF_NAMES = new Set(['henry ang', 'janaphy', 'steven t']);
 
@@ -7815,16 +7809,25 @@
       return staffDisplayName(profile).trim();
     }
 
+    function signedInStaffEmail() {
+      const profile = window.Techm8StaffAuth && window.Techm8StaffAuth.getProfile
+        ? window.Techm8StaffAuth.getProfile()
+        : null;
+      return normalizeStaffKey(profile && (profile.staff_email || profile.email || profile.login_email));
+    }
+
     function staffRoleFor(staff) {
       const record = typeof staff === 'object'
         ? staff
         : state.staffMembers.find(item => staffIdentityKey(item) === staffIdentityKey(staff));
-      const explicitRole = String(record && (record.job_role || record.role || record.employee_role) || '').trim().toLowerCase();
-      if (explicitRole === 'admin') return 'admin';
-      if (explicitRole.includes('manager')) return 'manager';
-      const matchedName = Object.keys(POS_STAFF_ROLES)
-        .find(name => staffIdentityKey(name) === staffIdentityKey(staff));
-      return matchedName ? POS_STAFF_ROLES[matchedName] : 'staff';
+      const signedInEmail = signedInStaffEmail();
+      const signedInName = staffIdentityKey(signedInStaffName());
+      const targetName = staffIdentityKey(staff);
+      if (signedInEmail) {
+        return signedInEmail === POS_ADMIN_EMAIL && targetName === signedInName ? 'admin' : 'staff';
+      }
+      const recordEmail = normalizeStaffKey(record && (record.staff_email || record.email || record.login_email));
+      return recordEmail === POS_ADMIN_EMAIL ? 'admin' : 'staff';
     }
 
     function staffDefaultStoreId(staff) {
@@ -7836,7 +7839,7 @@
     }
 
     function staffCanSwitchStore(staff) {
-      return ['manager', 'admin'].includes(staffRoleFor(staff));
+      return staffRoleFor(staff) === 'admin';
     }
 
     function currentStaffCanSwitchStore() {
@@ -8281,7 +8284,7 @@
         && !options.bypassRoleCheck
         && !currentStaffCanSwitchStore()
       ) {
-        showToast('Only manager or admin can switch store after a shift has started.');
+        showToast('Only the admin account can switch store after a shift has started.');
         renderStoreSelectOptions();
         updateStoreBadge();
         return false;
@@ -8342,7 +8345,7 @@
       }
       const activeShift = readActiveShift();
       if (activeShift && !currentStaffCanSwitchStore()) {
-        showToast('Only manager or admin can switch store after a shift has started.');
+        showToast('Only the admin account can switch store after a shift has started.');
         return;
       }
       renderStoreSwitchModal();
@@ -12965,7 +12968,6 @@
         || INTERNAL_PRODUCTS_ENDPOINT;
       const url = new URL(endpoint, window.location.href);
       url.searchParams.set('mode', 'stocktake-context');
-      url.searchParams.set('staff_name', state.selectedStaffName);
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), 12000);
       try {
@@ -13108,7 +13110,6 @@
           method: 'PUT',
           headers: posProductRequestHeaders(),
           body: JSON.stringify({
-            staff_name: state.selectedStaffName,
             store_slug: state.storeId,
             product_id: Number(product.id),
             pos_category_id: posCategoryId,
@@ -13281,7 +13282,6 @@
 
       const url = new URL(arrangementEndpoint(), window.location.href);
       url.searchParams.set('mode', 'arrangement-context');
-      url.searchParams.set('staff_name', state.selectedStaffName);
       try {
         const response = await fetch(url.toString(), {
           method: 'GET',
@@ -13429,7 +13429,6 @@
             headers: arrangementRequestHeaders(),
             body: JSON.stringify({
               mode: 'arrangement',
-              staff_name: state.selectedStaffName,
               scope: request.scope,
               rows: request.rows
             })
@@ -15657,7 +15656,11 @@
         const arrangementTestStaff = catalogTestParams.get('catalog-arrangement-staff') || 'Bowen';
         const arrangementTestAuthorized = staffIdentityKey(arrangementTestStaff) === 'bowen';
         state.selectedStaffName = arrangementTestStaff;
-        state.staffMembers = [{ display_name: arrangementTestStaff, job_role: arrangementTestAuthorized ? 'admin' : 'staff' }];
+        state.staffMembers = [{
+          display_name: arrangementTestStaff,
+          email: arrangementTestAuthorized ? POS_ADMIN_EMAIL : 'staff@example.com',
+          job_role: arrangementTestAuthorized ? 'admin' : 'staff'
+        }];
         state.arrangementAccessEnabled = arrangementTestAuthorized;
         state.arrangementCategories = POS_PRODUCT_CATEGORIES.flatMap((category, categoryIndex) => (
           category.subcategories.map((subcategory, subcategoryIndex) => ({

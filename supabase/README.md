@@ -24,17 +24,18 @@ GET https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products?page=1&li
 Stocktake calls use the same endpoint and staff-session headers:
 
 ```text
-GET https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products?mode=stocktake-context&staff_name=Andy
+GET https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products?mode=stocktake-context
 PUT https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products
 ```
 
-The context call returns the staff permission and the fixed POS category taxonomy. The `PUT` body contains `staff_name`, `store_slug`, `product_id`, `pos_category_id`, and an integer `quantity`.
+The context call returns the authenticated account's permission and the fixed POS category taxonomy. The `PUT` body contains `store_slug`, `product_id`, `pos_category_id`, and an integer `quantity`; staff identity is always derived from `x-staff-session`.
 
 Required stocktake migrations:
 
 ```text
 # Staff/POS project abkjbhmifswfexpjkval
 supabase/migrations/20260812111500_add_pos_stocktake_permissions.sql
+supabase/migrations/20260821093757_simplify_staff_roles_and_bind_stocktake_access.sql
 
 # Product project fwlronvmgqzkleofriis
 supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql
@@ -42,7 +43,7 @@ supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql
 
 Security and data rules:
 - All staff permissions begin disabled and are controlled through admin-session RPCs.
-- `pos-products` verifies both the shared staff session and the selected staff member's current permission on every save.
+- `pos-products` verifies the authenticated staff account's current permission on every save; caller-provided staff names cannot change which account's permission is used.
 - The product-project RPC updates the fixed POS category and one exact product/store inventory row in one transaction.
 - Grouped variants share the POS category at product-group level; inventory always remains per variant SKU and per store.
 - `products.stock_quantity` is recalculated as the sum of all store inventory rows after each save.

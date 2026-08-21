@@ -59,19 +59,17 @@ async function callStaffRpc(
   return (result as JsonRecord | null) || {};
 }
 
-async function verifyStaffSession(sessionToken: string, request: Request): Promise<boolean> {
-  const result = await callStaffRpc("verify_staff_session", { session_token: sessionToken }, request);
-  return Boolean(result.ok);
+async function verifyStaffSession(sessionToken: string, request: Request): Promise<JsonRecord> {
+  return await callStaffRpc("verify_staff_session", { session_token: sessionToken }, request);
 }
 
 async function getStocktakeAccess(
   sessionToken: string,
-  staffName: string,
   request: Request,
 ): Promise<JsonRecord> {
   return await callStaffRpc("get_staff_stocktake_access", {
     session_token: sessionToken,
-    target_staff_name: staffName,
+    target_staff_name: "",
   }, request);
 }
 
@@ -89,17 +87,21 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: false, message: "Staff session is required." }, 401);
   }
 
-  let isStaff = false;
+  let staffProfile: JsonRecord = {};
   try {
-    isStaff = await verifyStaffSession(sessionToken, request);
+    staffProfile = await verifyStaffSession(sessionToken, request);
   } catch (error) {
     console.error(error);
     return jsonResponse({ ok: false, message: "Unable to verify staff session." }, 500);
   }
 
-  if (!isStaff) {
+  if (!staffProfile.ok) {
     return jsonResponse({ ok: false, message: "Invalid or expired staff session." }, 401);
   }
+
+  const signedInEmail = String(staffProfile.staff_email || "").trim().toLowerCase();
+  const signedInRole = String(staffProfile.job_role || "staff").trim().toLowerCase();
+  const isAdmin = signedInEmail === "techm8contact@gmail.com" && signedInRole === "admin";
 
   const inputUrl = new URL(request.url);
   const mode = inputUrl.searchParams.get("mode") || "products";
@@ -110,8 +112,7 @@ Deno.serve(async (request) => {
     : {};
 
   if (mode === "arrangement-context" && request.method === "GET") {
-    const staffName = (inputUrl.searchParams.get("staff_name") || "").trim();
-    if (staffName.toLowerCase() !== "bowen") {
+    if (!isAdmin) {
       return jsonResponse({ ok: false, enabled: false, code: "ARRANGEMENT_FORBIDDEN", message: "POS arrangement is available to Bowen only." }, 403);
     }
 
@@ -132,7 +133,8 @@ Deno.serve(async (request) => {
       return jsonResponse({
         ok: true,
         enabled: true,
-        staff_name: "Bowen",
+        staff_name: String(staffProfile.staff_name || "Bowen"),
+        staff_email: signedInEmail,
         categories: data || [],
       });
     } catch (error) {
@@ -142,8 +144,7 @@ Deno.serve(async (request) => {
   }
 
   if (request.method === "PUT" && String(requestBody.mode || "") === "arrangement") {
-    const staffName = String(requestBody.staff_name || "").trim();
-    if (staffName.toLowerCase() !== "bowen") {
+    if (!isAdmin) {
       return jsonResponse({ ok: false, code: "ARRANGEMENT_FORBIDDEN", message: "POS arrangement is available to Bowen only." }, 403);
     }
 
@@ -162,7 +163,7 @@ Deno.serve(async (request) => {
       const { data, error } = await supabaseAdmin.rpc("apply_pos_catalog_arrangement", {
         target_scope: scope,
         target_rows: rows,
-        target_staff_name: "Bowen",
+        target_staff_name: String(staffProfile.staff_name || "Bowen"),
       });
       if (error) throw error;
       return jsonResponse((data as JsonRecord) || { ok: true, scope, changed: rows.length });
@@ -173,18 +174,19 @@ Deno.serve(async (request) => {
   }
 
   if (mode === "stocktake-context" && request.method === "GET") {
-    const staffName = (inputUrl.searchParams.get("staff_name") || "").trim();
-    if (!staffName) {
-      return jsonResponse({ ok: false, message: "Staff name is required." }, 400);
-    }
-
     try {
-      const access = await getStocktakeAccess(sessionToken, staffName, request);
+      const access = await getStocktakeAccess(sessionToken, request);
       if (!access.ok) {
         return jsonResponse({ ok: false, enabled: false, message: String(access.message || "Staff not found.") }, 404);
       }
       if (!access.enabled) {
-        return jsonResponse({ ok: true, enabled: false, staff_name: access.display_name || staffName, categories: [] });
+        return jsonResponse({
+          ok: true,
+          enabled: false,
+          staff_name: access.display_name || staffProfile.staff_name || "Staff",
+          staff_email: access.staff_email || signedInEmail,
+          categories: [],
+        });
       }
       if (!supabaseUrl || !serviceRoleKey) {
         return jsonResponse({ ok: false, message: "Product database is not configured." }, 500);
@@ -203,7 +205,8 @@ Deno.serve(async (request) => {
         ok: true,
         enabled: true,
         staff_id: access.staff_id,
-        staff_name: access.display_name || staffName,
+        staff_name: access.display_name || staffProfile.staff_name || "Staff",
+        staff_email: access.staff_email || signedInEmail,
         categories: data || [],
       });
     } catch (error) {
@@ -214,20 +217,19 @@ Deno.serve(async (request) => {
 
   if (request.method === "PUT") {
     const body = requestBody;
-    const staffName = String(body.staff_name || "").trim();
     const productId = Number(body.product_id);
     const posCategoryId = Number(body.pos_category_id);
     const quantity = Number(body.quantity);
     const storeSlug = String(body.store_slug || "").trim();
 
-    if (!staffName || !storeSlug || !Number.isInteger(productId) || productId < 1
+    if (!storeSlug || !Number.isInteger(productId) || productId < 1
       || !Number.isInteger(posCategoryId) || posCategoryId < 1
       || !Number.isInteger(quantity) || quantity < 0 || quantity > 1000000) {
-      return jsonResponse({ ok: false, message: "Valid staff, product, category, store, and quantity are required." }, 400);
+      return jsonResponse({ ok: false, message: "Valid product, category, store, and quantity are required." }, 400);
     }
 
     try {
-      const access = await getStocktakeAccess(sessionToken, staffName, request);
+      const access = await getStocktakeAccess(sessionToken, request);
       if (!access.ok || !access.enabled) {
         return jsonResponse({ ok: false, code: "STOCKTAKE_ACCESS_DISABLED", message: "Stocktake access is not enabled for this staff member." }, 403);
       }
@@ -241,7 +243,7 @@ Deno.serve(async (request) => {
         target_store_slug: storeSlug,
         target_pos_category_id: posCategoryId,
         target_quantity: quantity,
-        target_staff_name: String(access.display_name || staffName),
+        target_staff_name: String(access.display_name || staffProfile.staff_name || "Staff"),
       });
 
       if (error) throw error;

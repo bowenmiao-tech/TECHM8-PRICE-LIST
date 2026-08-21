@@ -77,7 +77,7 @@ Completed product-sale flow:
 - Bowen can open `Arrange POS` directly to drag and save the display order of main categories, second-level categories, and products. No second login is required; the control is hidden from all other staff and every save is rechecked by the backend.
 - POS display order is shared across stores. Store inventory remains independent and is never changed by arranging the catalogue.
 - An authorized stocktake mode allows staff to correct the fixed POS main/subcategory and the selected store's quantity without adding the product to cart.
-- Stocktake access is disabled by default and is enabled or disabled per active staff member from `stocktake-admin.html`.
+- Stocktake access is disabled by default and is enabled or disabled per active staff login account from `stocktake-admin.html`; the permission follows the authenticated email/session rather than a name selected in the POS.
 - The Edge Function rechecks access on every save. Turning access off blocks further saves even if the POS page is still open.
 - Store quantity changes write only to `product_store_inventory` for the currently selected store. The product's online total stock is then recalculated from all store inventory rows.
 - Stocktake saves are atomic and append an audit row containing staff, store, product, previous/new category, and previous/new quantity.
@@ -296,6 +296,7 @@ Required POS migrations, in order:
 16. `20260820152151_configure_bowen_staff_login.sql`
 17. `20260820153840_require_customer_search_query.sql`
 18. `20260821010000_make_pos_customers_global.sql`
+19. `20260821093757_simplify_staff_roles_and_bind_stocktake_access.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
@@ -386,7 +387,7 @@ Staff currently seeded in `staff_directory`:
 - Jinny
 - Joanna Chen
 
-RepairDesk staff details synchronized into `staff_directory` include email, RepairDesk user ID, role, and default store. Henry Ang, JANAPHY, and Steven T remain available in historical records but are inactive and are not shown in new staff selectors.
+RepairDesk staff details synchronized into `staff_directory` include email, RepairDesk user ID, role, and default store. POS authorization deliberately has only two roles: `techm8contact@gmail.com` (Bowen) is `admin`, and every other account is forced to `staff`. Henry Ang, JANAPHY, and Steven T remain available in historical records but are inactive and are not shown in new staff selectors.
 
 ## Daily Report Admin Rules
 
