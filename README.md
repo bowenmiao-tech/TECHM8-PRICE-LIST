@@ -207,6 +207,8 @@ Completed multi-terminal state:
 - Held carts are shared within the selected store and cached locally until database sync succeeds.
 - One open store shift is shared by all terminals at that store.
 - Opening cash entered on one terminal is visible to the others.
+- The first staff member using a store each Brisbane business day must explicitly Start Shift and confirm opening cash. Refreshes and device restarts resume that same database shift without asking again.
+- Close Shift ends the shared store shift. Any shift left open from a prior business date is automatically system-closed at the previous day boundary, so it can never carry into the next morning.
 - All new sales use the shared shift ID, and end-shift reconciliation reloads payment/refund totals from the database before closing.
 - Closing a shift is database-authoritative; the local shift is not cleared when database closing fails.
 
@@ -297,6 +299,7 @@ Required POS migrations, in order:
 17. `20260820153840_require_customer_search_query.sql`
 18. `20260821010000_make_pos_customers_global.sql`
 19. `20260821093757_simplify_staff_roles_and_bind_stocktake_access.sql`
+20. `20260823145405_expire_stale_pos_store_shifts.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
