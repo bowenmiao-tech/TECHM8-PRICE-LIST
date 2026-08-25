@@ -303,6 +303,7 @@ Required POS migrations, in order:
 21. `20260825095329_fix_google_review_event_code_ambiguity.sql`
 22. `20260825163946_clear_test_pos_receipts_and_repair_tickets.sql`
 23. `20260825163948_enforce_numeric_repair_prices.sql`
+24. `20260825165639_prevent_deleted_test_transactions_from_resync.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
