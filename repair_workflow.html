@@ -512,7 +512,8 @@
                   </div>
                   <div class="col-md-6">
                     <div class="field-label">Quoted Price</div>
-                    <input id="quotedPrice" type="text" class="form-control" placeholder="$219">
+                    <input id="quotedPrice" type="number" inputmode="decimal" min="0.01" max="1000000" step="0.01" class="form-control" placeholder="219.00">
+                    <div id="priceError" class="error-text">Enter one exact numeric amount. Price ranges are not allowed.</div>
                   </div>
                   <div class="col-md-6">
                     <div class="field-label">Repair Issue</div>
@@ -789,6 +790,19 @@
         .replace(/'/g, '&#39;');
     }
 
+    function repairPriceNumber(value) {
+      const raw = String(value || '').trim();
+      const match = raw.match(/^\$?([0-9]+(?:\.[0-9]{1,2})?)$/);
+      if (!match) return null;
+      const amount = Number(match[1]);
+      return Number.isFinite(amount) && amount > 0 && amount <= 1000000 ? amount : null;
+    }
+
+    function repairPriceInputValue(value) {
+      const amount = repairPriceNumber(value);
+      return amount == null ? '' : amount.toFixed(2);
+    }
+
     function readQuoteDataFromQuery() {
       const params = new URLSearchParams(window.location.search);
       quoteData = {
@@ -805,7 +819,7 @@
     function updateQuoteFields() {
       document.getElementById('deviceType').value = quoteData.deviceType || defaultQuoteData.deviceType;
       document.getElementById('deviceModel').value = quoteData.model || '';
-      document.getElementById('quotedPrice').value = quoteData.price || '';
+      document.getElementById('quotedPrice').value = repairPriceInputValue(quoteData.price);
       document.getElementById('quoteIssue').value = quoteData.issue || '';
       document.getElementById('estimatedTime').value = quoteData.time || '';
 
@@ -968,10 +982,10 @@
     }
 
     function clearValidation() {
-      ['customerName', 'customerPhone', 'customerEmail', 'cannotTestReason', 'deviceIdImeiInput', 'deviceIdSnInput', 'deviceIdNoneReason'].forEach(id => {
+      ['customerName', 'customerPhone', 'customerEmail', 'quotedPrice', 'cannotTestReason', 'deviceIdImeiInput', 'deviceIdSnInput', 'deviceIdNoneReason'].forEach(id => {
         document.getElementById(id).classList.remove('error-field');
       });
-      ['nameError', 'contactError', 'cannotTestReasonError', 'deviceIdImeiError', 'deviceIdSnError', 'deviceIdNoneError', 'functionTestError'].forEach(id => {
+      ['nameError', 'contactError', 'priceError', 'cannotTestReasonError', 'deviceIdImeiError', 'deviceIdSnError', 'deviceIdNoneError', 'functionTestError'].forEach(id => {
         document.getElementById(id).style.display = 'none';
       });
     }
@@ -991,6 +1005,12 @@
         document.getElementById('customerPhone').classList.add('error-field');
         document.getElementById('customerEmail').classList.add('error-field');
         document.getElementById('contactError').style.display = 'block';
+      }
+
+      if (repairPriceNumber(document.getElementById('quotedPrice').value) == null) {
+        valid = false;
+        document.getElementById('quotedPrice').classList.add('error-field');
+        document.getElementById('priceError').style.display = 'block';
       }
 
       if (currentTestable === 'no' && !document.getElementById('cannotTestReason').value.trim()) {
@@ -1042,7 +1062,7 @@
         passwordNoneReason: document.getElementById('passwordNoneReason').value.trim(),
         deviceType: document.getElementById('deviceType').value,
         deviceModel: document.getElementById('deviceModel').value.trim(),
-        quotedPrice: document.getElementById('quotedPrice').value.trim(),
+        quotedPrice: repairPriceInputValue(document.getElementById('quotedPrice').value),
         quoteIssue: document.getElementById('quoteIssue').value.trim(),
         estimatedTime: document.getElementById('estimatedTime').value.trim(),
         deviceIdImei: document.getElementById('deviceIdImeiInput').value.trim(),
@@ -1077,7 +1097,7 @@
       document.getElementById('passwordNoneReason').value = data.passwordNoneReason || '';
       document.getElementById('deviceType').value = data.deviceType || quoteData.deviceType || defaultQuoteData.deviceType;
       document.getElementById('deviceModel').value = data.deviceModel || '';
-      document.getElementById('quotedPrice').value = data.quotedPrice || '';
+      document.getElementById('quotedPrice').value = repairPriceInputValue(data.quotedPrice);
       document.getElementById('quoteIssue').value = data.quoteIssue || '';
       document.getElementById('estimatedTime').value = data.estimatedTime || '';
       document.getElementById('deviceIdImeiInput').value = data.deviceIdImei || '';

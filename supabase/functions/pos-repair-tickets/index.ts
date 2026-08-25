@@ -6,6 +6,15 @@ const corsHeaders = {
 
 type JsonRecord = Record<string, unknown>;
 
+function normalizedRepairPrice(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  const match = raw.match(/^\$?([0-9]+(?:\.[0-9]{1,2})?)$/);
+  if (!match) return null;
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000) return null;
+  return `$${amount.toFixed(2)}`;
+}
+
 function jsonResponse(body: JsonRecord, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -92,9 +101,17 @@ Deno.serve(async (request) => {
       if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
         return jsonResponse({ ok: false, message: "Ticket payload must be an object." }, 400);
       }
+      const ticketPayload = payload as JsonRecord;
+      const repairPrice = normalizedRepairPrice(ticketPayload.price);
+      if (!repairPrice) {
+        return jsonResponse({
+          ok: false,
+          message: "Repair price must be one numeric amount, not a range.",
+        }, 400);
+      }
       return await rpcJson(request, "upsert_pos_repair_ticket", {
         session_token: sessionToken,
-        payload,
+        payload: { ...ticketPayload, price: repairPrice },
       });
     }
 

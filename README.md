@@ -301,6 +301,8 @@ Required POS migrations, in order:
 19. `20260821093757_simplify_staff_roles_and_bind_stocktake_access.sql`
 20. `20260823145405_expire_stale_pos_store_shifts.sql`
 21. `20260825095329_fix_google_review_event_code_ambiguity.sql`
+22. `20260825163946_clear_test_pos_receipts_and_repair_tickets.sql`
+23. `20260825163948_enforce_numeric_repair_prices.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`

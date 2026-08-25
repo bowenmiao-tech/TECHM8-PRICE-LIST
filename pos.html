@@ -4011,6 +4011,13 @@
       background: #fff7f6;
     }
 
+    .repair-price-hint {
+      color: #9a4b13;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
     .pattern-modal {
       width: min(820px, calc(100vw - 28px));
       padding: 24px;
@@ -4992,8 +4999,39 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      padding: 14px 16px;
+      padding: 13px 18px;
       border-bottom: 1px solid var(--tm-line);
+      background: #fbfdfe;
+    }
+
+    .ticket-detail-ref {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: #41565f;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .ticket-detail-ref i {
+      color: var(--tm-green);
+      font-size: 15px;
+    }
+
+    .ticket-detail-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: none;
+    }
+
+    .ticket-detail-head-actions .repair-select {
+      width: min(300px, 42vw);
+      height: 44px;
+      min-height: 44px;
     }
 
     .ticket-detail-body {
@@ -5017,37 +5055,101 @@
 
     .ticket-detail-title {
       margin: 0;
-      font-size: 26px;
-      line-height: 1.25;
+      font-size: 22px;
+      line-height: 1.22;
+      font-weight: 950;
+      overflow-wrap: anywhere;
+    }
+
+    .ticket-detail-subtitle {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 10px;
+      margin-top: 7px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .ticket-detail-subtitle .price {
+      color: var(--tm-green-dark);
       font-weight: 950;
     }
 
     .ticket-detail-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
-      margin: 14px 0 18px;
+      margin: 16px 0 14px;
     }
 
     .ticket-detail-box {
-      padding: 12px;
+      display: grid;
+      align-content: start;
+      gap: 5px;
+      padding: 11px 12px;
       border: 1px solid var(--tm-line);
       border-radius: 12px;
       background: #f8fafb;
     }
 
+    .ticket-detail-box.is-editable {
+      border-color: #cddee2;
+      background: #fff;
+    }
+
+    .ticket-detail-box .repair-input {
+      min-height: 42px;
+    }
+
     .ticket-detail-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
       color: var(--tm-muted);
       font-size: 11px;
       font-weight: 900;
+      letter-spacing: .03em;
       text-transform: uppercase;
     }
 
+    .ticket-detail-label i {
+      font-size: 12px;
+    }
+
     .ticket-detail-value {
-      margin-top: 5px;
       font-size: 14px;
       font-weight: 900;
+      line-height: 1.35;
       overflow-wrap: anywhere;
+    }
+
+    .ticket-detail-locked-note {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 14px;
+      padding: 10px 13px;
+      border: 1px solid #e4ecef;
+      border-radius: 12px;
+      color: #4f626b;
+      background: #f4f8f9;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .ticket-detail-locked-note i {
+      color: var(--tm-orange);
+      font-size: 15px;
+    }
+
+    .ticket-detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
     }
 
     .ticket-detail-sections {
@@ -5065,6 +5167,24 @@
       background: #fff;
     }
 
+    .ticket-side-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .ticket-side-count {
+      padding: 2px 8px;
+      border-radius: 999px;
+      color: var(--tm-green-dark);
+      background: #e4f5ef;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
     .ticket-comment-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -5074,14 +5194,19 @@
 
     .ticket-activity-list {
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .ticket-activity-item {
       display: grid;
-      grid-template-columns: 34px minmax(0, 1fr);
+      grid-template-columns: 28px minmax(0, 1fr);
       gap: 10px;
       align-items: start;
+    }
+
+    .ticket-activity-item.is-comment {
+      grid-template-columns: 34px minmax(0, 1fr);
+      margin: 2px 0;
     }
 
     .ticket-activity-avatar {
@@ -5094,20 +5219,138 @@
       color: #fff;
       font-size: 12px;
       font-weight: 950;
+      box-shadow: 0 4px 10px rgba(7, 137, 111, .22);
+    }
+
+    .ticket-activity-dot {
+      width: 28px;
+      height: 28px;
+      margin-top: 2px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #7c8f97;
+      background: #eef3f5;
+      border: 1px solid #e2eaed;
+      font-size: 12px;
+    }
+
+    .ticket-comment-card {
+      display: grid;
+      gap: 6px;
+      padding: 11px 13px;
+      border: 1px solid #cbe6dd;
+      border-left: 4px solid var(--tm-green);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 6px 16px rgba(16, 30, 38, .07);
+    }
+
+    .ticket-comment-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 4px 10px;
+    }
+
+    .ticket-comment-author {
+      color: var(--tm-green-dark);
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .ticket-comment-body {
+      margin: 0;
+      color: var(--tm-ink);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     .ticket-activity-card {
       display: grid;
-      gap: 4px;
-      color: #31434c;
-      font-size: 13px;
+      gap: 2px;
+      padding-top: 4px;
+      color: #6b7c84;
+      font-size: 12.5px;
       line-height: 1.45;
     }
 
+    .ticket-activity-card strong {
+      color: #47585f;
+      font-weight: 900;
+    }
+
     .ticket-activity-meta {
+      color: #97a6ac;
+      font-size: 11.5px;
+      font-weight: 800;
+    }
+
+    .ticket-comment-card .ticket-activity-meta {
       color: var(--tm-muted);
       font-size: 12px;
+    }
+
+    .ticket-activity-empty {
+      padding: 16px;
+      border: 1px dashed var(--tm-line);
+      border-radius: 12px;
+      color: var(--tm-muted);
+      background: #fff;
+      font-size: 13px;
       font-weight: 800;
+      text-align: center;
+    }
+
+    .ticket-detail-content h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .ticket-detail-content p {
+      margin: 0 0 7px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .ticket-detail-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 1180px) {
+      .ticket-detail-body {
+        grid-template-columns: minmax(0, 1.3fr) minmax(280px, .95fr);
+      }
+
+      .ticket-detail-head {
+        padding: 10px 14px;
+      }
+
+      .ticket-detail-head-actions .repair-select {
+        height: 40px;
+        min-height: 40px;
+      }
+
+      .ticket-detail-main,
+      .ticket-detail-side {
+        padding: 14px;
+      }
+
+      .ticket-detail-title {
+        font-size: 19px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .ticket-detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     .toast {
@@ -7020,8 +7263,11 @@
   <div id="ticketDetailModal" class="modal-backdrop" aria-hidden="true">
     <div class="special-modal ticket-detail-modal" role="dialog" aria-modal="true" aria-labelledby="ticketDetailTitle">
       <div class="ticket-detail-head">
-        <select id="ticketDetailStatus" class="repair-select" style="width:min(360px,100%);"></select>
-        <button id="ticketDetailClose" class="repair-action" type="button"><i class="bi bi-x-lg"></i></button>
+        <div id="ticketDetailRef" class="ticket-detail-ref"></div>
+        <div class="ticket-detail-head-actions">
+          <select id="ticketDetailStatus" class="repair-select"></select>
+          <button id="ticketDetailClose" class="repair-action" type="button" aria-label="Close ticket"><i class="bi bi-x-lg"></i></button>
+        </div>
       </div>
       <div class="ticket-detail-body">
         <div id="ticketDetailMain" class="ticket-detail-main"></div>
@@ -7934,6 +8180,7 @@
       ticketDetailModal: document.getElementById('ticketDetailModal'),
       ticketDetailMain: document.getElementById('ticketDetailMain'),
       ticketDetailSide: document.getElementById('ticketDetailSide'),
+      ticketDetailRef: document.getElementById('ticketDetailRef'),
       ticketDetailStatus: document.getElementById('ticketDetailStatus'),
       ticketDetailClose: document.getElementById('ticketDetailClose'),
       refundModal: document.getElementById('refundModal'),
@@ -10505,9 +10752,16 @@
     }
 
     function priceNumber(value) {
-      const cleaned = String(value || '').replace(/[^0-9.-]/g, '');
-      const parsed = Number(cleaned);
-      return Number.isFinite(parsed) ? parsed : 0;
+      const raw = String(value || '').trim();
+      const match = raw.match(/^\$?([0-9]+(?:\.[0-9]{1,2})?)$/);
+      if (!match) return 0;
+      const parsed = Number(match[1]);
+      return Number.isFinite(parsed) && parsed > 0 && parsed <= 1000000 ? parsed : 0;
+    }
+
+    function repairPriceInputValue(value) {
+      const parsed = priceNumber(value);
+      return parsed > 0 ? parsed.toFixed(2) : '';
     }
 
     function currentRepairCartName() {
@@ -12836,6 +13090,7 @@
         ? (state.repair.specialName || quote.model || quote.issue || 'Special repair')
         : [quote.brand, quote.model].filter(Boolean).join(' ');
       const quoteLabel = state.repair.quotedPrice || quotePriceLabel(quote.price || state.repair.specialPrice);
+      const priceInputValue = repairPriceInputValue(quoteLabel);
       const deviceIdType = normalizedRepairDeviceIdType();
       return `
         <div class="repair-summary">
@@ -12853,7 +13108,10 @@
           </div>
           <div class="repair-summary-item">
             <div class="repair-summary-label">Quote</div>
-            <input class="repair-input" id="repairQuotedPrice" type="text" placeholder="$219" value="${escapeHtml(quoteLabel)}">
+            <input class="repair-input" id="repairQuotedPrice" type="number" inputmode="decimal" min="0.01" max="1000000" step="0.01" placeholder="Enter one exact amount" value="${escapeHtml(priceInputValue)}">
+            <div class="repair-price-hint">${priceInputValue
+              ? 'Numbers only. The final agreed amount will be saved.'
+              : 'The price list contains a range or no price. Enter one exact agreed amount.'}</div>
           </div>
         </div>
         <div class="repair-fields">
@@ -13059,17 +13317,50 @@
       `;
     }
 
+    const TICKET_ACTIVITY_ICONS = {
+      created: 'bi-plus-circle',
+      status: 'bi-arrow-left-right',
+      cart: 'bi-cart-plus',
+      customer: 'bi-person-gear'
+    };
+
+    function isTicketComment(item) {
+      return item && (item.type === 'comment' || /^commented:\s*/i.test(String(item.text || '')));
+    }
+
+    function ticketCommentBody(item) {
+      return String(item && item.text || '').replace(/^commented:\s*/i, '').trim();
+    }
+
     function ticketActivityHtml(ticket) {
       const activity = Array.isArray(ticket.activity) ? ticket.activity : [];
-      return activity.map(item => `
-        <div class="ticket-activity-item">
-          <div class="ticket-activity-avatar">${escapeHtml(staffInitials(item.staffName))}</div>
-          <div class="ticket-activity-card">
-            <div><strong>${escapeHtml(item.staffName || 'Unknown staff')}</strong> ${escapeHtml(item.text || '')}</div>
-            <div class="ticket-activity-meta">${escapeHtml(formatDateTime(item.at))}</div>
+      if (!activity.length) return '<div class="ticket-activity-empty">No comments or activity yet.</div>';
+      return activity.map(item => {
+        const staffName = item.staffName || 'Unknown staff';
+        if (isTicketComment(item)) {
+          return `
+            <article class="ticket-activity-item is-comment">
+              <div class="ticket-activity-avatar">${escapeHtml(staffInitials(staffName))}</div>
+              <div class="ticket-comment-card">
+                <div class="ticket-comment-head">
+                  <span class="ticket-comment-author">${escapeHtml(staffName)}</span>
+                  <span class="ticket-activity-meta">${escapeHtml(formatDateTime(item.at))}</span>
+                </div>
+                <p class="ticket-comment-body">${escapeHtml(ticketCommentBody(item) || 'Empty comment')}</p>
+              </div>
+            </article>
+          `;
+        }
+        return `
+          <div class="ticket-activity-item is-event">
+            <span class="ticket-activity-dot" aria-hidden="true"><i class="bi ${TICKET_ACTIVITY_ICONS[item.type] || 'bi-clock-history'}"></i></span>
+            <div class="ticket-activity-card">
+              <div><strong>${escapeHtml(staffName)}</strong> ${escapeHtml(item.text || '')}</div>
+              <div class="ticket-activity-meta">${escapeHtml(formatDateTime(item.at))}</div>
+            </div>
           </div>
-        </div>
-      `).join('') || '<div class="ticket-meta">No activity recorded.</div>';
+        `;
+      }).join('');
     }
 
     function renderTicketDetailModal() {
@@ -13078,30 +13369,41 @@
       const intake = ticket.intake || {};
       els.ticketDetailStatus.innerHTML = repairBoardColumns.map(column => `<option value="${column.id}" ${ticket.status === column.id ? 'selected' : ''}>${escapeHtml(column.label)}</option>`).join('');
       els.ticketDetailStatus.disabled = ticket.paymentStatus !== 'unpaid';
+      const inCart = state.cart.some(item => item.ticket_id === ticket.id);
+      state.selectedTicketInCart = inCart;
+      const customerLocked = ticket.paymentStatus !== 'unpaid' || inCart;
+      const priceLabel = ticket.price || intake.quotedPrice || '';
+      const storeLabel = ticket.store_name || storeById(state.storeId).name;
+      if (els.ticketDetailRef) {
+        els.ticketDetailRef.innerHTML = `<i class="bi bi-receipt-cutoff"></i><span>${escapeHtml(ticket.id)}</span>`;
+      }
       els.ticketDetailMain.innerHTML = `
-        <h2 id="ticketDetailTitle" class="ticket-detail-title">${escapeHtml(ticket.id)} ${escapeHtml(ticket.customerName || 'Walk-in Customer')} ${escapeHtml(ticket.title || '')} ${escapeHtml(ticket.issue || '')}</h2>
+        <h2 id="ticketDetailTitle" class="ticket-detail-title">${escapeHtml(ticket.title || 'Repair ticket')}</h2>
+        <div class="ticket-detail-subtitle">
+          <span>${escapeHtml(ticket.issue || 'Repair')}</span>
+          ${priceLabel ? `<span>·</span><span class="price">${escapeHtml(priceLabel)}</span>` : ''}
+          <span>·</span><span>${escapeHtml(storeLabel)}</span>
+        </div>
         <div class="ticket-detail-grid">
-          ${ticket.paymentStatus === 'unpaid' ? `
-            <label class="ticket-detail-box"><div class="ticket-detail-label">Customer *</div><input id="ticketDetailCustomerName" class="repair-input" value="${escapeHtml(ticket.customerName === 'Walk-in Customer' ? '' : ticket.customerName || '')}"></label>
-            <label class="ticket-detail-box"><div class="ticket-detail-label">Phone *</div><input id="ticketDetailCustomerPhone" class="repair-input" type="tel" value="${escapeHtml(ticket.customerPhone || '')}"></label>
+          ${customerLocked ? `
+            <div class="ticket-detail-box"><div class="ticket-detail-label">Customer${inCart ? ' <i class="bi bi-lock-fill"></i>' : ''}</div><div class="ticket-detail-value">${escapeHtml(ticket.customerName || 'Walk-in Customer')}</div></div>
+            <div class="ticket-detail-box"><div class="ticket-detail-label">Phone${inCart ? ' <i class="bi bi-lock-fill"></i>' : ''}</div><div class="ticket-detail-value">${escapeHtml(ticket.customerPhone || 'Missing')}</div></div>
           ` : `
-            <div class="ticket-detail-box"><div class="ticket-detail-label">Customer</div><div class="ticket-detail-value">${escapeHtml(ticket.customerName || 'Walk-in Customer')}</div></div>
-            <div class="ticket-detail-box"><div class="ticket-detail-label">Phone</div><div class="ticket-detail-value">${escapeHtml(ticket.customerPhone || 'Missing')}</div></div>
+            <label class="ticket-detail-box is-editable"><div class="ticket-detail-label">Customer *</div><input id="ticketDetailCustomerName" class="repair-input" value="${escapeHtml(ticket.customerName === 'Walk-in Customer' ? '' : ticket.customerName || '')}"></label>
+            <label class="ticket-detail-box is-editable"><div class="ticket-detail-label">Phone *</div><input id="ticketDetailCustomerPhone" class="repair-input" type="tel" value="${escapeHtml(ticket.customerPhone || '')}"></label>
           `}
-          <div class="ticket-detail-box"><div class="ticket-detail-label">Store</div><div class="ticket-detail-value">${escapeHtml(ticket.store_name || storeById(state.storeId).name)}</div></div>
+          <div class="ticket-detail-box"><div class="ticket-detail-label">Store</div><div class="ticket-detail-value">${escapeHtml(storeLabel)}</div></div>
           <div class="ticket-detail-box"><div class="ticket-detail-label">Device</div><div class="ticket-detail-value">${escapeHtml(ticket.title || '')}</div></div>
           <div class="ticket-detail-box"><div class="ticket-detail-label">Issue</div><div class="ticket-detail-value">${escapeHtml(ticket.issue || '')}</div></div>
-          <div class="ticket-detail-box"><div class="ticket-detail-label">Price</div><div class="ticket-detail-value">${escapeHtml(ticket.price || intake.quotedPrice || '')}</div></div>
-          ${ticket.paymentStatus === 'unpaid' ? `
-            <label class="ticket-detail-box"><div class="ticket-detail-label">Outcome</div><select id="ticketDetailResolution" class="repair-select">
-              <option value="" ${!ticket.resolution ? 'selected' : ''}>In progress</option>
-              <option value="repaired" ${ticket.resolution === 'repaired' ? 'selected' : ''}>Repaired</option>
-              <option value="cancelled" ${ticket.resolution === 'cancelled' ? 'selected' : ''}>Cancelled - waiting pickup</option>
-              <option value="returned_unrepaired" ${ticket.resolution === 'returned_unrepaired' ? 'selected' : ''}>Returned unrepaired - waiting pickup</option>
-            </select></label>
-          ` : ''}
+          <div class="ticket-detail-box"><div class="ticket-detail-label">Price</div><div class="ticket-detail-value">${escapeHtml(priceLabel)}</div></div>
         </div>
-        ${ticket.paymentStatus === 'unpaid' ? '<button id="ticketCustomerSave" class="repair-action primary" type="button"><i class="bi bi-floppy"></i> Save ticket details</button>' : ''}
+        ${inCart && ticket.paymentStatus === 'unpaid' ? `
+          <div class="ticket-detail-locked-note">
+            <i class="bi bi-lock-fill"></i>
+            <span>This ticket is in the cart, so the customer name and phone are locked to the invoice. Remove it from the cart first if they need to change.</span>
+          </div>
+        ` : ''}
+        ${customerLocked ? '' : '<div class="ticket-detail-actions"><button id="ticketCustomerSave" class="repair-action primary" type="button"><i class="bi bi-floppy"></i> Save ticket details</button></div>'}
         <div class="ticket-detail-sections">
           ${[
             ['password', 'Password'],
@@ -13112,20 +13414,28 @@
         </div>
         <div class="ticket-detail-content">${ticketDetailSectionHtml(ticket)}</div>
       `;
+      const commentCount = (Array.isArray(ticket.activity) ? ticket.activity : []).filter(isTicketComment).length;
       els.ticketDetailSide.innerHTML = ticket.paymentStatus !== 'unpaid' ? `
-        <h3 style="margin:0 0 12px;">Invoice #${escapeHtml(ticket.invoiceNumber || '')}</h3>
+        <h3 class="ticket-side-title">Invoice #${escapeHtml(ticket.invoiceNumber || '')}</h3>
         <div class="repair-stack">
           <button class="repair-action primary" type="button" data-ticket-view-invoice="${escapeHtml(ticket.invoiceOrderId || '')}"><i class="bi bi-receipt"></i> View Invoice</button>
           <button class="repair-action" type="button" data-ticket-refund-invoice="${escapeHtml(ticket.invoiceOrderId || '')}"><i class="bi bi-arrow-counterclockwise"></i> Refund</button>
         </div>
       ` : `
-        <h3 style="margin:0 0 12px;">Comments and activity</h3>
+        <h3 class="ticket-side-title">Comments and activity${commentCount ? `<span class="ticket-side-count">${commentCount} comment${commentCount === 1 ? '' : 's'}</span>` : ''}</h3>
         <div class="ticket-comment-row">
           <input id="ticketCommentInput" class="repair-input" placeholder="Add a comment...">
           <button id="ticketCommentAdd" class="repair-action primary" type="button">Add</button>
         </div>
         <div class="ticket-activity-list">${ticketActivityHtml(ticket)}</div>
       `;
+    }
+
+    function refreshTicketDetailCartLock() {
+      if (!state.selectedTicketId || !els.ticketDetailModal || !els.ticketDetailModal.classList.contains('show')) return;
+      const inCart = state.cart.some(item => item.ticket_id === state.selectedTicketId);
+      if (inCart === state.selectedTicketInCart) return;
+      renderTicketDetailModal();
     }
 
     function openTicketDetailModal(ticketId) {
@@ -13147,9 +13457,13 @@
     async function saveTicketCustomerDetails() {
       const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
       if (!ticket || ticket.paymentStatus !== 'unpaid') return;
+      if (state.cart.some(item => item.ticket_id === ticket.id)) {
+        showToast('This ticket is in the cart. Remove it from the cart before changing the customer.');
+        renderTicketDetailModal();
+        return;
+      }
       const nameInput = els.ticketDetailMain.querySelector('#ticketDetailCustomerName');
       const phoneInput = els.ticketDetailMain.querySelector('#ticketDetailCustomerPhone');
-      const resolutionInput = els.ticketDetailMain.querySelector('#ticketDetailResolution');
       const customerName = nameInput ? nameInput.value.trim() : '';
       const customerPhone = phoneInput ? phoneInput.value.trim() : '';
       if (!customerName || customerName.toLowerCase() === 'walk-in customer') {
@@ -13165,18 +13479,8 @@
       ticket.customerName = customerName;
       ticket.customerPhone = customerPhone;
       ticket.customerContact = customerPhone;
-      const previousStatus = ticket.status;
-      ticket.resolution = resolutionInput ? resolutionInput.value : (ticket.resolution || '');
-      if (ticket.resolution === 'cancelled' || ticket.resolution === 'returned_unrepaired') {
-        ticket.status = 'waiting_pickup';
-        ticket.statusUpdatedAt = new Date().toISOString();
-        ticket.readyForPickupAt = ticket.readyForPickupAt || ticket.statusUpdatedAt;
-      }
       ticket.updatedBy = currentStaffName();
-      addTicketActivity(ticket, 'customer', 'updated the customer and repair outcome');
-      if (previousStatus !== ticket.status) {
-        addTicketActivity(ticket, 'status', `moved this ticket from ${repairStatusText(previousStatus)} to ${repairStatusText(ticket.status)}`);
-      }
+      addTicketActivity(ticket, 'customer', 'updated the customer details');
       const saved = await persistRepairTicket(ticket);
       if (!saved) return;
       renderTicketDetailModal();
@@ -15485,6 +15789,7 @@
     }
 
     function renderCart() {
+      refreshTicketDetailCartLock();
       if (!state.cart.length) {
         els.cartArea.innerHTML = `
           <div class="cart-empty">

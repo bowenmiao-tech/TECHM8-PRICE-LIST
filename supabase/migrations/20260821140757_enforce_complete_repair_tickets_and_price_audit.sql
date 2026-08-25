@@ -38,8 +38,9 @@ begin
     raise exception 'A valid customer phone is required for repair tickets';
   end if;
 
-  numeric_price := regexp_replace(coalesce(new.price, ''), '[^0-9.-]', '', 'g');
-  if numeric_price !~ '^[0-9]+(\.[0-9]{1,2})?$' or numeric_price::numeric <= 0 then
+  numeric_price := btrim(coalesce(new.price, ''));
+  if numeric_price !~ '^[$]?[0-9]+([.][0-9]{1,2})?$'
+    or replace(numeric_price, '$', '')::numeric <= 0 then
     raise exception 'A valid repair price is required';
   end if;
 

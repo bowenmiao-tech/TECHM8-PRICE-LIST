@@ -60,7 +60,9 @@ create table if not exists public.repair_intakes (
   quote_data_json jsonb not null default '{}'::jsonb,
   intake_json jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint repair_intakes_quoted_price_numeric_check
+    check (btrim(quoted_price) ~ '^[0-9]+[.][0-9]{2}$')
 );
 
 create table if not exists public.apple_model_map (
@@ -136,6 +138,55 @@ begin
 end;
 $$;
 
+create or replace function public.enforce_repair_intake_numeric_price()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  raw_price text := btrim(coalesce(new.quoted_price, ''));
+  numeric_price numeric(12,2);
+  normalized_price text;
+begin
+  if raw_price !~ '^[$]?[0-9]+([.][0-9]{1,2})?$' then
+    raise exception 'Repair price must be one numeric amount, not a range';
+  end if;
+  numeric_price := replace(raw_price, '$', '')::numeric;
+  if numeric_price <= 0 or numeric_price > 1000000 then
+    raise exception 'Repair price must be between 0.01 and 1000000.00';
+  end if;
+  normalized_price := to_char(numeric_price, 'FM999999990.00');
+  new.quoted_price := normalized_price;
+  new.quote_data_json := jsonb_set(coalesce(new.quote_data_json, '{}'::jsonb), '{price}', to_jsonb(normalized_price), true);
+  new.intake_json := jsonb_set(coalesce(new.intake_json, '{}'::jsonb), '{quotedPrice}', to_jsonb(normalized_price), true);
+  return new;
+end;
+$$;
+
+create or replace function public.enforce_pos_repair_ticket_numeric_price()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  raw_price text := btrim(coalesce(new.price, ''));
+  numeric_price numeric(12,2);
+begin
+  if raw_price !~ '^[$]?[0-9]+([.][0-9]{1,2})?$' then
+    raise exception 'Repair price must be one numeric amount, not a range';
+  end if;
+  numeric_price := replace(raw_price, '$', '')::numeric;
+  if numeric_price <= 0 or numeric_price > 1000000 then
+    raise exception 'Repair price must be between 0.01 and 1000000.00';
+  end if;
+  new.price := '$' || to_char(numeric_price, 'FM999999990.00');
+  return new;
+end;
+$$;
+
+revoke all on function public.enforce_repair_intake_numeric_price() from public, anon, authenticated;
+revoke all on function public.enforce_pos_repair_ticket_numeric_price() from public, anon, authenticated;
+
 drop trigger if exists repair_prices_set_updated_at on public.repair_prices;
 create trigger repair_prices_set_updated_at
 before update on public.repair_prices
@@ -147,6 +198,12 @@ create trigger repair_intakes_set_updated_at
 before update on public.repair_intakes
 for each row
 execute function public.set_updated_at();
+
+drop trigger if exists enforce_repair_intake_numeric_price_trigger on public.repair_intakes;
+create trigger enforce_repair_intake_numeric_price_trigger
+before insert or update of quoted_price on public.repair_intakes
+for each row
+execute function public.enforce_repair_intake_numeric_price();
 
 drop trigger if exists apple_model_map_set_updated_at on public.apple_model_map;
 create trigger apple_model_map_set_updated_at
@@ -4504,6 +4561,8 @@ create table if not exists public.pos_repair_tickets (
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  constraint pos_repair_tickets_price_numeric_check
+    check (btrim(price) ~ '^[$][0-9]+[.][0-9]{2}$'),
   constraint pos_repair_tickets_status_check check (
     status in (
       'need_to_order',
@@ -4525,6 +4584,12 @@ create trigger pos_repair_tickets_set_updated_at
 before update on public.pos_repair_tickets
 for each row
 execute function public.set_updated_at();
+
+drop trigger if exists enforce_pos_repair_ticket_numeric_price_trigger on public.pos_repair_tickets;
+create trigger enforce_pos_repair_ticket_numeric_price_trigger
+before insert or update of price on public.pos_repair_tickets
+for each row
+execute function public.enforce_pos_repair_ticket_numeric_price();
 
 alter table public.pos_repair_tickets enable row level security;
 
