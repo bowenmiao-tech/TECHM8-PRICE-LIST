@@ -110,6 +110,20 @@ Deno.serve(async (request) => {
       if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
         return jsonResponse({ ok: false, message: "Refund payload must be an object." }, 400);
       }
+      const url = new URL(request.url);
+      if ((url.searchParams.get("mode") || "") === "balance-payment") {
+        const record = payload as JsonRecord;
+        if (!record.order_id || !record.store_code || !record.staff_name) {
+          return jsonResponse({ ok: false, message: "order_id, store_code, and staff_name are required." }, 400);
+        }
+        if (!Array.isArray(record.payments) || record.payments.length === 0) {
+          return jsonResponse({ ok: false, message: "At least one payment is required." }, 400);
+        }
+        return await rpcResponse(request, "add_pos_sales_order_payment", {
+          session_token: sessionToken,
+          payload,
+        });
+      }
       return await rpcResponse(request, "refund_pos_sales_order", {
         session_token: sessionToken,
         payload,

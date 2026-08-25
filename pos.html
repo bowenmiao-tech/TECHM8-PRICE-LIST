@@ -2912,6 +2912,31 @@
       background: #e9eef0;
     }
 
+    .payment-deposit {
+      width: 100%;
+      min-height: 50px;
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid #f0c68a;
+      border-radius: 14px;
+      color: #8a4f10;
+      background: #fdf4e8;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .payment-deposit:hover {
+      border-color: var(--tm-orange);
+      background: #fbe9d4;
+    }
+
+    .payment-deposit[hidden] {
+      display: none !important;
+    }
+
     .payment-error {
       min-height: 18px;
       color: #d24034;
@@ -5022,6 +5047,31 @@
       border: 1px solid var(--tm-line);
       border-radius: 10px;
       background: #fff;
+    }
+
+    .invoice-row.has-balance {
+      border-color: #f0c68a;
+      background: #fffaf3;
+    }
+
+    .invoice-balance-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      margin-top: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      color: #8a4f10;
+      background: #fbe9d4;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .repair-action.balance-action {
+      border-color: var(--tm-orange);
+      color: #fff;
+      background: var(--tm-orange);
     }
 
     .invoice-number {
@@ -7209,6 +7259,7 @@
               <button id="paymentConfirmBtn" class="payment-confirm" type="button">Confirm Amount</button>
               <button id="paymentFullBtn" class="payment-full" type="button">Full Payment</button>
             </div>
+            <button id="paymentDepositBtn" class="payment-deposit" type="button" hidden><i class="bi bi-piggy-bank"></i> <span id="paymentDepositLabel">Finish as Deposit</span></button>
             <div id="paymentError" class="payment-error" role="alert"></div>
           </div>
         </section>
@@ -8258,6 +8309,8 @@
       paymentQuickGrid: document.getElementById('paymentQuickGrid'),
       paymentConfirmBtn: document.getElementById('paymentConfirmBtn'),
       paymentFullBtn: document.getElementById('paymentFullBtn'),
+      paymentDepositBtn: document.getElementById('paymentDepositBtn'),
+      paymentDepositLabel: document.getElementById('paymentDepositLabel'),
       paymentError: document.getElementById('paymentError'),
       paymentSummaryCard: document.getElementById('paymentSummaryCard'),
       receiptCompleteModal: document.getElementById('receiptCompleteModal'),
@@ -17133,8 +17186,14 @@
       return roundedMoneyValue(state.paymentSession.payments.reduce((sum, payment) => sum + numberValue(payment.amount), 0));
     }
 
+    function paymentSessionTotal() {
+      const balanceTotal = numberValue(state.paymentSession && state.paymentSession.balanceTotal);
+      if (state.paymentSession && state.paymentSession.balanceOrderId && balanceTotal > 0) return roundedMoneyValue(balanceTotal);
+      return cartTotal();
+    }
+
     function paymentRemaining() {
-      return Math.max(0, roundedMoneyValue(cartTotal() - paymentPaidTotal()));
+      return Math.max(0, roundedMoneyValue(paymentSessionTotal() - paymentPaidTotal()));
     }
 
     function setPaymentAmountToRemaining() {
@@ -17188,10 +17247,30 @@
 
     function renderPaymentSummary() {
       if (!els.paymentSummaryCard) return;
-      const total = cartTotal();
+      const total = paymentSessionTotal();
       const gst = total / 11;
       const paid = paymentPaidTotal();
       const remaining = paymentRemaining();
+      if (state.paymentSession.balanceOrderId) {
+        const paidLines = state.paymentSession.payments.length
+          ? state.paymentSession.payments.map(payment => `
+            <div class="paid-line">
+              <span>${escapeHtml(paymentMethodLabel(payment.method))}</span>
+              <strong>${money(payment.amount)}</strong>
+            </div>
+          `).join('')
+          : '<div class="paid-empty">No payment confirmed yet.</div>';
+        els.paymentSummaryCard.innerHTML = `
+          <div class="payment-summary-line"><span>Invoice</span><strong>#${escapeHtml(state.paymentSession.balanceInvoiceNumber || '')}</strong></div>
+          <div class="payment-summary-line"><span>Order total</span><strong>${money(state.paymentSession.balanceOrderTotal || 0)}</strong></div>
+          <div class="payment-summary-line"><span>Deposit already paid</span><strong>${money(state.paymentSession.balanceAlreadyPaid || 0)}</strong></div>
+          <div class="payment-summary-line total"><span>Balance due</span><strong>${money(total)}</strong></div>
+          <div class="paid-list">${paidLines}</div>
+          <div class="payment-summary-line"><span>Paying now</span><strong>${money(paid)}</strong></div>
+          <div class="payment-summary-line due"><span>Still owing</span><strong>${money(remaining)}</strong></div>
+        `;
+        return;
+      }
       const paidLines = state.paymentSession.payments.length
         ? state.paymentSession.payments.map(payment => `
           <div class="paid-line">
@@ -17220,9 +17299,22 @@
         els.paymentAmountInput.value = state.paymentSession.amount || (remaining > 0 ? remaining.toFixed(2) : '');
       }
       if (els.paymentError) els.paymentError.textContent = '';
+      renderDepositAction(remaining);
       renderPaymentMethods();
       renderPaymentQuickAmounts();
       renderPaymentSummary();
+    }
+
+    function renderDepositAction(remaining) {
+      if (!els.paymentDepositBtn) return;
+      const paid = paymentPaidTotal();
+      const canDeposit = paid > 0 && remaining > 0;
+      els.paymentDepositBtn.hidden = !canDeposit;
+      if (canDeposit && els.paymentDepositLabel) {
+        els.paymentDepositLabel.textContent = state.paymentSession.balanceOrderId
+          ? `Finish as Part Payment · ${money(remaining)} owing`
+          : `Finish as Deposit · ${money(remaining)} owing`;
+      }
     }
 
     function openPaymentModal() {
@@ -17234,7 +17326,8 @@
       state.paymentSession = {
         method: 'Cash',
         payments: [],
-        amount: ''
+        amount: '',
+        balanceOrderId: ''
       };
       setPaymentAmountToRemaining();
       els.paymentModal.classList.add('show');
@@ -17281,13 +17374,27 @@
 
       if (paymentRemaining() <= 0) {
         const payments = state.paymentSession.payments.slice();
+        const balanceOrderId = state.paymentSession.balanceOrderId;
         closePaymentModal();
-        checkout(payments);
+        if (balanceOrderId) submitBalancePayment(balanceOrderId, payments);
+        else checkout(payments);
         return;
       }
 
       setPaymentAmountToRemaining();
       renderPaymentModal();
+    }
+
+    function finishAsDeposit() {
+      const payments = state.paymentSession.payments.slice();
+      if (!payments.length) {
+        els.paymentError.textContent = 'Confirm the deposit amount first.';
+        return;
+      }
+      const balanceOrderId = state.paymentSession.balanceOrderId;
+      closePaymentModal();
+      if (balanceOrderId) submitBalancePayment(balanceOrderId, payments);
+      else checkout(payments, { deposit: true });
     }
 
     function posOrderApiHeaders() {
@@ -17423,12 +17530,14 @@
       els.invoiceList.innerHTML = orders.map(order => {
         const itemCount = Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + Number(item.qty || 1), 0) : 0;
         const refundable = Number(order.refundable_total ?? order.total ?? 0) > 0;
+        const balance = orderBalanceDue(order);
         return `
-          <article class="invoice-row" data-invoice-id="${escapeHtml(order.id)}">
+          <article class="invoice-row ${balance > 0 ? 'has-balance' : ''}" data-invoice-id="${escapeHtml(order.id)}">
             <div class="invoice-number">#${escapeHtml(invoiceNumberText(order))}</div>
             <div class="invoice-row-main">
               <strong>${escapeHtml(order.customer_name || 'Walk-in Customer')}</strong>
               <span>${escapeHtml(order.customer_phone || order.id)} &middot; ${itemCount} item${itemCount === 1 ? '' : 's'}</span>
+              ${balance > 0 ? `<span class="invoice-balance-tag"><i class="bi bi-piggy-bank"></i> Deposit ${money(order.amount_paid)} &middot; ${money(balance)} owing</span>` : ''}
             </div>
             <div class="invoice-row-meta">
               <strong>${escapeHtml(order.staff_name || 'Staff unavailable')}</strong>
@@ -17436,6 +17545,7 @@
             </div>
             <div class="invoice-total">${money(order.total)}</div>
             <div class="invoice-actions">
+              ${balance > 0 ? `<button class="repair-action balance-action" type="button" data-balance-invoice="${escapeHtml(order.id)}" title="Take balance payment"><i class="bi bi-cash-coin"></i></button>` : ''}
               <button class="repair-action primary" type="button" data-view-invoice="${escapeHtml(order.id)}" title="View invoice"><i class="bi bi-eye"></i></button>
               <button class="repair-action" type="button" data-refund-invoice="${escapeHtml(order.id)}" title="Refund" ${refundable ? '' : 'disabled'}><i class="bi bi-arrow-counterclockwise"></i></button>
             </div>
@@ -17798,7 +17908,8 @@
           ${paymentRows}
           ${refundTotal > 0 ? `<div class="receipt-total-row"><span>Refunded</span><strong>-${money(refundTotal)}</strong></div>` : ''}
           ${refundTotal > 0 ? `<div class="receipt-total-row"><span>Net paid</span><strong>${money(Math.max(0, total - refundTotal))}</strong></div>` : ''}
-          <div class="receipt-total-row"><span>Balance</span><strong>$0.00</strong></div>
+          <div class="receipt-total-row receipt-grand-total"><span>BALANCE DUE</span><strong>${money(orderBalanceDue(order))}</strong></div>
+          ${orderBalanceDue(order) > 0 ? '<div class="receipt-section-label">DEPOSIT ONLY - BALANCE PAYABLE ON PICKUP</div>' : ''}
         </section>
         <div class="receipt-rule"></div>
         <section class="receipt-terms">
@@ -18114,7 +18225,7 @@
       showToast('Held order restored.');
     }
 
-    async function checkout(payments) {
+    async function checkout(payments, options = {}) {
       if (!state.cart.length) return;
       if (!state.selectedStaffName) {
         openStaffModal({ canCancel: false });
@@ -18129,8 +18240,13 @@
         : [{ method: state.payment, amount: cartTotal() }];
       const total = cartTotal();
       const paymentTotal = roundedMoneyValue(normalizedPayments.reduce((sum, payment) => sum + payment.amount, 0));
-      if (paymentTotal < total) {
+      const isDeposit = Boolean(options && options.deposit) && paymentTotal > 0 && paymentTotal < total;
+      if (paymentTotal < total && !isDeposit) {
         showToast('Payment is not complete.');
+        return;
+      }
+      if (isDeposit && state.cart.some(item => item.is_used_device)) {
+        showToast('Used devices must be paid in full. Remove the device to take a deposit.');
         return;
       }
       const paymentSummary = summarizePayments(normalizedPayments);
@@ -18207,6 +18323,9 @@
         payment_method: paymentSummary,
         payments: normalizedPayments,
         total,
+        payment_status: isDeposit ? 'deposit' : 'paid',
+        amount_paid: Math.min(paymentTotal, total),
+        balance_due: isDeposit ? roundedMoneyValue(total - paymentTotal) : 0,
         items: state.cart.map(posOrderLineFromCartItem),
         created_at: new Date().toISOString(),
         sync_pending: true
@@ -18220,7 +18339,8 @@
       }
       state.shiftPaymentTotals = null;
 
-      state.cart.forEach(item => {
+      // Stock only moves when the order is settled in full; a deposit reserves nothing.
+      if (!isDeposit) state.cart.forEach(item => {
         const product = state.products.find(productItem => productItem.id === item.id);
         if (!product) return;
         if (product.store_stock) {
@@ -18265,9 +18385,107 @@
       await loadTodayProgress({ silent: true });
       renderCart();
       openReceiptCompleteModal(order);
-      showToast(order.sync_pending
-        ? `${order.id} paid. Database sync is pending.`
-        : `${order.id} paid and saved to the POS database.`);
+      if (isDeposit) {
+        showToast(`Deposit ${money(paymentTotal)} taken. ${money(total - paymentTotal)} still owing on invoice ${invoiceNumberText(order)}.`);
+      } else {
+        showToast(order.sync_pending
+          ? `${order.id} paid. Database sync is pending.`
+          : `${order.id} paid and saved to the POS database.`);
+      }
+    }
+
+    function orderBalanceDue(order) {
+      if (!order) return 0;
+      const total = numberValue(order.total);
+      const paid = numberValue(order.amount_paid);
+      if (order.payment_status === 'paid') return 0;
+      if (!order.payment_status && !order.amount_paid) return 0;
+      return Math.max(0, roundedMoneyValue(total - paid));
+    }
+
+    function openBalancePaymentModal(orderId) {
+      const order = state.invoiceOrders.find(item => item.id === orderId)
+        || readLocalArray(POS_ORDERS_KEY).find(item => item && item.id === orderId);
+      if (!order) {
+        showToast('Invoice could not be loaded.');
+        return;
+      }
+      if (!state.selectedStaffName) {
+        openStaffModal({ canCancel: false });
+        return;
+      }
+      const balance = orderBalanceDue(order);
+      if (balance <= 0) {
+        showToast('This invoice is already fully paid.');
+        return;
+      }
+      const activeShift = readActiveShift();
+      if (!activeShift || activeShift.status !== 'open' || activeShift.date !== brisbaneDateIso() || !state.openingConfirmed) {
+        showToast('Start today\'s shift before taking a payment.');
+        ensureOpeningCash();
+        return;
+      }
+      state.paymentSession = {
+        method: 'Cash',
+        payments: [],
+        amount: '',
+        balanceOrderId: order.id,
+        balanceTotal: balance,
+        balanceOrderTotal: numberValue(order.total),
+        balanceAlreadyPaid: numberValue(order.amount_paid),
+        balanceInvoiceNumber: invoiceNumberText(order)
+      };
+      setPaymentAmountToRemaining();
+      els.paymentModal.classList.add('show');
+      els.paymentModal.setAttribute('aria-hidden', 'false');
+      renderPaymentModal();
+      setTimeout(() => {
+        els.paymentAmountInput.focus();
+        els.paymentAmountInput.select();
+      }, 0);
+    }
+
+    async function submitBalancePayment(orderId, payments) {
+      const activeShift = readActiveShift();
+      const normalizedPayments = (Array.isArray(payments) ? payments : [])
+        .map(payment => ({ method: paymentMethodLabel(payment.method), amount: roundedMoneyValue(payment.amount) }))
+        .filter(payment => payment.amount > 0);
+      if (!normalizedPayments.length) return;
+      try {
+        const response = await fetch(`${POS_SALES_ORDERS_ENDPOINT}?mode=balance-payment`, {
+          method: 'PUT',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify({
+            order_id: orderId,
+            store_code: storeById(state.storeId).code,
+            staff_name: state.selectedStaffName,
+            shift_id: activeShift && activeShift.id,
+            business_date: brisbaneDateIso(),
+            payments: normalizedPayments
+          })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false || !payload.order) {
+          throw new Error(payload.message || 'The payment could not be saved.');
+        }
+        const index = state.invoiceOrders.findIndex(item => item.id === payload.order.id);
+        if (index >= 0) state.invoiceOrders[index] = payload.order;
+        updateStoredOrder(payload.order);
+        state.shiftPaymentTotals = null;
+        const balance = orderBalanceDue(payload.order);
+        await loadRepairTickets();
+        renderRepairWorkspace();
+        renderInvoiceHistory();
+        await loadTodayProgress({ silent: true });
+        state.lastCompletedOrder = payload.order;
+        openReceiptCompleteModal(payload.order);
+        showToast(balance > 0
+          ? `Payment recorded. ${money(balance)} still owing.`
+          : `Invoice ${invoiceNumberText(payload.order)} is now paid in full.`);
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'The payment could not be saved.');
+      }
     }
 
     function suggestedHoldName() {
@@ -18892,6 +19110,8 @@
     els.invoiceList.addEventListener('click', event => {
       const viewButton = event.target.closest('[data-view-invoice]');
       const refundButton = event.target.closest('[data-refund-invoice]');
+      const balanceButton = event.target.closest('[data-balance-invoice]');
+      if (balanceButton) openBalancePaymentModal(balanceButton.dataset.balanceInvoice);
       if (viewButton) viewInvoiceById(viewButton.dataset.viewInvoice);
       if (refundButton) openRefundModalById(refundButton.dataset.refundInvoice);
     });
@@ -19232,6 +19452,7 @@
     els.holdBtn.addEventListener('click', openHoldNameModal);
     els.resumeBtn.addEventListener('click', openHoldListModal);
     els.discardBtn.addEventListener('click', discardCart);
+    els.paymentDepositBtn.addEventListener('click', finishAsDeposit);
     els.holdNameForm.addEventListener('submit', submitHoldName);
     els.holdNameClose.addEventListener('click', closeHoldNameModal);
     els.holdNameCancel.addEventListener('click', closeHoldNameModal);
