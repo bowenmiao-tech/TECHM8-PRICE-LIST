@@ -1962,13 +1962,22 @@
     }
 
     .cart-item {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 12px;
-      padding: 13px;
+      display: block;
+      padding: 12px;
       border-radius: 15px;
       background: #fff;
       border: 1px solid #e2ebee;
+    }
+
+    .cart-item-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .cart-item-copy {
+      min-width: 0;
     }
 
     .cart-name {
@@ -1989,10 +1998,17 @@
       align-items: center;
       gap: 7px;
       width: fit-content;
-      margin-top: 8px;
       color: #34474f;
       font-size: 12px;
       font-weight: 850;
+    }
+
+    .cart-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
     }
 
     .cart-price-input-wrap {
@@ -2036,7 +2052,6 @@
       grid-template-columns: 30px 36px 30px;
       align-items: center;
       height: 32px;
-      margin-top: 10px;
       border: 1px solid #d8e3e7;
       border-radius: 999px;
       overflow: hidden;
@@ -2056,15 +2071,69 @@
       font-weight: 900;
     }
 
-    .cart-side {
-      display: grid;
-      justify-items: end;
-      gap: 8px;
+    .qty-control.unique {
+      display: flex;
+      min-width: 92px;
+      padding: 0 10px;
+      justify-content: center;
     }
 
-    .cart-line-total {
-      font-weight: 900;
-      white-space: nowrap;
+    .cart-note-field,
+    .order-note-field {
+      display: grid;
+      gap: 5px;
+      color: #53656d;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .cart-note-field {
+      margin-top: 9px;
+    }
+
+    .cart-note-input,
+    .order-note-input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid #d7e2e5;
+      border-radius: 9px;
+      outline: none;
+      background: #f8fbfb;
+      color: var(--tm-ink);
+      font: inherit;
+      font-weight: 650;
+    }
+
+    .cart-note-input {
+      height: 32px;
+      padding: 0 9px;
+    }
+
+    .order-note-field {
+      padding: 10px 12px;
+      border: 1px solid #e1e9ec;
+      border-radius: 14px;
+      background: #f8fbfb;
+    }
+
+    .order-note-input {
+      min-height: 42px;
+      max-height: 88px;
+      padding: 8px 9px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    .cart-note-input:focus,
+    .order-note-input:focus {
+      border-color: var(--tm-green);
+      box-shadow: 0 0 0 3px rgba(0, 137, 111, .1);
+      background: #fff;
+    }
+
+    .order-note-input:disabled {
+      cursor: not-allowed;
+      opacity: .6;
     }
 
     .icon-action {
@@ -6695,6 +6764,10 @@
       <div id="cartArea" class="cart-scroll"></div>
 
       <div class="checkout-footer">
+        <label class="order-note-field">
+          <span>Order note · prints on receipt</span>
+          <textarea id="orderNoteInput" class="order-note-input" rows="2" maxlength="1000" placeholder="Add information for this whole order" disabled></textarea>
+        </label>
         <div class="summary-box">
           <div class="summary-line"><span>Items</span><strong id="summaryItems">0</strong></div>
           <div class="summary-line"><span>Subtotal</span><strong id="summarySubtotal">$0.00</strong></div>
@@ -7506,6 +7579,7 @@
       customerDuplicateMatch: null,
       customerDuplicateLoading: false,
       cart: [],
+      orderNote: '',
         category: 'All',
         search: '',
         storeId: 'park-ridge',
@@ -7712,6 +7786,7 @@
       storeSelect: document.getElementById('storeSelect'),
       syncStatus: document.getElementById('syncStatus'),
       cartArea: document.getElementById('cartArea'),
+      orderNoteInput: document.getElementById('orderNoteInput'),
       summaryItems: document.getElementById('summaryItems'),
       summarySubtotal: document.getElementById('summarySubtotal'),
       summaryGst: document.getElementById('summaryGst'),
@@ -8703,6 +8778,7 @@
       }
       if (reloadProducts) {
         state.cart = [];
+        setOrderNote('');
         loadProducts();
         renderCart();
       }
@@ -15269,6 +15345,10 @@
         : roundedMoneyValue(item && item.sale_price);
     }
 
+    function noteText(value, maxLength) {
+      return String(value || '').replace(/\r\n?/g, '\n').slice(0, maxLength);
+    }
+
     function posOrderLineFromCartItem(item) {
       return {
         product_id: item.id,
@@ -15291,8 +15371,22 @@
         price_overridden: Boolean(item.price_overridden),
         price_override_by: item.price_overridden ? (item.price_override_by || state.selectedStaffName) : '',
         price_override_at: item.price_overridden ? (item.price_override_at || new Date().toISOString()) : '',
+        note: noteText(item.note, 500).trim(),
         line_total: roundedMoneyValue(item.sale_price * item.qty)
       };
+    }
+
+    function updateCartItemNote(productId, value) {
+      const item = state.cart.find(cartItem => String(cartItem.id) === String(productId));
+      if (!item) return;
+      item.note = noteText(value, 500);
+    }
+
+    function setOrderNote(value) {
+      state.orderNote = noteText(value, 1000);
+      if (els.orderNoteInput && document.activeElement !== els.orderNoteInput) {
+        els.orderNoteInput.value = state.orderNote;
+      }
     }
 
     function updateCartItemPrice(productId, rawValue) {
@@ -15329,8 +15423,8 @@
       if (!item.price_overridden) return '';
       const originalPrice = cartOriginalUnitPrice(item);
       const difference = roundedMoneyValue(originalPrice - Number(item.sale_price || 0));
-      if (difference > 0) return `Original ${money(originalPrice)} · Discount ${money(difference)}`;
-      if (difference < 0) return `Original ${money(originalPrice)} · Increased ${money(Math.abs(difference))}`;
+      if (difference > 0) return 'Discount applied';
+      if (difference < 0) return 'Adjusted price';
       return '';
     }
 
@@ -15352,19 +15446,25 @@
               const overrideText = cartPriceOverrideText(item);
               return `
                 <div class="cart-item">
-                  <div>
-                    <h3 class="cart-name">${escapeHtml(item.name)}</h3>
-                    <div class="cart-small">${escapeHtml(item.sku || 'No SKU')}</div>
+                  <div class="cart-item-head">
+                    <div class="cart-item-copy">
+                      <h3 class="cart-name">${escapeHtml(item.name)}</h3>
+                      <div class="cart-small">${escapeHtml(item.sku || 'No SKU')}</div>
+                    </div>
+                    <button class="icon-action" type="button" data-remove="${escapeHtml(item.id)}" title="Remove item" aria-label="Remove ${escapeHtml(item.name)}">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                  <div class="cart-control-row">
                     <label class="cart-price-editor">
-                      <span>Unit price</span>
+                      <span>Price</span>
                       <span class="cart-price-input-wrap">
                         <span>$</span>
                         <input class="cart-price-input" type="number" min="0" max="1000000" step="0.01" value="${roundedMoneyValue(item.sale_price).toFixed(2)}" data-cart-price="${escapeHtml(item.id)}" aria-label="Unit price for ${escapeHtml(item.name)}">
                       </span>
                     </label>
-                    ${overrideText ? `<div class="cart-price-override">${escapeHtml(overrideText)}</div>` : ''}
                     ${item.is_used_device || item.is_repair ? `
-                      <div class="qty-control"><span>1 unique item</span></div>
+                      <div class="qty-control unique"><span>1 unique item</span></div>
                     ` : `
                       <div class="qty-control">
                         <button type="button" data-qty="${escapeHtml(item.id)}" data-dir="-1">-</button>
@@ -15373,12 +15473,11 @@
                       </div>
                     `}
                   </div>
-                  <div class="cart-side">
-                    <div class="cart-line-total">${money(item.sale_price * item.qty)}</div>
-                    <button class="icon-action" type="button" data-remove="${escapeHtml(item.id)}" title="Remove item">
-                      <i class="bi bi-x-lg"></i>
-                    </button>
-                  </div>
+                  ${overrideText ? `<div class="cart-price-override">${escapeHtml(overrideText)}</div>` : ''}
+                  <label class="cart-note-field">
+                    <span>Item note · prints on receipt</span>
+                    <input class="cart-note-input" type="text" maxlength="500" value="${escapeHtml(noteText(item.note, 500))}" data-cart-note="${escapeHtml(item.id)}" placeholder="Add a note for this item">
+                  </label>
                 </div>
               `;
             }).join('')}
@@ -15395,6 +15494,10 @@
       els.summaryTotal.textContent = money(subtotal);
       els.payBtn.textContent = subtotal > 0 ? `${money(subtotal)} Checkout` : 'Checkout';
       els.payBtn.disabled = subtotal <= 0;
+      if (els.orderNoteInput) {
+        els.orderNoteInput.disabled = !state.cart.length;
+        if (document.activeElement !== els.orderNoteInput) els.orderNoteInput.value = state.orderNote;
+      }
     }
 
     function renderAll() {
@@ -17110,10 +17213,12 @@
       const refundTotal = roundedMoneyValue(order.refund_total || 0);
       const gst = roundedMoneyValue(total / 11);
       const subtotalExGst = roundedMoneyValue(total - gst);
+      const orderNote = noteText(order.order_note, 1000).trim();
       const itemRows = items.map(item => `
         <div class="receipt-item">
           <div class="receipt-item-name">${escapeHtml(receiptItemDisplayName(item))}</div>
           ${item.sku ? `<div class="receipt-item-sku">SKU: ${escapeHtml(item.sku)}</div>` : ''}
+          ${item.note ? `<div class="receipt-item-note">Note: ${escapeHtml(noteText(item.note, 500).trim())}</div>` : ''}
           <div class="receipt-item-line">
             <span>${Math.max(1, Number(item.qty || 1))} x ${money(item.unit_price)}</span>
             <strong>${money(item.line_total)}</strong>
@@ -17152,6 +17257,10 @@
         </div>
         <div class="receipt-rule"></div>
         <section class="receipt-items">${itemRows}</section>
+        ${orderNote ? `
+          <div class="receipt-rule"></div>
+          <section class="receipt-order-note"><strong>ORDER NOTE</strong><span>${escapeHtml(orderNote)}</span></section>
+        ` : ''}
         <div class="receipt-rule"></div>
         <section class="receipt-totals">
           <div class="receipt-total-row"><span>Subtotal (ex GST)</span><strong>${money(subtotalExGst)}</strong></div>
@@ -17202,6 +17311,8 @@
     .receipt-item { display: grid; gap: .7mm; padding-bottom: 1.3mm; }
     .receipt-item-name { font-weight: 800; }
     .receipt-item-sku { color: #333; font-size: 9px; }
+    .receipt-item-note { padding-left: 1.5mm; border-left: 1px solid #000; font-size: 9.5px; white-space: pre-wrap; }
+    .receipt-order-note { display: grid; gap: 1mm; font-size: 9.5px; white-space: pre-wrap; }
     .receipt-grand-total { margin-top: 1mm; padding-top: 1.5mm; border-top: 1px solid #000; font-size: 13px; }
     .receipt-section-label { font-weight: 900; }
     .receipt-terms { display: grid; gap: 2mm; font-size: 9px; line-height: 1.36; text-align: left; }
@@ -17444,6 +17555,7 @@
       }
       held.splice(index, 1);
       state.cart = Array.isArray(order.items) ? order.items : [];
+      setOrderNote(order.order_note || '');
       els.customerInput.value = order.customer && order.customer !== 'Walk-in Customer' ? order.customer : '';
       cacheHeldOrders(held);
       closeHoldListModal();
@@ -17544,6 +17656,7 @@
         payment_method: paymentSummary,
         payments: normalizedPayments,
         total,
+        order_note: noteText(state.orderNote, 1000).trim(),
         items: state.cart.map(posOrderLineFromCartItem),
         created_at: new Date().toISOString(),
         sync_pending: true
@@ -17594,6 +17707,7 @@
       if (repairTickets.length) resetRepairState();
 
       state.cart = [];
+      setOrderNote('');
       els.customerInput.value = '';
       await loadRepairTickets();
       if (usedDeviceItems.length) await loadUsedDevices();
@@ -17619,6 +17733,7 @@
         store_id: state.storeId,
         store_code: repairTicketStoreCode(),
         staff_name: state.selectedStaffName,
+        order_note: noteText(state.orderNote, 1000).trim(),
         items: state.cart.map(item => ({ ...item })),
         created_at: new Date().toISOString(),
         sync_pending: true
@@ -17633,6 +17748,7 @@
       held.unshift(heldOrder);
       cacheHeldOrders(held.slice(0, 50));
       state.cart = [];
+      setOrderNote('');
       els.customerInput.value = '';
       renderCart();
       showToast(heldOrder.sync_pending ? 'Order held locally. Database sync is pending.' : 'Order placed on hold for this store.');
@@ -17642,6 +17758,7 @@
       if (!state.cart.length) return;
       if (!confirm('Discard current cart?')) return;
       state.cart = [];
+      setOrderNote('');
       renderCart();
       showToast('Cart discarded.');
     }
@@ -18388,6 +18505,15 @@
     els.cartArea.addEventListener('change', event => {
       const priceInput = event.target.closest('[data-cart-price]');
       if (priceInput) updateCartItemPrice(priceInput.dataset.cartPrice, priceInput.value);
+    });
+
+    els.cartArea.addEventListener('input', event => {
+      const noteInput = event.target.closest('[data-cart-note]');
+      if (noteInput) updateCartItemNote(noteInput.dataset.cartNote, noteInput.value);
+    });
+
+    els.orderNoteInput.addEventListener('input', event => {
+      state.orderNote = noteText(event.target.value, 1000);
     });
 
     els.cartArea.addEventListener('keydown', event => {

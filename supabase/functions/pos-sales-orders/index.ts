@@ -91,6 +91,14 @@ Deno.serve(async (request) => {
           event_code: eventCode,
         });
       }
+      const orderPayload = payload as JsonRecord;
+      if (String(orderPayload.order_note || "").length > 1000) {
+        return jsonResponse({ ok: false, message: "Order note cannot exceed 1000 characters." }, 400);
+      }
+      const orderItems = Array.isArray(orderPayload.items) ? orderPayload.items as JsonRecord[] : [];
+      if (orderItems.some((item) => String(item && item.note || "").length > 500)) {
+        return jsonResponse({ ok: false, message: "Item note cannot exceed 500 characters." }, 400);
+      }
       return await rpcResponse(request, "save_pos_sales_order", {
         session_token: sessionToken,
         payload,

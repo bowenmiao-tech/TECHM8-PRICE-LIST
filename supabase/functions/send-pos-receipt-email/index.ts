@@ -157,11 +157,13 @@ function receiptEmailHtml(order: JsonRecord, note: string): string {
   const total = Number(order.total || 0);
   const gst = Math.round((total / 11) * 100) / 100;
   const subtotal = Math.round((total - gst) * 100) / 100;
+  const orderNote = String(order.order_note || "").trim();
   const itemRows = items.map((item) => `
     <tr>
       <td style="padding:14px 0;border-bottom:1px solid #e2e8e6;">
         <div style="font-weight:800;color:#14231e;">${escapeHtml(receiptItemDisplayName(item))}</div>
         ${item.sku ? `<div style="margin-top:4px;font-size:12px;color:#708078;">SKU: ${escapeHtml(item.sku)}</div>` : ""}
+        ${item.note ? `<div style="margin-top:5px;padding-left:8px;border-left:2px solid #07896f;font-size:12px;line-height:1.45;color:#43564e;">Note: ${escapeHtml(String(item.note).trim()).replaceAll("\n", "<br>")}</div>` : ""}
       </td>
       <td style="padding:14px 8px;border-bottom:1px solid #e2e8e6;text-align:center;color:#52625b;">${escapeHtml(item.qty || 1)}</td>
       <td style="padding:14px 0;border-bottom:1px solid #e2e8e6;text-align:right;font-weight:800;color:#14231e;">${money(item.line_total)}</td>
@@ -175,6 +177,7 @@ function receiptEmailHtml(order: JsonRecord, note: string): string {
   `).join("");
   const customerName = String(order.customer_name || "Walk-in Customer");
   const noteHtml = note ? `<div style="margin:0 0 22px;padding:14px 16px;border-radius:8px;background:#eef8f5;color:#29473e;line-height:1.6;">${escapeHtml(note).replaceAll("\n", "<br>")}</div>` : "";
+  const orderNoteHtml = orderNote ? `<div style="margin:0 0 22px;padding:14px 16px;border:1px solid #dce6e2;border-radius:8px;background:#f8fbfa;color:#29473e;line-height:1.6;"><strong style="display:block;margin-bottom:4px;">Order note</strong>${escapeHtml(orderNote).replaceAll("\n", "<br>")}</div>` : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -190,6 +193,7 @@ function receiptEmailHtml(order: JsonRecord, note: string): string {
         <h1 style="margin:0 0 8px;font-size:27px;line-height:1.2;">Here's your tax invoice #${escapeHtml(invoiceNumber)}</h1>
         <p style="margin:0 0 22px;color:#62736b;line-height:1.6;">Thanks for shopping with us. Your payment has been completed and recorded.</p>
         ${noteHtml}
+        ${orderNoteHtml}
         <table role="presentation" style="width:100%;margin-bottom:22px;border-collapse:collapse;font-size:14px;">
           <tr><td style="padding:4px 0;color:#708078;">Invoice No.</td><td style="padding:4px 0;text-align:right;font-weight:800;">#${escapeHtml(invoiceNumber)}</td></tr>
           <tr><td style="padding:4px 0;color:#708078;">Order Ref.</td><td style="padding:4px 0;text-align:right;font-weight:800;">${escapeHtml(order.id)}</td></tr>
