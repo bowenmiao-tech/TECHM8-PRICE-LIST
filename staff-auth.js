@@ -80,6 +80,8 @@ window.Techm8StaffAuth = (function () {
       staff_name: profile.staff_name || '',
       staff_email: profile.staff_email || '',
       job_role: profile.job_role || '',
+      default_store_code: profile.default_store_code || '',
+      default_store_name: profile.default_store_name || '',
       must_change_credentials: Boolean(profile.must_change_credentials)
     });
     sessionStores().forEach(storage => storage.setItem(profileKey(), storedProfile));

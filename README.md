@@ -58,7 +58,7 @@ Password rules:
 
 ## POS System
 
-`pos.html` is the operational POS for Park Ridge, North Lakes, Fairfield, and Toowong. Brassall and Warehouse are not POS stores.
+`pos.html` is the operational POS for Park Ridge, North Lakes, Fairfield, Toowong, and Brassall. Warehouse is not a POS store.
 
 ### Current Scope
 

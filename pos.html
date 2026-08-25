@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-pos-build" content="2026-08-21-daily-scorecard-instant-quote">
+  <meta name="techm8-pos-build" content="2026-08-25-store-access-brassall-quote-stability">
   <title>TECHM8 POS</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
-  <script src="./staff-auth.js?v=20260821.2"></script>
+  <script src="./staff-auth.js?v=20260825.1"></script>
   <script src="./vendor/sortable.min.js"></script>
   <style>
     :root {
@@ -50,25 +50,41 @@
     }
 
     .pos-app {
+      --pos-rail-btn: 44px;
+      --pos-rail-pad: 10px;
+      --pos-rail-gap: 12px;
+      --pos-rail-width: calc(var(--pos-rail-btn) + var(--pos-rail-pad) * 2);
+      --pos-cart-width: 390px;
       height: var(--pos-viewport-height, 100vh);
       display: grid;
-      grid-template-columns: 64px minmax(0, 1fr) 390px;
+      grid-template-columns: var(--pos-rail-width) minmax(0, 1fr) var(--pos-cart-width);
       background: var(--tm-soft);
     }
 
     .rail {
+      min-height: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-      padding: 18px 10px;
+      gap: var(--pos-rail-gap);
+      padding: 18px var(--pos-rail-pad);
       background: #fff;
       border-right: 1px solid var(--tm-line);
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+    }
+
+    .rail::-webkit-scrollbar {
+      width: 0;
+      height: 0;
     }
 
     .brand-mark {
-      width: 44px;
-      height: 44px;
+      width: var(--pos-rail-btn);
+      height: var(--pos-rail-btn);
+      flex: none;
       border: 0;
       display: grid;
       place-items: center;
@@ -87,14 +103,16 @@
 
     .rail-nav {
       display: grid;
-      gap: 10px;
+      gap: var(--pos-rail-gap);
       width: 100%;
       margin-top: 10px;
+      justify-items: center;
     }
 
     .rail-button {
-      width: 44px;
-      height: 44px;
+      width: var(--pos-rail-btn);
+      height: var(--pos-rail-btn);
+      flex: none;
       border: 1px solid var(--tm-line);
       border-radius: 14px;
       color: #2a3a42;
@@ -112,7 +130,7 @@
 
     .rail-bottom {
       display: grid;
-      gap: 10px;
+      gap: var(--pos-rail-gap);
       width: 100%;
       justify-items: center;
     }
@@ -122,16 +140,16 @@
       padding-top: 12px;
       border-top: 1px solid var(--tm-line);
       display: grid;
-      gap: 10px;
+      gap: var(--pos-rail-gap);
       width: 100%;
       justify-items: center;
     }
 
     .rail-user-button {
-      width: 54px;
+      width: var(--pos-rail-btn);
       min-height: 54px;
       height: auto;
-      padding: 6px 4px;
+      padding: 6px 2px;
       grid-template-rows: auto auto;
       gap: 2px;
       font-size: 16px;
@@ -143,7 +161,7 @@
     }
 
     .rail-user-name {
-      max-width: 46px;
+      max-width: 100%;
       color: inherit;
       font-size: 9px;
       font-weight: 900;
@@ -5030,13 +5048,76 @@
       transform: translateY(0);
     }
 
-    @media (max-width: 1080px) {
+    @media (max-width: 1180px) {
       body { overflow: hidden; }
 
       .pos-app {
+        --pos-rail-btn: 42px;
+        --pos-rail-pad: 6px;
+        --pos-rail-gap: 6px;
+        --pos-cart-width: 288px;
         height: var(--pos-viewport-height, 100vh);
         min-height: 0;
-        grid-template-columns: 58px minmax(0, 1fr) minmax(320px, 340px);
+      }
+
+      .rail {
+        padding: 10px var(--pos-rail-pad);
+      }
+
+      .rail-nav {
+        margin-top: 4px;
+      }
+
+      .rail-shortcuts {
+        padding-top: 6px;
+      }
+
+      .rail-button {
+        border-radius: 12px;
+        font-size: 18px;
+      }
+
+      .brand-mark {
+        border-radius: 13px;
+        font-size: 15px;
+        box-shadow: 0 6px 14px rgba(7, 137, 111, 0.2);
+      }
+
+      .rail-user-button {
+        min-height: 46px;
+        padding: 5px 2px;
+      }
+
+      .rail-user-button i {
+        font-size: 15px;
+      }
+
+      .rail-user-name {
+        font-size: 8.5px;
+      }
+
+      .workspace {
+        padding: 14px;
+      }
+
+      .topbar {
+        gap: 10px;
+      }
+
+      .search-input,
+      .store-select,
+      .staff-pill {
+        height: 46px;
+        border-radius: 14px;
+      }
+
+      .search-input {
+        padding-left: 44px;
+      }
+
+      .search-wrap i {
+        left: 15px;
+        font-size: 18px;
       }
 
       .target-head {
@@ -5084,18 +5165,129 @@
       .checkout-panel {
         grid-column: auto;
         min-height: 0;
+        gap: 10px;
         border-left: 1px solid var(--tm-line);
         border-top: 0;
-        padding: 18px 14px max(env(safe-area-inset-bottom), calc(14px + var(--pos-system-overlap, 0px)));
+        padding: 14px 12px max(env(safe-area-inset-bottom), calc(12px + var(--pos-system-overlap, 0px)));
+      }
+
+      .customer-row {
+        height: 46px;
+        border-radius: 13px;
+      }
+
+      .cart-scroll {
+        border-radius: 14px;
+      }
+
+      .cart-list {
+        gap: 8px;
+        padding: 8px;
+      }
+
+      .cart-item {
+        padding: 10px;
+        border-radius: 12px;
+        gap: 8px;
+      }
+
+      .cart-empty {
+        min-height: 0;
+        padding: 20px 14px;
+      }
+
+      .cart-empty-icon {
+        width: 62px;
+        height: 62px;
+        margin-bottom: 10px;
+        border-radius: 20px;
+        font-size: 28px;
+      }
+
+      .checkout-footer {
+        gap: 10px;
+      }
+
+      .summary-box {
+        gap: 6px;
+        padding: 11px 12px;
+        border-radius: 14px;
+      }
+
+      .summary-line {
+        font-size: 13px;
+      }
+
+      .summary-line.total {
+        padding-top: 7px;
+        font-size: 21px;
+      }
+
+      .footer-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .footer-actions .pay-action {
+        grid-column: 1 / -1;
+      }
+
+      .soft-action {
+        min-height: 46px;
+        border-radius: 13px;
+        font-size: 11px;
+      }
+
+      .soft-action i {
+        font-size: 17px;
+      }
+
+      .pay-action {
+        min-height: 52px;
+        border-radius: 14px;
+        box-shadow: 0 8px 18px rgba(7, 137, 111, 0.2);
+      }
+
+      .checkout-pay {
+        font-size: 17px;
       }
 
       .product-grid {
         gap: 12px;
       }
 
+      .repair-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 15px;
+      }
+
+      .repair-title {
+        font-size: 19px;
+      }
+
+      .repair-head .repair-subtitle {
+        display: none;
+      }
+
+      .repair-head .repair-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .repair-head .repair-action {
+        min-height: 42px;
+        padding: 0 8px;
+        border-radius: 12px;
+        font-size: 13px;
+      }
+
       .topbar .staff-pill {
-        width: 54px;
-        min-width: 54px;
+        width: 46px;
+        min-width: 46px;
         padding: 0;
         font-size: 18px;
       }
@@ -5115,6 +5307,37 @@
       .payment-entry-panel,
       .payment-summary-panel {
         padding: 18px;
+      }
+    }
+
+    @media (min-width: 960px) and (max-width: 1180px) {
+      .product-grid.product-layout {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .product-card {
+        height: 272px;
+        grid-template-rows: 128px minmax(0, 1fr);
+        padding: 10px;
+      }
+
+      .product-name {
+        min-height: 50px;
+        font-size: 15px;
+      }
+
+      .product-price {
+        flex-wrap: wrap;
+        gap: 2px 8px;
+      }
+
+      .sale-price {
+        min-width: 0;
+        font-size: 16px;
+      }
+
+      .stock-pill {
+        font-size: 11px;
       }
     }
 
@@ -5139,6 +5362,10 @@
     }
 
     @media (max-width: 900px) {
+      .pos-app {
+        --pos-cart-width: 266px;
+      }
+
       .topbar {
         grid-template-columns: minmax(0, 1fr) auto;
       }
@@ -5238,15 +5465,18 @@
       }
 
       .pos-app {
+        --pos-rail-btn: 40px;
+        --pos-rail-pad: 6px;
+        --pos-rail-gap: 6px;
+        --pos-cart-width: 272px;
         width: max(100vw, 720px);
-        grid-template-columns: 54px minmax(0, 1fr) 300px;
       }
 
       .rail {
         position: static;
         flex-direction: column;
         justify-content: flex-start;
-        padding: 12px 7px;
+        padding: 10px var(--pos-rail-pad);
         border-right: 1px solid var(--tm-line);
         border-bottom: 0;
       }
@@ -5255,17 +5485,10 @@
       .rail-shortcuts,
       .rail-bottom {
         display: grid;
-        gap: 8px;
         width: 100%;
       }
 
-      .rail-button {
-        width: 40px;
-        height: 40px;
-      }
-
       .rail-user-button {
-        width: 48px;
         min-height: 44px;
       }
 
@@ -5560,7 +5783,7 @@
       }
 
       .footer-actions {
-        grid-template-columns: 58px 58px 66px minmax(0, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 7px;
       }
 
@@ -5586,13 +5809,38 @@
         grid-template-columns: 1fr;
       }
     }
+
+    @media (max-height: 680px) {
+      .pos-app {
+        --pos-rail-btn: 38px;
+        --pos-rail-gap: 5px;
+      }
+
+      .rail {
+        padding: 8px var(--pos-rail-pad);
+      }
+
+      .rail-button {
+        border-radius: 11px;
+        font-size: 17px;
+      }
+
+      .rail-user-button {
+        min-height: 42px;
+      }
+
+      .rail-user-name {
+        font-size: 8px;
+      }
+    }
+
     .transfer-view {
       grid-template-rows: minmax(0, 1fr);
     }
 
     .pos-app.transfer-mode,
     .pos-app.internal-tool-mode {
-      grid-template-columns: 64px minmax(0, 1fr);
+      grid-template-columns: var(--pos-rail-width) minmax(0, 1fr);
     }
 
     .pos-app.transfer-mode .checkout-panel,
@@ -7709,7 +7957,6 @@
     const REPAIR_TICKETS_KEY = 'techm8_pos_repair_tickets';
     const POS_CUSTOMERS_KEY = 'techm8_pos_customers';
     const POS_STAFF_KEY = 'techm8_pos_staff_name';
-    const POS_STORE_ASSIGNMENTS_KEY = 'techm8_pos_staff_store_assignments';
     const POS_STORE_KEY = 'techm8_pos_store_id';
     const POS_STAFF_SCHEDULE_KEY = 'techm8_pos_staff_schedule';
     const POS_OPENINGS_KEY = 'techm8_pos_openings';
@@ -7731,7 +7978,8 @@
       { id: 'park-ridge', code: 'PR', dbCode: 'parkridge', name: 'TechM8 Park Ridge' },
       { id: 'north-lakes', code: 'NL', dbCode: 'northlakes', name: 'TechM8 North Lakes' },
       { id: 'fairfield', code: 'FF', dbCode: 'fairfield', name: 'TechM8 Fairfield' },
-      { id: 'toowong', code: 'TW', dbCode: 'toowong', name: 'TechM8 Toowong' }
+      { id: 'toowong', code: 'TW', dbCode: 'toowong', name: 'TechM8 Toowong' },
+      { id: 'brassall', code: 'BR', dbCode: 'brassall', name: 'TechM8 Brassall' }
     ];
 
     const POS_RECEIPT_PROFILES = {
@@ -7766,18 +8014,27 @@
         email: 'techm8.toowong@gmail.com',
         website: 'www.techm8australia.com',
         abn: '69 656 056 352'
+      },
+      brassall: {
+        name: 'TechM8 Brassall',
+        address: '',
+        phone: '',
+        email: 'techm8.brassall@gmail.com',
+        website: 'www.techm8australia.com',
+        abn: ''
       }
     };
 
     const POS_STAFF_STORE_ASSIGNMENTS = {
-      Andy: ['PR', 'NL', 'FF', 'TW'],
-      Anna: ['PR', 'NL', 'FF', 'TW'],
-      Bonnie: ['PR', 'NL', 'FF', 'TW'],
-      Fiona: ['PR', 'NL', 'FF', 'TW'],
-      Jinny: ['PR', 'NL', 'FF', 'TW'],
-      'Joanna Chen': ['PR', 'NL', 'FF', 'TW'],
-      Lydia: ['PR', 'NL', 'FF', 'TW'],
-      Bowen: ['PR', 'NL', 'FF', 'TW']
+      Andy: ['PR'],
+      Anna: ['NL'],
+      Bonnie: ['FF'],
+      Fiona: ['TW'],
+      Jinny: ['FF'],
+      'Joanna Chen': ['PR'],
+      Lydia: [],
+      Brassall: ['BR'],
+      Bowen: ['PR', 'NL', 'FF', 'TW', 'BR']
     };
 
     const POS_STAFF_DEFAULT_GENDERS = {
@@ -7872,13 +8129,21 @@
       const signedInName = staffIdentityKey(signedInStaffName());
       const targetName = staffIdentityKey(staff);
       if (signedInEmail) {
-        return signedInEmail === POS_ADMIN_EMAIL && targetName === signedInName ? 'admin' : 'staff';
+        return signedInEmail === POS_ADMIN_EMAIL ? 'admin' : 'staff';
       }
       const recordEmail = normalizeStaffKey(record && (record.staff_email || record.email || record.login_email));
       return recordEmail === POS_ADMIN_EMAIL ? 'admin' : 'staff';
     }
 
     function staffDefaultStoreId(staff) {
+      const signedInProfile = window.Techm8StaffAuth && window.Techm8StaffAuth.getProfile
+        ? window.Techm8StaffAuth.getProfile()
+        : null;
+      const requestedName = staffIdentityKey(staff);
+      if (signedInProfile && requestedName === staffIdentityKey(signedInStaffName())) {
+        const profileStore = storeByCode(signedInProfile.default_store_code);
+        if (profileStore) return profileStore.id;
+      }
       const record = typeof staff === 'object'
         ? staff
         : state.staffMembers.find(item => staffIdentityKey(item) === staffIdentityKey(staff));
@@ -7962,7 +8227,9 @@
 
     function renderStaffGateStoreChoices() {
       if (!els.posStoreChoices) return;
-      const stores = posStores.filter(store => fuzzySearchMatch(state.staffGateStoreSearch, [
+      const accessStaffName = state.staffGateStaffName || signedInStaffName();
+      const allowedStoreIds = allowedStoresForStaff(accessStaffName).map(store => store.id);
+      const stores = posStores.filter(store => allowedStoreIds.includes(store.id)).filter(store => fuzzySearchMatch(state.staffGateStoreSearch, [
         store.name,
         store.code,
         store.dbCode,
@@ -7985,7 +8252,11 @@
 
     function renderStaffGateStaffChoices() {
       if (!els.posStaffChoices) return;
-      const staff = staffChoiceRecords().filter(record => fuzzySearchMatch(state.staffGateStaffSearch, [
+      const accountStaffName = signedInStaffName();
+      const canChooseOtherStaff = staffCanSwitchStore(accountStaffName);
+      const staff = staffChoiceRecords()
+        .filter(record => canChooseOtherStaff || staffIdentityKey(record) === staffIdentityKey(accountStaffName))
+        .filter(record => fuzzySearchMatch(state.staffGateStaffSearch, [
         record.displayName,
         record.email,
         staffGenderFor(record)
@@ -8011,14 +8282,25 @@
     }
 
     function setStaffGateStore(storeId) {
-      if (!posStores.some(store => store.id === storeId)) return;
+      const allowedStoreIds = allowedStoresForStaff(state.staffGateStaffName || signedInStaffName())
+        .map(store => store.id);
+      if (!allowedStoreIds.includes(storeId)) {
+        if (els.posStaffError) els.posStaffError.textContent = 'Your account is not assigned to this shop.';
+        return;
+      }
       state.staffGateStoreId = storeId;
       if (els.posStaffError) els.posStaffError.textContent = '';
       renderStaffGateStoreChoices();
     }
 
     function setStaffGateStaff(staffName) {
-      state.staffGateStaffName = staffDisplayName(staffName).trim();
+      const requestedStaffName = staffDisplayName(staffName).trim();
+      const accountStaffName = signedInStaffName();
+      if (!staffCanSwitchStore(accountStaffName) && staffIdentityKey(requestedStaffName) !== staffIdentityKey(accountStaffName)) {
+        if (els.posStaffError) els.posStaffError.textContent = 'Staff accounts can only continue as their signed-in user.';
+        return;
+      }
+      state.staffGateStaffName = requestedStaffName;
       const activeShift = readActiveShift();
       if (activeShift && !staffCanSwitchStore(state.staffGateStaffName)) {
         state.staffGateStoreId = activeShift.storeId;
@@ -8304,16 +8586,6 @@
       return shift && shift.storeId ? shift : null;
     }
 
-    function loadStaffStoreAssignments() {
-      try {
-        const override = JSON.parse(localStorage.getItem(POS_STORE_ASSIGNMENTS_KEY) || 'null');
-        if (override && typeof override === 'object') return override;
-      } catch (error) {
-        console.error(error);
-      }
-      return POS_STAFF_STORE_ASSIGNMENTS;
-    }
-
     function storeById(storeId) {
       return posStores.find(store => store.id === storeId) || posStores[0];
     }
@@ -8324,13 +8596,34 @@
     }
 
     function allowedStoresForStaff(staffName) {
-      const assignments = loadStaffStoreAssignments();
-      const staffKey = staffIdentityKey(staffName);
-      const matchedKey = Object.keys(assignments).find(key => staffIdentityKey(key) === staffKey);
-      const codes = matchedKey ? assignments[matchedKey] : [];
-      return (Array.isArray(codes) ? codes : [])
-        .map(storeByCode)
-        .filter(Boolean);
+      const requestedName = staffDisplayName(staffName).trim();
+      const accountName = signedInStaffName();
+      if (staffCanSwitchStore(accountName || requestedName)) return posStores.slice();
+      if (accountName && staffIdentityKey(requestedName) !== staffIdentityKey(accountName)) return [];
+      const defaultStoreId = staffDefaultStoreId(accountName || requestedName);
+      const defaultStore = posStores.find(store => store.id === defaultStoreId);
+      return defaultStore ? [defaultStore] : [];
+    }
+
+    async function verifySignedInStoreAccess(storeId) {
+      const store = posStores.find(item => item.id === storeId);
+      if (!store) return { ok: false, message: 'The selected shop is unavailable.' };
+      if (localDashboardTestMode || localTransferTestMode || localCatalogTestMode) return { ok: true };
+      try {
+        const token = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+          ? window.Techm8StaffAuth.getToken()
+          : '';
+        const result = await window.Techm8StaffAuth.callRpc('verify_staff_store_access', {
+          session_token: token,
+          target_store_code: store.dbCode
+        });
+        return result && result.ok && result.allowed !== false
+          ? { ok: true }
+          : { ok: false, message: (result && result.message) || 'Your account is not assigned to this shop.' };
+      } catch (error) {
+        console.error(error);
+        return { ok: false, message: error.message || 'Shop access could not be verified.' };
+      }
     }
 
     function renderStoreSelectOptions() {
@@ -8475,8 +8768,9 @@
         || localStorage.getItem(POS_STAFF_KEY)
         || sessionStorage.getItem(POS_STAFF_KEY)
         || (activeShift && (activeShift.currentStaffName || activeShift.lastStaffName || activeShift.staffName));
-      state.staffGateStoreId = posStores.some(store => store.id === savedStore) ? savedStore : posStores[0].id;
       state.staffGateStaffName = savedStaff ? staffDisplayName(savedStaff) : '';
+      const allowedStoreIds = allowedStoresForStaff(state.staffGateStaffName).map(store => store.id);
+      state.staffGateStoreId = allowedStoreIds.includes(savedStore) ? savedStore : (allowedStoreIds[0] || '');
       if (els.posStoreChoice) els.posStoreChoice.value = state.staffGateStoreId;
       if (els.posStaffSelect) els.posStaffSelect.value = state.staffGateStaffName;
       els.posStaffCancel.hidden = options.canCancel === false || !state.selectedStaffName;
@@ -8572,6 +8866,10 @@
         localStorage.removeItem(POS_ACTIVE_SHIFT_KEY);
         return false;
       }
+      if (!context.allowedStoreIds.includes(activeShift.storeId)) {
+        clearActiveShiftCache();
+        return false;
+      }
       context.nextStoreId = activeShift.storeId;
       if (!staffCanSwitchStore(context.selectedName)) context.allowedStoreIds = [activeShift.storeId];
       setStaffContext(context, { keepOpeningConfirmed: true });
@@ -8620,6 +8918,11 @@
       const activeShift = readActiveShift();
       const canSwitchStore = staffCanSwitchStore(selectedName);
       const effectiveStoreId = activeShift && !canSwitchStore ? activeShift.storeId : selectedStoreId;
+      const storeAccess = await verifySignedInStoreAccess(effectiveStoreId);
+      if (!storeAccess.ok) {
+        els.posStaffError.textContent = storeAccess.message;
+        return false;
+      }
       const context = staffContextFor(selectedName, effectiveStoreId, { ignoreSchedule: Boolean(activeShift) });
       if (!context.ok) {
         els.posStaffError.textContent = context.message;
@@ -8664,11 +8967,23 @@
           || posStores[0].id;
         const context = staffContextFor(accountStaff, preferredStoreId, { ignoreSchedule: Boolean(activeShift) });
         if (context.ok) {
+          if (activeShift && !context.allowedStoreIds.includes(activeShift.storeId)) {
+            clearActiveShiftCache();
+            return ensureStaffStoreAccess();
+          }
           if (activeShift && !staffCanSwitchStore(accountStaff)) {
             context.allowedStoreIds = [activeShift.storeId];
             context.nextStoreId = activeShift.storeId;
           } else if (context.allowedStoreIds.includes(preferredStoreId)) {
             context.nextStoreId = preferredStoreId;
+          }
+          const storeAccess = await verifySignedInStoreAccess(context.nextStoreId);
+          if (!storeAccess.ok) {
+            console.error(storeAccess.message);
+            return new Promise(resolve => {
+              staffAccessResolve = resolve;
+              openStaffModal({ canCancel: false });
+            });
           }
           setStaffContext(context, { keepOpeningConfirmed: Boolean(activeShift) });
           return true;
@@ -9233,7 +9548,7 @@
 
       state.todayProgressLoading = true;
       if (!options.silent) state.todayProgressError = '';
-      renderLiveTargetDashboard();
+      if (!options.silent) renderLiveTargetDashboard();
 
       const url = new URL(POS_SALES_ORDERS_ENDPOINT);
       url.searchParams.set('mode', 'today-progress');
@@ -18691,9 +19006,6 @@
     window.setInterval(() => {
       if (!localDashboardTestMode && !localTransferTestMode && !localCatalogTestMode) {
         enforceBusinessDateRollover().catch(console.error);
-      }
-      if (!localDashboardTestMode && state.activeView === 'target' && document.visibilityState === 'visible') {
-        loadTodayProgress({ silent: true });
       }
       if (state.selectedStaffName && document.visibilityState === 'visible' && !localTransferTestMode && !localDashboardTestMode) {
         loadStocktakeContext({ silent: true });
