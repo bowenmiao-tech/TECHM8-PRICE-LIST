@@ -8322,6 +8322,7 @@
     const POS_ORDERS_KEY = 'techm8_pos_demo_orders';
     const POS_HELD_ORDERS_KEY = 'techm8_pos_held_orders';
     const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
+    const POS_TEST_DATA_RESET_KEY = 'techm8_pos_test_data_reset_2026_08_26';
     const POS_PRODUCTS_CACHE_KEY = 'techm8_pos_products_cache_v3';
     const POS_REPAIR_QUOTES_CACHE_KEY = 'techm8_pos_repair_quotes_cache_v1';
     const POS_PAYMENT_METHODS = [
@@ -8693,6 +8694,15 @@
         return [];
       }
     }
+
+    function clearDeletedTestTransactionCache() {
+      if (localStorage.getItem(POS_TEST_DATA_RESET_KEY) === 'complete') return;
+      localStorage.removeItem(POS_ORDERS_KEY);
+      localStorage.removeItem(REPAIR_TICKETS_KEY);
+      localStorage.setItem(POS_TEST_DATA_RESET_KEY, 'complete');
+    }
+
+    clearDeletedTestTransactionCache();
 
     function numberValue(value) {
       const parsed = Number(String(value ?? '').replace(/[^0-9.-]/g, ''));
