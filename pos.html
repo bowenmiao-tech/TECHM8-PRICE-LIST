@@ -3166,20 +3166,155 @@
       border: 1px solid var(--tm-line);
       border-radius: 14px;
       background: #fff;
-      padding: 14px;
+      padding: 13px 14px;
       display: grid;
-      gap: 6px;
+      gap: 7px;
       text-align: left;
+      color: var(--tm-ink);
+    }
+
+    .hold-order-button:hover,
+    .hold-order-button:focus-visible {
+      border-color: var(--tm-green);
+      background: #f5fbf9;
+      outline: none;
+    }
+
+    .hold-order-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .hold-order-button strong {
       font-size: 16px;
+      font-weight: 950;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
     }
 
-    .hold-order-button span {
+    .hold-order-total {
+      flex: none;
+      color: var(--tm-green-dark);
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .hold-order-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px 14px;
       color: #64767f;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 750;
+    }
+
+    .hold-order-meta > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .hold-order-meta i {
+      font-size: 13px;
+      opacity: .72;
+    }
+
+    .hold-order-pending {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      padding: 3px 9px;
+      border-radius: 999px;
+      color: #9a5b12;
+      background: #fdf1e2;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .hold-name-modal {
+      width: min(480px, 100%);
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .hold-name-body {
+      display: grid;
+      gap: 9px;
+      padding: 18px;
+    }
+
+    .hold-name-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #405058;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .hold-name-label .required-mark {
+      color: var(--tm-orange);
+      font-weight: 950;
+    }
+
+    .hold-name-input {
+      width: 100%;
+      min-height: 52px;
+      padding: 0 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      outline: none;
+      color: var(--tm-ink);
+      background: #fff;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .hold-name-input:focus {
+      border-color: rgba(7, 137, 111, .55);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, .1);
+    }
+
+    .hold-name-hint {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.5;
+    }
+
+    .hold-name-error {
+      min-height: 15px;
+      color: var(--tm-red);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .hold-name-summary {
+      display: grid;
+      gap: 5px;
+      margin-top: 3px;
+      padding: 12px 13px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #f7fafb;
+      color: #4c5d65;
+      font-size: 12.5px;
+      font-weight: 800;
+    }
+
+    .hold-name-summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hold-name-summary strong {
+      color: var(--tm-ink);
+      font-weight: 950;
     }
 
     .special-fields {
@@ -7150,6 +7285,26 @@
     </div>
   </div>
 
+  <div id="holdNameModal" class="modal-backdrop" aria-hidden="true">
+    <form id="holdNameForm" class="special-modal hold-name-modal" role="dialog" aria-modal="true" aria-labelledby="holdNameTitle">
+      <div class="payment-modal-header">
+        <h2 id="holdNameTitle">Hold Order</h2>
+        <button id="holdNameClose" class="modal-close" type="button" aria-label="Close hold order"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="hold-name-body">
+        <label class="hold-name-label" for="holdNameInput">Reference name <span class="required-mark">*</span></label>
+        <input id="holdNameInput" class="hold-name-input" type="text" maxlength="60" autocomplete="off" placeholder="Who or what is this order for?">
+        <div class="hold-name-hint">This name is what staff see in the Resume list, so use something recognisable — the customer, the device, or where the items are waiting.</div>
+        <div id="holdNameError" class="hold-name-error" role="alert"></div>
+        <div id="holdNameSummary" class="hold-name-summary"></div>
+      </div>
+      <div class="payment-modal-footer">
+        <button id="holdNameCancel" class="soft-action" type="button">Cancel</button>
+        <button class="pay-action" type="submit"><i class="bi bi-pause-circle-fill"></i> Hold Order</button>
+      </div>
+    </form>
+  </div>
+
   <div id="itemNoteModal" class="modal-backdrop" aria-hidden="true">
     <form id="itemNoteForm" class="special-modal item-note-modal" role="dialog" aria-modal="true" aria-labelledby="itemNoteTitle">
       <div class="payment-modal-header">
@@ -8125,6 +8280,13 @@
       holdListModal: document.getElementById('holdListModal'),
       holdListCloseBtn: document.getElementById('holdListCloseBtn'),
       holdList: document.getElementById('holdList'),
+      holdNameModal: document.getElementById('holdNameModal'),
+      holdNameForm: document.getElementById('holdNameForm'),
+      holdNameInput: document.getElementById('holdNameInput'),
+      holdNameError: document.getElementById('holdNameError'),
+      holdNameSummary: document.getElementById('holdNameSummary'),
+      holdNameClose: document.getElementById('holdNameClose'),
+      holdNameCancel: document.getElementById('holdNameCancel'),
       specialProductBtn: document.getElementById('specialProductBtn'),
       specialProductModal: document.getElementById('specialProductModal'),
       specialProductForm: document.getElementById('specialProductForm'),
@@ -17861,6 +18023,25 @@
       }
     }
 
+    function itemQuantity(item) {
+      const quantity = Number(item && item.qty);
+      return Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+    }
+
+    function heldOrderTotal(order) {
+      return (Array.isArray(order && order.items) ? order.items : [])
+        .reduce((sum, item) => sum + numberValue(item.sale_price) * itemQuantity(item), 0);
+    }
+
+    function heldOrderLabel(order) {
+      const label = String(order && order.label || '').trim();
+      if (label) return label;
+      const customer = String(order && order.customer || '').trim();
+      if (customer && customer.toLowerCase() !== 'walk-in customer') return customer;
+      const items = Array.isArray(order && order.items) ? order.items : [];
+      return items.length ? String(items[0].name || 'Held order') : 'Held order';
+    }
+
     function renderHoldList() {
       const held = heldOrders();
       if (!els.holdList) return;
@@ -17869,12 +18050,21 @@
         return;
       }
       els.holdList.innerHTML = held.map(order => {
-        const total = (Array.isArray(order.items) ? order.items : []).reduce((sum, item) => sum + numberValue(item.sale_price) * itemQuantity(item), 0);
-        const created = order.created_at ? new Date(order.created_at).toLocaleString('en-AU') : '';
+        const items = Array.isArray(order.items) ? order.items : [];
+        const created = order.created_at ? formatDateTime(order.created_at) : '';
         return `
           <button class="hold-order-button" type="button" data-resume-hold="${escapeHtml(order.id)}">
-            <strong>${escapeHtml(order.customer || 'Walk-in Customer')} &middot; ${money(total)}</strong>
-            <span>${(order.items || []).length} lines &middot; ${escapeHtml(created)}</span>
+            <span class="hold-order-head">
+              <strong>${escapeHtml(heldOrderLabel(order))}</strong>
+              <span class="hold-order-total">${money(heldOrderTotal(order))}</span>
+            </span>
+            <span class="hold-order-meta">
+              <span><i class="bi bi-person"></i>${escapeHtml(order.customer || 'Walk-in Customer')}</span>
+              <span><i class="bi bi-bag"></i>${items.length} line${items.length === 1 ? '' : 's'}</span>
+              ${order.held_by || order.staff_name ? `<span><i class="bi bi-person-badge"></i>${escapeHtml(order.held_by || order.staff_name)}</span>` : ''}
+              ${created ? `<span><i class="bi bi-clock"></i>${escapeHtml(created)}</span>` : ''}
+            </span>
+            ${order.sync_pending ? '<span class="hold-order-pending"><i class="bi bi-cloud-arrow-up"></i> Not synced yet</span>' : ''}
           </button>
         `;
       }).join('');
@@ -18080,7 +18270,62 @@
         : `${order.id} paid and saved to the POS database.`);
     }
 
-    async function holdOrder() {
+    function suggestedHoldName() {
+      const customer = els.customerInput.value.trim();
+      if (customer && customer.toLowerCase() !== 'walk-in customer') return customer.slice(0, 60);
+      const repairItem = state.cart.find(item => item.is_repair && item.ticket_id);
+      if (repairItem) {
+        const ticket = state.repairTickets.find(item => item.id === repairItem.ticket_id);
+        const ticketCustomer = String(ticket && ticket.customerName || '').trim();
+        if (ticketCustomer && ticketCustomer.toLowerCase() !== 'walk-in customer') return ticketCustomer.slice(0, 60);
+        return String(repairItem.name || 'Repair').slice(0, 60);
+      }
+      const firstItem = state.cart[0];
+      if (!firstItem) return '';
+      const extraLines = state.cart.length - 1;
+      const base = String(firstItem.name || 'Order').trim();
+      return extraLines > 0 ? `${base.slice(0, 42)} +${extraLines} more` : base.slice(0, 60);
+    }
+
+    function openHoldNameModal() {
+      if (!state.cart.length) {
+        showToast('Cart is empty.');
+        return;
+      }
+      const total = state.cart.reduce((sum, item) => sum + numberValue(item.sale_price) * itemQuantity(item), 0);
+      const customer = els.customerInput.value.trim() || 'Walk-in Customer';
+      els.holdNameError.textContent = '';
+      els.holdNameSummary.innerHTML = `
+        <div class="hold-name-summary-row"><span>Customer</span><strong>${escapeHtml(customer)}</strong></div>
+        <div class="hold-name-summary-row"><span>${state.cart.length} line${state.cart.length === 1 ? '' : 's'}</span><strong>${money(total)}</strong></div>
+      `;
+      els.holdNameInput.value = suggestedHoldName();
+      els.holdNameModal.classList.add('show');
+      els.holdNameModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => {
+        els.holdNameInput.focus();
+        els.holdNameInput.select();
+      }, 0);
+    }
+
+    function closeHoldNameModal() {
+      els.holdNameModal.classList.remove('show');
+      els.holdNameModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function submitHoldName(event) {
+      if (event) event.preventDefault();
+      const label = els.holdNameInput.value.trim();
+      if (!label) {
+        els.holdNameError.textContent = 'Enter a name so staff can recognise this order later.';
+        els.holdNameInput.focus();
+        return;
+      }
+      closeHoldNameModal();
+      await holdOrder(label);
+    }
+
+    async function holdOrder(label) {
       if (!state.cart.length) {
         showToast('Cart is empty.');
         return;
@@ -18088,6 +18333,7 @@
       const held = heldOrders();
       const heldOrder = {
         id: 'HOLD-' + Date.now(),
+        label: String(label || '').trim().slice(0, 60),
         customer: els.customerInput.value.trim() || 'Walk-in Customer',
         store_id: state.storeId,
         store_code: repairTicketStoreCode(),
@@ -18108,7 +18354,10 @@
       state.cart = [];
       els.customerInput.value = '';
       renderCart();
-      showToast(heldOrder.sync_pending ? 'Order held locally. Database sync is pending.' : 'Order placed on hold for this store.');
+      const heldLabel = heldOrderLabel(heldOrder);
+      showToast(heldOrder.sync_pending
+        ? `"${heldLabel}" held locally. Database sync is pending.`
+        : `"${heldLabel}" placed on hold for this store.`);
     }
 
     function discardCart() {
@@ -18980,9 +19229,15 @@
     });
 
     els.payBtn.addEventListener('click', openPaymentModal);
-    els.holdBtn.addEventListener('click', holdOrder);
+    els.holdBtn.addEventListener('click', openHoldNameModal);
     els.resumeBtn.addEventListener('click', openHoldListModal);
     els.discardBtn.addEventListener('click', discardCart);
+    els.holdNameForm.addEventListener('submit', submitHoldName);
+    els.holdNameClose.addEventListener('click', closeHoldNameModal);
+    els.holdNameCancel.addEventListener('click', closeHoldNameModal);
+    els.holdNameModal.addEventListener('click', event => {
+      if (event.target === els.holdNameModal) closeHoldNameModal();
+    });
     els.paymentCloseBtn.addEventListener('click', closePaymentModal);
     els.paymentModal.addEventListener('click', event => {
       if (event.target === els.paymentModal) closePaymentModal();
@@ -19326,6 +19581,9 @@
       }
       if (event.key === 'Escape' && els.itemNoteModal.classList.contains('show')) {
         closeItemNoteModal();
+      }
+      if (event.key === 'Escape' && els.holdNameModal.classList.contains('show')) {
+        closeHoldNameModal();
       }
       if (event.key === 'Escape' && els.usedDeviceDetailModal.classList.contains('show')) {
         closeUsedDeviceDetail();
