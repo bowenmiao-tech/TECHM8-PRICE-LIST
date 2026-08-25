@@ -134,14 +134,17 @@ window.Techm8StaffAuth = (function () {
         inset: 0;
         z-index: 99999;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         padding: 20px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         background: rgba(9, 18, 24, 0.48);
         backdrop-filter: blur(8px);
       }
       .tm-auth-card {
         width: min(460px, 100%);
+        margin: auto;
         background: #ffffff;
         border-radius: 24px;
         border: 1px solid #d8e1e6;
