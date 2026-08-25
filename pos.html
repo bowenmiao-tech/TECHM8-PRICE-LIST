@@ -2078,62 +2078,74 @@
       justify-content: center;
     }
 
-    .cart-note-field,
-    .order-note-field {
-      display: grid;
-      gap: 5px;
-      color: #53656d;
-      font-size: 11px;
-      font-weight: 850;
-    }
-
-    .cart-note-field {
+    .cart-note-trigger {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       margin-top: 9px;
+      padding: 0;
+      border: 0;
+      color: var(--tm-green);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 900;
     }
 
-    .cart-note-input,
-    .order-note-input {
+    .cart-note-trigger:hover {
+      color: var(--tm-green-dark);
+      text-decoration: underline;
+    }
+
+    .cart-note-trigger.has-note::after {
+      content: '\2713';
+      width: 17px;
+      height: 17px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--tm-green);
+      font-size: 10px;
+      text-decoration: none;
+    }
+
+    .item-note-modal {
+      width: min(520px, 100%);
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .item-note-modal-body {
+      display: grid;
+      gap: 12px;
+      padding: 22px;
+    }
+
+    .item-note-product {
+      color: #566870;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .item-note-input {
       width: 100%;
-      min-width: 0;
-      border: 1px solid #d7e2e5;
-      border-radius: 9px;
+      min-height: 150px;
+      padding: 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
       outline: none;
-      background: #f8fbfb;
-      color: var(--tm-ink);
-      font: inherit;
-      font-weight: 650;
-    }
-
-    .cart-note-input {
-      height: 32px;
-      padding: 0 9px;
-    }
-
-    .order-note-field {
-      padding: 10px 12px;
-      border: 1px solid #e1e9ec;
-      border-radius: 14px;
-      background: #f8fbfb;
-    }
-
-    .order-note-input {
-      min-height: 42px;
-      max-height: 88px;
-      padding: 8px 9px;
       resize: vertical;
-      line-height: 1.35;
-    }
-
-    .cart-note-input:focus,
-    .order-note-input:focus {
-      border-color: var(--tm-green);
-      box-shadow: 0 0 0 3px rgba(0, 137, 111, .1);
+      color: var(--tm-ink);
       background: #fff;
+      font: inherit;
+      line-height: 1.45;
     }
 
-    .order-note-input:disabled {
-      cursor: not-allowed;
-      opacity: .6;
+    .item-note-input:focus {
+      border-color: var(--tm-green);
+      box-shadow: 0 0 0 4px rgba(7, 137, 111, .1);
     }
 
     .icon-action {
@@ -6764,10 +6776,6 @@
       <div id="cartArea" class="cart-scroll"></div>
 
       <div class="checkout-footer">
-        <label class="order-note-field">
-          <span>Order note · prints on receipt</span>
-          <textarea id="orderNoteInput" class="order-note-input" rows="2" maxlength="1000" placeholder="Add information for this whole order" disabled></textarea>
-        </label>
         <div class="summary-box">
           <div class="summary-line"><span>Items</span><strong id="summaryItems">0</strong></div>
           <div class="summary-line"><span>Subtotal</span><strong id="summarySubtotal">$0.00</strong></div>
@@ -6892,6 +6900,23 @@
       </div>
       <div id="holdList" class="hold-list"></div>
     </div>
+  </div>
+
+  <div id="itemNoteModal" class="modal-backdrop" aria-hidden="true">
+    <form id="itemNoteForm" class="special-modal item-note-modal" role="dialog" aria-modal="true" aria-labelledby="itemNoteTitle">
+      <div class="payment-modal-header">
+        <h2 id="itemNoteTitle">Add Note</h2>
+        <button id="itemNoteClose" class="modal-close" type="button" aria-label="Close item note"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="item-note-modal-body">
+        <div id="itemNoteProduct" class="item-note-product"></div>
+        <textarea id="itemNoteInput" class="item-note-input" maxlength="500" placeholder="Add information for this item"></textarea>
+      </div>
+      <div class="payment-modal-footer">
+        <button id="itemNoteCancel" class="soft-action" type="button">Cancel</button>
+        <button class="pay-action" type="submit">Save Note</button>
+      </div>
+    </form>
   </div>
 
   <div id="specialProductModal" class="modal-backdrop" aria-hidden="true">
@@ -7579,7 +7604,7 @@
       customerDuplicateMatch: null,
       customerDuplicateLoading: false,
       cart: [],
-      orderNote: '',
+      itemNoteProductId: '',
         category: 'All',
         search: '',
         storeId: 'park-ridge',
@@ -7786,7 +7811,13 @@
       storeSelect: document.getElementById('storeSelect'),
       syncStatus: document.getElementById('syncStatus'),
       cartArea: document.getElementById('cartArea'),
-      orderNoteInput: document.getElementById('orderNoteInput'),
+      itemNoteModal: document.getElementById('itemNoteModal'),
+      itemNoteForm: document.getElementById('itemNoteForm'),
+      itemNoteTitle: document.getElementById('itemNoteTitle'),
+      itemNoteProduct: document.getElementById('itemNoteProduct'),
+      itemNoteInput: document.getElementById('itemNoteInput'),
+      itemNoteClose: document.getElementById('itemNoteClose'),
+      itemNoteCancel: document.getElementById('itemNoteCancel'),
       summaryItems: document.getElementById('summaryItems'),
       summarySubtotal: document.getElementById('summarySubtotal'),
       summaryGst: document.getElementById('summaryGst'),
@@ -8778,7 +8809,6 @@
       }
       if (reloadProducts) {
         state.cart = [];
-        setOrderNote('');
         loadProducts();
         renderCart();
       }
@@ -15382,11 +15412,32 @@
       item.note = noteText(value, 500);
     }
 
-    function setOrderNote(value) {
-      state.orderNote = noteText(value, 1000);
-      if (els.orderNoteInput && document.activeElement !== els.orderNoteInput) {
-        els.orderNoteInput.value = state.orderNote;
-      }
+    function openItemNoteModal(productId) {
+      const item = state.cart.find(cartItem => String(cartItem.id) === String(productId));
+      if (!item) return;
+      state.itemNoteProductId = String(item.id);
+      els.itemNoteTitle.textContent = noteText(item.note, 500).trim() ? 'Edit Note' : 'Add Note';
+      els.itemNoteProduct.textContent = item.name || item.sku || 'Selected item';
+      els.itemNoteInput.value = noteText(item.note, 500);
+      els.itemNoteModal.classList.add('show');
+      els.itemNoteModal.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => els.itemNoteInput.focus());
+    }
+
+    function closeItemNoteModal() {
+      state.itemNoteProductId = '';
+      els.itemNoteModal.classList.remove('show');
+      els.itemNoteModal.setAttribute('aria-hidden', 'true');
+      els.itemNoteInput.value = '';
+    }
+
+    function saveItemNote() {
+      if (!state.itemNoteProductId) return;
+      const note = noteText(els.itemNoteInput.value, 500);
+      updateCartItemNote(state.itemNoteProductId, note);
+      closeItemNoteModal();
+      renderCart();
+      showToast(note.trim() ? 'Item note saved.' : 'Item note removed.');
     }
 
     function updateCartItemPrice(productId, rawValue) {
@@ -15444,6 +15495,7 @@
           <div class="cart-list">
             ${state.cart.map(item => {
               const overrideText = cartPriceOverrideText(item);
+              const hasNote = Boolean(noteText(item.note, 500).trim());
               return `
                 <div class="cart-item">
                   <div class="cart-item-head">
@@ -15474,10 +15526,10 @@
                     `}
                   </div>
                   ${overrideText ? `<div class="cart-price-override">${escapeHtml(overrideText)}</div>` : ''}
-                  <label class="cart-note-field">
-                    <span>Item note · prints on receipt</span>
-                    <input class="cart-note-input" type="text" maxlength="500" value="${escapeHtml(noteText(item.note, 500))}" data-cart-note="${escapeHtml(item.id)}" placeholder="Add a note for this item">
-                  </label>
+                  <button class="cart-note-trigger${hasNote ? ' has-note' : ''}" type="button" data-open-cart-note="${escapeHtml(item.id)}" title="${hasNote ? 'Note added — click to edit' : 'Add a note to this item'}">
+                    <i class="bi bi-chat-left-text"></i>
+                    <span>Add note</span>
+                  </button>
                 </div>
               `;
             }).join('')}
@@ -15494,10 +15546,6 @@
       els.summaryTotal.textContent = money(subtotal);
       els.payBtn.textContent = subtotal > 0 ? `${money(subtotal)} Checkout` : 'Checkout';
       els.payBtn.disabled = subtotal <= 0;
-      if (els.orderNoteInput) {
-        els.orderNoteInput.disabled = !state.cart.length;
-        if (document.activeElement !== els.orderNoteInput) els.orderNoteInput.value = state.orderNote;
-      }
     }
 
     function renderAll() {
@@ -17213,7 +17261,6 @@
       const refundTotal = roundedMoneyValue(order.refund_total || 0);
       const gst = roundedMoneyValue(total / 11);
       const subtotalExGst = roundedMoneyValue(total - gst);
-      const orderNote = noteText(order.order_note, 1000).trim();
       const itemRows = items.map(item => `
         <div class="receipt-item">
           <div class="receipt-item-name">${escapeHtml(receiptItemDisplayName(item))}</div>
@@ -17257,10 +17304,6 @@
         </div>
         <div class="receipt-rule"></div>
         <section class="receipt-items">${itemRows}</section>
-        ${orderNote ? `
-          <div class="receipt-rule"></div>
-          <section class="receipt-order-note"><strong>ORDER NOTE</strong><span>${escapeHtml(orderNote)}</span></section>
-        ` : ''}
         <div class="receipt-rule"></div>
         <section class="receipt-totals">
           <div class="receipt-total-row"><span>Subtotal (ex GST)</span><strong>${money(subtotalExGst)}</strong></div>
@@ -17312,7 +17355,6 @@
     .receipt-item-name { font-weight: 800; }
     .receipt-item-sku { color: #333; font-size: 9px; }
     .receipt-item-note { padding-left: 1.5mm; border-left: 1px solid #000; font-size: 9.5px; white-space: pre-wrap; }
-    .receipt-order-note { display: grid; gap: 1mm; font-size: 9.5px; white-space: pre-wrap; }
     .receipt-grand-total { margin-top: 1mm; padding-top: 1.5mm; border-top: 1px solid #000; font-size: 13px; }
     .receipt-section-label { font-weight: 900; }
     .receipt-terms { display: grid; gap: 2mm; font-size: 9px; line-height: 1.36; text-align: left; }
@@ -17555,7 +17597,6 @@
       }
       held.splice(index, 1);
       state.cart = Array.isArray(order.items) ? order.items : [];
-      setOrderNote(order.order_note || '');
       els.customerInput.value = order.customer && order.customer !== 'Walk-in Customer' ? order.customer : '';
       cacheHeldOrders(held);
       closeHoldListModal();
@@ -17656,7 +17697,6 @@
         payment_method: paymentSummary,
         payments: normalizedPayments,
         total,
-        order_note: noteText(state.orderNote, 1000).trim(),
         items: state.cart.map(posOrderLineFromCartItem),
         created_at: new Date().toISOString(),
         sync_pending: true
@@ -17707,7 +17747,6 @@
       if (repairTickets.length) resetRepairState();
 
       state.cart = [];
-      setOrderNote('');
       els.customerInput.value = '';
       await loadRepairTickets();
       if (usedDeviceItems.length) await loadUsedDevices();
@@ -17733,7 +17772,6 @@
         store_id: state.storeId,
         store_code: repairTicketStoreCode(),
         staff_name: state.selectedStaffName,
-        order_note: noteText(state.orderNote, 1000).trim(),
         items: state.cart.map(item => ({ ...item })),
         created_at: new Date().toISOString(),
         sync_pending: true
@@ -17748,7 +17786,6 @@
       held.unshift(heldOrder);
       cacheHeldOrders(held.slice(0, 50));
       state.cart = [];
-      setOrderNote('');
       els.customerInput.value = '';
       renderCart();
       showToast(heldOrder.sync_pending ? 'Order held locally. Database sync is pending.' : 'Order placed on hold for this store.');
@@ -17758,7 +17795,6 @@
       if (!state.cart.length) return;
       if (!confirm('Discard current cart?')) return;
       state.cart = [];
-      setOrderNote('');
       renderCart();
       showToast('Cart discarded.');
     }
@@ -18498,22 +18534,15 @@
     els.cartArea.addEventListener('click', event => {
       const qtyButton = event.target.closest('[data-qty]');
       const removeButton = event.target.closest('[data-remove]');
+      const noteButton = event.target.closest('[data-open-cart-note]');
       if (qtyButton) changeQty(qtyButton.dataset.qty, qtyButton.dataset.dir);
       if (removeButton) removeFromCart(removeButton.dataset.remove);
+      if (noteButton) openItemNoteModal(noteButton.dataset.openCartNote);
     });
 
     els.cartArea.addEventListener('change', event => {
       const priceInput = event.target.closest('[data-cart-price]');
       if (priceInput) updateCartItemPrice(priceInput.dataset.cartPrice, priceInput.value);
-    });
-
-    els.cartArea.addEventListener('input', event => {
-      const noteInput = event.target.closest('[data-cart-note]');
-      if (noteInput) updateCartItemNote(noteInput.dataset.cartNote, noteInput.value);
-    });
-
-    els.orderNoteInput.addEventListener('input', event => {
-      state.orderNote = noteText(event.target.value, 1000);
     });
 
     els.cartArea.addEventListener('keydown', event => {
@@ -18683,6 +18712,15 @@
       const button = event.target.closest('[data-resume-hold]');
       if (!button) return;
       restoreHeldOrder(button.dataset.resumeHold);
+    });
+    els.itemNoteClose.addEventListener('click', closeItemNoteModal);
+    els.itemNoteCancel.addEventListener('click', closeItemNoteModal);
+    els.itemNoteModal.addEventListener('click', event => {
+      if (event.target === els.itemNoteModal) closeItemNoteModal();
+    });
+    els.itemNoteForm.addEventListener('submit', event => {
+      event.preventDefault();
+      saveItemNote();
     });
     els.specialProductBtn.addEventListener('click', () => {
       if (state.stocktakeMode || state.arrangementMode) {
@@ -18965,6 +19003,9 @@
       }
       if (event.key === 'Escape' && els.customerModal.classList.contains('show')) {
         closeCustomerModal();
+      }
+      if (event.key === 'Escape' && els.itemNoteModal.classList.contains('show')) {
+        closeItemNoteModal();
       }
       if (event.key === 'Escape' && els.usedDeviceDetailModal.classList.contains('show')) {
         closeUsedDeviceDetail();
