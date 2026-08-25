@@ -201,7 +201,7 @@
 
       <template v-else>
         <section class="panel">
-          <div class="section-head"><div><h2>Report History</h2><div class="sub">Review completed reports, uploaded product costs and uploaded monthly charges.</div></div></div>
+          <div class="section-head"><div><h2>Report History</h2><div class="sub">Review submitted reports, admin cost drafts and monthly settlements. Draft information is view only.</div></div></div>
           <div class="filter-row" style="margin-top:15px">
             <el-date-picker v-model="historyRange" type="daterange" value-format="yyyy-MM-dd" range-separator="to" start-placeholder="From date" end-placeholder="To date"></el-date-picker>
             <el-button type="primary" @click="loadHistory" :loading="historyLoading">Load Reports</el-button>
@@ -209,13 +209,13 @@
           </div>
           <div class="summary-grid history-summary">
             <div class="summary"><div class="summary-label">Completed Reports</div><div class="summary-value">{{ historyCompletedCount }}</div></div>
-            <div class="summary"><div class="summary-label">Uploaded Total Cost Inc GST</div><div class="summary-value">{{ money(historyUploadedCostTotal) }}</div></div>
+            <div class="summary"><div class="summary-label">Visible Total Cost Inc GST</div><div class="summary-value">{{ money(historyVisibleCostTotal) }}</div></div>
           </div>
-          <div class="section-head" style="margin-top:22px" v-if="monthlyCharges.length"><div><h2>Uploaded Monthly Settlements</h2><div class="sub">Monthly charges, customer payments and final settlement amounts below include GST.</div></div></div>
+          <div class="section-head" style="margin-top:22px" v-if="monthlyCharges.length"><div><h2>Monthly Settlements</h2><div class="sub">Admin drafts are shown immediately for review. North Lakes staff can view these amounts but cannot change or upload them.</div></div></div>
           <div class="report-card" v-for="charge in monthlyCharges" :key="'monthly-'+charge.id">
             <div class="report-card-head">
               <div><strong>{{ formatMonth(charge.charge_month) }} Monthly Settlement</strong><div class="sub">Cash is received directly by NL and is included in the month-end deductions.</div></div>
-              <div class="actions"><span class="status confirmed">Uploaded</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
+              <div class="actions"><span class="status" :class="charge.status==='draft' ? 'draft' : 'confirmed'">{{ charge.status==='draft' ? 'Draft · View only' : 'Uploaded' }}</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
             </div>
             <div class="report-card-body">
               <div class="monthly-subhead">Monthly Charges</div>
@@ -241,7 +241,10 @@
                 <div class="monthly-detail"><span>Received By TECHM8 For NL Inc GST</span><strong>{{ money(charge.techm8_received_total_inc_gst) }}</strong></div>
                 <div class="monthly-detail" :class="charge.settlement_direction"><span>Month-End Settlement Inc GST</span><strong>{{ settlementDirectionLabel(charge) }} {{ money(settlementAmount(charge)) }}</strong></div>
               </div>
-              <div class="payment-record paid" v-if="charge.payment_status==='paid'">
+              <div class="payment-record" v-if="charge.status==='draft'">
+                <div class="payment-record-head"><div><div class="payment-record-title">Admin Draft Preview</div><div class="sub">These values may still change. They are displayed here as read-only information.</div></div><span class="status draft">View only</span></div>
+              </div>
+              <div class="payment-record paid" v-else-if="charge.payment_status==='paid'">
                 <div class="payment-record-head">
                   <div><div class="payment-record-title">Payment Completed</div><div class="sub">TECHM8 paid NL {{ money(charge.payment_amount_inc_gst) }} on {{ formatTimestamp(charge.paid_at) }}.</div></div>
                   <span class="status paid">Paid</span>
@@ -255,12 +258,12 @@
               <div class="sub" style="margin-top:12px" v-if="charge.notes">{{ charge.notes }}</div>
             </div>
           </div>
-          <div class="empty" v-if="historyReports.length && !monthlyCharges.length && !historyLoading">No monthly charges have been uploaded for this date range.</div>
+          <div class="empty" v-if="historyReports.length && !monthlyCharges.length && !historyLoading">No monthly settlement drafts or uploads were found for this date range.</div>
           <div class="report-card" v-for="row in historyReports" :key="row.id">
-            <div class="report-card-head"><div><strong>{{ formatDate(row.report_date) }}</strong><div class="sub">Entered by {{ row.started_by_staff_name }}</div></div><div class="actions"><span class="status" :class="row.status">{{ statusLabel(row.status) }}</span><strong v-if="isUploadedReport(row)">{{ money(row.payable_total_inc_gst) }} cost inc GST</strong><strong v-else>Cost pending admin upload</strong></div></div>
+            <div class="report-card-head"><div><strong>{{ formatDate(row.report_date) }}</strong><div class="sub">Entered by {{ row.started_by_staff_name }}</div></div><div class="actions"><span class="status" :class="row.status">{{ statusLabel(row.status) }}</span><strong v-if="hasVisibleCost(row)">{{ money(row.payable_total_inc_gst) }} cost inc GST<span v-if="!isUploadedReport(row)"> · draft view only</span></strong><strong v-else>Cost pending admin draft</strong></div></div>
             <div class="report-card-body"><table><thead><tr><th>Product</th><th>Qty</th><th>Sale Unit Inc GST</th><th>Sale Total</th><th>Cost Unit Ex GST</th><th>Cost Unit Inc GST</th><th>Payable Inc GST</th></tr></thead><tbody><tr v-for="item in row.items" :key="item.id"><td><span class="category-badge" :class="{repair:item.category==='repair'}">{{ item.category==='repair' ? 'Repair' : 'Accessories' }}</span><div>{{ item.product_name }}</div><div class="sub" v-if="item.category==='repair'">{{ stockActionLabel(item.stock_action) }}<span v-if="item.stock_before!==null&&item.stock_before!==undefined"> · Stock {{ item.stock_before }} → {{ item.stock_after }}</span></div></td><td>{{ item.quantity }}</td><td>{{ item.is_billable===false ? '—' : money(item.sale_unit_price_inc_gst) }}</td><td>{{ item.is_billable===false ? 'Stock only' : money(item.sale_total_inc_gst) }}</td><td :class="{pending:item.is_billable!==false&&item.cost_unit_price_ex_gst===null}">{{ item.is_billable===false ? '—' : (item.cost_unit_price_ex_gst===null ? 'Pending' : money(item.cost_unit_price_ex_gst)) }}</td><td>{{ item.cost_unit_price_inc_gst===null ? '—' : money(item.cost_unit_price_inc_gst) }}</td><td>{{ item.cost_total_inc_gst===null ? '—' : money(item.cost_total_inc_gst) }}</td></tr><tr v-if="!row.items.length"><td colspan="7">No product sales.</td></tr></tbody></table></div>
           </div>
-          <div class="empty" v-if="!historyReports.length && !monthlyCharges.length && !historyLoading">No reports or uploaded monthly charges found for this date range.</div>
+          <div class="empty" v-if="!historyReports.length && !monthlyCharges.length && !historyLoading">No reports or monthly settlements were found for this date range.</div>
         </section>
       </template>
     </div>
@@ -286,7 +289,7 @@
         unitCount(){ return this.items.reduce((sum,item)=>sum+Number(item.quantity||0),0); },
         salesTotal(){ return this.items.reduce((sum,item)=>sum+this.lineTotal(item),0); },
         historyCompletedCount(){ return this.historyReports.filter(row=>row.status!=='draft').length; },
-        historyUploadedCostTotal(){ return this.historyReports.filter(row=>this.isUploadedReport(row)).reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0); }
+        historyVisibleCostTotal(){ return this.historyReports.filter(row=>this.hasVisibleCost(row)).reduce((sum,row)=>sum+Number(row.payable_total_inc_gst||0),0); }
       },
       async mounted(){
         const token=sessionStorage.getItem(NL_SESSION_KEY)||'';
@@ -309,8 +312,9 @@
         paymentProofUrl(path){ if(!path||!window.TECHM8_SUPABASE)return ''; return window.TECHM8_SUPABASE.url+'/storage/v1/object/public/nl-settlement-payment-proofs/'+path; },
         settlementAmount(charge){ return Math.abs(Number(charge&&charge.net_settlement_inc_gst||0)); },
         settlementDirectionLabel(charge){ const direction=charge&&charge.settlement_direction; if(direction==='nl_pays_techm8')return 'NL Pays TECHM8'; if(direction==='techm8_pays_nl')return 'TECHM8 Pays NL'; return 'Nothing To Pay'; },
-        statusLabel(value){ const labels={draft:'draft',submitted:'awaiting cost upload',pricing_pending:'awaiting cost upload',priced:'awaiting cost upload',confirmed:'uploaded',settled:'uploaded'}; return labels[value]||String(value||'draft').replace(/_/g,' '); },
+        statusLabel(value){ const labels={draft:'entry draft',submitted:'awaiting admin cost draft',pricing_pending:'cost draft · view only',priced:'cost draft · view only',confirmed:'uploaded',settled:'uploaded'}; return labels[value]||String(value||'draft').replace(/_/g,' '); },
         isUploadedReport(report){ return ['confirmed','settled'].includes(report&&report.status); },
+        hasVisibleCost(report){ return this.isUploadedReport(report)||Boolean(report&&Array.isArray(report.items)&&report.items.some(item=>item&&item.cost_unit_price_ex_gst!==null&&item.cost_unit_price_ex_gst!==undefined&&item.cost_unit_price_ex_gst!=='')); },
         stockActionLabel(value){ const labels={sold:'Sold / Used In Repair',send_to_other:'Send To Other',faulty:'Faulty',broken:'Broken'}; return labels[value]||'Choose action'; },
         queryAccessoryNames(query,done){ const needle=String(query||'').trim().toLowerCase(); done(this.accessoryNames.filter(name=>!needle||name.toLowerCase().includes(needle)).slice(0,30).map(name=>({value:name}))); },
         async saveAccessoryName(item){ const name=String(item.product_name||'').trim(); if(!name)return; this.savingAccessoryName=item.product_name; try{ const result=await window.Techm8StaffAuth.callRpc('save_nl_accessory_name',{session_token:this.token(),accessory_name:name}); const saved=result&&result.accessory&&result.accessory.name?result.accessory.name:name; if(!this.accessoryNames.some(entry=>entry.toLowerCase()===saved.toLowerCase()))this.accessoryNames.push(saved); this.accessoryNames.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'})); item.product_name=saved; this.$message.success('Accessory name saved.'); }catch(error){this.$message.error(error.message||'Could not save accessory name.');}finally{this.savingAccessoryName='';} },
