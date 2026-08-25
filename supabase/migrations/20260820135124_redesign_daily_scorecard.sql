@@ -427,7 +427,7 @@ begin
     selected_staff.display_name,
     5
   )
-  on conflict (event_code) do nothing;
+  on conflict on constraint pos_google_review_events_event_code_key do nothing;
 
   return public.pos_today_progress_payload(selected_store.id, date_value, selected_staff.display_name);
 end;

@@ -300,6 +300,7 @@ Required POS migrations, in order:
 18. `20260821010000_make_pos_customers_global.sql`
 19. `20260821093757_simplify_staff_roles_and_bind_stocktake_access.sql`
 20. `20260823145405_expire_stale_pos_store_shifts.sql`
+21. `20260825095329_fix_google_review_event_code_ambiguity.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
