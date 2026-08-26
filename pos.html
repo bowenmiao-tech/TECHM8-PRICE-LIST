@@ -4481,6 +4481,14 @@
       color: #12639a;
     }
 
+    .ticket-tag.deposit {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #fbe9d4;
+      color: #8a4f10;
+    }
+
     .repair-board-toolbar,
     .invoice-toolbar {
       display: grid;
@@ -5350,6 +5358,33 @@
       border-radius: 14px;
       padding: 14px;
       background: #fff;
+    }
+
+    .ticket-balance-card {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 12px 13px;
+      border: 1px solid #f0c68a;
+      border-radius: 12px;
+      background: #fffaf3;
+      color: #6a5233;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .ticket-balance-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ticket-balance-row.is-due {
+      padding-top: 7px;
+      border-top: 1px solid #f0d6b2;
+      color: #8a4f10;
+      font-size: 16px;
+      font-weight: 950;
     }
 
     .ticket-side-title {
@@ -13488,7 +13523,9 @@
                       ${ticket.motherboardRepair ? '<span class="ticket-tag danger">Mainboard</span>' : ''}
                       ${ticket.resolution === 'cancelled' ? '<span class="ticket-tag warn">Cancelled</span>' : ''}
                       ${ticket.resolution === 'returned_unrepaired' ? '<span class="ticket-tag warn">Returned unrepaired</span>' : ''}
-                      ${ticket.paymentStatus !== 'unpaid' ? `<span class="ticket-tag paid">${escapeHtml(ticket.paymentStatus.replaceAll('_', ' '))}</span>` : ''}
+                      ${ticket.paymentStatus === 'deposit'
+                        ? `<span class="ticket-tag deposit"><i class="bi bi-piggy-bank"></i> Deposit &middot; ${money(numberValue(ticket.balanceDue))} owing</span>`
+                        : (ticket.paymentStatus !== 'unpaid' ? `<span class="ticket-tag paid">${escapeHtml(ticket.paymentStatus.replaceAll('_', ' '))}</span>` : '')}
                     </div>
                   </div>
                 `).join('') || '<div class="ticket-meta">No tickets</div>'}
@@ -13640,12 +13677,23 @@
         <div class="ticket-detail-content">${ticketDetailSectionHtml(ticket)}</div>
       `;
       const commentCount = (Array.isArray(ticket.activity) ? ticket.activity : []).filter(isTicketComment).length;
+      const ticketBalance = numberValue(ticket.balanceDue);
       els.ticketDetailSide.innerHTML = ticket.paymentStatus !== 'unpaid' ? `
         <h3 class="ticket-side-title">Invoice #${escapeHtml(ticket.invoiceNumber || '')}</h3>
+        ${ticket.paymentStatus === 'deposit' ? `
+          <div class="ticket-balance-card">
+            <div class="ticket-balance-row"><span>Job total</span><strong>${money(numberValue(ticket.orderTotal))}</strong></div>
+            <div class="ticket-balance-row"><span>Deposit paid</span><strong>${money(numberValue(ticket.depositPaid))}</strong></div>
+            <div class="ticket-balance-row is-due"><span>Balance due</span><strong>${money(ticketBalance)}</strong></div>
+          </div>
+        ` : ''}
         <div class="repair-stack">
+          ${ticket.paymentStatus === 'deposit' ? `<button class="repair-action balance-action" type="button" data-ticket-balance-invoice="${escapeHtml(ticket.invoiceOrderId || '')}"><i class="bi bi-cash-coin"></i> Take ${money(ticketBalance)} Balance</button>` : ''}
           <button class="repair-action primary" type="button" data-ticket-view-invoice="${escapeHtml(ticket.invoiceOrderId || '')}"><i class="bi bi-receipt"></i> View Invoice</button>
           <button class="repair-action" type="button" data-ticket-refund-invoice="${escapeHtml(ticket.invoiceOrderId || '')}"><i class="bi bi-arrow-counterclockwise"></i> Refund</button>
         </div>
+        <h3 class="ticket-side-title" style="margin-top:18px;">Comments and activity${commentCount ? `<span class="ticket-side-count">${commentCount} comment${commentCount === 1 ? '' : 's'}</span>` : ''}</h3>
+        <div class="ticket-activity-list">${ticketActivityHtml(ticket)}</div>
       ` : `
         <h3 class="ticket-side-title">Comments and activity${commentCount ? `<span class="ticket-side-count">${commentCount} comment${commentCount === 1 ? '' : 's'}</span>` : ''}</h3>
         <div class="ticket-comment-row">
@@ -18403,9 +18451,19 @@
       return Math.max(0, roundedMoneyValue(total - paid));
     }
 
-    function openBalancePaymentModal(orderId) {
-      const order = state.invoiceOrders.find(item => item.id === orderId)
+    async function openBalancePaymentModal(orderId) {
+      if (!orderId) return;
+      let order = state.invoiceOrders.find(item => item.id === orderId)
         || readLocalArray(POS_ORDERS_KEY).find(item => item && item.id === orderId);
+      if (!order) {
+        try {
+          order = await invoiceOrderById(orderId);
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || 'Invoice could not be loaded.');
+          return;
+        }
+      }
       if (!order) {
         showToast('Invoice could not be loaded.');
         return;
@@ -19614,6 +19672,12 @@
     els.ticketDetailSide.addEventListener('click', event => {
       const viewInvoiceButton = event.target.closest('[data-ticket-view-invoice]');
       const refundInvoiceButton = event.target.closest('[data-ticket-refund-invoice]');
+      const balanceInvoiceButton = event.target.closest('[data-ticket-balance-invoice]');
+      if (balanceInvoiceButton) {
+        closeTicketDetailModal();
+        openBalancePaymentModal(balanceInvoiceButton.dataset.ticketBalanceInvoice);
+        return;
+      }
       if (viewInvoiceButton) {
         viewInvoiceById(viewInvoiceButton.dataset.ticketViewInvoice);
         return;
