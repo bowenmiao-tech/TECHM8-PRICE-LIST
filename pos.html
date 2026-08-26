@@ -1409,6 +1409,25 @@
       white-space: nowrap;
     }
 
+    .browse-context-copy {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .browse-context-count {
+      flex: 0 0 auto;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--tm-line);
+      color: var(--tm-muted);
+      background: #fff;
+      font-size: 11px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
     .browse-back {
       flex: 0 0 auto;
       width: 38px;
@@ -1558,17 +1577,36 @@
       top: 0;
       grid-column: 1 / -1;
       display: flex;
+      align-items: center;
       gap: 8px;
       min-width: 0;
+      /* overflow-x:auto also makes overflow-y computed:auto, which turns this
+         grid item into a scroll container whose block size collapses to its
+         padding. Pin a min-height so the 38px chips are never clipped. */
+      min-height: 56px;
       overflow-x: auto;
-      padding: 2px 2px 10px;
+      overflow-y: hidden;
+      padding: 8px 2px;
+      margin-bottom: -2px;
       background: var(--tm-bg);
-      scrollbar-width: thin;
+      box-shadow: 0 8px 12px -10px rgba(13, 25, 32, 0.45);
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .phone-case-style-filters::-webkit-scrollbar {
+      width: 0;
+      height: 0;
     }
 
     .phone-case-style-chip {
       flex: 0 0 auto;
-      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 38px;
       padding: 0 14px;
       border: 1px solid var(--tm-line);
       border-radius: 999px;
@@ -1577,12 +1615,35 @@
       font-size: 12px;
       font-weight: 850;
       white-space: nowrap;
+      transition: border-color .16s ease, background .16s ease, color .16s ease;
+    }
+
+    .phone-case-style-chip span {
+      display: inline-grid;
+      place-items: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      color: #4a6560;
+      background: #eef3f2;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .phone-case-style-chip:hover {
+      border-color: rgba(7, 137, 111, 0.42);
     }
 
     .phone-case-style-chip.active {
       border-color: var(--tm-green);
       color: #fff;
       background: var(--tm-green);
+    }
+
+    .phone-case-style-chip.active span {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.22);
     }
 
     .category-icon {
@@ -5936,7 +5997,7 @@
         padding: 0 9px;
       }
 
-      .browse-context-copy {
+      .browse-context-count {
         display: none;
       }
 
@@ -15174,20 +15235,20 @@
       const query = state.search.trim();
       const categoryModeActive = state.productBrowseMode !== 'all';
       const context = query
-        ? `<span class="browse-context-copy"><strong>Search results</strong> - ${displayedProducts().length} products</span>`
+        ? `<span class="browse-context-copy"><strong>Search results</strong><span class="browse-context-count">${displayedProducts().length} products</span></span>`
         : state.productBrowseMode === 'model'
-          ? `<button class="browse-back" type="button" data-category-back title="Change model" aria-label="Change phone model"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.phoneCaseModel)}</strong> - ${displayedProducts().length} styles</span>`
+          ? `<button class="browse-back" type="button" data-category-back title="Change model" aria-label="Change phone model"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.phoneCaseModel)}</strong><span class="browse-context-count">${displayedProducts().length} styles</span></span>`
           : state.productBrowseMode === 'models'
-            ? `<button class="browse-back" type="button" data-category-back title="Back to Phone Cases" aria-label="Back to Phone Cases"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.subcategory)}</strong> - ${phoneCaseModelGroups().length} models</span>`
+            ? `<button class="browse-back" type="button" data-category-back title="Back to Phone Cases" aria-label="Back to Phone Cases"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.subcategory)}</strong><span class="browse-context-count">${phoneCaseModelGroups().length} models</span></span>`
         : state.productBrowseMode === 'subcategory'
-          ? `<button class="browse-back" type="button" data-category-back title="Back to ${escapeHtml(state.category)}" aria-label="Back to ${escapeHtml(state.category)}"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> / ${escapeHtml(state.subcategory)} - ${displayedProducts().length} products</span>`
+          ? `<button class="browse-back" type="button" data-category-back title="Back to ${escapeHtml(state.category)}" aria-label="Back to ${escapeHtml(state.category)}"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)} / ${escapeHtml(state.subcategory)}</strong><span class="browse-context-count">${displayedProducts().length} products</span></span>`
           : state.productBrowseMode === 'subcategories'
-            ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> - ${subcategories(state.category).length} groups</span>`
+            ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong><span class="browse-context-count">${subcategories(state.category).length} groups</span></span>`
             : state.productBrowseMode === 'category'
-              ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong> - ${displayedProducts().length} products</span>`
+              ? `<button class="browse-back" type="button" data-category-back title="Back to categories" aria-label="Back to categories"><i class="bi bi-arrow-left"></i></button><span class="browse-context-copy"><strong>${escapeHtml(state.category)}</strong><span class="browse-context-count">${displayedProducts().length} products</span></span>`
           : state.productBrowseMode === 'all'
-            ? `<span class="browse-context-copy"><strong>All products</strong> - ${productTiles(state.products).length} products</span>`
-            : `<span class="browse-context-copy"><strong>Categories</strong> - ${categories().length} groups</span>`;
+            ? `<span class="browse-context-copy"><strong>All products</strong><span class="browse-context-count">${productTiles(state.products).length} products</span></span>`
+            : `<span class="browse-context-copy"><strong>Categories</strong><span class="browse-context-count">${categories().length} groups</span></span>`;
 
       els.categoryTabs.innerHTML = `
         <div class="browse-mode-tabs" role="tablist" aria-label="Product browsing mode">

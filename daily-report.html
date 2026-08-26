@@ -654,9 +654,168 @@
       margin-top: 12px;
     }
 
-    .transfer-receipt-row input[type="file"] {
-      min-height: 40px;
-      max-width: 100%;
+    .transfer-card-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .transfer-count-pill {
+      flex: 0 0 auto;
+      margin-left: 8px;
+      vertical-align: middle;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid #bfe4cf;
+      background: #eef9f1;
+      color: #176641;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .transfer-line-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .transfer-line {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border: 1px solid var(--tm-border);
+      border-radius: 16px;
+      background: #f8fafb;
+    }
+
+    .transfer-line-copy {
+      min-width: 0;
+    }
+
+    .transfer-line-name {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .transfer-line-variant {
+      margin-top: 2px;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .transfer-line-qty {
+      flex: 0 0 auto;
+      min-width: 52px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #163129;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .transfer-photo-picker {
+      flex: 1 1 280px;
+      min-width: 0;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      min-height: 56px;
+      padding: 10px 14px;
+      border: 1.5px dashed #c3d4dc;
+      border-radius: 18px;
+      background: #f8fafb;
+      cursor: pointer;
+      transition: border-color .18s ease, background-color .18s ease;
+    }
+
+    .transfer-photo-picker:hover,
+    .transfer-photo-picker:focus-within {
+      border-color: #2a8e45;
+      background: #f4faf5;
+    }
+
+    .transfer-photo-picker.is-set {
+      border-style: solid;
+      border-color: #bfe4cf;
+      background: #eef9f1;
+    }
+
+    .transfer-photo-picker input[type="file"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .transfer-photo-icon {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: #e7eff2;
+      color: #2c4f45;
+      font-size: 20px;
+    }
+
+    .transfer-photo-picker.is-set .transfer-photo-icon {
+      background: #d6efdf;
+      color: #176641;
+    }
+
+    .transfer-photo-thumb {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      object-fit: cover;
+      border: 1px solid #bfe4cf;
+    }
+
+    .transfer-photo-copy {
+      min-width: 0;
+    }
+
+    .transfer-photo-title {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #1d3239;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .transfer-photo-hint {
+      display: block;
+      margin-top: 2px;
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .transfer-confirm-button {
+      flex: 0 0 auto;
     }
 
     .el-button--primary {
@@ -771,6 +930,75 @@
       .transfer-receipt-row .el-button {
         width: 100%;
         margin-left: 0;
+      }
+
+      /* Phones: trim the marketing hero so the work starts above the fold. */
+      .hero { padding: 16px 14px; }
+      .hero-title { font-size: 26px; }
+      .hero-text {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .hero-badges { display: none; }
+      .hero-shell { gap: 12px; }
+      .hero-meta-grid { gap: 8px; }
+      .hero-meta-card { padding: 10px 12px; border-radius: 14px; }
+      .hero-meta-value { font-size: 16px; }
+
+      /* 16px keeps iOS Safari from zooming in when a field is focused. */
+      .el-input__inner,
+      .el-textarea__inner,
+      .el-select .el-input__inner {
+        min-height: 46px;
+        font-size: 16px;
+      }
+
+      .el-button {
+        min-height: 46px;
+        padding: 10px 18px;
+        font-size: 15px;
+      }
+
+      .panel-title { font-size: 17px; }
+
+      .transfer-receipt-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .transfer-photo-picker {
+        min-height: 64px;
+        border-radius: 16px;
+      }
+
+      .transfer-photo-title { font-size: 14px; }
+      .transfer-photo-hint { font-size: 12px; }
+
+      .transfer-line {
+        padding: 10px;
+        border-radius: 14px;
+      }
+
+      .transfer-line-name { font-size: 15px; }
+      .transfer-line-qty { font-size: 15px; padding: 8px 12px; }
+
+      .line-card { padding: 10px; border-radius: 16px; }
+
+      /* Element UI dialogs default to a fixed 420px, which overflows a phone. */
+      .el-message-box {
+        width: calc(100vw - 28px);
+        max-width: 420px;
+      }
+
+      .el-message-box__btns .el-button {
+        width: 100%;
+        margin: 6px 0 0;
+      }
+
+      .el-message {
+        min-width: 0;
+        width: calc(100vw - 24px);
       }
     }
 
@@ -888,6 +1116,69 @@
             <el-button type="success" plain @click="enterInventoryCount" :loading="setupLoading">Screen & Battery Count</el-button>
           </div>
 
+          <div class="panel" v-if="selectedStoreCode" style="margin-top:14px;">
+            <div class="section-head">
+              <div>
+                <h2 class="panel-title">
+                  Pending Warehouse Transfers
+                  <span class="transfer-count-pill" v-if="pendingTransfers.length">{{ pendingTransfers.length }} waiting</span>
+                </h2>
+                <div class="hint">Check the stock against the list, add a photo of what arrived, then confirm receipt. Store inventory is updated after confirmation.</div>
+              </div>
+              <div class="toolbar">
+                <el-button plain icon="el-icon-refresh" @click="loadPendingTransfers" :loading="transferLoading">Refresh Transfers</el-button>
+              </div>
+            </div>
+
+            <div class="line-stack" v-if="pendingTransfers.length">
+              <div class="line-card" v-for="transfer in pendingTransfers" :key="'pending-transfer-' + transfer.id">
+                <div class="transfer-card-head">
+                  <div>
+                    <div class="draft-item-title">{{ transfer.transfer_code || ('Transfer #' + transfer.id) }}</div>
+                    <div class="draft-item-meta">
+                      From {{ transferSourceLabel(transfer) }} &middot; {{ formatDateTime(transfer.created_at) }}
+                      <span v-if="transfer.notes"><br>{{ transfer.notes }}</span>
+                    </div>
+                  </div>
+                  <span class="transfer-count-pill">{{ transferUnitCount(transfer) }} units &middot; {{ (transfer.lines || []).length }} lines</span>
+                </div>
+
+                <div class="transfer-line-list">
+                  <div class="transfer-line" v-for="line in transfer.lines" :key="'pending-transfer-line-' + transfer.id + '-' + line.id">
+                    <div class="transfer-line-copy">
+                      <div class="transfer-line-name">{{ line.model_name }}</div>
+                      <div class="transfer-line-variant" v-if="line.variant_name">{{ line.variant_name }}</div>
+                    </div>
+                    <div class="transfer-line-qty">x{{ line.quantity }}</div>
+                  </div>
+                </div>
+
+                <div class="transfer-receipt-row">
+                  <label class="transfer-photo-picker" :class="{ 'is-set': !!transfer.receiptFile }">
+                    <input type="file" accept="image/*" @change="onTransferPhotoChange(transfer, $event)">
+                    <img class="transfer-photo-thumb" v-if="transfer.receiptPreview" :src="transfer.receiptPreview" alt="Receipt photo preview">
+                    <span class="transfer-photo-icon" v-else><i class="el-icon-camera-solid"></i></span>
+                    <span class="transfer-photo-copy">
+                      <span class="transfer-photo-title">{{ transfer.receiptFile ? 'Photo attached' : 'Add photo of received stock' }}</span>
+                      <span class="transfer-photo-hint">{{ transfer.receiptFile ? (transfer.receiptFile.name + ' - tap to replace') : 'Required before you can confirm' }}</span>
+                    </span>
+                  </label>
+                  <el-button
+                    class="transfer-confirm-button"
+                    type="primary"
+                    icon="el-icon-check"
+                    @click="confirmTransferReceived(transfer)"
+                    :loading="transferConfirmingId === transfer.id"
+                    :disabled="!selectedStaffName || !transfer.receiptFile">
+                    Confirm Received
+                  </el-button>
+                </div>
+                <div class="hint" style="margin:8px 0 0;" v-if="!selectedStaffName">Choose your staff name above before confirming.</div>
+              </div>
+            </div>
+            <div class="empty-note" v-else>No pending warehouse transfers for this store.</div>
+          </div>
+
           <div class="draft-list" v-if="selectedStoreCode">
             <div class="draft-note" v-if="submittedTodayForStore">
               This store already has a submitted report for today. Any temporary draft for today has been cleared automatically.
@@ -912,50 +1203,6 @@
                 No saved report has been found for this store today.
               </div>
             </template>
-          </div>
-
-          <div class="panel" v-if="selectedStoreCode" style="margin-top:14px;">
-            <div class="section-head">
-              <div>
-                <h2 class="panel-title">Pending Warehouse Transfers</h2>
-                <div class="hint">Upload a photo of the received stock, then confirm receipt. Store inventory is updated after confirmation.</div>
-              </div>
-              <div class="toolbar">
-                <el-button plain @click="loadPendingTransfers" :loading="transferLoading">Refresh Transfers</el-button>
-              </div>
-            </div>
-
-            <div class="line-stack" v-if="pendingTransfers.length">
-              <div class="line-card" v-for="transfer in pendingTransfers" :key="'pending-transfer-' + transfer.id">
-                <div class="section-head">
-                  <div>
-                    <div class="draft-item-title">{{ transfer.transfer_code || ('Transfer #' + transfer.id) }}</div>
-                    <div class="draft-item-meta">
-                      From {{ transferSourceLabel(transfer) }} | Created {{ formatDateTime(transfer.created_at) }}
-                      <span v-if="transfer.notes"> | {{ transfer.notes }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <table class="summary-table" style="margin-top:10px;">
-                  <tbody>
-                    <tr v-for="line in transfer.lines" :key="'pending-transfer-line-' + transfer.id + '-' + line.id">
-                      <td class="summary-label-cell">{{ line.model_name }}</td>
-                      <td>{{ line.variant_name }}</td>
-                      <td class="summary-money">x {{ line.quantity }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <div class="transfer-receipt-row">
-                  <input type="file" accept="image/*" @change="onTransferPhotoChange(transfer, $event)">
-                  <el-button type="primary" @click="confirmTransferReceived(transfer)" :loading="transferConfirmingId === transfer.id" :disabled="!selectedStaffName">
-                    Confirm Received
-                  </el-button>
-                </div>
-              </div>
-            </div>
-            <div class="empty-note" v-else>No pending warehouse transfers for this store.</div>
           </div>
         </div>
 
@@ -2101,7 +2348,13 @@
           },
           onTransferPhotoChange(transfer, event) {
             const file = event && event.target && event.target.files ? event.target.files[0] : null;
+            if (transfer.receiptPreview) URL.revokeObjectURL(transfer.receiptPreview);
             this.$set(transfer, 'receiptFile', file || null);
+            this.$set(transfer, 'receiptPreview', file ? URL.createObjectURL(file) : '');
+          },
+          transferUnitCount(transfer) {
+            return (transfer && Array.isArray(transfer.lines) ? transfer.lines : [])
+              .reduce((total, line) => total + (Number(line.quantity) || 0), 0);
           },
           transferSourceLabel(transfer) {
             const sourceName = String(transfer && transfer.from_store_name ? transfer.from_store_name : '').trim();
@@ -2144,6 +2397,20 @@
           async confirmTransferReceived(transfer) {
             if (!this.selectedStaffName) {
               this.$message.error('Please choose your staff name before confirming a transfer.');
+              return;
+            }
+            if (!transfer.receiptFile) {
+              this.$message.error('Please add a photo of the received stock first.');
+              return;
+            }
+
+            try {
+              await this.$confirm(
+                `Add ${this.transferUnitCount(transfer)} units to ${this.selectedStoreName} stock? This cannot be undone.`,
+                'Confirm Receipt',
+                { confirmButtonText: 'Yes, received', cancelButtonText: 'Cancel', type: 'warning' }
+              );
+            } catch (cancelled) {
               return;
             }
 
