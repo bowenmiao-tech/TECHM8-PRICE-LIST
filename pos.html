@@ -9360,6 +9360,9 @@
         closeStocktakeEditor();
         closeProductVariantModal();
         clearActiveShiftCache();
+        state.invoiceOrders = [];
+        state.refundOrder = null;
+        state.lastCompletedOrder = null;
       }
       state.storeId = storeId;
       localStorage.setItem(POS_STORE_KEY, storeId);
@@ -17679,7 +17682,9 @@
         const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Invoice search failed.');
-        state.invoiceOrders = Array.isArray(payload.orders) ? payload.orders : [];
+        const currentStoreCode = repairTicketStoreCode().toLowerCase();
+        state.invoiceOrders = (Array.isArray(payload.orders) ? payload.orders : [])
+          .filter(order => String(order && order.store_db_code || '').trim().toLowerCase() === currentStoreCode);
       } catch (error) {
         console.error(error);
         showToast(error.message || 'Invoice history unavailable.');
@@ -17694,10 +17699,14 @@
       if (cached) return cached;
       const url = new URL(POS_SALES_ORDERS_ENDPOINT);
       url.searchParams.set('order_id', orderId);
+      url.searchParams.set('store_code', repairTicketStoreCode());
       const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.ok === false || !payload.order) {
         throw new Error(payload.message || 'Invoice could not be loaded.');
+      }
+      if (String(payload.order.store_db_code || '').trim().toLowerCase() !== repairTicketStoreCode().toLowerCase()) {
+        throw new Error('Invoice does not belong to the current store.');
       }
       return payload.order;
     }
@@ -17799,6 +17808,7 @@
           headers: posOrderApiHeaders(),
           body: JSON.stringify({
             order_id: order.id,
+            store_code: repairTicketStoreCode(),
             staff_name: state.selectedStaffName,
             refund_method: els.refundMethod.value,
             reason,
@@ -18189,6 +18199,7 @@
           headers: posOrderApiHeaders(),
           body: JSON.stringify({
             order_id: order.id,
+            store_code: repairTicketStoreCode(),
             to: recipient,
             subject: els.emailReceiptSubject.value.trim(),
             note: els.emailReceiptNote.value.trim(),
@@ -18524,8 +18535,7 @@
 
     async function openBalancePaymentModal(orderId) {
       if (!orderId) return;
-      let order = state.invoiceOrders.find(item => item.id === orderId)
-        || readLocalArray(POS_ORDERS_KEY).find(item => item && item.id === orderId);
+      let order = state.invoiceOrders.find(item => item.id === orderId);
       if (!order) {
         try {
           order = await invoiceOrderById(orderId);
@@ -18586,7 +18596,7 @@
           headers: posOrderApiHeaders(),
           body: JSON.stringify({
             order_id: orderId,
-            store_code: storeById(state.storeId).code,
+            store_code: repairTicketStoreCode(),
             staff_name: state.selectedStaffName,
             shift_id: activeShift && activeShift.id,
             business_date: brisbaneDateIso(),

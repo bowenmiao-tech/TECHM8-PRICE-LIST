@@ -304,6 +304,12 @@ Required POS migrations, in order:
 22. `20260825163946_clear_test_pos_receipts_and_repair_tickets.sql`
 23. `20260825163948_enforce_numeric_repair_prices.sql`
 24. `20260825165639_prevent_deleted_test_transactions_from_resync.sql`
+25. `20260826020000_add_pos_order_deposits.sql`
+26. `20260826030000_repair_ticket_payload_reports_deposit.sql`
+27. `20260826134316_allow_multi_device_staff_sessions.sql`
+28. `20260826134518_keep_password_change_session_revocation.sql`
+29. `20260826135147_scope_pos_invoices_to_current_store.sql`
+30. `20260826135945_restrict_scoped_pos_invoice_rpc_roles.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`

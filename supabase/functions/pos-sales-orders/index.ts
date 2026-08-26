@@ -119,12 +119,16 @@ Deno.serve(async (request) => {
         if (!Array.isArray(record.payments) || record.payments.length === 0) {
           return jsonResponse({ ok: false, message: "At least one payment is required." }, 400);
         }
-        return await rpcResponse(request, "add_pos_sales_order_payment", {
+        return await rpcResponse(request, "add_pos_sales_order_payment_for_store", {
           session_token: sessionToken,
           payload,
         });
       }
-      return await rpcResponse(request, "refund_pos_sales_order", {
+      const record = payload as JsonRecord;
+      if (!record.order_id || !record.store_code || !record.staff_name) {
+        return jsonResponse({ ok: false, message: "order_id, store_code, and staff_name are required." }, 400);
+      }
+      return await rpcResponse(request, "refund_pos_sales_order_for_store", {
         session_token: sessionToken,
         payload,
       });
@@ -165,8 +169,13 @@ Deno.serve(async (request) => {
 
       const orderCode = url.searchParams.get("order_id") || "";
       if (orderCode) {
-        return await rpcResponse(request, "get_pos_sales_order", {
+        const storeCode = url.searchParams.get("store_code") || "";
+        if (!storeCode) {
+          return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+        }
+        return await rpcResponse(request, "get_pos_sales_order_for_store", {
           session_token: sessionToken,
+          target_store_code: storeCode,
           target_order_code: orderCode,
         });
       }

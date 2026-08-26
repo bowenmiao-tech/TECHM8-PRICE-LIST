@@ -287,16 +287,19 @@ Deno.serve(async (request) => {
     if (!input) return jsonResponse({ ok: false, message: "Email payload is required." }, 400);
 
     const orderCode = String(input.order_id || "").trim();
+    const storeCode = String(input.store_code || "").trim();
     const recipient = String(input.to || "").trim().toLowerCase();
     const subject = String(input.subject || "").trim().slice(0, 180);
     const note = String(input.note || "").trim().slice(0, 1500);
     const sendCopy = input.send_copy === true;
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!orderCode) return jsonResponse({ ok: false, message: "Order id is required." }, 400);
+    if (!storeCode) return jsonResponse({ ok: false, message: "Store code is required." }, 400);
     if (!emailPattern.test(recipient)) return jsonResponse({ ok: false, message: "A valid recipient email is required." }, 400);
 
-    const orderResult = await callRpc(request, "get_pos_sales_order", {
+    const orderResult = await callRpc(request, "get_pos_sales_order_for_store", {
       session_token: sessionToken,
+      target_store_code: storeCode,
       target_order_code: orderCode,
     });
     if (!orderResult.ok || orderResult.data.ok === false || !orderResult.data.order) {
