@@ -8349,6 +8349,7 @@
       paymentError: document.getElementById('paymentError'),
       paymentSummaryCard: document.getElementById('paymentSummaryCard'),
       receiptCompleteModal: document.getElementById('receiptCompleteModal'),
+      receiptCompleteTitle: document.getElementById('receiptCompleteTitle'),
       receiptCompleteCloseBtn: document.getElementById('receiptCompleteCloseBtn'),
       receiptCompleteTotal: document.getElementById('receiptCompleteTotal'),
       receiptCompleteMeta: document.getElementById('receiptCompleteMeta'),
@@ -18024,10 +18025,19 @@
       state.lastCompletedOrder = order;
       const profile = receiptProfileForOrder(order);
       const invoiceNumber = invoiceNumberText(order);
-      els.receiptCompleteTotal.textContent = `${money(order.total)} paid`;
-      els.receiptCompleteMeta.textContent = invoiceNumber === 'Pending'
-        ? `${order.id} - ${profile.name}`
-        : `Invoice #${invoiceNumber} - ${profile.name}`;
+      const total = numberValue(order.total);
+      const balance = orderBalanceDue(order);
+      const isDeposit = order.payment_status === 'deposit' || balance > 0;
+      let amountPaid = numberValue(order.amount_paid);
+      if (amountPaid <= 0 && !isDeposit) amountPaid = total;
+      const invoiceLabel = invoiceNumber === 'Pending' ? order.id : `Invoice #${invoiceNumber}`;
+      els.receiptCompleteTitle.textContent = isDeposit ? 'Deposit Taken' : 'Payment Complete';
+      els.receiptCompleteTotal.textContent = isDeposit
+        ? `${money(amountPaid)} deposit paid`
+        : `${money(amountPaid)} paid`;
+      els.receiptCompleteMeta.textContent = isDeposit
+        ? `${invoiceLabel} · ${money(balance)} balance due · ${profile.name}`
+        : `${invoiceLabel} - ${profile.name}`;
       els.receiptSyncNote.textContent = order.sync_pending || invoiceNumber === 'Pending'
         ? 'Saved locally. Database sync is pending and will retry automatically.'
         : 'Order saved to the POS database.';
