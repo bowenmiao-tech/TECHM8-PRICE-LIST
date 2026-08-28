@@ -7667,7 +7667,7 @@
     <form id="posStaffForm" class="special-modal staff-gate-modal" role="dialog" aria-modal="true" aria-labelledby="posStaffTitle">
       <div class="staff-gate-head">
         <h2 id="posStaffTitle" class="staff-gate-title">Open POS</h2>
-        <div class="staff-gate-subtitle">Choose your shop and staff name before starting.</div>
+        <div class="staff-gate-subtitle">Choose your shop and staff name, then continue to today's opening cash count.</div>
       </div>
       <input id="posStoreChoice" type="hidden">
       <input id="posStaffSelect" type="hidden">
@@ -9460,7 +9460,7 @@
       renderStaffGateChoices();
       els.posStaffModal.classList.add('show');
       els.posStaffModal.setAttribute('aria-hidden', 'false');
-      const focusTarget = state.staffGateStaffName ? els.posStaffPin : els.posStoreSearch;
+      const focusTarget = els.posStoreSearch;
       if (focusTarget) setTimeout(() => focusTarget.focus(), 0);
     }
 
@@ -9640,38 +9640,6 @@
 
     async function ensureStaffStoreAccess() {
       await loadPosStaffSetup();
-      if (resumeActiveShift()) return true;
-      const accountStaff = signedInStaffName();
-      const activeShift = readActiveShift();
-      if (accountStaff) {
-        const preferredStoreId = (activeShift && activeShift.storeId)
-          || localStorage.getItem(POS_STORE_KEY)
-          || staffDefaultStoreId(accountStaff)
-          || posStores[0].id;
-        const context = staffContextFor(accountStaff, preferredStoreId, { ignoreSchedule: Boolean(activeShift) });
-        if (context.ok) {
-          if (activeShift && !context.allowedStoreIds.includes(activeShift.storeId)) {
-            clearActiveShiftCache();
-            return ensureStaffStoreAccess();
-          }
-          if (activeShift && !staffCanSwitchStore(accountStaff)) {
-            context.allowedStoreIds = [activeShift.storeId];
-            context.nextStoreId = activeShift.storeId;
-          } else if (context.allowedStoreIds.includes(preferredStoreId)) {
-            context.nextStoreId = preferredStoreId;
-          }
-          const storeAccess = await verifySignedInStoreAccess(context.nextStoreId);
-          if (!storeAccess.ok) {
-            console.error(storeAccess.message);
-            return new Promise(resolve => {
-              staffAccessResolve = resolve;
-              openStaffModal({ canCancel: false });
-            });
-          }
-          setStaffContext(context, { keepOpeningConfirmed: Boolean(activeShift) });
-          return true;
-        }
-      }
       return new Promise(resolve => {
         staffAccessResolve = resolve;
         openStaffModal({ canCancel: false });
