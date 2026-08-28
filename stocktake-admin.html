@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TECHM8 Stocktake Access</title>
+  <title>TECHM8 Staff Management</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;650;750;850;950&display=swap" rel="stylesheet">
@@ -29,8 +29,8 @@
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       letter-spacing: 0;
     }
-    button, a { font: inherit; }
-    .shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 48px; }
+    button, a, input, select { font: inherit; }
+    .shell { width: min(1280px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 48px; }
     .topbar {
       display: flex;
       align-items: center;
@@ -87,11 +87,21 @@
     }
     .panel-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
     .panel-head h2 { font-size: 18px; font-weight: 950; }
+    .search-input {
+      width: min(330px, 100%);
+      min-height: 42px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fff;
+      font-weight: 700;
+    }
     .staff-list { display: grid; gap: 8px; }
     .staff-row {
-      min-height: 76px;
+      min-height: 92px;
       display: grid;
-      grid-template-columns: 46px minmax(0, 1fr) auto auto;
+      grid-template-columns: 46px minmax(230px, 1fr) minmax(230px, 320px) auto auto auto;
       align-items: center;
       gap: 13px;
       padding: 12px 14px;
@@ -112,6 +122,30 @@
     .staff-copy { min-width: 0; display: grid; gap: 5px; }
     .staff-name { font-size: 15px; font-weight: 950; }
     .staff-meta { color: var(--muted); font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .store-field { display: grid; gap: 6px; }
+    .store-field label { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .store-field select {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fff;
+      font-weight: 800;
+    }
+    .admin-store {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border: 1px solid #bee5d9;
+      border-radius: 8px;
+      color: var(--green-dark);
+      background: #eaf8f3;
+      font-size: 12px;
+      font-weight: 900;
+    }
     .status {
       min-width: 72px;
       padding: 6px 9px;
@@ -150,6 +184,18 @@
     .toggle input:checked + .toggle-track::after { transform: translateX(22px); }
     .toggle input:focus-visible + .toggle-track { outline: 3px solid rgba(7, 137, 111, .2); }
     .toggle input:disabled + .toggle-track { cursor: wait; opacity: .55; }
+    .save-button {
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--green);
+      border-radius: 8px;
+      color: #fff;
+      background: var(--green);
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .save-button:disabled { cursor: wait; opacity: .55; }
+    .admin-row { background: #f6fbf9; }
     .empty { padding: 30px; color: var(--muted); text-align: center; font-weight: 750; }
     .error { min-height: 20px; margin-top: 12px; color: var(--red); font-size: 13px; font-weight: 750; }
     .toast {
@@ -170,12 +216,16 @@
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     @media (max-width: 680px) {
-      .shell { width: min(100% - 20px, 1120px); padding-top: 10px; }
+      .shell { width: min(100% - 20px, 1280px); padding-top: 10px; }
       .topbar { align-items: stretch; flex-direction: column; }
       .actions { justify-content: flex-start; }
       .summary { grid-template-columns: 1fr; }
+      .panel-head { align-items: stretch; flex-direction: column; }
+      .search-input { width: 100%; }
       .staff-row { grid-template-columns: 42px minmax(0, 1fr) auto; }
-      .status { display: none; }
+      .store-field { grid-column: 1 / -1; }
+      .save-button { grid-column: 1 / -1; width: 100%; }
+      .status { display: inline-block; }
     }
   </style>
 </head>
@@ -183,8 +233,8 @@
   <main class="shell" data-auth-protected>
     <header class="topbar">
       <div>
-        <h1>Stocktake Access</h1>
-        <p class="subtitle">Temporarily allow a staff member to edit POS categories and quantities. Disable access when stocktake is finished.</p>
+        <h1>Staff Management</h1>
+        <p class="subtitle">Assign every staff account to its store and control whether the account can sign in. Bowen remains the administrator for all stores.</p>
       </div>
       <div class="actions">
         <button id="refreshBtn" class="button" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
@@ -192,18 +242,19 @@
       </div>
     </header>
 
-    <section class="summary" aria-label="Stocktake access summary">
-      <div class="summary-item"><span>Active staff</span><strong id="staffCount">0</strong></div>
-      <div class="summary-item"><span>Access enabled</span><strong id="enabledCount">0</strong></div>
-      <div class="summary-item"><span>Access disabled</span><strong id="disabledCount">0</strong></div>
+    <section class="summary" aria-label="Staff account summary">
+      <div class="summary-item"><span>Total staff</span><strong id="staffCount">0</strong></div>
+      <div class="summary-item"><span>Active accounts</span><strong id="enabledCount">0</strong></div>
+      <div class="summary-item"><span>Needs store assignment</span><strong id="unassignedCount">0</strong></div>
     </section>
 
     <section class="panel">
       <div class="panel-head">
         <div>
-          <h2>Staff Permissions</h2>
-          <p class="subtitle">The POS checks this permission again every time a change is saved.</p>
+          <h2>Staff Accounts And Store Assignment</h2>
+          <p class="subtitle">Staff can only use the store selected here. Changes are enforced by the POS backend immediately.</p>
         </div>
+        <input id="searchInput" class="search-input" type="search" placeholder="Search staff name or email" aria-label="Search staff">
       </div>
       <div id="staffList" class="staff-list"><div class="empty">Loading staff...</div></div>
       <div id="pageError" class="error" role="alert"></div>
@@ -214,14 +265,18 @@
   <script>
     const els = {
       refreshBtn: document.getElementById('refreshBtn'),
+      searchInput: document.getElementById('searchInput'),
       staffList: document.getElementById('staffList'),
       staffCount: document.getElementById('staffCount'),
       enabledCount: document.getElementById('enabledCount'),
-      disabledCount: document.getElementById('disabledCount'),
+      unassignedCount: document.getElementById('unassignedCount'),
       pageError: document.getElementById('pageError'),
       toast: document.getElementById('toast')
     };
     let staffRows = [];
+    let stores = [];
+    const pendingStaff = new Set();
+    const STAFF_MANAGEMENT_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-staff-management';
 
     function escapeHtml(value) {
       return String(value || '').replace(/[&<>"']/g, char => ({
@@ -236,85 +291,146 @@
       showToast.timer = setTimeout(() => els.toast.classList.remove('show'), 2400);
     }
 
+    async function managementRequest(method, body) {
+      const response = await fetch(STAFF_MANAGEMENT_ENDPOINT, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-session': window.Techm8StaffAuth.getToken()
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(result.message || 'Staff management request failed.');
+      }
+      return result;
+    }
+
+    function isBowenAdmin(row) {
+      return String(row.email || '').trim().toLowerCase() === 'techm8contact@gmail.com'
+        || (String(row.display_name || '').trim().toLowerCase() === 'bowen' && String(row.job_role || '').toLowerCase() === 'admin');
+    }
+
+    function storeOptions(selectedCode) {
+      const selected = String(selectedCode || '').toLowerCase();
+      const placeholder = `<option value="" ${selected ? '' : 'selected'} disabled>Select a store</option>`;
+      return placeholder + stores.map(store => `
+        <option value="${escapeHtml(store.store_code)}" ${String(store.store_code).toLowerCase() === selected ? 'selected' : ''}>
+          ${escapeHtml(store.store_name)}
+        </option>
+      `).join('');
+    }
+
     function renderStaff() {
-      const enabled = staffRows.filter(row => row.enabled).length;
+      const enabled = staffRows.filter(row => row.active).length;
+      const unassigned = staffRows.filter(row => !isBowenAdmin(row) && !row.default_store_code).length;
       els.staffCount.textContent = String(staffRows.length);
       els.enabledCount.textContent = String(enabled);
-      els.disabledCount.textContent = String(staffRows.length - enabled);
-      if (!staffRows.length) {
-        els.staffList.innerHTML = '<div class="empty">No active staff found.</div>';
+      els.unassignedCount.textContent = String(unassigned);
+
+      const query = String(els.searchInput.value || '').trim().toLowerCase();
+      const visibleRows = query
+        ? staffRows.filter(row => [row.display_name, row.email, row.default_store_name].some(value => String(value || '').toLowerCase().includes(query)))
+        : staffRows;
+
+      if (!visibleRows.length) {
+        els.staffList.innerHTML = '<div class="empty">No matching staff found.</div>';
         return;
       }
-      els.staffList.innerHTML = staffRows.map(row => {
-        const meta = [row.job_role || 'staff', row.email || '', row.default_store_name || 'No default store'].filter(Boolean).join(' · ');
+      els.staffList.innerHTML = visibleRows.map(row => {
+        const staffId = Number(row.staff_id);
+        const admin = isBowenAdmin(row);
+        const pending = pendingStaff.has(staffId);
+        const meta = [admin ? 'admin' : 'staff', row.email || 'No email', row.credentials_ready ? 'Login ready' : 'First login pending'].join(' · ');
         return `
-          <div class="staff-row" data-staff-row="${Number(row.staff_id)}">
+          <div class="staff-row ${admin ? 'admin-row' : ''}" data-staff-row="${staffId}">
             <div class="staff-avatar"><i class="bi bi-person-badge"></i></div>
             <div class="staff-copy">
               <div class="staff-name">${escapeHtml(row.display_name)}</div>
               <div class="staff-meta">${escapeHtml(meta)}</div>
             </div>
-            <span class="status ${row.enabled ? 'enabled' : ''}">${row.enabled ? 'Enabled' : 'Disabled'}</span>
-            <label class="toggle" title="${row.enabled ? 'Disable' : 'Enable'} stocktake access for ${escapeHtml(row.display_name)}">
-              <input type="checkbox" data-stocktake-toggle="${Number(row.staff_id)}" ${row.enabled ? 'checked' : ''} aria-label="Stocktake access for ${escapeHtml(row.display_name)}">
+            <div class="store-field">
+              <label>${admin ? 'Store access' : 'Assigned store'}</label>
+              ${admin
+                ? '<div class="admin-store"><i class="bi bi-buildings"></i>&nbsp; All stores</div>'
+                : `<select data-store-select="${staffId}" ${pending ? 'disabled' : ''}>${storeOptions(row.default_store_code)}</select>`}
+            </div>
+            <span class="status ${row.active ? 'enabled' : ''}">${row.active ? 'Enabled' : 'Disabled'}</span>
+            <label class="toggle" title="${admin ? 'Administrator account is always enabled' : `${row.active ? 'Disable' : 'Enable'} ${escapeHtml(row.display_name)}`}">
+              <input type="checkbox" data-account-toggle="${staffId}" ${row.active ? 'checked' : ''} ${admin || pending ? 'disabled' : ''} aria-label="Account enabled for ${escapeHtml(row.display_name)}">
               <span class="toggle-track"></span>
             </label>
+            ${admin ? '' : `<button class="save-button" type="button" data-save-staff="${staffId}" ${pending ? 'disabled' : ''}>${pending ? 'Saving...' : 'Save'}</button>`}
           </div>
         `;
       }).join('');
     }
 
-    async function loadPermissions() {
+    async function loadStaff() {
       els.pageError.textContent = '';
       els.refreshBtn.disabled = true;
       try {
-        const result = await window.Techm8StaffAuth.callRpc('get_pos_stocktake_permissions', {
-          session_token: window.Techm8StaffAuth.getToken()
-        });
+        const result = await managementRequest('GET');
         staffRows = Array.isArray(result.staff) ? result.staff : [];
+        stores = Array.isArray(result.stores) ? result.stores : [];
         renderStaff();
       } catch (error) {
         console.error(error);
-        els.pageError.textContent = error.message || 'Stocktake permissions could not be loaded.';
+        els.pageError.textContent = error.message || 'Staff accounts could not be loaded.';
       } finally {
         els.refreshBtn.disabled = false;
       }
     }
 
-    async function changePermission(input) {
-      const staffId = Number(input.dataset.stocktakeToggle);
+    async function saveStaff(button) {
+      const staffId = Number(button.dataset.saveStaff);
       const row = staffRows.find(item => Number(item.staff_id) === staffId);
       if (!row) return;
-      const nextEnabled = input.checked;
-      input.disabled = true;
+      const rowElement = button.closest('[data-staff-row]');
+      const storeSelect = rowElement.querySelector('[data-store-select]');
+      const accountToggle = rowElement.querySelector('[data-account-toggle]');
+      const storeCode = String(storeSelect && storeSelect.value || '').trim();
+      if (!storeCode) {
+        els.pageError.textContent = `Select a store for ${row.display_name}.`;
+        storeSelect && storeSelect.focus();
+        return;
+      }
+
+      pendingStaff.add(staffId);
       els.pageError.textContent = '';
+      renderStaff();
       try {
-        const result = await window.Techm8StaffAuth.callRpc('set_pos_stocktake_permission', {
-          session_token: window.Techm8StaffAuth.getToken(),
-          target_staff_id: staffId,
-          target_enabled: nextEnabled
+        const result = await managementRequest('PUT', {
+          staff_id: staffId,
+          store_code: storeCode,
+          active: Boolean(accountToggle && accountToggle.checked)
         });
-        row.enabled = Boolean(result.enabled);
-        row.updated_at = result.updated_at || new Date().toISOString();
-        renderStaff();
-        showToast(`${row.display_name}: stocktake access ${row.enabled ? 'enabled' : 'disabled'}.`);
+        const updated = result && result.staff;
+        if (!updated) throw new Error('The staff update did not return a result.');
+        const index = staffRows.findIndex(item => Number(item.staff_id) === staffId);
+        if (index >= 0) staffRows[index] = updated;
+        showToast(`${updated.display_name} is assigned to ${updated.default_store_name}.`);
       } catch (error) {
         console.error(error);
-        input.checked = !nextEnabled;
-        input.disabled = false;
-        els.pageError.textContent = error.message || 'Permission could not be changed.';
+        els.pageError.textContent = error.message || 'Staff account could not be saved.';
+      } finally {
+        pendingStaff.delete(staffId);
+        renderStaff();
       }
     }
 
-    els.refreshBtn.addEventListener('click', loadPermissions);
-    els.staffList.addEventListener('change', event => {
-      if (event.target.matches('[data-stocktake-toggle]')) changePermission(event.target);
+    els.refreshBtn.addEventListener('click', loadStaff);
+    els.searchInput.addEventListener('input', renderStaff);
+    els.staffList.addEventListener('click', event => {
+      const button = event.target.closest('[data-save-staff]');
+      if (button) saveStaff(button);
     });
 
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
-      title: 'Stocktake Access Login',
-      subtitle: 'Sign in with the admin account to control staff stocktake access.',
+      title: 'Staff Management Login',
+      subtitle: 'Sign in with the admin account to manage staff accounts and store assignments.',
       requireLoginEmail: true,
       loginInputType: 'text',
       loginPlaceholder: 'Admin account',
@@ -322,7 +438,7 @@
       createRpc: 'create_admin_session',
       verifyRpc: 'verify_admin_session',
       revokeRpc: 'revoke_admin_session'
-    }).then(loadPermissions);
+    }).then(loadStaff);
   </script>
 </body>
 </html>
