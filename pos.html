@@ -5229,6 +5229,21 @@
       font-weight: 900;
     }
 
+    .refund-line-controls {
+      display: grid;
+      gap: 6px;
+    }
+
+    .refund-line-controls label {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 6px;
+      color: var(--tm-muted);
+      font-size: 10px;
+      font-weight: 850;
+    }
+
     .refund-total {
       display: flex;
       justify-content: space-between;
@@ -8267,10 +8282,10 @@
     };
 
     const INTERNAL_PRODUCTS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-products';
-    const POS_REPAIR_TICKETS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-repair-tickets';
-    const POS_SALES_ORDERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-sales-orders';
-    const POS_SHARED_STATE_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-shared-state';
-    const POS_USED_DEVICES_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-used-devices';
+    const POS_REPAIR_TICKETS_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-repair-tickets';
+    const POS_SALES_ORDERS_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-sales-orders';
+    const POS_SHARED_STATE_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-shared-state';
+    const POS_USED_DEVICES_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-used-devices';
     const POS_STOCK_TRANSFERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-stock-transfers';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
     const INTERNAL_TOOLS = {
@@ -9698,11 +9713,10 @@
         openedAt: new Date().toISOString(),
         sync_pending: true
       };
-      records[openingKey()] = record;
-      localStorage.setItem(POS_OPENINGS_KEY, JSON.stringify(records));
-
-      shift = await syncCurrentShiftWithDatabase({ createIfMissing: true });
       try {
+        shift = await syncCurrentShiftWithDatabase({ createIfMissing: true });
+        if (!shift || !shift.id) throw new Error('The store shift could not be opened.');
+        record.shiftId = shift.id;
         const payload = typeof localShiftTestMode !== 'undefined' && localShiftTestMode
           ? { shift: {
               id: shift && shift.id,
@@ -9723,22 +9737,30 @@
               total: record.total,
               counts
             });
-        if (payload.shift) {
-          cacheRemoteShiftOpening(payload.shift);
-          record = {
-            ...record,
-            shiftId: payload.shift.id,
-            date: payload.shift.business_date || brisbaneDateIso(),
-            total: roundedMoneyValue(payload.shift.opening_cash_total),
-            counts: payload.shift.opening_counts || counts,
-            openedAt: payload.shift.opening_confirmed_at || record.openedAt,
-            sync_pending: false
-          };
-          records[payload.shift.id] = record;
-          localStorage.setItem(POS_OPENINGS_KEY, JSON.stringify(records));
+        if (!payload.shift || !payload.shift.opening_confirmed_at) {
+          throw new Error('Opening cash was not confirmed by the database.');
         }
+        cacheRemoteShiftOpening(payload.shift);
+        record = {
+          ...record,
+          shiftId: payload.shift.id,
+          date: payload.shift.business_date || brisbaneDateIso(),
+          total: roundedMoneyValue(payload.shift.opening_cash_total),
+          counts: payload.shift.opening_counts || counts,
+          openedAt: payload.shift.opening_confirmed_at,
+          sync_pending: false
+        };
+        records[payload.shift.id] = record;
+        localStorage.setItem(POS_OPENINGS_KEY, JSON.stringify(records));
       } catch (error) {
         console.error(error);
+        state.openingConfirmed = false;
+        if (submit) {
+          submit.disabled = false;
+          submit.textContent = 'Start Shift';
+        }
+        showToast(error.message || 'Opening cash could not be saved. Check the connection and try again.');
+        return false;
       }
       state.openingConfirmed = true;
       els.openingCashModal.classList.remove('show');
@@ -9747,9 +9769,7 @@
         submit.disabled = false;
         submit.textContent = 'Start Shift';
       }
-      showToast(record.sync_pending
-        ? `Opening cash saved locally for ${storeById(state.storeId).code}; database sync is pending.`
-        : `Shift started for ${storeById(state.storeId).code}.`);
+      showToast(`Shift started for ${storeById(state.storeId).code}.`);
       if (openingResolve) {
         openingResolve(true);
         openingResolve = null;
@@ -9759,7 +9779,7 @@
     function ensureOpeningCash() {
       const records = loadOpeningRecords();
       const activeShift = readActiveShift();
-      if (activeShift && records[activeShift.id]) {
+      if (activeShift && records[activeShift.id] && !records[activeShift.id].sync_pending) {
         state.openingConfirmed = true;
         return Promise.resolve(true);
       }
@@ -10729,6 +10749,14 @@
         if (matchedKey) return Number(product.store_inventory[matchedKey] || 0);
       }
       return 0;
+    }
+
+    function usesTrackedProductStock(item) {
+      return Boolean(item)
+        && !item.is_repair
+        && !item.is_special
+        && !item.is_used_device
+        && /^\d+$/.test(String(item.id ?? item.product_id ?? '').trim());
     }
 
     function productPlaceholderImage(product) {
@@ -12484,6 +12512,7 @@
       const url = new URL(POS_REPAIR_TICKETS_ENDPOINT);
       url.searchParams.set('ticket_code', ticketId);
       url.searchParams.set('staff_name', state.selectedStaffName || '');
+      url.searchParams.set('store_code', repairTicketStoreCode());
       try {
         const response = await fetch(url.toString(), {
           method: 'DELETE',
@@ -16059,8 +16088,8 @@
       const item = state.cart.find(cartItem => String(cartItem.id) === String(productId));
       if (!item) return false;
       const nextPrice = Number(rawValue);
-      if (!Number.isFinite(nextPrice) || nextPrice < 0 || nextPrice > 1000000) {
-        showToast('Enter a valid unit price between $0.00 and $1,000,000.00.');
+      if (!Number.isFinite(nextPrice) || nextPrice <= 0 || nextPrice > 1000000) {
+        showToast('Enter a valid unit price between $0.01 and $1,000,000.00.');
         renderCart();
         return false;
       }
@@ -16128,7 +16157,7 @@
                       <span>Price</span>
                       <span class="cart-price-input-wrap">
                         <span>$</span>
-                        <input class="cart-price-input" type="number" min="0" max="1000000" step="0.01" value="${roundedMoneyValue(item.sale_price).toFixed(2)}" data-cart-price="${escapeHtml(item.id)}" aria-label="Unit price for ${escapeHtml(item.name)}">
+                        <input class="cart-price-input" type="number" min="0.01" max="1000000" step="0.01" value="${roundedMoneyValue(item.sale_price).toFixed(2)}" data-cart-price="${escapeHtml(item.id)}" aria-label="Unit price for ${escapeHtml(item.name)}">
                       </span>
                     </label>
                     ${item.is_used_device || item.is_repair ? `
@@ -16268,6 +16297,13 @@
       if (!product) return;
 
       const current = state.cart.find(item => item.id === productId);
+      const nextQty = Number(current && current.qty || 0) + 1;
+      if (usesTrackedProductStock(product) && nextQty > getProductStock(product)) {
+        showToast(getProductStock(product) > 0
+          ? `Only ${getProductStock(product)} in stock at this store.`
+          : 'This product is out of stock at this store.');
+        return;
+      }
       if (current) {
         current.qty += 1;
       } else {
@@ -17199,6 +17235,13 @@
       if (nextQty <= 0) {
         state.cart = state.cart.filter(cartItem => cartItem.id !== productId);
       } else {
+        const product = state.products.find(productItem => String(productItem.id) === String(productId));
+        if (Number(dir) > 0 && usesTrackedProductStock(item) && nextQty > getProductStock(product || item)) {
+          showToast(getProductStock(product || item) > 0
+            ? `Only ${getProductStock(product || item)} in stock at this store.`
+            : 'This product is out of stock at this store.');
+          return;
+        }
         item.qty = nextQty;
       }
       renderCart();
@@ -17516,7 +17559,11 @@
       const response = await fetch(POS_SHARED_STATE_ENDPOINT, {
         method: 'POST',
         headers: posOrderApiHeaders(),
-        body: JSON.stringify({ resource, action, payload })
+        body: JSON.stringify({
+          resource,
+          action,
+          payload: { store_code: repairTicketStoreCode(), ...(payload || {}) }
+        })
       });
       return parsePosApiResponse(response, 'Shared POS data could not be saved.');
     }
@@ -17695,9 +17742,11 @@
       return [...els.refundLines.querySelectorAll('[data-refund-line]')].map(row => {
         const checkbox = row.querySelector('[data-refund-check]');
         const amountInput = row.querySelector('[data-refund-amount]');
+        const quantityInput = row.querySelector('[data-refund-quantity]');
         return {
           line_id: Number(row.dataset.refundLine),
           amount: roundedMoneyValue(amountInput ? amountInput.value : 0),
+          quantity: Math.floor(Math.max(0, Number(quantityInput ? quantityInput.value : 0))),
           selected: Boolean(checkbox && checkbox.checked)
         };
       }).filter(line => line.selected && line.line_id && line.amount > 0);
@@ -17716,6 +17765,10 @@
         : [];
       els.refundLines.innerHTML = lines.map(item => {
         const refundable = roundedMoneyValue(item.refundable_amount ?? item.line_total ?? 0);
+        const refundableQuantity = Math.max(0, Number(item.refundable_quantity ?? item.qty ?? 0));
+        const canReturnStock = refundableQuantity > 0
+          && (item.line_type === 'product' || item.line_type === 'retail' || item.line_type === 'used_device')
+          && (item.line_type === 'used_device' || /^\d+$/.test(String(item.product_id || '')));
         return `
           <label class="refund-line" data-refund-line="${Number(item.line_id)}">
             <input type="checkbox" data-refund-check checked>
@@ -17723,7 +17776,12 @@
               <span class="refund-line-name">${escapeHtml(item.name || 'Sale item')}</span>
               <span class="refund-line-meta">${escapeHtml(item.ticket_id ? `Ticket ${item.ticket_id}` : item.sku || (item.line_type === 'repair' ? 'Repair' : 'Product'))} · Available ${money(refundable)}</span>
             </span>
-            <input type="number" min="0.01" max="${refundable.toFixed(2)}" step="0.01" value="${refundable.toFixed(2)}" data-refund-amount aria-label="Refund amount for ${escapeHtml(item.name || 'item')}">
+            <span class="refund-line-controls">
+              <label>Refund $<input type="number" min="0.01" max="${refundable.toFixed(2)}" step="0.01" value="${refundable.toFixed(2)}" data-refund-amount aria-label="Refund amount for ${escapeHtml(item.name || 'item')}"></label>
+              ${canReturnStock
+                ? `<label>Returned qty<input type="number" min="0" max="${refundableQuantity}" step="1" value="${refundableQuantity}" data-refund-quantity aria-label="Returned quantity for ${escapeHtml(item.name || 'item')}"></label>`
+                : '<input type="hidden" value="0" data-refund-quantity>'}
+            </span>
           </label>
         `;
       }).join('') || '<div class="ticket-meta">No refundable balance remains.</div>';
@@ -17778,6 +17836,8 @@
             order_id: order.id,
             store_code: repairTicketStoreCode(),
             staff_name: state.selectedStaffName,
+            shift_id: state.activeShiftId || (readActiveShift() && readActiveShift().id) || '',
+            business_date: brisbaneDateIso(),
             refund_method: els.refundMethod.value,
             reason,
             lines
@@ -17791,6 +17851,7 @@
         state.shiftPaymentTotals = null;
         closeRefundModal();
         renderInvoiceHistory();
+        loadProducts({ force: true });
         showToast(`Refund ${payload.refund_id} recorded.`);
       } catch (error) {
         console.error(error);
@@ -17827,9 +17888,13 @@
         if (payload.order && typeof payload.order === 'object') {
           Object.assign(order, payload.order);
         }
-        order.sync_pending = false;
+        order.sync_pending = Boolean(payload.inventory_sync_pending);
+        order.inventory_sync_pending = Boolean(payload.inventory_sync_pending);
         order.database_saved_at = new Date().toISOString();
         updateStoredOrder(order);
+        if (payload.inventory_sync_pending && !silent) {
+          showToast('Sale saved. Inventory synchronization will retry automatically.');
+        }
         return true;
       } catch (error) {
         console.error(error);
@@ -18339,6 +18404,10 @@
       const total = cartTotal();
       const paymentTotal = roundedMoneyValue(normalizedPayments.reduce((sum, payment) => sum + payment.amount, 0));
       const isDeposit = Boolean(options && options.deposit) && paymentTotal > 0 && paymentTotal < total;
+      if (paymentTotal > total + 0.005) {
+        showToast('Payment cannot be more than the order total.');
+        return;
+      }
       if (paymentTotal < total && !isDeposit) {
         showToast('Payment is not complete.');
         return;
@@ -18352,6 +18421,15 @@
       if (!activeShift || activeShift.status !== 'open' || activeShift.date !== brisbaneDateIso() || !state.openingConfirmed) {
         showToast('Start today\'s shift before checkout.');
         ensureOpeningCash();
+        return;
+      }
+      const stockShortage = state.cart.find(item => {
+        if (!usesTrackedProductStock(item)) return false;
+        const product = state.products.find(productItem => String(productItem.id) === String(item.id));
+        return Number(item.qty || 0) > getProductStock(product || item);
+      });
+      if (stockShortage) {
+        showToast(`${stockShortage.name || 'A product'} does not have enough stock at this store.`);
         return;
       }
       const repairCartItems = state.cart.filter(item => item.is_repair && item.ticket_id);
@@ -18437,8 +18515,9 @@
       }
       state.shiftPaymentTotals = null;
 
-      // Stock only moves when the order is settled in full; a deposit reserves nothing.
-      if (!isDeposit) state.cart.forEach(item => {
+      // The database is authoritative. Mirror its successful stock movement in
+      // the current screen so the next scan cannot oversell before a reload.
+      if (!order.inventory_sync_pending) state.cart.filter(usesTrackedProductStock).forEach(item => {
         const product = state.products.find(productItem => productItem.id === item.id);
         if (!product) return;
         if (product.store_stock) {
@@ -19755,7 +19834,9 @@
       const row = event.target.closest('[data-refund-line]');
       if (event.target.matches('[data-refund-check]') && row) {
         const amount = row.querySelector('[data-refund-amount]');
+        const quantity = row.querySelector('[data-refund-quantity]');
         if (amount) amount.disabled = !event.target.checked;
+        if (quantity) quantity.disabled = !event.target.checked;
       }
       updateRefundTotal();
     });

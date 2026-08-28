@@ -13,27 +13,21 @@ function jsonResponse(body: JsonRecord, status = 200): Response {
   });
 }
 
-function supabaseConfig(request: Request): { url: string; anonKey: string; authorization: string } {
+function supabaseConfig(): { url: string; serviceKey: string } {
   const url = Deno.env.get("STAFF_AUTH_SUPABASE_URL") || Deno.env.get("SUPABASE_URL") || "";
-  const incomingApiKey = request.headers.get("apikey") || "";
-  const incomingAuthorization = request.headers.get("authorization") || "";
-  const anonKey = incomingApiKey
-    || Deno.env.get("STAFF_AUTH_SUPABASE_ANON_KEY")
-    || Deno.env.get("SUPABASE_ANON_KEY")
-    || "";
-  const authorization = incomingAuthorization || `Bearer ${anonKey}`;
-  if (!url || !anonKey) throw new Error("Supabase environment is not configured.");
-  return { url, anonKey, authorization };
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!url || !serviceKey) throw new Error("Supabase environment is not configured.");
+  return { url, serviceKey };
 }
 
-async function rpcResponse(request: Request, rpcName: string, payload: JsonRecord): Promise<Response> {
-  const config = supabaseConfig(request);
+async function rpcResponse(_request: Request, rpcName: string, payload: JsonRecord): Promise<Response> {
+  const config = supabaseConfig();
   const response = await fetch(`${config.url}/rest/v1/rpc/${rpcName}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      apikey: config.anonKey,
-      Authorization: config.authorization,
+      apikey: config.serviceKey,
+      Authorization: `Bearer ${config.serviceKey}`,
     },
     body: JSON.stringify(payload),
   });
@@ -47,6 +41,22 @@ async function rpcResponse(request: Request, rpcName: string, payload: JsonRecor
   });
 }
 
+async function authorize(
+  request: Request,
+  sessionToken: string,
+  storeCode: string,
+  staffName = "",
+): Promise<JsonRecord> {
+  const response = await rpcResponse(request, "pos_authorized_actor", {
+    session_token: sessionToken,
+    target_store_code: storeCode,
+    requested_staff_name: staffName || null,
+  });
+  const result = await response.json().catch(() => ({})) as JsonRecord;
+  if (!response.ok || !result.ok) throw new Error(String(result.message || "Store access denied."));
+  return result;
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
@@ -58,6 +68,7 @@ Deno.serve(async (request) => {
     if (request.method === "GET") {
       const storeCode = url.searchParams.get("store_code") || "";
       if (!storeCode) return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+      await authorize(request, sessionToken, storeCode);
       const resource = url.searchParams.get("resource") || "devices";
       const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 200), 1), 500);
 
@@ -89,17 +100,28 @@ Deno.serve(async (request) => {
       const data = payload.payload && typeof payload.payload === "object" && !Array.isArray(payload.payload)
         ? payload.payload as JsonRecord
         : payload;
+      const storeCode = String(data.store_code || data.store_db_code || "").trim().toLowerCase();
+      if (!storeCode) return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+      const actor = await authorize(request, sessionToken, storeCode, String(data.staff_name || data.updated_by || ""));
+      const safeData = {
+        ...data,
+        store_code: String(actor.store_code || storeCode),
+        store_db_code: String(actor.store_code || storeCode),
+        staff_name: String(actor.staff_name || ""),
+        acquired_by: String(actor.staff_name || ""),
+        updated_by: String(actor.staff_name || ""),
+      };
 
       if (action === "acquire") {
         return await rpcResponse(request, "create_pos_used_device_acquisition", {
           session_token: sessionToken,
-          payload: data,
+          payload: safeData,
         });
       }
       if (action === "update") {
         return await rpcResponse(request, "update_pos_used_device", {
           session_token: sessionToken,
-          payload: data,
+          payload: safeData,
         });
       }
       return jsonResponse({ ok: false, message: "Unknown used-device action." }, 400);

@@ -16,32 +16,26 @@ function jsonResponse(body: JsonRecord, status = 200): Response {
   });
 }
 
-function supabaseConfig(request: Request): { url: string; anonKey: string; authorization: string } {
+function supabaseConfig(): { url: string; serviceKey: string } {
   const url = Deno.env.get("STAFF_AUTH_SUPABASE_URL")
     || Deno.env.get("SUPABASE_URL")
     || "";
-  const incomingApiKey = request.headers.get("apikey") || "";
-  const incomingAuthorization = request.headers.get("authorization") || "";
-  const anonKey = incomingApiKey
-    || Deno.env.get("STAFF_AUTH_SUPABASE_ANON_KEY")
-    || Deno.env.get("SUPABASE_ANON_KEY")
-    || "";
-  const authorization = incomingAuthorization || `Bearer ${anonKey}`;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-  if (!url || !anonKey) {
+  if (!url || !serviceKey) {
     throw new Error("Supabase environment is not configured.");
   }
-  return { url, anonKey, authorization };
+  return { url, serviceKey };
 }
 
-async function rpcResponse(request: Request, rpcName: string, payload: JsonRecord): Promise<Response> {
-  const config = supabaseConfig(request);
+async function rpcResponse(_request: Request, rpcName: string, payload: JsonRecord): Promise<Response> {
+  const config = supabaseConfig();
   const response = await fetch(`${config.url}/rest/v1/rpc/${rpcName}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      apikey: config.anonKey,
-      Authorization: config.authorization,
+      apikey: config.serviceKey,
+      Authorization: `Bearer ${config.serviceKey}`,
     },
     body: JSON.stringify(payload),
   });
@@ -53,6 +47,23 @@ async function rpcResponse(request: Request, rpcName: string, payload: JsonRecor
       "Content-Type": response.headers.get("Content-Type") || "application/json; charset=utf-8",
     },
   });
+}
+
+async function rpcData(rpcName: string, payload: JsonRecord): Promise<JsonRecord> {
+  const response = await rpcResponse(new Request("https://local.invalid"), rpcName, payload);
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(String((result as JsonRecord).message || "Database request failed."));
+  return Array.isArray(result) ? ((result[0] as JsonRecord | undefined) || {}) : ((result as JsonRecord) || {});
+}
+
+async function authorizedActor(sessionToken: string, storeCode: string, staffName = ""): Promise<JsonRecord> {
+  const result = await rpcData("pos_authorized_actor", {
+    session_token: sessionToken,
+    target_store_code: storeCode,
+    requested_staff_name: staffName || null,
+  });
+  if (!result.ok) throw new Error(String(result.message || "Store access denied."));
+  return result;
 }
 
 Deno.serve(async (request) => {
@@ -72,6 +83,7 @@ Deno.serve(async (request) => {
     if (request.method === "GET") {
       const storeCode = url.searchParams.get("store_code") || "";
       if (!storeCode) return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+      await authorizedActor(sessionToken, storeCode);
 
       if (resource === "customers") {
         return await rpcResponse(request, "search_pos_customers", {
@@ -94,8 +106,9 @@ Deno.serve(async (request) => {
         });
       }
       if (resource === "shift-totals") {
-        return await rpcResponse(request, "get_pos_shift_payment_totals", {
+        return await rpcResponse(request, "get_pos_shift_payment_totals_for_store", {
           session_token: sessionToken,
+          target_store_code: storeCode,
           target_shift_code: url.searchParams.get("shift_id") || "",
         });
       }
@@ -113,43 +126,54 @@ Deno.serve(async (request) => {
       const data = body.payload && typeof body.payload === "object" && !Array.isArray(body.payload)
         ? body.payload as JsonRecord
         : body;
+      const storeCode = String(data.store_code || data.store_db_code || "").trim().toLowerCase();
+      if (!storeCode) return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+      const actor = await authorizedActor(sessionToken, storeCode, String(data.staff_name || ""));
+      const safeData = {
+        ...data,
+        store_code: String(actor.store_code || storeCode),
+        store_db_code: String(actor.store_code || storeCode),
+        staff_name: String(actor.staff_name || ""),
+      };
 
       if (bodyResource === "customer") {
         return await rpcResponse(request, "upsert_pos_customer", {
           session_token: sessionToken,
-          payload: data,
+          payload: safeData,
         });
       }
       if (bodyResource === "hold" && action === "restore") {
         return await rpcResponse(request, "restore_pos_held_cart", {
           session_token: sessionToken,
-          target_store_code: String(data.store_code || ""),
+          target_store_code: String(actor.store_code || storeCode),
           target_hold_code: String(data.hold_id || data.id || ""),
-          staff_name: String(data.staff_name || ""),
+          staff_name: String(actor.staff_name || ""),
         });
       }
       if (bodyResource === "hold") {
         return await rpcResponse(request, "save_pos_held_cart", {
           session_token: sessionToken,
-          payload: data,
+          payload: safeData,
         });
       }
       if (bodyResource === "shift" && action === "open") {
         return await rpcResponse(request, "open_pos_store_shift", {
           session_token: sessionToken,
-          payload: data,
+          payload: safeData,
         });
       }
       if (bodyResource === "shift" && action === "opening") {
-        return await rpcResponse(request, "save_pos_shift_opening", {
+        return await rpcResponse(request, "save_pos_shift_opening_for_store", {
           session_token: sessionToken,
-          payload: data,
+          target_store_code: storeCode,
+          payload: safeData,
         });
       }
       if (bodyResource === "shift" && action === "close") {
-        return await rpcResponse(request, "close_pos_store_shift", {
+        return await rpcResponse(request, "close_pos_store_shift_for_store", {
           session_token: sessionToken,
-          payload: data,
+          target_store_code: storeCode,
+          payload: safeData,
         });
       }
       return jsonResponse({ ok: false, message: "Unknown shared-state action." }, 400);

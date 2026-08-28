@@ -3,10 +3,24 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-staff-session",
-  "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
 };
 
 type JsonRecord = Record<string, unknown>;
+
+function staffStoreCode(value: unknown): string {
+  const code = String(value || "").trim().toLowerCase();
+  if (code === "park-ridge") return "parkridge";
+  if (code === "north-lakes") return "northlakes";
+  return code;
+}
+
+function productStoreSlug(value: unknown): string {
+  const code = String(value || "").trim().toLowerCase();
+  if (code === "parkridge") return "park-ridge";
+  if (code === "northlakes") return "north-lakes";
+  return code;
+}
 
 function jsonResponse(body: JsonRecord, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -28,11 +42,14 @@ async function callStaffRpc(
     || "";
   const incomingApiKey = request.headers.get("apikey") || "";
   const incomingAuthorization = request.headers.get("authorization") || "";
-  const supabaseAnonKey = incomingApiKey
-    || Deno.env.get("STAFF_AUTH_SUPABASE_ANON_KEY")
+  const configuredStaffKey = Deno.env.get("STAFF_AUTH_SUPABASE_ANON_KEY") || "";
+  const supabaseAnonKey = configuredStaffKey
+    || incomingApiKey
     || Deno.env.get("SUPABASE_ANON_KEY")
     || "";
-  const authorization = incomingAuthorization || `Bearer ${supabaseAnonKey}`;
+  const authorization = configuredStaffKey
+    ? `Bearer ${configuredStaffKey}`
+    : (incomingAuthorization || `Bearer ${supabaseAnonKey}`);
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Supabase environment is not configured.");
@@ -63,6 +80,17 @@ async function verifyStaffSession(sessionToken: string, request: Request): Promi
   return await callStaffRpc("verify_staff_session", { session_token: sessionToken }, request);
 }
 
+async function verifyStoreAccess(
+  sessionToken: string,
+  storeCode: string,
+  request: Request,
+): Promise<JsonRecord> {
+  return await callStaffRpc("verify_staff_store_access", {
+    session_token: sessionToken,
+    target_store_code: storeCode,
+  }, request);
+}
+
 async function getStocktakeAccess(
   sessionToken: string,
   request: Request,
@@ -78,7 +106,7 @@ Deno.serve(async (request) => {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
-  if (request.method !== "GET" && request.method !== "PUT") {
+  if (request.method !== "GET" && request.method !== "POST" && request.method !== "PUT") {
     return jsonResponse({ ok: false, message: "Method not allowed." }, 405);
   }
 
@@ -107,9 +135,67 @@ Deno.serve(async (request) => {
   const mode = inputUrl.searchParams.get("mode") || "products";
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  const requestBody = request.method === "PUT"
+  const requestBody = request.method === "PUT" || request.method === "POST"
     ? await request.json().catch(() => ({})) as JsonRecord
     : {};
+
+  if (request.method === "POST") {
+    const action = String(requestBody.action || "").trim().toLowerCase();
+    const requestedStore = String(requestBody.store_slug || requestBody.store_code || "").trim().toLowerCase();
+    const storeCode = staffStoreCode(requestedStore);
+    const storeSlug = productStoreSlug(requestedStore);
+    if (!storeCode || !storeSlug || !["validate-sale", "sync-order"].includes(action)) {
+      return jsonResponse({ ok: false, message: "A valid inventory action and store are required." }, 400);
+    }
+
+    try {
+      const access = await verifyStoreAccess(sessionToken, storeCode, request);
+      if (!access.ok || !access.allowed) {
+        return jsonResponse({ ok: false, message: String(access.message || "Store access denied.") }, 403);
+      }
+      if (!supabaseUrl || !serviceRoleKey) {
+        return jsonResponse({ ok: false, message: "Product database is not configured." }, 500);
+      }
+
+      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+      if (action === "validate-sale") {
+        const items = Array.isArray(requestBody.items) ? requestBody.items : null;
+        if (!items) return jsonResponse({ ok: false, message: "Sale items are required." }, 400);
+        const { data, error } = await supabaseAdmin.rpc("validate_pos_inventory_sale", {
+          target_store_slug: storeSlug,
+          target_items: items,
+        });
+        if (error) throw error;
+        const result = (data as JsonRecord) || { ok: false };
+        return jsonResponse(result, result.ok ? 200 : 409);
+      }
+
+      const orderCode = String(requestBody.order_id || requestBody.order_code || "").trim();
+      if (!orderCode) return jsonResponse({ ok: false, message: "Order id is required." }, 400);
+      const orderResult = await callStaffRpc("get_pos_sales_order_for_store", {
+        session_token: sessionToken,
+        target_store_code: storeCode,
+        target_order_code: orderCode,
+      }, request);
+      const order = (orderResult.order && typeof orderResult.order === "object")
+        ? orderResult.order as JsonRecord
+        : null;
+      if (!order) return jsonResponse({ ok: false, message: "Order was not found." }, 404);
+
+      const { data, error } = await supabaseAdmin.rpc("apply_pos_inventory_order_effect", {
+        target_order_code: String(order.id || orderCode),
+        target_store_slug: storeSlug,
+        target_staff_name: String(order.staff_name || access.staff_name || "Staff"),
+        target_order_created_at: String(order.created_at || ""),
+        target_items: Array.isArray(order.items) ? order.items : [],
+      });
+      if (error) throw error;
+      return jsonResponse({ ...((data as JsonRecord | null) || { ok: true }), order });
+    } catch (error) {
+      console.error(error);
+      return jsonResponse({ ok: false, message: error instanceof Error ? error.message : "Inventory synchronization failed." }, 500);
+    }
+  }
 
   if (mode === "arrangement-context" && request.method === "GET") {
     if (!isAdmin) {
@@ -220,7 +306,7 @@ Deno.serve(async (request) => {
     const productId = Number(body.product_id);
     const posCategoryId = Number(body.pos_category_id);
     const quantity = Number(body.quantity);
-    const storeSlug = String(body.store_slug || "").trim();
+    const storeSlug = productStoreSlug(body.store_slug);
 
     if (!storeSlug || !Number.isInteger(productId) || productId < 1
       || !Number.isInteger(posCategoryId) || posCategoryId < 1
@@ -232,6 +318,10 @@ Deno.serve(async (request) => {
       const access = await getStocktakeAccess(sessionToken, request);
       if (!access.ok || !access.enabled) {
         return jsonResponse({ ok: false, code: "STOCKTAKE_ACCESS_DISABLED", message: "Stocktake access is not enabled for this staff member." }, 403);
+      }
+      const storeAccess = await verifyStoreAccess(sessionToken, staffStoreCode(storeSlug), request);
+      if (!storeAccess.ok || !storeAccess.allowed) {
+        return jsonResponse({ ok: false, code: "STORE_ACCESS_DENIED", message: String(storeAccess.message || "Store access denied.") }, 403);
       }
       if (!supabaseUrl || !serviceRoleKey) {
         return jsonResponse({ ok: false, message: "Product database is not configured." }, 500);
