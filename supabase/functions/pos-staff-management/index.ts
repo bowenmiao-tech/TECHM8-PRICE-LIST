@@ -55,16 +55,27 @@ Deno.serve(async (request) => {
     }
     const record = payload as JsonRecord;
     const staffId = Number(record.staff_id);
-    const storeCode = String(record.store_code || "").trim().toLowerCase();
-    if (!Number.isInteger(staffId) || staffId < 0 || !storeCode) {
-      return jsonResponse({ ok: false, message: "Staff member and store are required." }, 400);
+    const storeCodes = Array.isArray(record.store_codes)
+      ? Array.from(new Set(record.store_codes
+        .map((value) => String(value || "").trim().toLowerCase())
+        .filter(Boolean)))
+      : [];
+    if (!Number.isInteger(staffId) || staffId < 0) {
+      return jsonResponse({ ok: false, message: "Staff member is required." }, 400);
+    }
+    if (storeCodes.length > 50) {
+      return jsonResponse({ ok: false, message: "Too many stores were selected." }, 400);
+    }
+    if (typeof record.active !== "boolean" || typeof record.stocktake_enabled !== "boolean") {
+      return jsonResponse({ ok: false, message: "Account and inventory access values are required." }, 400);
     }
 
     const result = await callRpc("update_staff_management", {
       session_token: sessionToken,
       target_staff_id: staffId,
-      target_store_code: storeCode,
-      target_active: Boolean(record.active),
+      target_store_codes: storeCodes,
+      target_active: record.active,
+      target_stocktake_enabled: record.stocktake_enabled,
     });
     return jsonResponse(result.body, result.status);
   } catch (error) {
