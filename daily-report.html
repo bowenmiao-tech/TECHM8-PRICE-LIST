@@ -390,6 +390,44 @@
       font-size: 13px;
       line-height: 1.6;
     }
+
+    .report-stage,
+    .report-readonly-fieldset {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .report-readonly-fieldset {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .read-only-banner {
+      padding: 14px 16px;
+      border: 1px solid #b8d8cd;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #f2fbf7 0%, #e6f5ef 100%);
+      color: #174c3e;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .read-only-label {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #e6f5ef;
+      color: #176a54;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
     .success-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1050,7 +1088,7 @@
           <div class="hero-side" v-if="stage === 'report'">
             <div class="hero-action-row">
               <el-button plain icon="el-icon-back" @click="backToSetup">Change Store / Staff</el-button>
-              <el-button type="warning" plain icon="el-icon-document" @click="saveDraft" :loading="draftSaving">Save Draft</el-button>
+              <el-button type="warning" plain icon="el-icon-document" @click="saveDraft" :loading="draftSaving" :disabled="reportReadOnly">Save Draft</el-button>
             </div>
             <div class="hero-meta-grid">
               <div class="hero-meta-card">
@@ -1186,7 +1224,7 @@
 
             <template v-else>
               <div class="draft-note" v-if="storeDrafts.length">
-                Saved reports found for today under this store. Choose one to reopen and continue editing.
+                Saved reports found for today under this store. You can continue editing your own report; reports created by another staff member open as read-only.
               </div>
               <div class="draft-item" v-for="draft in storeDrafts" :key="'store-draft-' + draft.id">
                 <div>
@@ -1196,7 +1234,8 @@
                   </div>
                 </div>
                 <div class="toolbar" style="margin-top:0;">
-                  <el-button plain @click="resumeDraftFromSetup(draft)">Open Saved Report</el-button>
+                  <span class="read-only-label" v-if="draft.read_only">Read only</span>
+                  <el-button plain @click="resumeDraftFromSetup(draft)">{{ draft.read_only ? 'View Saved Report' : 'Open Saved Report' }}</el-button>
                 </div>
               </div>
               <div class="empty-note" v-if="!storeDrafts.length">
@@ -1207,6 +1246,12 @@
         </div>
 
         <template v-else-if="stage === 'report'">
+          <div class="report-stage">
+            <div class="read-only-banner" v-if="reportReadOnly">
+              Read-only report. You can view every saved detail, but only the staff member who created this draft or Bowen can change or submit it.
+            </div>
+
+            <fieldset class="report-readonly-fieldset" :disabled="reportReadOnly">
           <div class="panel">
             <div class="draft-note" v-if="draftLoadedAt">
               Existing draft loaded. Last saved at {{ formatDateTime(draftLoadedAt) }}.
@@ -1668,6 +1713,8 @@
               </div>
             </div>
           </div>
+            </fieldset>
+          </div>
         </template>
 
         <template v-else-if="stage === 'count'">
@@ -1836,6 +1883,7 @@
             setupLoading: false,
             submitting: false,
             draftSaving: false,
+            reportReadOnly: false,
             loadError: '',
             stores: [],
             staffMembers: [],
@@ -2244,6 +2292,8 @@
             if (!this.selectedStoreCode) return this.$message.error('Please choose a store.');
             if (!this.selectedStaffName) return this.$message.error('Please choose your name.');
 
+            this.reportReadOnly = false;
+
             if (this.selectedStoreCode === 'northlakes') {
               let passwordResult;
               try {
@@ -2442,11 +2492,13 @@
             this.selectedStaffName = draft.staff_name || '';
             await this.loadSetup(this.selectedStoreCode);
             this.stage = 'report';
+            this.reportReadOnly = Boolean(draft.read_only);
             this.applyDraft(draft.payload || {});
             this.draftLoadedAt = draft.updated_at || new Date().toISOString();
           },
           backToSetup() {
             this.stage = 'setup';
+            this.reportReadOnly = false;
             this.inventoryCountSubmitting = false;
           },
           async loadInventoryCountForm() {
@@ -2639,14 +2691,21 @@
                 target_date: this.todayIso
               });
               if (result && result.has_draft && result.draft) {
+                this.reportReadOnly = Boolean(result.read_only);
                 this.applyDraft(result.draft);
-                this.draftLoadedAt = new Date().toISOString();
+                this.draftLoadedAt = result.updated_at || new Date().toISOString();
+              } else {
+                this.reportReadOnly = false;
               }
             } catch (error) {
               console.error(error);
             }
           },
           async saveDraft() {
+            if (this.reportReadOnly) {
+              this.$message.warning('This report is read-only. Only its owner or Bowen can save changes.');
+              return;
+            }
             this.draftSaving = true;
             try {
               await window.Techm8StaffAuth.callRpc('save_daily_report_draft', {
@@ -2686,6 +2745,10 @@
             return true;
           },
           async submitReport() {
+            if (this.reportReadOnly) {
+              this.$message.warning('This report is read-only. Only its owner or Bowen can submit it.');
+              return;
+            }
             const payload = this.buildPayload();
             if (!this.validateBeforeSubmit(payload)) return;
 
