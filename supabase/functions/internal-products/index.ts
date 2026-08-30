@@ -216,7 +216,11 @@ Deno.serve(async (req) => {
     const pageSize = clampPositiveInteger(input.limit ?? input.page_size, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
     const page = clampPositiveInteger(input.page, 1, 100000)
     const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
+    // Fetch one extra row so pagination never relies on PostgREST's count header.
+    // The count can become stale relative to the filtered rows while catalogue
+    // edits are happening. That used to send the POS to a non-existent final
+    // page and turn an otherwise successful refresh into a 500 response.
+    const to = from + pageSize
     const updatedSince = normalizeNullableString(input.updated_since)
     const onlineVisibleOnly = input.online_visible_only === true || String(input.online_visible_only ?? '').toLowerCase() === 'true'
     const includePosHidden = input.include_pos_hidden === true || String(input.include_pos_hidden ?? '').toLowerCase() === 'true'
@@ -243,7 +247,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ ok: false, error: 'Products could not be loaded.' }, 500)
     }
 
-    const productRows = (products ?? []) as ProductRow[]
+    const fetchedProductRows = (products ?? []) as ProductRow[]
+    const hasMore = fetchedProductRows.length > pageSize
+    const productRows = fetchedProductRows.slice(0, pageSize)
     const productIds = productRows.map((product) => product.id)
     const productGroupIds = Array.from(new Set(
       productRows.map((product) => product.product_group_id).filter((id): id is number => Number.isInteger(id))
@@ -445,7 +451,7 @@ Deno.serve(async (req) => {
       page,
       page_size: pageSize,
       total: count ?? rows.length,
-      has_more: from + rows.length < (count ?? rows.length),
+      has_more: hasMore,
       pos_categories: posCategories ?? [],
     })
   } catch (error) {
