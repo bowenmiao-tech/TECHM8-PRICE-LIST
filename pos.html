@@ -2536,6 +2536,38 @@
       overflow: auto;
     }
 
+    .product-variant-list.tracker-case-options {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+
+    .tracker-case-style {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #f7faf9;
+    }
+
+    .tracker-case-style-title {
+      margin: 0;
+      color: var(--tm-green-dark);
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .tracker-case-style-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .tracker-case-style .product-variant-option {
+      min-height: 230px;
+    }
+
     .product-variant-option {
       min-width: 0;
       min-height: 244px;
@@ -6303,6 +6335,11 @@
       }
 
       .product-variant-list {
+        grid-template-columns: 1fr;
+      }
+
+      .product-variant-list.tracker-case-options,
+      .tracker-case-style-options {
         grid-template-columns: 1fr;
       }
 
@@ -14985,6 +15022,11 @@
       return String(product?.product_family || '').trim().toLowerCase() === 'branded case collection';
     }
 
+    function isAirTagCaseProduct(product) {
+      return String(product?.product_family || '').trim().toLowerCase() === 'tracker case'
+        || String(product?.product_group_code || '').toUpperCase() === 'TM8-GRP-ACC-AIRTAG-CASE';
+    }
+
     function isCtfyProduct(product) {
       const brand = String(product?.brand || '').trim().toLowerCase();
       const groupName = String(product?.product_group_name || '').trim().toLowerCase();
@@ -14998,11 +15040,23 @@
       const family = String(product?.product_family || '').trim().toLowerCase();
       return family === 'universal pattern case'
         || family === 'special order case'
+        || isAirTagCaseProduct(product)
         || isBrandedCaseCollection(product);
     }
 
     function productImageVariantPreviews(product) {
       const family = String(product?.product_family || '').trim().toLowerCase();
+      if (isAirTagCaseProduct(product)) {
+        const variants = Array.isArray(product.variant_options) ? product.variant_options : [product];
+        const styles = Array.from(new Set(variants
+          .map(variant => String(variant.model || '').trim())
+          .filter(Boolean)));
+        return `
+          <div class="product-option-preview" aria-label="Available styles: ${escapeHtml(styles.join(', '))}">
+            ${styles.map(style => `<span class="product-option-chip" title="${escapeHtml(style)}">${escapeHtml(style)}</span>`).join('')}
+          </div>
+        `;
+      }
       if (family === 'branded case collection') {
         const variants = Array.isArray(product.variant_options) ? product.variant_options : [product];
         const labels = variants
@@ -16338,6 +16392,7 @@
       const watchBandGroup = isWatchBandProduct(variants[0]);
       const imageVariantGroup = isImageVariantProduct(variants[0]);
       const brandedCaseGroup = isBrandedCaseCollection(variants[0]);
+      const airTagCaseGroup = isAirTagCaseProduct(variants[0]);
       if (variants.length === 1 && !watchBandGroup && !brandedCaseGroup) {
         if (state.stocktakeMode) {
           openStocktakeEditor(variants[0].id);
@@ -16354,7 +16409,9 @@
         image_url: first.product_group_image_url || first.image_url
       };
       const compatibleDevices = (first.compatible_devices || []).map(device => device.name).filter(Boolean);
-      const fitCopy = watchBandGroup
+      const fitCopy = airTagCaseGroup
+        ? (state.stocktakeMode ? 'Choose Key Ring or Loop, then choose the material to edit' : 'Choose Key Ring or Loop, then choose Leather or Silicone')
+        : watchBandGroup
         ? (state.stocktakeMode ? 'Choose the size to edit' : 'Choose the size to add')
         : imageVariantGroup
           ? (String(first.product_family || '').toLowerCase() === 'branded case collection'
@@ -16375,13 +16432,17 @@
         els.productVariantImage.onerror = null;
         els.productVariantImage.src = productPlaceholderImage(imageProduct);
       };
-      els.productVariantList.innerHTML = variants.map((variant, index) => {
+      const renderVariantOption = (variant, index) => {
         const stock = getProductStock(variant);
         const stockClass = stock <= 0 ? 'out' : (stock <= 2 ? 'low' : '');
-        const optionName = watchBandGroup
+        const optionName = airTagCaseGroup
+          ? (variant.variant_name || variant.name)
+          : watchBandGroup
           ? (variant.variant_name || variant.name)
           : (variant.variant_color || variant.variant_name || variant.name);
-        const optionMeta = watchBandGroup
+        const optionMeta = airTagCaseGroup
+          ? `<span class="product-variant-size product-variant-choice">${escapeHtml(optionName)}</span>`
+          : watchBandGroup
           ? `<span class="product-variant-size">${escapeHtml(optionName)}</span>`
           : imageVariantGroup
             ? `<span class="product-variant-size product-variant-choice">${escapeHtml(optionName)}</span>`
@@ -16399,7 +16460,35 @@
             </span>
           </button>
         `;
-      }).join('');
+      };
+
+      els.productVariantList.classList.toggle('tracker-case-options', airTagCaseGroup);
+      if (airTagCaseGroup) {
+        const styleGroups = new Map();
+        variants.forEach(variant => {
+          const style = String(variant.model || 'Other').trim() || 'Other';
+          if (!styleGroups.has(style)) styleGroups.set(style, []);
+          styleGroups.get(style).push(variant);
+        });
+        const preferredStyles = ['Key Ring', 'Loop'];
+        const orderedStyles = Array.from(styleGroups.entries()).sort(([left], [right]) => {
+          const leftIndex = preferredStyles.indexOf(left);
+          const rightIndex = preferredStyles.indexOf(right);
+          if (leftIndex >= 0 || rightIndex >= 0) return (leftIndex < 0 ? 99 : leftIndex) - (rightIndex < 0 ? 99 : rightIndex);
+          return left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
+        });
+        let optionIndex = 0;
+        els.productVariantList.innerHTML = orderedStyles.map(([style, styleVariants]) => `
+          <section class="tracker-case-style" data-tracker-style="${escapeHtml(style)}">
+            <h3 class="tracker-case-style-title">${escapeHtml(style)}</h3>
+            <div class="tracker-case-style-options">
+              ${styleVariants.map(variant => renderVariantOption(variant, optionIndex++)).join('')}
+            </div>
+          </section>
+        `).join('');
+      } else {
+        els.productVariantList.innerHTML = variants.map(renderVariantOption).join('');
+      }
       els.productVariantModal.classList.add('show');
       els.productVariantModal.setAttribute('aria-hidden', 'false');
       const firstOption = els.productVariantList.querySelector('[data-add-variant]');
@@ -16408,6 +16497,7 @@
 
     function closeProductVariantModal() {
       state.activeProductGroupCode = '';
+      els.productVariantList.classList.remove('tracker-case-options');
       els.productVariantModal.classList.remove('show');
       els.productVariantModal.setAttribute('aria-hidden', 'true');
     }
@@ -16897,6 +16987,44 @@
       const singleSizeWatchBandModalSizes = Array.from(els.productVariantList.querySelectorAll('.product-variant-size'))
         .map(element => element.textContent.trim());
       closeProductVariantModal();
+
+      const airTagProducts = normalizeProducts({ rows: [
+        ['Key Ring', 'Leather', 5001, 15],
+        ['Key Ring', 'Silicone', 5002, 10],
+        ['Loop', 'Leather', 5003, 15],
+        ['Loop', 'Silicone', 5004, 10]
+      ].map(([style, material, id, price]) => ({
+        id,
+        sku: `TM8-ACC-${id}`,
+        name: `AirTag ${style} - ${material}`,
+        model: style,
+        category_name: 'Other Electronics',
+        subcategory_name: 'Tracker Cases',
+        cost_price: 3,
+        sale_price: price,
+        stock_quantity: 0,
+        image_url: `https://example.com/airtag-${String(style).toLowerCase().replace(/\s+/g, '-')}-${String(material).toLowerCase()}.jpg`,
+        product_group_code: 'TM8-GRP-ACC-AIRTAG-CASE',
+        product_group_name: 'AirTag Case',
+        product_family: 'Tracker Case',
+        variant_name: material,
+        variant_color: null
+      })) });
+      state.products = airTagProducts;
+      state.search = '';
+      state.productBrowseMode = 'all';
+      renderProductBrowser();
+      const airTagCard = document.querySelector('[data-open-product-group="TM8-GRP-ACC-AIRTAG-CASE"]');
+      const airTagCardStyles = Array.from(airTagCard?.querySelectorAll('.product-option-chip') || [])
+        .map(element => element.textContent.trim());
+      openProductVariantModal('TM8-GRP-ACC-AIRTAG-CASE');
+      const airTagModalStyles = Array.from(els.productVariantList.querySelectorAll('.tracker-case-style-title'))
+        .map(element => element.textContent.trim());
+      const airTagModalMaterials = Array.from(els.productVariantList.querySelectorAll('.product-variant-choice'))
+        .map(element => element.textContent.trim());
+      const airTagModalOptionCount = els.productVariantList.querySelectorAll('[data-add-variant]').length;
+      closeProductVariantModal();
+
       state.products = products;
       state.search = '2999000010024';
       state.productBrowseMode = 'all';
@@ -16967,6 +17095,11 @@
         watchBandModalUsesColourSwatches,
         singleSizeWatchBandCardRendered: Boolean(singleSizeWatchBandCard),
         singleSizeWatchBandModalSizes,
+        airTagCardRendered: Boolean(airTagCard),
+        airTagCardStyles,
+        airTagModalStyles,
+        airTagModalMaterials,
+        airTagModalOptionCount,
         exactSearchCards
       });
 
@@ -17014,6 +17147,12 @@
         state.search = '';
         renderProductBrowser();
         openProductVariantModal('TM8-GRP-WB-FABRIC-BLACK');
+      } else if (catalogTestParams.has('catalog-airtag')) {
+        state.products = airTagProducts;
+        state.search = '';
+        state.productBrowseMode = 'all';
+        renderProductBrowser();
+        openProductVariantModal('TM8-GRP-ACC-AIRTAG-CASE');
       } else if (catalogTestParams.has('catalog-modal')) {
         state.search = '';
         renderProductBrowser();
