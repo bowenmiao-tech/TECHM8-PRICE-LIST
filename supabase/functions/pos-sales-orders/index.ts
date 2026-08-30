@@ -162,20 +162,6 @@ Deno.serve(async (request) => {
         }
       }
 
-      const validation = await inventoryRequest(sessionToken, {
-        action: "validate-sale",
-        store_slug: storeCode,
-        items,
-      });
-      if (validation.status >= 400 || !validation.body.ok) {
-        return jsonResponse({
-          ok: false,
-          code: "INSUFFICIENT_STOCK",
-          message: String(validation.body.message || "One or more products do not have enough stock."),
-          shortages: validation.body.shortages || [],
-        }, validation.status === 403 ? 403 : 409);
-      }
-
       const saved = await callRpc("save_pos_sales_order_for_store", {
         session_token: sessionToken,
         payload: record,

@@ -38,9 +38,11 @@ Database / auth:
 
 Staff access:
 - Staff-facing pages use the individual email/password session flow from `staff-auth.js`.
+- Account login rejects a missing password in both the browser and the database RPC. A valid session is persisted locally and revalidated on refresh, so refreshing POS does not trigger another login until the session expires or is revoked.
+- The POS rail has an explicit `Log out` command. Logout revokes the server session and clears the local verified-staff and active-shift cache before returning to the login page.
 - Every new staff account starts with the temporary password `123456`.
 - First login is blocked until the staff member creates a private account password and four-digit POS PIN.
-- The four-digit PIN is verified by the database when a staff name is selected in POS; PINs are never stored in browser storage.
+- The four-digit PIN is always required and verified by the database when a staff name is selected in POS, including when the selected name matches the signed-in account. PINs are never stored in browser storage.
 
 Admin access:
 - Admin must enter through `admin.html`.
@@ -67,6 +69,7 @@ Completed product-sale flow:
 - Product loading follows the API `has_more` pagination flag, so catalogues larger than 500 rows are loaded completely.
 - Product browsing opens on a category grid; staff can enter a category or switch to `All Products` without losing the fixed checkout panel.
 - Product cards show one main image, name, sale price, and stock for the selected store.
+- After PIN verification, staff may switch between every active store assigned to their account, including after a store shift has started. Switching stores reloads store-scoped products, customers, held carts, repairs, invoices, and the matching shared shift.
 - Search supports product name, SKU, and barcode.
 - The POS always shows these fixed retail groups, including empty groups: `Phone Cases`, `Tablet Cases`, `Screen Protection`, `Cables & Adapters`, `Charging & Power`, `Audio`, `Mounts & Holders`, `Watch Accessories`, `Computer & Gaming`, `Other Electronics`, and `Uncategorized`.
 - Each main group opens a fixed second-level category grid before showing products. Empty second-level groups remain visible.
@@ -86,6 +89,7 @@ Completed product-sale flow:
 - Product images are loaded progressively, and gallery thumbnails are intentionally omitted to keep the POS fast.
 - The entire product card adds the item to the cart.
 - Zero-stock products are intentionally allowed to be sold.
+- A zero-stock sale is saved normally and decreases only the selected store's inventory into a negative quantity. The negative value is an intentional stocktake discrepancy; it is never silently clamped to zero.
 - Grouped products use one POS/website card and one main image. Sellable colours remain separate product rows with their own SKU, barcode, cost, price, and store stock.
 - CTFY, EFM, and OtterBox phone cases use one card per device model and brand. Each card previews its available text options; clicking it opens the exact case images, titles, prices, and store stock while retaining every original SKU as an independent sellable child option. CTFY sales print and email as `CTFY` while the exact SKU remains on the invoice line.
 - Clicking a multi-colour product group opens a compact colour selector. Watch bands open a size selector even when a style currently has only one available size; branded case collections open an image selector; ordinary one-variant groups and legacy products still add directly.

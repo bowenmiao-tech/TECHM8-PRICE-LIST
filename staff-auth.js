@@ -420,9 +420,14 @@ window.Techm8StaffAuth = (function () {
     activeCreateRpc = 'create_staff_session';
     activeVerifyRpc = 'verify_staff_session';
     activeRevokeRpc = 'revoke_staff_session';
+    const normalizedEmail = String(loginEmail || '').trim();
+    const enteredPassword = String(password || '');
+    if (!normalizedEmail || !enteredPassword.trim()) {
+      throw new Error('Enter your staff email and account password.');
+    }
     const result = await callRpc(activeCreateRpc, {
-      login_email: String(loginEmail || '').trim(),
-      input_password: password || ''
+      login_email: normalizedEmail,
+      input_password: enteredPassword
     });
     if (!result || !result.ok || !result.session_token) {
       throw new Error((result && result.message) || 'Incorrect email or password.');

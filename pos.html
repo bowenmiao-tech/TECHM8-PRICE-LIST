@@ -7130,7 +7130,10 @@
           <i class="bi bi-person-circle"></i>
           <span id="currentStaffName" class="rail-user-name">User</span>
         </button>
-        <button id="staffLogoutBtn" class="rail-button" type="button" title="Log out"><i class="bi bi-door-open"></i></button>
+        <button id="staffLogoutBtn" class="rail-button rail-user-button" type="button" title="Log out current account" aria-label="Log out current account">
+          <i class="bi bi-door-open"></i>
+          <span class="rail-user-name">Log out</span>
+        </button>
       </div>
     </aside>
 
@@ -8646,6 +8649,7 @@
     const POS_STAFF_SCHEDULE_KEY = 'techm8_pos_staff_schedule';
     const POS_OPENINGS_KEY = 'techm8_pos_openings';
     const POS_ACTIVE_SHIFT_KEY = 'techm8_pos_active_shift';
+    const POS_VERIFIED_STAFF_CONTEXT_KEY = 'techm8_pos_verified_staff_context';
     const POS_ORDERS_KEY = 'techm8_pos_demo_orders';
     const POS_HELD_ORDERS_KEY = 'techm8_pos_held_orders';
     const POS_END_SHIFTS_KEY = 'techm8_pos_end_shifts';
@@ -8837,12 +8841,25 @@
       return defaultStore ? defaultStore.id : '';
     }
 
-    function staffCanSwitchStore(staff) {
+    function staffCanChooseOtherStaff(staff) {
       return staffRoleFor(staff) === 'admin';
     }
 
-    function currentStaffCanSwitchStore() {
-      return staffCanSwitchStore(state.selectedStaffName);
+    function staffRecordFor(staff) {
+      const requestedKey = staffIdentityKey(staff);
+      return state.staffMembers.find(item => staffIdentityKey(item) === requestedKey) || null;
+    }
+
+    function assignedStoresForStaff(staff) {
+      const record = typeof staff === 'object' ? staff : staffRecordFor(staff);
+      const assigned = Array.isArray(record && record.assigned_stores) ? record.assigned_stores : [];
+      const stores = assigned
+        .map(item => storeByCode(item && (item.store_code || item.code || item.slug)))
+        .filter(Boolean);
+      if (stores.length) return [...new Map(stores.map(store => [store.id, store])).values()];
+      const defaultStoreId = staffDefaultStoreId(record || staff);
+      const defaultStore = posStores.find(store => store.id === defaultStoreId);
+      return defaultStore ? [defaultStore] : [];
     }
 
     function staffAvatarUrl(staff) {
@@ -8939,7 +8956,7 @@
     function renderStaffGateStaffChoices() {
       if (!els.posStaffChoices) return;
       const accountStaffName = signedInStaffName();
-      const canChooseOtherStaff = staffCanSwitchStore(accountStaffName);
+      const canChooseOtherStaff = staffCanChooseOtherStaff(accountStaffName);
       const staff = staffChoiceRecords()
         .filter(record => canChooseOtherStaff || staffIdentityKey(record) === staffIdentityKey(accountStaffName))
         .filter(record => fuzzySearchMatch(state.staffGateStaffSearch, [
@@ -8982,21 +8999,18 @@
     function setStaffGateStaff(staffName) {
       const requestedStaffName = staffDisplayName(staffName).trim();
       const accountStaffName = signedInStaffName();
-      if (!staffCanSwitchStore(accountStaffName) && staffIdentityKey(requestedStaffName) !== staffIdentityKey(accountStaffName)) {
+      if (!staffCanChooseOtherStaff(accountStaffName) && staffIdentityKey(requestedStaffName) !== staffIdentityKey(accountStaffName)) {
         if (els.posStaffError) els.posStaffError.textContent = 'Staff accounts can only continue as their signed-in user.';
         return;
       }
       state.staffGateStaffName = requestedStaffName;
-      const activeShift = readActiveShift();
-      if (activeShift && !staffCanSwitchStore(state.staffGateStaffName)) {
-        state.staffGateStoreId = activeShift.storeId;
-        renderStaffGateStoreChoices();
-      } else if (!activeShift) {
+      const assignedStoreIds = allowedStoresForStaff(state.staffGateStaffName).map(store => store.id);
+      if (!assignedStoreIds.includes(state.staffGateStoreId)) {
         const defaultStoreId = staffDefaultStoreId(state.staffGateStaffName);
-        if (defaultStoreId) {
-          state.staffGateStoreId = defaultStoreId;
-          renderStaffGateStoreChoices();
-        }
+        state.staffGateStoreId = assignedStoreIds.includes(defaultStoreId)
+          ? defaultStoreId
+          : (assignedStoreIds[0] || '');
+        renderStaffGateStoreChoices();
       }
       if (els.posStaffError) els.posStaffError.textContent = '';
       renderStaffGateStaffChoices();
@@ -9130,21 +9144,6 @@
           lastStaffName: state.selectedStaffName,
           storeId: state.storeId,
           storeCode: storeById(state.storeId).code,
-          lastSeenAt: new Date().toISOString()
-        });
-        return readActiveShift();
-      }
-
-      if (current && current.storeId !== state.storeId && !currentStaffCanSwitchStore()) {
-        state.storeId = current.storeId;
-        localStorage.setItem(POS_STORE_KEY, current.storeId);
-        renderStoreSelectOptions();
-        updateStoreBadge();
-        writeActiveShift({
-          ...current,
-          openedBy: current.openedBy || current.staffName || state.selectedStaffName,
-          currentStaffName: state.selectedStaffName,
-          lastStaffName: state.selectedStaffName,
           lastSeenAt: new Date().toISOString()
         });
         return readActiveShift();
@@ -9293,11 +9292,10 @@
     function allowedStoresForStaff(staffName) {
       const requestedName = staffDisplayName(staffName).trim();
       const accountName = signedInStaffName();
-      if (staffCanSwitchStore(accountName || requestedName)) return posStores.slice();
-      if (accountName && staffIdentityKey(requestedName) !== staffIdentityKey(accountName)) return [];
-      const defaultStoreId = staffDefaultStoreId(accountName || requestedName);
-      const defaultStore = posStores.find(store => store.id === defaultStoreId);
-      return defaultStore ? [defaultStore] : [];
+      const isOwnAccount = !accountName || staffIdentityKey(requestedName) === staffIdentityKey(accountName);
+      if (!isOwnAccount && !staffCanChooseOtherStaff(accountName)) return [];
+      if (isOwnAccount && staffCanChooseOtherStaff(accountName)) return posStores.slice();
+      return assignedStoresForStaff(requestedName || accountName);
     }
 
     async function verifySignedInStoreAccess(storeId) {
@@ -9352,18 +9350,6 @@
     }
 
     function setCurrentStore(storeId, reloadProducts, options = {}) {
-      const activeShift = readActiveShift();
-      if (
-        activeShift
-        && activeShift.storeId !== storeId
-        && !options.bypassRoleCheck
-        && !currentStaffCanSwitchStore()
-      ) {
-        showToast('Only the admin account can switch store after a shift has started.');
-        renderStoreSelectOptions();
-        updateStoreBadge();
-        return false;
-      }
       if (!state.allowedStoreIds.includes(storeId)) {
         showToast('This staff member is not assigned to that store.');
         renderStoreSelectOptions();
@@ -9381,6 +9367,7 @@
       }
       state.storeId = storeId;
       localStorage.setItem(POS_STORE_KEY, storeId);
+      if (state.selectedStaffName) rememberVerifiedStaffContext(state.selectedStaffName, storeId);
       state.todayProgress = null;
       state.todayProgressError = '';
       renderStoreSelectOptions();
@@ -9422,9 +9409,8 @@
         openStaffModal({ canCancel: false });
         return;
       }
-      const activeShift = readActiveShift();
-      if (activeShift && !currentStaffCanSwitchStore()) {
-        showToast('Only the admin account can switch store after a shift has started.');
+      if (state.allowedStoreIds.length <= 1) {
+        showToast('This account is assigned to one POS store only.');
         return;
       }
       renderStoreSwitchModal();
@@ -9511,9 +9497,41 @@
         selectedName,
         assignedStoreIds,
         scheduledStoreId: scheduledStore ? scheduledStore.id : '',
-        allowedStoreIds: scheduledStore ? [scheduledStore.id] : assignedStoreIds,
-        nextStoreId
+        allowedStoreIds: assignedStoreIds,
+        nextStoreId: assignedStoreIds.includes(savedStore) ? savedStore : nextStoreId
       };
+    }
+
+    function rememberVerifiedStaffContext(staffName, storeId) {
+      const accountName = signedInStaffName();
+      if (!accountName || !staffName || !storeId) return;
+      localStorage.setItem(POS_VERIFIED_STAFF_CONTEXT_KEY, JSON.stringify({
+        accountName,
+        staffName,
+        storeId,
+        verifiedAt: new Date().toISOString()
+      }));
+    }
+
+    function clearVerifiedStaffContext() {
+      localStorage.removeItem(POS_VERIFIED_STAFF_CONTEXT_KEY);
+      sessionStorage.removeItem(POS_STAFF_KEY);
+      localStorage.removeItem(POS_STAFF_KEY);
+    }
+
+    function resumeVerifiedStaffContext() {
+      const saved = readLocalJson(POS_VERIFIED_STAFF_CONTEXT_KEY, null);
+      const accountName = signedInStaffName();
+      if (!saved || !accountName || staffIdentityKey(saved.accountName) !== staffIdentityKey(accountName)) return false;
+      if (staffIdentityKey(saved.staffName) !== staffIdentityKey(accountName) && !staffCanChooseOtherStaff(accountName)) return false;
+      const context = staffContextFor(saved.staffName, saved.storeId, { ignoreSchedule: true });
+      if (!context.ok || !context.allowedStoreIds.includes(saved.storeId)) {
+        clearVerifiedStaffContext();
+        return false;
+      }
+      context.nextStoreId = saved.storeId;
+      setStaffContext(context, { keepOpeningConfirmed: Boolean(readActiveShift()) });
+      return true;
     }
 
     function setStaffContext(context, options = {}) {
@@ -9569,7 +9587,6 @@
         return false;
       }
       context.nextStoreId = activeShift.storeId;
-      if (!staffCanSwitchStore(context.selectedName)) context.allowedStoreIds = [activeShift.storeId];
       setStaffContext(context, { keepOpeningConfirmed: true });
       return true;
     }
@@ -9586,64 +9603,50 @@
         els.posStaffError.textContent = 'Choose a staff member.';
         return false;
       }
-      const isSignedInStaff = staffIdentityKey(selectedName) === staffIdentityKey(signedInStaffName());
-      if (!isSignedInStaff) {
-        if (!/^\d{4}$/.test(pin)) {
-          els.posStaffError.textContent = 'Enter the 4-digit staff PIN.';
+      if (!/^\d{4}$/.test(pin)) {
+        els.posStaffError.textContent = 'Enter the 4-digit staff PIN.';
+        return false;
+      }
+      els.posStaffError.textContent = 'Checking PIN…';
+      try {
+        const token = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
+          ? window.Techm8StaffAuth.getToken()
+          : '';
+        const result = await window.Techm8StaffAuth.callRpc('verify_staff_pin', {
+          session_token: token,
+          target_staff_name: selectedName,
+          input_pin: pin
+        });
+        if (!result || !result.ok) {
+          els.posStaffError.textContent = (result && result.message) || 'Incorrect PIN.';
           return false;
         }
-        els.posStaffError.textContent = 'Checking PIN…';
-        try {
-          const token = window.Techm8StaffAuth && window.Techm8StaffAuth.getToken
-            ? window.Techm8StaffAuth.getToken()
-            : '';
-          const result = await window.Techm8StaffAuth.callRpc('verify_staff_pin', {
-            session_token: token,
-            target_staff_name: selectedName,
-            input_pin: pin
-          });
-          if (!result || !result.ok) {
-            els.posStaffError.textContent = (result && result.message) || 'Incorrect PIN.';
-            return false;
-          }
-        } catch (error) {
-          console.error(error);
-          els.posStaffError.textContent = error.message || 'PIN could not be checked. Please try again.';
-          return false;
-        }
+      } catch (error) {
+        console.error(error);
+        els.posStaffError.textContent = error.message || 'PIN could not be checked. Please try again.';
+        return false;
       }
       els.posStaffError.textContent = '';
-      const activeShift = readActiveShift();
-      const canSwitchStore = staffCanSwitchStore(selectedName);
-      const effectiveStoreId = activeShift && !canSwitchStore ? activeShift.storeId : selectedStoreId;
-      const storeAccess = await verifySignedInStoreAccess(effectiveStoreId);
+      const storeAccess = await verifySignedInStoreAccess(selectedStoreId);
       if (!storeAccess.ok) {
         els.posStaffError.textContent = storeAccess.message;
         return false;
       }
-      const context = staffContextFor(selectedName, effectiveStoreId, { ignoreSchedule: Boolean(activeShift) });
+      const context = staffContextFor(selectedName, selectedStoreId, { ignoreSchedule: true });
       if (!context.ok) {
         els.posStaffError.textContent = context.message;
         return false;
       }
-      if (!context.allowedStoreIds.includes(effectiveStoreId)) {
+      if (!context.allowedStoreIds.includes(selectedStoreId)) {
         els.posStaffError.textContent = context.scheduledStoreId
           ? `This staff member is scheduled at ${storeById(context.scheduledStoreId).name} today.`
           : 'This staff member is not assigned to the selected shop.';
         return false;
       }
-      if (activeShift && !canSwitchStore) {
-        context.allowedStoreIds = [activeShift.storeId];
-        context.nextStoreId = activeShift.storeId;
-      } else {
-        context.nextStoreId = selectedStoreId;
-      }
-      const continuedStoreId = context.nextStoreId;
+      context.nextStoreId = selectedStoreId;
       setStaffContext(context);
+      rememberVerifiedStaffContext(selectedName, selectedStoreId);
       closeStaffModal();
-      if (activeShift && !canSwitchStore && selectedStoreId !== activeShift.storeId) {
-        showToast(`Current shift continues at ${storeById(continuedStoreId).code}.`);
-      }
       if (staffAccessResolve) {
         staffAccessResolve(true);
         staffAccessResolve = null;
@@ -9653,8 +9656,8 @@
       return true;
     }
 
-    async function ensureStaffStoreAccess() {
-      await loadPosStaffSetup();
+    async function ensureStaffStoreAccess(options = {}) {
+      if (!options.setupLoaded) await loadPosStaffSetup();
       return new Promise(resolve => {
         staffAccessResolve = resolve;
         openStaffModal({ canCancel: false });
@@ -16297,13 +16300,6 @@
       if (!product) return;
 
       const current = state.cart.find(item => item.id === productId);
-      const nextQty = Number(current && current.qty || 0) + 1;
-      if (usesTrackedProductStock(product) && nextQty > getProductStock(product)) {
-        showToast(getProductStock(product) > 0
-          ? `Only ${getProductStock(product)} in stock at this store.`
-          : 'This product is out of stock at this store.');
-        return;
-      }
       if (current) {
         current.qty += 1;
       } else {
@@ -17235,13 +17231,6 @@
       if (nextQty <= 0) {
         state.cart = state.cart.filter(cartItem => cartItem.id !== productId);
       } else {
-        const product = state.products.find(productItem => String(productItem.id) === String(productId));
-        if (Number(dir) > 0 && usesTrackedProductStock(item) && nextQty > getProductStock(product || item)) {
-          showToast(getProductStock(product || item) > 0
-            ? `Only ${getProductStock(product || item)} in stock at this store.`
-            : 'This product is out of stock at this store.');
-          return;
-        }
         item.qty = nextQty;
       }
       renderCart();
@@ -18426,15 +18415,6 @@
         ensureOpeningCash();
         return;
       }
-      const stockShortage = state.cart.find(item => {
-        if (!usesTrackedProductStock(item)) return false;
-        const product = state.products.find(productItem => String(productItem.id) === String(item.id));
-        return Number(item.qty || 0) > getProductStock(product || item);
-      });
-      if (stockShortage) {
-        showToast(`${stockShortage.name || 'A product'} does not have enough stock at this store.`);
-        return;
-      }
       const repairCartItems = state.cart.filter(item => item.is_repair && item.ticket_id);
       const repairTickets = repairCartItems.map(item => state.repairTickets.find(ticket => ticket.id === item.ticket_id)).filter(Boolean).map(normalizeRepairTicket);
       if (repairCartItems.length !== repairTickets.length) {
@@ -18524,7 +18504,7 @@
         const product = state.products.find(productItem => productItem.id === item.id);
         if (!product) return;
         if (product.store_stock) {
-          product.store_stock[state.storeId] = Math.max(0, getProductStock(product) - item.qty);
+          product.store_stock[state.storeId] = getProductStock(product) - item.qty;
         } else if (Array.isArray(product.store_inventory)) {
           const currentStore = normalizeStoreKey(state.storeId);
           const row = product.store_inventory.find(inventoryItem => {
@@ -18538,19 +18518,19 @@
           });
           if (row) {
             const currentQty = Number(row.qty_on_hand ?? row.stock_qty ?? row.qty ?? row.quantity ?? 0);
-            if ('qty_on_hand' in row) row.qty_on_hand = Math.max(0, currentQty - item.qty);
-            else if ('stock_qty' in row) row.stock_qty = Math.max(0, currentQty - item.qty);
-            else if ('qty' in row) row.qty = Math.max(0, currentQty - item.qty);
-            else row.quantity = Math.max(0, currentQty - item.qty);
+            if ('qty_on_hand' in row) row.qty_on_hand = currentQty - item.qty;
+            else if ('stock_qty' in row) row.stock_qty = currentQty - item.qty;
+            else if ('qty' in row) row.qty = currentQty - item.qty;
+            else row.quantity = currentQty - item.qty;
           }
         } else if (product.store_inventory && typeof product.store_inventory === 'object') {
           const currentStore = normalizeStoreKey(state.storeId);
           const matchedKey = Object.keys(product.store_inventory).find(key => normalizeStoreKey(key) === currentStore);
           if (matchedKey) {
-            product.store_inventory[matchedKey] = Math.max(0, Number(product.store_inventory[matchedKey] || 0) - item.qty);
+            product.store_inventory[matchedKey] = Number(product.store_inventory[matchedKey] || 0) - item.qty;
           }
         } else if (typeof product.qty_on_hand === 'number') {
-          product.qty_on_hand = Math.max(0, product.qty_on_hand - item.qty);
+          product.qty_on_hand -= item.qty;
         }
       });
 
@@ -19307,8 +19287,13 @@
     els.storeSwitchBtn.addEventListener('click', openStoreSwitchModal);
     els.endShiftBtn.addEventListener('click', openEndShiftModal);
     els.switchUserBtn.addEventListener('click', () => openStaffModal({ canCancel: true }));
-    els.staffLogoutBtn.addEventListener('click', () => {
-      window.Techm8StaffAuth.logout({ redirectTo: './index.html' });
+    els.staffLogoutBtn.addEventListener('click', async () => {
+      const accountName = signedInStaffName() || 'this account';
+      if (!window.confirm(`Log out ${accountName}?`)) return;
+      clearVerifiedStaffContext();
+      clearActiveShiftCache();
+      state.selectedStaffName = '';
+      await window.Techm8StaffAuth.logout({ redirectTo: './index.html' });
     });
     els.customerAddBtn.addEventListener('click', () => {
       closeCustomerSearchResults();
@@ -19942,12 +19927,24 @@
       if (event.target === els.endShiftModal) closeEndShiftModal();
     });
     els.storeSwitchCancel.addEventListener('click', closeStoreSwitchModal);
-    els.storeSwitchModal.addEventListener('click', event => {
+    els.storeSwitchModal.addEventListener('click', async event => {
       if (event.target === els.storeSwitchModal) closeStoreSwitchModal();
       const button = event.target.closest('[data-store-switch]');
       if (button) {
+        const storeId = button.dataset.storeSwitch;
+        if (storeId === state.storeId) {
+          closeStoreSwitchModal();
+          return;
+        }
+        button.disabled = true;
+        const access = await verifySignedInStoreAccess(storeId);
+        button.disabled = false;
+        if (!access.ok) {
+          showToast(access.message || 'Your account is not assigned to this shop.');
+          return;
+        }
         closeStoreSwitchModal();
-        setCurrentStore(button.dataset.storeSwitch, true);
+        setCurrentStore(storeId, true);
       }
     });
     els.customerCloseBtn.addEventListener('click', closeCustomerModal);
@@ -20152,7 +20149,9 @@
       }).then(async () => {
         loadRepairQuotes();
         loadDashboardAppleMap();
-        await ensureStaffStoreAccess();
+        await loadPosStaffSetup();
+        const resumedStaffContext = resumeActiveShift() || resumeVerifiedStaffContext();
+        if (!resumedStaffContext) await ensureStaffStoreAccess({ setupLoaded: true });
         const productLoad = loadProducts();
         await syncCurrentShiftWithDatabase();
         await ensureOpeningCash();
