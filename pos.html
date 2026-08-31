@@ -2032,7 +2032,7 @@
     .customer-history-row {
       width: 100%;
       display: grid;
-      grid-template-columns: 74px minmax(0, 1fr) auto auto;
+      grid-template-columns: 74px minmax(0, 1fr) auto auto auto;
       gap: 12px;
       align-items: center;
       padding: 12px 13px;
@@ -2044,17 +2044,66 @@
     }
 
     .customer-history-row:hover,
-    .customer-history-row:focus-visible {
+    .customer-history-row:focus-within {
       border-color: var(--tm-green);
       background: #f6fbf9;
-      outline: none;
     }
 
     .customer-history-invoice { color: var(--tm-green-dark); font-size: 15px; font-weight: 950; }
     .customer-history-main { display: grid; gap: 3px; min-width: 0; }
     .customer-history-items { font-size: 13.5px; font-weight: 850; overflow-wrap: anywhere; }
     .customer-history-meta { color: var(--tm-muted); font-size: 12px; font-weight: 750; }
+    .customer-history-status { display: flex; align-items: center; }
     .customer-history-total { font-size: 16px; font-weight: 950; white-space: nowrap; }
+
+    .customer-history-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .customer-history-pay-button,
+    .customer-history-view-button {
+      min-height: 36px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .customer-history-pay-button {
+      padding: 0 11px;
+      border-color: var(--tm-green);
+      background: var(--tm-green);
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .customer-history-view-button {
+      width: 36px;
+      padding: 0;
+      background: #fff;
+      color: var(--tm-green-dark);
+      font-size: 16px;
+    }
+
+    .customer-history-pay-button:hover,
+    .customer-history-pay-button:focus-visible {
+      background: var(--tm-green-dark);
+      outline: none;
+    }
+
+    .customer-history-view-button:hover,
+    .customer-history-view-button:focus-visible {
+      border-color: var(--tm-green);
+      background: #e9f7f3;
+      outline: none;
+    }
 
     .customer-history-tag {
       padding: 3px 9px;
@@ -2083,6 +2132,10 @@
       .customer-history-row { grid-template-columns: minmax(0, 1fr) auto; }
       .customer-history-invoice { grid-column: 1 / -1; }
       .customer-history-main { grid-column: 1 / -1; }
+      .customer-history-status { grid-column: 1; }
+      .customer-history-total { grid-column: 2; }
+      .customer-history-actions { grid-column: 1 / -1; }
+      .customer-history-pay-button { flex: 1; }
     }
 
     .customer-add-button {
@@ -13102,19 +13155,32 @@
         const items = Array.isArray(order.items) ? order.items : [];
         const itemCount = items.reduce((sum, item) => sum + Number(item.qty || 1), 0);
         const names = items.map(item => String(item.name || '').trim()).filter(Boolean);
+        const balance = orderBalanceDue(order);
+        const invoice = invoiceNumberText(order);
         const summary = names.length
           ? escapeHtml(names.slice(0, 2).join(', ')) + (names.length > 2 ? ` +${names.length - 2} more` : '')
           : `${itemCount} item${itemCount === 1 ? '' : 's'}`;
         return `
-          <button class="customer-history-row" type="button" data-history-invoice="${escapeHtml(order.id)}">
-            <span class="customer-history-invoice">#${escapeHtml(invoiceNumberText(order))}</span>
+          <article class="customer-history-row">
+            <span class="customer-history-invoice">#${escapeHtml(invoice)}</span>
             <span class="customer-history-main">
               <span class="customer-history-items">${summary}</span>
               <span class="customer-history-meta">${escapeHtml(formatDateTime(order.created_at))} &middot; ${itemCount} item${itemCount === 1 ? '' : 's'} &middot; ${escapeHtml(order.staff_name || '')}</span>
             </span>
-            ${customerHistoryStatusTag(order)}
+            <span class="customer-history-status">${customerHistoryStatusTag(order)}</span>
             <span class="customer-history-total">${money(order.total)}</span>
-          </button>
+            <span class="customer-history-actions">
+              ${balance > 0 ? `
+                <button class="customer-history-pay-button" type="button" data-history-balance="${escapeHtml(order.id)}" title="Pay balance for invoice #${escapeHtml(invoice)}">
+                  <i class="bi bi-cash-coin"></i>
+                  <span>Pay ${money(balance)}</span>
+                </button>
+              ` : ''}
+              <button class="customer-history-view-button" type="button" data-history-invoice="${escapeHtml(order.id)}" title="View invoice #${escapeHtml(invoice)}" aria-label="View invoice #${escapeHtml(invoice)}">
+                <i class="bi bi-eye"></i>
+              </button>
+            </span>
+          </article>
         `;
       }).join('');
     }
@@ -19050,7 +19116,8 @@
 
     async function openBalancePaymentModal(orderId) {
       if (!orderId) return;
-      let order = state.invoiceOrders.find(item => item.id === orderId);
+      let order = state.invoiceOrders.find(item => item.id === orderId)
+        || state.customerHistoryOrders.find(item => item.id === orderId);
       if (!order) {
         try {
           order = await invoiceOrderById(orderId);
@@ -19124,6 +19191,8 @@
         }
         const index = state.invoiceOrders.findIndex(item => item.id === payload.order.id);
         if (index >= 0) state.invoiceOrders[index] = payload.order;
+        const customerHistoryIndex = state.customerHistoryOrders.findIndex(item => item.id === payload.order.id);
+        if (customerHistoryIndex >= 0) state.customerHistoryOrders[customerHistoryIndex] = payload.order;
         updateStoredOrder(payload.order);
         state.shiftPaymentTotals = null;
         const balance = orderBalanceDue(payload.order);
@@ -20119,6 +20188,12 @@
       if (event.target === els.customerHistoryModal) closeCustomerHistory();
     });
     els.customerHistoryList.addEventListener('click', event => {
+      const balanceButton = event.target.closest('[data-history-balance]');
+      if (balanceButton) {
+        closeCustomerHistory();
+        openBalancePaymentModal(balanceButton.dataset.historyBalance);
+        return;
+      }
       const row = event.target.closest('[data-history-invoice]');
       if (row) openCustomerHistoryInvoice(row.dataset.historyInvoice);
     });
