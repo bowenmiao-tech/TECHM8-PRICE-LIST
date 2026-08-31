@@ -180,16 +180,17 @@ Completed invoice flow:
 - Invoice numbers are not shared between stores.
 - Invoice History is always restricted to the selected store.
 - Search supports invoice number, order reference, customer, phone, repair ticket, product, and SKU.
-- Date search supports a specific day, date range, today, yesterday, last 7 days, this month, and all dates.
+- Invoice History opens on today by default. Date search also supports a specific day, date range, yesterday, last 7 days, this month, and all dates.
 - Refunds are immutable records linked to the original invoice and can be entered per line.
 - Original invoice lines are never deleted or overwritten by a refund.
 
-Toowong RepairDesk history imported on 31 August 2026:
-- The existing RepairDesk invoices in the requested `1`-`3286` range are stored as 3,282 Toowong sales orders, 4,236 invoice lines, and 3,280 payment rows.
-- RepairDesk has no records for invoice numbers `300`, `314`, `1035`, and `2114`; those four gaps remain empty rather than being synthesized.
+Toowong RepairDesk history completed on 1 September 2026:
+- All existing RepairDesk invoices in the `1`-`3848` range are stored as 3,843 Toowong sales orders, 4,913 invoice lines, and 3,841 payment rows.
+- RepairDesk has no records for invoice numbers `300`, `314`, `1035`, `2114`, and `3570`; those five gaps remain empty rather than being synthesized.
 - Original invoice numbers, Brisbane transaction times, customer contact details, staff names, line descriptions/notes, serial/warranty details, prices, totals, payment methods, deposits, zero-value invoices, and 18 negative refund invoices are preserved.
-- Imported history is shift-free and does not change product inventory. The Toowong counter is set to `3286`, so the next live Toowong sale receives invoice `3287`.
-- Rebuild the deterministic import batches with `scripts/build-repairdesk-toowong-invoice-import.py`. Generated SQL and customer data must stay in an ignored temporary directory and must not be committed.
+- Invoice customers with a usable phone number or email are synchronized into the company-wide customer search; walk-in customers are not duplicated.
+- Imported history is shift-free and does not change product inventory. The Toowong counter is set to `3848`, so the next live Toowong sale receives invoice `3849`.
+- Rebuild deterministic full or incremental import batches with `scripts/build-repairdesk-toowong-invoice-import.py` and its `--min-invoice` / `--max-invoice` options. Generated SQL and customer data must stay in an ignored temporary directory and must not be committed.
 
 Completed receipt flow:
 - Completing payment opens receipt actions after the database save.
@@ -322,6 +323,7 @@ Required POS migrations, in order:
 29. `20260826135147_scope_pos_invoices_to_current_store.sql`
 30. `20260826135945_restrict_scoped_pos_invoice_rpc_roles.sql`
 31. `20260831194500_add_repairdesk_historical_sales_import.sql`
+32. `20260831194600_extend_repairdesk_toowong_invoice_import.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`

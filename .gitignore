@@ -1,6 +1,7 @@
 .secrets/
 .codex-temp/
 .codex-tmp/
+__pycache__/
 outputs/crazyparts-price-monitor/
 outputs/phone-case-catalog-reconciliation-20260819/*.inspect.ndjson
 outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Case_Reconciliation*

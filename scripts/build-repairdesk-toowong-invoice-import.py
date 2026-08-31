@@ -92,7 +92,7 @@ def normalize_email(value) -> str:
     return email if re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email) else ""
 
 
-def load_invoice_export(path: Path, store_name: str, max_invoice: int):
+def load_invoice_export(path: Path, store_name: str, min_invoice: int, max_invoice: int):
     workbook = load_workbook(path, read_only=True, data_only=True)
     sheet = workbook[workbook.sheetnames[0]]
     rows = sheet.iter_rows(values_only=True)
@@ -116,7 +116,7 @@ def load_invoice_export(path: Path, store_name: str, max_invoice: int):
         number = invoice_number(row["Invoice number"])
         if key_text(row["Store name"]) != key_text(store_name):
             continue
-        if number is None or not 1 <= number <= max_invoice:
+        if number is None or not min_invoice <= number <= max_invoice:
             continue
         row["_invoice_number"] = number
         selected.append(row)
@@ -124,7 +124,7 @@ def load_invoice_export(path: Path, store_name: str, max_invoice: int):
     return headers, selected
 
 
-def load_item_report(path: Path, store_name: str, max_invoice: int):
+def load_item_report(path: Path, store_name: str, min_invoice: int, max_invoice: int):
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         headers = [clean_text(value) for value in (reader.fieldnames or [])]
@@ -144,7 +144,7 @@ def load_item_report(path: Path, store_name: str, max_invoice: int):
             number = invoice_number(row.get("Invoice ID"))
             if key_text(row.get("Store Name")) != key_text(store_name):
                 continue
-            if number is None or not 1 <= number <= max_invoice:
+            if number is None or not min_invoice <= number <= max_invoice:
                 continue
             row["_invoice_number"] = number
             selected.append(row)
@@ -312,8 +312,15 @@ def sql_json(value) -> str:
 
 
 def build_import(args) -> dict:
-    invoice_headers, workbook_rows = load_invoice_export(args.invoice_export, args.store_name, args.max_invoice)
-    report_headers, report_rows = load_item_report(args.item_report, args.store_name, args.max_invoice)
+    if args.min_invoice < 1 or args.max_invoice < args.min_invoice:
+        raise ValueError("Invoice range must be positive and ordered")
+
+    invoice_headers, workbook_rows = load_invoice_export(
+        args.invoice_export, args.store_name, args.min_invoice, args.max_invoice
+    )
+    report_headers, report_rows = load_item_report(
+        args.item_report, args.store_name, args.min_invoice, args.max_invoice
+    )
 
     workbook_by_invoice = defaultdict(list)
     for row in workbook_rows:
@@ -438,7 +445,7 @@ def build_import(args) -> dict:
             "payments": payments,
         })
 
-    all_expected = set(range(1, args.max_invoice + 1))
+    all_expected = set(range(args.min_invoice, args.max_invoice + 1))
     missing_invoice_numbers = sorted(all_expected - report_ids)
     imported_total = sum((decimal_value(invoice["total"]) for invoice in prepared), Decimal("0"))
     imported_paid_total = sum((decimal_value(invoice["amount_paid"]) for invoice in prepared), Decimal("0"))
@@ -452,7 +459,7 @@ def build_import(args) -> dict:
             "invoice_export": str(args.invoice_export),
             "item_report": str(args.item_report),
             "store_name": args.store_name,
-            "invoice_range": [1, args.max_invoice],
+            "invoice_range": [args.min_invoice, args.max_invoice],
             "invoice_export_headers": invoice_headers,
             "item_report_headers": report_headers,
         },
@@ -516,7 +523,8 @@ def parse_args():
     parser.add_argument("--item-report", type=Path, default=Path.home() / "Downloads" / "Item Wise Sales Report.csv")
     parser.add_argument("--output-dir", type=Path, default=Path(".codex-temp/repairdesk-toowong-invoice-import"))
     parser.add_argument("--store-name", default="TechM8 Toowong")
-    parser.add_argument("--max-invoice", type=int, default=3286)
+    parser.add_argument("--min-invoice", type=int, default=1)
+    parser.add_argument("--max-invoice", type=int, default=3848)
     parser.add_argument("--batch-size", type=int, default=50)
     return parser.parse_args()
 

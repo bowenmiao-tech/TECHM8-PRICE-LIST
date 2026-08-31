@@ -305,15 +305,15 @@ select public.reseed_pos_store_invoice_counters();
 
 The function returns the next invoice number for each store after its imported maximum. It is executable only by `service_role` and database administrators.
 
-Apply `supabase/migrations/20260831194500_add_repairdesk_historical_sales_import.sql` for the controlled RepairDesk importer. Its `import_repairdesk_sales_batch(jsonb)` RPC is restricted to `service_role`, accepts only TechM8 Toowong RepairDesk invoices `1`-`3286`, is idempotent by store and invoice number, preserves historical negative refunds, and never updates inventory or assigns an active shift.
+Apply `supabase/migrations/20260831194500_add_repairdesk_historical_sales_import.sql` and `supabase/migrations/20260831194600_extend_repairdesk_toowong_invoice_import.sql` for the controlled RepairDesk importer. Its `import_repairdesk_sales_batch(jsonb)` RPC is restricted to `service_role`, accepts only TechM8 Toowong RepairDesk invoices `1`-`3848`, is idempotent by store and invoice number, preserves historical negative refunds, and never updates inventory or assigns an active shift. The follow-up migration also adds the service-role-only `sync_repairdesk_toowong_invoice_customers()` function so invoice contacts with a usable phone number or email appear in the company-wide customer search without duplicating walk-in customers.
 
 Build the import batches from the downloaded RepairDesk invoice and item-wise-sales exports with:
 
 ```text
-python scripts/build-repairdesk-toowong-invoice-import.py --invoice-export <invoices.xlsx> --item-report <item-wise-sales.csv> --output-dir <temporary-output-directory>
+python scripts/build-repairdesk-toowong-invoice-import.py --invoice-export <invoices.xlsx> --item-report <item-wise-sales.csv> --output-dir <temporary-output-directory> --min-invoice <first> --max-invoice <last>
 ```
 
-The completed Toowong import contains 3,282 invoices, 4,236 lines, and 3,280 payments. RepairDesk does not contain invoice numbers `300`, `314`, `1035`, or `2114`. The store counter is `3286`, making `3287` the next live invoice. Generated batches contain customer data and must remain outside version control.
+The completed Toowong import contains 3,843 invoices, 4,913 lines, and 3,841 payments. RepairDesk does not contain invoice numbers `300`, `314`, `1035`, `2114`, or `3570`. The store counter is `3848`, making `3849` the next live invoice. Generated batches contain customer data and must remain outside version control.
 
 ## POS Receipt Email
 
