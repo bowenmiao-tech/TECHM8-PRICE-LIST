@@ -305,6 +305,16 @@ select public.reseed_pos_store_invoice_counters();
 
 The function returns the next invoice number for each store after its imported maximum. It is executable only by `service_role` and database administrators.
 
+Apply `supabase/migrations/20260831194500_add_repairdesk_historical_sales_import.sql` for the controlled RepairDesk importer. Its `import_repairdesk_sales_batch(jsonb)` RPC is restricted to `service_role`, accepts only TechM8 Toowong RepairDesk invoices `1`-`3286`, is idempotent by store and invoice number, preserves historical negative refunds, and never updates inventory or assigns an active shift.
+
+Build the import batches from the downloaded RepairDesk invoice and item-wise-sales exports with:
+
+```text
+python scripts/build-repairdesk-toowong-invoice-import.py --invoice-export <invoices.xlsx> --item-report <item-wise-sales.csv> --output-dir <temporary-output-directory>
+```
+
+The completed Toowong import contains 3,282 invoices, 4,236 lines, and 3,280 payments. RepairDesk does not contain invoice numbers `300`, `314`, `1035`, or `2114`. The store counter is `3286`, making `3287` the next live invoice. Generated batches contain customer data and must remain outside version control.
+
 ## POS Receipt Email
 
 `send-pos-receipt-email` loads an already-saved POS order, renders the store-specific email receipt, sends it through Resend, and records the successful delivery on the order.

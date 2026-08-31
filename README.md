@@ -184,6 +184,13 @@ Completed invoice flow:
 - Refunds are immutable records linked to the original invoice and can be entered per line.
 - Original invoice lines are never deleted or overwritten by a refund.
 
+Toowong RepairDesk history imported on 31 August 2026:
+- The existing RepairDesk invoices in the requested `1`-`3286` range are stored as 3,282 Toowong sales orders, 4,236 invoice lines, and 3,280 payment rows.
+- RepairDesk has no records for invoice numbers `300`, `314`, `1035`, and `2114`; those four gaps remain empty rather than being synthesized.
+- Original invoice numbers, Brisbane transaction times, customer contact details, staff names, line descriptions/notes, serial/warranty details, prices, totals, payment methods, deposits, zero-value invoices, and 18 negative refund invoices are preserved.
+- Imported history is shift-free and does not change product inventory. The Toowong counter is set to `3286`, so the next live Toowong sale receives invoice `3287`.
+- Rebuild the deterministic import batches with `scripts/build-repairdesk-toowong-invoice-import.py`. Generated SQL and customer data must stay in an ignored temporary directory and must not be committed.
+
 Completed receipt flow:
 - Completing payment opens receipt actions after the database save.
 - Available actions are `Print Thermal Receipt` and `Email Thermal Receipt` only.
@@ -314,6 +321,7 @@ Required POS migrations, in order:
 28. `20260826134518_keep_password_change_session_revocation.sql`
 29. `20260826135147_scope_pos_invoices_to_current_store.sql`
 30. `20260826135945_restrict_scoped_pos_invoice_rpc_roles.sql`
+31. `20260831194500_add_repairdesk_historical_sales_import.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
