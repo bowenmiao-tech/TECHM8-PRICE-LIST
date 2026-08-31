@@ -1958,6 +1958,214 @@
       text-align: center;
     }
 
+    /* Handed to the customer, so it is deliberately full-bleed and read-only:
+       no POS navigation, no cost prices, nothing else tappable. */
+    .special-modal.repair-card-modal {
+      width: min(880px, calc(100vw - 20px));
+      max-height: calc(100vh - 20px);
+      overflow: hidden;
+      padding: 0;
+      gap: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+
+    .repair-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--tm-line);
+      background: #fbfdfe;
+    }
+
+    .repair-card-head h2 { margin: 0; font-size: 20px; font-weight: 950; }
+    .repair-card-subtitle { margin-top: 4px; color: var(--tm-muted); font-size: 13px; font-weight: 800; }
+
+    .repair-card-body { min-height: 0; overflow: auto; padding: 16px 18px; }
+
+    .repair-card-foot {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 12px 18px max(env(safe-area-inset-bottom), 12px);
+      border-top: 1px solid var(--tm-line);
+      background: #fbfdfe;
+    }
+
+    .repair-card-foot .pay-action { min-width: 240px; }
+
+    .repair-card-section { margin-bottom: 16px; }
+    .repair-card-section h3 {
+      margin: 0 0 9px;
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: #46585f;
+    }
+
+    .repair-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 9px;
+    }
+
+    .repair-card-cell {
+      display: grid;
+      gap: 4px;
+      padding: 10px 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #f8fafb;
+    }
+
+    .repair-card-cell span { color: var(--tm-muted); font-size: 10.5px; font-weight: 900; text-transform: uppercase; }
+    .repair-card-cell strong { font-size: 14px; font-weight: 900; overflow-wrap: anywhere; }
+
+    .repair-card-tests {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 5px 16px;
+    }
+
+    .repair-card-test {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 5px 0;
+      border-bottom: 1px dotted #e2eaed;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .repair-card-test b { font-weight: 950; }
+    .repair-card-test b.pass { color: var(--tm-green-dark); }
+    .repair-card-test b.fail { color: var(--tm-red); }
+    .repair-card-test b.skip { color: var(--tm-muted); }
+
+    .repair-card-signed {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: var(--panel);
+      font-size: 13px;
+    }
+    .repair-card-signed img {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      max-height: 120px;
+      object-fit: contain;
+      object-position: left;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+    .repair-card-superseded {
+      opacity: 0.62;
+    }
+    .repair-card-superseded img {
+      filter: grayscale(1);
+    }
+    .repair-card-terms {
+      max-height: 230px;
+      overflow: auto;
+      padding: 14px 16px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #fff;
+      color: #26363d;
+      font-size: 12.5px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .repair-card-ack {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      margin-top: 12px;
+      padding: 13px 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #f7fafb;
+      font-size: 14px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .repair-card-ack input { width: 22px; height: 22px; accent-color: var(--tm-green); flex: none; }
+
+    .repair-card-signature-box {
+      margin-top: 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .repair-card-signature-box.is-locked { opacity: .5; pointer-events: none; }
+
+    #repairCardSignaturePad {
+      display: block;
+      width: 100%;
+      height: 190px;
+      touch-action: none;
+      cursor: crosshair;
+      background:
+        linear-gradient(to right, transparent 0 24px, #dde7ea 24px 25px, transparent 25px) no-repeat 0 150px/100% 1px;
+    }
+
+    .repair-card-signature-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 12px;
+      border-top: 1px solid var(--tm-line);
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .repair-card-error {
+      min-height: 18px;
+      margin-top: 10px;
+      color: var(--tm-red);
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .repair-card-signed {
+      display: grid;
+      gap: 10px;
+      padding: 13px 14px;
+      border: 1px solid #cbe6dd;
+      border-radius: 12px;
+      background: #f4fbf8;
+    }
+
+    .repair-card-signed img {
+      width: min(340px, 100%);
+      border: 1px solid var(--tm-line);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .repair-card-superseded {
+      border-color: var(--tm-line);
+      background: #f7f8f9;
+      opacity: .8;
+    }
+
+    @media (max-width: 900px) {
+      .repair-card-foot { flex-direction: column-reverse; }
+      .repair-card-foot .pay-action, .repair-card-foot .soft-action { width: 100%; }
+    }
+
     .customer-history-button {
       width: 34px;
       height: 34px;
@@ -7687,6 +7895,23 @@
     </form>
   </div>
 
+  <div id="repairCardModal" class="modal-backdrop" aria-hidden="true">
+    <div class="special-modal repair-card-modal" role="dialog" aria-modal="true" aria-labelledby="repairCardTitle">
+      <div class="repair-card-head">
+        <div>
+          <h2 id="repairCardTitle">Repair Card</h2>
+          <div id="repairCardSubtitle" class="repair-card-subtitle"></div>
+        </div>
+        <button id="repairCardClose" class="modal-close" type="button" aria-label="Close repair card"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="repairCardBody" class="repair-card-body"></div>
+      <div class="repair-card-foot">
+        <button id="repairCardCancel" class="soft-action" type="button">Back</button>
+        <button id="repairCardSubmit" class="pay-action" type="button" disabled><i class="bi bi-pen"></i> Confirm &amp; Create Ticket</button>
+      </div>
+    </div>
+  </div>
+
   <div id="customerHistoryModal" class="modal-backdrop" aria-hidden="true">
     <div class="special-modal customer-history-modal" role="dialog" aria-modal="true" aria-labelledby="customerHistoryTitle">
       <div class="ticket-detail-head">
@@ -8423,6 +8648,9 @@
       customers: [],
       selectedCustomerId: '',
       customerHistoryOrders: [],
+      repairCard: { snapshot: null, hasInk: false, saving: false, mode: 'create', ticketCode: '', reason: '' },
+      repairCardTerms: '',
+      ticketCardSignatures: {},
       customerSearchLoading: false,
       customerSearchActiveIndex: -1,
       customerSearchFixture: [],
@@ -8534,6 +8762,7 @@
         testProfile: 'mobile',
         tests: {},
         media: [],
+        deviceNotes: '',
         addedToCart: false
       }
     };
@@ -8716,6 +8945,12 @@
       googleReviewSummary: document.getElementById('googleReviewSummary'),
       googleReviewClose: document.getElementById('googleReviewClose'),
       googleReviewCancel: document.getElementById('googleReviewCancel'),
+      repairCardModal: document.getElementById('repairCardModal'),
+      repairCardBody: document.getElementById('repairCardBody'),
+      repairCardSubtitle: document.getElementById('repairCardSubtitle'),
+      repairCardSubmit: document.getElementById('repairCardSubmit'),
+      repairCardClose: document.getElementById('repairCardClose'),
+      repairCardCancel: document.getElementById('repairCardCancel'),
       customerHistoryBtn: document.getElementById('customerHistoryBtn'),
       customerHistoryModal: document.getElementById('customerHistoryModal'),
       customerHistoryClose: document.getElementById('customerHistoryClose'),
@@ -11425,6 +11660,7 @@
 
     function currentRepairTestItems() {
       return state.repair.testProfile === 'computer' ? computerRepairTestItems : mobileRepairTestItems;
+      // 'tablet' deliberately shares the mobile checklist.
     }
 
     function repairTestOptions(itemName) {
@@ -12723,6 +12959,7 @@
     }
 
     async function loadRepairTickets() {
+      loadRepairCardTerms();
       if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) {
         state.repairSearchLoading = false;
         return;
@@ -12939,6 +13176,7 @@
         testProfile: state.repair.testProfile,
         tests: { ...state.repair.tests },
         testNotes: state.repair.testNotes,
+        deviceNotes: state.repair.deviceNotes,
         media: state.repair.media.map(item => ({ ...item })),
         quote: { ...quote },
         quotedPrice: state.repair.quotedPrice || quotePriceLabel(quote.price)
@@ -13728,11 +13966,333 @@
       showToast('Repair check opened as a draft. It is not a ticket until all required details are complete.');
     }
 
+    const REPAIR_CARDS_ENDPOINT = POS_SALES_ORDERS_ENDPOINT.replace('/pos-sales-orders', '/pos-repair-cards');
+
+    /** Everything the customer sees, frozen at signing time. Never re-read from
+        the live ticket: a later price or detail change must not rewrite what
+        was agreed. */
+    function buildRepairCardSnapshot() {
+      const quote = state.repair.quote || {};
+      const profile = state.repair.testProfile === 'computer' ? 'Laptop / Desktop'
+        : state.repair.testProfile === 'tablet' ? 'Tablet' : 'Mobile Device';
+      return {
+        captured_at: new Date().toISOString(),
+        store_name: storeById(state.storeId).name,
+        staff_name: currentStaffName(),
+        customer_name: state.repair.customerName || '',
+        customer_phone: state.repair.customerPhone || '',
+        device: state.repair.specialOrder
+          ? state.repair.specialName
+          : `${quote.brand || ''} ${quote.model || ''}`.trim(),
+        issue: quote.issue || state.repair.issue || '',
+        price: state.repair.quotedPrice || quotePriceLabel(quote.price),
+        device_in_store: Boolean(state.repair.deviceInStore),
+        test_profile: profile,
+        testable: state.repair.testable,
+        cannot_test_reason: state.repair.cannotTestReason || '',
+        tests: { ...state.repair.tests },
+        test_notes: state.repair.testNotes || '',
+        device_notes: state.repair.deviceNotes || '',
+        password_type: state.repair.passwordType,
+        device_id_type: normalizedRepairDeviceIdType(),
+        device_id_value: state.repair.deviceImei || state.repair.deviceSerial || state.repair.deviceIdUnavailable || '',
+        photo_count: (state.repair.media || []).length
+      };
+    }
+
+    function repairCardTestRows(snapshot) {
+      const tests = snapshot.tests || {};
+      const names = Object.keys(tests);
+      if (snapshot.testable === 'no') {
+        return `<p class="repair-panel-text">Device could not be tested. Reason: ${escapeHtml(snapshot.cannot_test_reason || 'Not recorded')}</p>`;
+      }
+      if (!names.length) return '<p class="repair-panel-text">No function test recorded.</p>';
+      return `<div class="repair-card-tests">${names.map(name => {
+        const value = String(tests[name] || '').toLowerCase();
+        const cls = value === 'pass' ? 'pass' : value === 'fail' ? 'fail' : 'skip';
+        return `<div class="repair-card-test"><span>${escapeHtml(name)}</span><b class="${cls}">${escapeHtml(tests[name] || 'Not tested')}</b></div>`;
+      }).join('')}</div>`;
+    }
+
+    function repairCardDetailsHtml(snapshot) {
+      const cells = [
+        ['Customer', snapshot.customer_name],
+        ['Contact', snapshot.customer_phone],
+        ['Device', snapshot.device],
+        ['Issue', snapshot.issue],
+        ['Price', snapshot.price],
+        ['Device type', snapshot.test_profile],
+        ['Device ID', snapshot.device_id_value || 'Not recorded'],
+        ['Device left in store', snapshot.device_in_store ? 'Yes' : 'No']
+      ];
+      return `
+        <div class="repair-card-section">
+          <h3>Repair Details</h3>
+          <div class="repair-card-grid">
+            ${cells.map(([label, value]) => `
+              <div class="repair-card-cell"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value || '-'))}</strong></div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="repair-card-section">
+          <h3>Pre-Repair Functional Test</h3>
+          ${repairCardTestRows(snapshot)}
+          ${snapshot.test_notes ? `<p class="repair-panel-text"><strong>Notes:</strong> ${escapeHtml(snapshot.test_notes)}</p>` : ''}
+          ${snapshot.device_notes ? `<p class="repair-panel-text"><strong>Device notes:</strong> ${escapeHtml(snapshot.device_notes)}</p>` : ''}
+        </div>
+      `;
+    }
+
+    function attachSignaturePad() {
+      const canvas = document.getElementById('repairCardSignaturePad');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let drawing = false;
+
+      // The customer may rotate the iPad mid-signature, so the backing store is
+      // resized and the existing ink redrawn instead of being left mis-scaled.
+      const sizeCanvas = () => {
+        const ratio = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        const width = Math.round(rect.width * ratio);
+        const height = Math.round(rect.height * ratio);
+        if (!width || !height || (canvas.width === width && canvas.height === height)) return;
+        const previous = canvas.width && canvas.height ? document.createElement('canvas') : null;
+        if (previous) {
+          previous.width = canvas.width;
+          previous.height = canvas.height;
+          previous.getContext('2d').drawImage(canvas, 0, 0);
+        }
+        canvas.width = width;
+        canvas.height = height;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#10262b';
+        if (previous) ctx.drawImage(previous, 0, 0, rect.width, rect.height);
+      };
+      sizeCanvas();
+      const resizeObserver = new ResizeObserver(sizeCanvas);
+      resizeObserver.observe(canvas);
+      state.repairCard.detachPad = () => resizeObserver.disconnect();
+
+      const pointAt = event => {
+        const box = canvas.getBoundingClientRect();
+        return { x: event.clientX - box.left, y: event.clientY - box.top };
+      };
+      canvas.addEventListener('pointerdown', event => {
+        // ResizeObserver only runs while the page is rendering, so the geometry is
+        // re-checked on the first touch after a rotation or a backgrounded tab.
+        sizeCanvas();
+        drawing = true;
+        canvas.setPointerCapture(event.pointerId);
+        const point = pointAt(event);
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y);
+      });
+      canvas.addEventListener('pointermove', event => {
+        if (!drawing) return;
+        const point = pointAt(event);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+        // Only a stroke counts as a signature; a stray tap must not unlock submit.
+        if (!state.repairCard.hasInk) {
+          state.repairCard.hasInk = true;
+          updateRepairCardSubmitState();
+        }
+      });
+      const stop = () => { drawing = false; };
+      canvas.addEventListener('pointerup', stop);
+      canvas.addEventListener('pointercancel', stop);
+      canvas.addEventListener('pointerleave', stop);
+
+      const clearBtn = document.getElementById('repairCardSignatureClear');
+      if (clearBtn) clearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        state.repairCard.hasInk = false;
+        updateRepairCardSubmitState();
+      });
+    }
+
+    function updateRepairCardSubmitState() {
+      const ack = document.getElementById('repairCardAck');
+      const nameInput = document.getElementById('repairCardCustomerName');
+      const box = document.getElementById('repairCardSignatureBox');
+      const acknowledged = Boolean(ack && ack.checked);
+      if (box) box.classList.toggle('is-locked', !acknowledged);
+      const named = Boolean(nameInput && nameInput.value.trim());
+      els.repairCardSubmit.disabled = !(acknowledged && named && state.repairCard.hasInk) || state.repairCard.saving;
+    }
+
+    async function openRepairCardSignature() {
+      if (!validateRepairIntake()) {
+        showToast('Complete every required repair detail before the customer signs.');
+        return;
+      }
+      const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
+      if (price <= 0 || price > 1000000) {
+        showToast('Enter a valid repair price before the customer signs.');
+        return;
+      }
+      // The customer must never be shown a card with the terms missing.
+      await loadRepairCardTerms();
+      if (!state.repairCardTerms) {
+        showToast('The terms and conditions could not be loaded. Check the connection and try again.');
+        return;
+      }
+      const snapshot = buildRepairCardSnapshot();
+      state.repairCard = { snapshot, hasInk: false, saving: false, mode: 'create', ticketCode: '', reason: '' };
+
+      els.repairCardSubtitle.textContent = `${snapshot.store_name} · ${snapshot.staff_name}`;
+      els.repairCardBody.innerHTML = `
+        ${repairCardDetailsHtml(snapshot)}
+        <div class="repair-card-section">
+          <h3>Terms and Conditions</h3>
+          <div class="repair-card-terms">${escapeHtml(state.repairCardTerms || 'Terms could not be loaded.')}</div>
+          <label class="repair-card-ack">
+            <input id="repairCardAck" type="checkbox">
+            <span>I have read and agree to the terms and conditions above.</span>
+          </label>
+          <label class="repair-field" style="margin-top:12px;">
+            Your name
+            <input id="repairCardCustomerName" class="repair-input" type="text" maxlength="120" autocomplete="off" value="${escapeHtml(snapshot.customer_name)}" placeholder="Type your name">
+          </label>
+          <div id="repairCardSignatureBox" class="repair-card-signature-box is-locked">
+            <canvas id="repairCardSignaturePad"></canvas>
+            <div class="repair-card-signature-foot">
+              <span>Sign above with your finger or a stylus.</span>
+              <button id="repairCardSignatureClear" class="repair-action" type="button">Clear</button>
+            </div>
+          </div>
+          <div id="repairCardError" class="repair-card-error" role="alert"></div>
+        </div>
+      `;
+      els.repairCardSubmit.innerHTML = '<i class="bi bi-pen"></i> Confirm &amp; Create Ticket';
+      els.repairCardModal.classList.add('show');
+      els.repairCardModal.setAttribute('aria-hidden', 'false');
+      // Attached synchronously: a backgrounded tab never runs requestAnimationFrame,
+      // which would leave the customer with a dead signature pad. The ResizeObserver
+      // inside attachSignaturePad corrects the size once layout settles.
+      attachSignaturePad();
+      updateRepairCardSubmitState();
+    }
+
+    function closeRepairCardModal() {
+      if (typeof state.repairCard.detachPad === 'function') state.repairCard.detachPad();
+      state.repairCard.detachPad = null;
+      els.repairCardModal.classList.remove('show');
+      els.repairCardModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function signatureDataUrl() {
+      const canvas = document.getElementById('repairCardSignaturePad');
+      return canvas ? canvas.toDataURL('image/png') : '';
+    }
+
+    async function saveRepairCardSignature(ticketCode, options = {}) {
+      const response = await fetch(REPAIR_CARDS_ENDPOINT, {
+        method: 'POST',
+        headers: posOrderApiHeaders(),
+        body: JSON.stringify({
+          store_code: repairTicketStoreCode(),
+          ticket_code: ticketCode,
+          staff_name: state.selectedStaffName,
+          signed_customer_name: options.customerName,
+          card_snapshot: state.repairCard.snapshot,
+          terms_acknowledged: true,
+          signature_image: options.signature,
+          resign_reason: options.reason || null
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.ok === false) {
+        throw new Error(payload.message || 'The signed repair card could not be saved.');
+      }
+      return payload.signature;
+    }
+
+    async function submitRepairCard() {
+      if (state.repairCard.saving) return;
+      const errorBox = document.getElementById('repairCardError');
+      const customerName = (document.getElementById('repairCardCustomerName') || {}).value || '';
+      if (!customerName.trim()) {
+        if (errorBox) errorBox.textContent = 'Please type your name.';
+        return;
+      }
+      if (!state.repairCard.hasInk) {
+        if (errorBox) errorBox.textContent = 'Please sign in the box above.';
+        return;
+      }
+      state.repairCard.saving = true;
+      updateRepairCardSubmitState();
+      els.repairCardSubmit.textContent = 'Saving...';
+      if (errorBox) errorBox.textContent = '';
+      const signature = signatureDataUrl();
+
+      try {
+        if (state.repairCard.mode === 'resign') {
+          await saveRepairCardSignature(state.repairCard.ticketCode, {
+            customerName: customerName.trim(),
+            signature,
+            reason: state.repairCard.reason
+          });
+          closeRepairCardModal();
+          showToast(state.repairCard.reason
+            ? 'Repair card re-signed. The previous signature is kept on file.'
+            : 'Signed repair card saved.');
+          const signedTicket = state.repairCard.ticketCode;
+          delete state.ticketCardSignatures[signedTicket];
+          await loadRepairTickets();
+          renderRepairWorkspace();
+          openTicketDetailModal(signedTicket);
+          state.selectedTicketSection = 'card';
+          renderTicketDetailModal();
+          loadTicketRepairCard(signedTicket);
+          return;
+        }
+
+        const ticketCode = await createRepairTicketAfterIntake();
+        if (!ticketCode) throw new Error('The ticket could not be created, so nothing was signed.');
+        try {
+          await saveRepairCardSignature(ticketCode, { customerName: customerName.trim(), signature });
+          closeRepairCardModal();
+          showToast(`Ticket ${ticketCode} created and the signed repair card is on file.`);
+        } catch (signError) {
+          console.error(signError);
+          closeRepairCardModal();
+          showToast(`Ticket ${ticketCode} was created but the signature failed to save. Re-sign it from the ticket.`);
+        }
+      } catch (error) {
+        console.error(error);
+        if (errorBox) errorBox.textContent = error.message || 'The repair card could not be saved.';
+      } finally {
+        state.repairCard.saving = false;
+        els.repairCardSubmit.innerHTML = state.repairCard.mode === 'resign'
+          ? '<i class="bi bi-pen"></i> Save Signature'
+          : '<i class="bi bi-pen"></i> Confirm &amp; Create Ticket';
+        updateRepairCardSubmitState();
+      }
+    }
+
+    async function loadRepairCardTerms() {
+      if (state.repairCardTerms) return state.repairCardTerms;
+      try {
+        const result = await window.Techm8StaffAuth.callRpc('get_pos_repair_card_terms', {
+          session_token: window.Techm8StaffAuth.getToken()
+        });
+        if (result && result.body) state.repairCardTerms = result.body;
+      } catch (error) {
+        console.error(error);
+      }
+      return state.repairCardTerms;
+    }
+
     async function createRepairTicketAfterIntake() {
-      if (!state.repair.intakeOpen || state.repair.ticketId) return;
+      if (!state.repair.intakeOpen || state.repair.ticketId) return '';
       if (!validateRepairIntake()) {
         showToast('Complete every required repair detail before creating the ticket.');
-        return;
+        return '';
       }
 
       const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
@@ -13740,7 +14300,7 @@
         showToast('Enter a valid repair price before creating the ticket.');
         const priceInput = els.repairWorkspace.querySelector('#repairQuotedPrice');
         if (priceInput) priceInput.focus();
-        return;
+        return '';
       }
 
       const currentCustomer = selectedRepairCustomer({ notify: false, focus: false });
@@ -13748,7 +14308,7 @@
         || currentCustomer.name.toLowerCase() !== String(state.repair.customerName || '').toLowerCase()
         || currentCustomer.phone.replace(/\D/g, '') !== String(state.repair.customerPhone || '').replace(/\D/g, '')) {
         showToast('The selected customer changed. Clear this draft and start again with the correct customer.');
-        return;
+        return '';
       }
 
       const ticketId = 'RPR-' + Date.now();
@@ -13793,9 +14353,12 @@
       localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
       const saved = await persistRepairTicket(completedTicket);
       renderRepairWorkspace();
-      showToast(saved
-        ? `Ticket ${ticketId} created after the device check was completed.`
-        : `Ticket ${ticketId} is complete and saved locally; database sync is pending.`);
+      if (!state.repairCard || state.repairCard.mode !== 'create') {
+        showToast(saved
+          ? `Ticket ${ticketId} created after the device check was completed.`
+          : `Ticket ${ticketId} is complete and saved locally; database sync is pending.`);
+      }
+      return saved ? ticketId : '';
     }
 
     function clearRepairTicket() {
@@ -14084,6 +14647,7 @@
         `).join('');
         return `<h3>Function Test</h3><div class="repair-summary">${rows || '<div class="ticket-meta">No function test recorded.</div>'}</div><p>${escapeHtml(intake.testNotes || '')}</p>`;
       }
+      if (section === 'card') return ticketRepairCardHtml(ticket);
       const media = Array.isArray(intake.media) ? intake.media : [];
       return `
         <h3>Photos And Evidence</h3>
@@ -14093,11 +14657,143 @@
       `;
     }
 
+    function ticketRepairCardHtml(ticket) {
+      const entry = state.ticketCardSignatures[ticket.id];
+      if (!entry || entry.loading) return '<h3>Repair Card</h3><p class="repair-panel-text">Loading signed repair card...</p>';
+      if (entry.error) return `<h3>Repair Card</h3><p class="repair-panel-text">${escapeHtml(entry.error)}</p>`;
+
+      const signatures = entry.signatures || [];
+      if (!signatures.length) {
+        return `
+          <h3>Repair Card</h3>
+          <p class="repair-panel-text">No signed repair card on file for this ticket.</p>
+          <div class="repair-stack"><button class="repair-action" type="button" data-ticket-resign><i class="bi bi-pen"></i> Sign card</button></div>
+        `;
+      }
+      const resignButton = '<button class="repair-action" type="button" data-ticket-resign><i class="bi bi-pen"></i> Re-sign card</button>';
+
+      return `
+        <h3>Repair Card</h3>
+        <div class="repair-stack" style="margin-bottom:14px;">${resignButton}</div>
+        ${signatures.map(row => {
+          const snapshot = row.card_snapshot || {};
+          const superseded = Boolean(row.superseded_at);
+          return `
+            <div class="repair-card-signed ${superseded ? 'repair-card-superseded' : ''}" style="margin-bottom:12px;">
+              <div><strong>${escapeHtml(row.signed_customer_name || '')}</strong> · ${escapeHtml(formatDateTime(row.signed_at))}
+                ${superseded ? ' · <em>replaced</em>' : ' · <strong>current</strong>'}</div>
+              <div class="ticket-activity-meta">Witnessed by ${escapeHtml(row.witnessed_by || '')} · terms ${escapeHtml(row.terms_version || '')} · ${escapeHtml(snapshot.device || '')} · ${escapeHtml(snapshot.price || '')}</div>
+              ${superseded && row.superseded_reason ? `<div class="ticket-activity-meta">Replaced because: ${escapeHtml(row.superseded_reason)}</div>` : ''}
+              ${row.signature_url ? `<img src="${escapeHtml(row.signature_url)}" alt="Customer signature">` : '<div class="ticket-activity-meta">Signature image unavailable.</div>'}
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    async function loadTicketRepairCard(ticketId) {
+      if (!ticketId) return;
+      state.ticketCardSignatures[ticketId] = { loading: true };
+      if (state.selectedTicketId === ticketId) renderTicketDetailModal();
+      try {
+        const url = new URL(REPAIR_CARDS_ENDPOINT);
+        url.searchParams.set('store_code', repairTicketStoreCode());
+        url.searchParams.set('ticket_code', ticketId);
+        const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Repair card unavailable.');
+        state.ticketCardSignatures[ticketId] = { signatures: payload.signatures || [] };
+      } catch (error) {
+        console.error(error);
+        state.ticketCardSignatures[ticketId] = { error: error.message || 'Repair card unavailable.' };
+      }
+      if (state.selectedTicketId === ticketId) renderTicketDetailModal();
+    }
+
+    async function openRepairCardResign(ticket) {
+      await loadRepairCardTerms();
+      if (!state.repairCardTerms) {
+        showToast('The terms and conditions could not be loaded. Check the connection and try again.');
+        return;
+      }
+      const existing = state.ticketCardSignatures[ticket.id];
+      const replacing = Boolean(existing && (existing.signatures || []).length);
+      let reason = '';
+      if (replacing) {
+        const answer = prompt('Why is this card being re-signed? (kept on file with the old signature)');
+        if (answer === null) return;
+        if (!answer.trim()) {
+          showToast('A reason is required to replace a signed card.');
+          return;
+        }
+        reason = answer.trim();
+      }
+      const intake = ticket.intake || {};
+      const snapshot = {
+        captured_at: new Date().toISOString(),
+        store_name: ticket.store_name || storeById(state.storeId).name,
+        staff_name: currentStaffName(),
+        customer_name: ticket.customerName || '',
+        customer_phone: ticket.customerPhone || '',
+        device: ticket.title || '',
+        issue: ticket.issue || '',
+        price: ticket.price === '' || ticket.price === null || ticket.price === undefined ? '' : money(ticket.price),
+        device_in_store: Boolean(ticket.deviceInStore),
+        test_profile: intake.testProfile === 'computer' ? 'Laptop / Desktop'
+          : intake.testProfile === 'tablet' ? 'Tablet' : 'Mobile Device',
+        testable: intake.testable || 'yes',
+        cannot_test_reason: intake.cannotTestReason || '',
+        tests: { ...(intake.tests || {}) },
+        test_notes: intake.testNotes || '',
+        device_notes: intake.deviceNotes || '',
+        password_type: intake.passwordType || '',
+        device_id_type: intake.deviceIdType || '',
+        device_id_value: intake.deviceImei || intake.deviceSerial || intake.deviceIdUnavailable || '',
+        photo_count: (intake.media || []).length
+      };
+      state.repairCard = { snapshot, hasInk: false, saving: false, mode: 'resign', ticketCode: ticket.id, reason };
+      closeTicketDetailModal();
+
+      els.repairCardSubtitle.textContent = `${snapshot.store_name} · ${replacing ? 're-signing' : 'signing'} ${ticket.id}`;
+      els.repairCardBody.innerHTML = `
+        ${repairCardDetailsHtml(snapshot)}
+        <div class="repair-card-section">
+          <h3>Terms and Conditions</h3>
+          <div class="repair-card-terms">${escapeHtml(state.repairCardTerms || 'Terms could not be loaded.')}</div>
+          <label class="repair-card-ack">
+            <input id="repairCardAck" type="checkbox">
+            <span>I have read and agree to the terms and conditions above.</span>
+          </label>
+          <label class="repair-field" style="margin-top:12px;">
+            Your name
+            <input id="repairCardCustomerName" class="repair-input" type="text" maxlength="120" autocomplete="off" value="${escapeHtml(snapshot.customer_name)}" placeholder="Type your name">
+          </label>
+          <div id="repairCardSignatureBox" class="repair-card-signature-box is-locked">
+            <canvas id="repairCardSignaturePad"></canvas>
+            <div class="repair-card-signature-foot">
+              <span>Sign above with your finger or a stylus.</span>
+              <button id="repairCardSignatureClear" class="repair-action" type="button">Clear</button>
+            </div>
+          </div>
+          <div id="repairCardError" class="repair-card-error" role="alert"></div>
+        </div>
+      `;
+      els.repairCardSubmit.innerHTML = '<i class="bi bi-pen"></i> Save Signature';
+      els.repairCardModal.classList.add('show');
+      els.repairCardModal.setAttribute('aria-hidden', 'false');
+      // Attached synchronously: a backgrounded tab never runs requestAnimationFrame,
+      // which would leave the customer with a dead signature pad. The ResizeObserver
+      // inside attachSignaturePad corrects the size once layout settles.
+      attachSignaturePad();
+      updateRepairCardSubmitState();
+    }
+
     const TICKET_ACTIVITY_ICONS = {
       created: 'bi-plus-circle',
       status: 'bi-arrow-left-right',
       cart: 'bi-cart-plus',
-      customer: 'bi-person-gear'
+      customer: 'bi-person-gear',
+      signature: 'bi-pen'
     };
 
     function isTicketComment(item) {
@@ -14185,7 +14881,8 @@
             ['password', 'Password'],
             ['imei', 'IMEI'],
             ['function', 'Function'],
-            ['photos', 'Photos And Evidence']
+            ['photos', 'Photos And Evidence'],
+            ['card', 'Repair Card']
           ].map(([id, label]) => `<button class="repair-chip ${state.selectedTicketSection === id ? 'active' : ''}" type="button" data-ticket-section="${id}">${label}</button>`).join('')}
         </div>
         <div class="ticket-detail-content">${ticketDetailSectionHtml(ticket)}</div>
@@ -14238,6 +14935,8 @@
     function closeTicketDetailModal() {
       els.ticketDetailModal.classList.remove('show');
       els.ticketDetailModal.setAttribute('aria-hidden', 'true');
+      // Signed image URLs expire quickly, so never reuse a cached payload.
+      if (state.selectedTicketId) delete state.ticketCardSignatures[state.selectedTicketId];
       state.selectedTicketId = '';
     }
 
@@ -14427,6 +15126,7 @@
                 <div class="repair-chip-row" data-repair-chip-group="testProfile">
                   <button class="repair-chip ${state.repair.testProfile === 'mobile' ? 'active' : ''}" type="button" data-value="mobile">Mobile Device</button>
                   <button class="repair-chip ${state.repair.testProfile === 'computer' ? 'active' : ''}" type="button" data-value="computer">Laptop / Desktop</button>
+                  <button class="repair-chip ${state.repair.testProfile === 'tablet' ? 'active' : ''}" type="button" data-value="tablet">Tablet</button>
                 </div>
               </div>
               <p class="repair-panel-text">Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.</p>
@@ -14447,6 +15147,10 @@
               <label class="repair-field" style="margin-top:12px;">
                 Function Test Notes
                 <textarea class="repair-textarea" id="repairTestNotes" placeholder="Example: display does not light up, so touch and Face ID could not be confirmed">${escapeHtml(state.repair.testNotes)}</textarea>
+              </label>
+              <label class="repair-field">
+                More for Computer, Console or other Devices
+                <textarea class="repair-textarea" id="repairDeviceNotes" placeholder="Anything else recorded on the paper card for this device">${escapeHtml(state.repair.deviceNotes || '')}</textarea>
               </label>
             </div>
           </div>
@@ -19931,7 +20635,8 @@
         repairPatternValue: 'patternValue',
         repairPasswordNoneReason: 'passwordNoneReason',
         repairCannotTestReason: 'cannotTestReason',
-        repairTestNotes: 'testNotes'
+        repairTestNotes: 'testNotes',
+        repairDeviceNotes: 'deviceNotes'
       };
       const key = map[event.target.id];
       if (key) {
@@ -19962,7 +20667,7 @@
         return;
       }
       if (confirmButton) confirmRepairSelection();
-      if (createTicketButton) createRepairTicketAfterIntake();
+      if (createTicketButton) openRepairCardSignature();
       if (addRepairButton) addCurrentRepairToCart();
       if (cameraButton) {
         const input = els.repairWorkspace.querySelector('#repairPhotoInput');
@@ -20182,6 +20887,15 @@
     els.discardBtn.addEventListener('click', discardCart);
     els.paymentDepositBtn.addEventListener('click', finishAsDeposit);
     els.holdNameForm.addEventListener('submit', submitHoldName);
+    els.repairCardSubmit.addEventListener('click', submitRepairCard);
+    els.repairCardClose.addEventListener('click', closeRepairCardModal);
+    els.repairCardCancel.addEventListener('click', closeRepairCardModal);
+    els.repairCardBody.addEventListener('change', event => {
+      if (event.target.id === 'repairCardAck') updateRepairCardSubmitState();
+    });
+    els.repairCardBody.addEventListener('input', event => {
+      if (event.target.id === 'repairCardCustomerName') updateRepairCardSubmitState();
+    });
     els.customerHistoryBtn.addEventListener('click', openCustomerHistory);
     els.customerHistoryClose.addEventListener('click', closeCustomerHistory);
     els.customerHistoryModal.addEventListener('click', event => {
@@ -20350,6 +21064,12 @@
       if (state.selectedTicketId) updateRepairTicketStatus(state.selectedTicketId, event.target.value);
     });
     els.ticketDetailMain.addEventListener('click', event => {
+      const resignButton = event.target.closest('[data-ticket-resign]');
+      if (resignButton) {
+        const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+        if (ticket) openRepairCardResign(ticket);
+        return;
+      }
       const customerSave = event.target.closest('#ticketCustomerSave');
       if (customerSave) {
         saveTicketCustomerDetails();
@@ -20359,6 +21079,9 @@
       if (!button) return;
       state.selectedTicketSection = button.dataset.ticketSection;
       renderTicketDetailModal();
+      if (state.selectedTicketSection === 'card' && !state.ticketCardSignatures[state.selectedTicketId]) {
+        loadTicketRepairCard(state.selectedTicketId);
+      }
     });
     els.ticketDetailSide.addEventListener('click', event => {
       const viewInvoiceButton = event.target.closest('[data-ticket-view-invoice]');
@@ -20580,6 +21303,9 @@
       }
       if (event.key === 'Escape' && els.customerHistoryModal.classList.contains('show')) {
         closeCustomerHistory();
+      }
+      if (event.key === 'Escape' && els.repairCardModal.classList.contains('show') && !state.repairCard.saving) {
+        closeRepairCardModal();
       }
       if (event.key === 'Escape' && els.usedDeviceDetailModal.classList.contains('show')) {
         closeUsedDeviceDetail();
