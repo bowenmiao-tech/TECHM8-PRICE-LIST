@@ -19209,6 +19209,10 @@
       }).format(date);
     }
 
+    function receiptLogoUrl() {
+      return new URL('assets/brand/techm8-logo.png', window.location.href).href;
+    }
+
     function receiptTermsHtml(profile, hasRepair) {
       return `
         <div class="receipt-term-block">
@@ -19274,7 +19278,7 @@
 
       return `
         <header class="receipt-header">
-          <div class="receipt-brand">TECHM8</div>
+          <img class="receipt-brand-logo" src="${escapeHtml(receiptLogoUrl())}" alt="OZ TECH M8">
           <div class="receipt-store">${escapeHtml(profile.name)}</div>
           ${profile.address ? `<div>${escapeHtml(profile.address)}</div>` : ''}
           ${profile.phone ? `<div>Tel: ${escapeHtml(profile.phone)}</div>` : ''}
@@ -19336,7 +19340,7 @@
     .thermal-receipt { width: 72mm; max-width: 72mm; margin: 0; padding: 3mm 3mm 4mm; font-size: 10.5px; line-height: 1.35; overflow-wrap: anywhere; }
     .receipt-header, .receipt-footer { display: grid; justify-items: center; gap: 1.2mm; text-align: center; }
     .receipt-header > *, .receipt-footer > * { max-width: 100%; }
-    .receipt-brand { font-size: 24px; font-weight: 900; line-height: 1; }
+    .receipt-brand-logo { display: block; width: 46mm; max-width: 100%; height: auto; filter: grayscale(1) brightness(0); }
     .receipt-store { font-size: 14px; font-weight: 800; }
     .receipt-title { padding: 1mm 0; text-align: center; font-size: 13px; font-weight: 900; }
     .receipt-rule { margin: 2.2mm 0; border-top: 1px dashed #000; }
