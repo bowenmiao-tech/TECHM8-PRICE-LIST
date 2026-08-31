@@ -7507,6 +7507,26 @@
     </form>
   </div>
 
+  <div id="googleReviewModal" class="modal-backdrop" aria-hidden="true">
+    <form id="googleReviewForm" class="special-modal hold-name-modal" role="dialog" aria-modal="true" aria-labelledby="googleReviewTitle">
+      <div class="payment-modal-header">
+        <h2 id="googleReviewTitle">Google Review</h2>
+        <button id="googleReviewClose" class="modal-close" type="button" aria-label="Close Google review"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="hold-name-body">
+        <label class="hold-name-label" for="googleReviewCustomer">Customer name <span class="required-mark">*</span></label>
+        <input id="googleReviewCustomer" class="hold-name-input" type="text" maxlength="120" autocomplete="off" placeholder="Who left the review?">
+        <div class="hold-name-hint">Recorded against this review so it can be matched to the customer later. Enter the name they left the review under.</div>
+        <div id="googleReviewError" class="hold-name-error" role="alert"></div>
+        <div id="googleReviewSummary" class="hold-name-summary"></div>
+      </div>
+      <div class="payment-modal-footer">
+        <button id="googleReviewCancel" class="soft-action" type="button">Cancel</button>
+        <button class="pay-action" type="submit"><i class="bi bi-plus-circle"></i> Record · +5 pts</button>
+      </div>
+    </form>
+  </div>
+
   <div id="itemNoteModal" class="modal-backdrop" aria-hidden="true">
     <form id="itemNoteForm" class="special-modal item-note-modal" role="dialog" aria-modal="true" aria-labelledby="itemNoteTitle">
       <div class="payment-modal-header">
@@ -8492,6 +8512,13 @@
       holdNameSummary: document.getElementById('holdNameSummary'),
       holdNameClose: document.getElementById('holdNameClose'),
       holdNameCancel: document.getElementById('holdNameCancel'),
+      googleReviewModal: document.getElementById('googleReviewModal'),
+      googleReviewForm: document.getElementById('googleReviewForm'),
+      googleReviewCustomer: document.getElementById('googleReviewCustomer'),
+      googleReviewError: document.getElementById('googleReviewError'),
+      googleReviewSummary: document.getElementById('googleReviewSummary'),
+      googleReviewClose: document.getElementById('googleReviewClose'),
+      googleReviewCancel: document.getElementById('googleReviewCancel'),
       specialProductBtn: document.getElementById('specialProductBtn'),
       specialProductModal: document.getElementById('specialProductModal'),
       specialProductForm: document.getElementById('specialProductForm'),
@@ -10207,8 +10234,46 @@
       }
     }
 
-    async function recordGoogleReview() {
+    function openGoogleReviewModal() {
       if (state.googleReviewSaving || state.todayProgress?.status === 'finalized') return;
+      if (!state.selectedStaffName) {
+        openStaffModal({ canCancel: false });
+        return;
+      }
+      els.googleReviewError.textContent = '';
+      els.googleReviewCustomer.value = '';
+      els.googleReviewSummary.innerHTML = `
+        <div class="hold-name-summary-row"><span>Staff</span><strong>${escapeHtml(state.selectedStaffName)}</strong></div>
+        <div class="hold-name-summary-row"><span>Store</span><strong>${escapeHtml(storeById(state.storeId).name)}</strong></div>
+      `;
+      els.googleReviewModal.classList.add('show');
+      els.googleReviewModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => els.googleReviewCustomer.focus(), 0);
+    }
+
+    function closeGoogleReviewModal() {
+      els.googleReviewModal.classList.remove('show');
+      els.googleReviewModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function submitGoogleReview(event) {
+      if (event) event.preventDefault();
+      const customerName = els.googleReviewCustomer.value.trim();
+      if (!customerName) {
+        els.googleReviewError.textContent = 'Enter the customer name so this review can be matched later.';
+        els.googleReviewCustomer.focus();
+        return;
+      }
+      closeGoogleReviewModal();
+      await recordGoogleReview(customerName);
+    }
+
+    async function recordGoogleReview(customerName) {
+      if (state.googleReviewSaving || state.todayProgress?.status === 'finalized') return;
+      if (!String(customerName || '').trim()) {
+        showToast('Customer name is required for a Google review.');
+        return;
+      }
       if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) {
         state.todayProgress.metrics.google_review_count += 1;
         state.todayProgress.metrics.google_review_points += 5;
@@ -10230,7 +10295,8 @@
           body: JSON.stringify({
             store_code: repairTicketStoreCode(),
             staff_name: state.selectedStaffName,
-            event_code: crypto.randomUUID()
+            event_code: crypto.randomUUID(),
+            customer_name: String(customerName).trim()
           })
         });
         const payload = await parsePosApiResponse(response, 'Google review could not be recorded.');
@@ -19677,7 +19743,7 @@
       }
       const reviewButton = event.target.closest('[data-google-review-add]');
       if (reviewButton) {
-        recordGoogleReview();
+        openGoogleReviewModal();
         return;
       }
       const appleModelButton = event.target.closest('[data-quote-apple-model]');
@@ -19767,6 +19833,12 @@
     els.discardBtn.addEventListener('click', discardCart);
     els.paymentDepositBtn.addEventListener('click', finishAsDeposit);
     els.holdNameForm.addEventListener('submit', submitHoldName);
+    els.googleReviewForm.addEventListener('submit', submitGoogleReview);
+    els.googleReviewClose.addEventListener('click', closeGoogleReviewModal);
+    els.googleReviewCancel.addEventListener('click', closeGoogleReviewModal);
+    els.googleReviewModal.addEventListener('click', event => {
+      if (event.target === els.googleReviewModal) closeGoogleReviewModal();
+    });
     els.holdNameClose.addEventListener('click', closeHoldNameModal);
     els.holdNameCancel.addEventListener('click', closeHoldNameModal);
     els.holdNameModal.addEventListener('click', event => {
@@ -20138,6 +20210,9 @@
       }
       if (event.key === 'Escape' && els.holdNameModal.classList.contains('show')) {
         closeHoldNameModal();
+      }
+      if (event.key === 'Escape' && els.googleReviewModal.classList.contains('show')) {
+        closeGoogleReviewModal();
       }
       if (event.key === 'Escape' && els.usedDeviceDetailModal.classList.contains('show')) {
         closeUsedDeviceDetail();

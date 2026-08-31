@@ -45,6 +45,14 @@ Deno.serve(async (request) => {
 
   try {
     if (request.method === "GET") {
+      const mode = new URL(request.url).searchParams.get("mode") || "";
+      if (mode === "reviews") {
+        const result = await callRpc("get_staff_google_review_report", {
+          session_token: sessionToken,
+          result_limit: 500,
+        });
+        return jsonResponse(result.body, result.status);
+      }
       const result = await callRpc("get_staff_management", { session_token: sessionToken });
       return jsonResponse(result.body, result.status);
     }

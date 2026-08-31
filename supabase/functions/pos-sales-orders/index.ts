@@ -123,8 +123,15 @@ Deno.serve(async (request) => {
       if ((url.searchParams.get("mode") || "") === "google-review") {
         const staffName = String(record.staff_name || "");
         const eventCode = String(record.event_code || "");
+        const customerName = String(record.customer_name || "").trim();
         if (!storeCode || !staffName || !eventCode) {
           return jsonResponse({ ok: false, message: "store_code, staff_name, and event_code are required." }, 400);
+        }
+        if (!customerName) {
+          return jsonResponse({ ok: false, message: "Customer name is required for a Google review." }, 400);
+        }
+        if (customerName.length > 120) {
+          return jsonResponse({ ok: false, message: "Customer name cannot exceed 120 characters." }, 400);
         }
         const actor = await authorizedActor(sessionToken, storeCode, staffName);
         const result = await callRpc("record_pos_google_review", {
@@ -132,6 +139,7 @@ Deno.serve(async (request) => {
           target_store_code: storeCode,
           target_staff_name: String(actor.staff_name || ""),
           event_code: eventCode,
+          customer_name: customerName,
         });
         return jsonResponse(result.body, result.status);
       }

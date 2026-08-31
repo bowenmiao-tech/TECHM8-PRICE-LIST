@@ -215,6 +215,34 @@
     }
     .save-button:disabled { cursor: wait; opacity: .55; }
     .admin-row { background: #f6fbf9; }
+    .review-staff-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+    .review-staff-card {
+      display: grid; gap: 8px; padding: 13px 14px; text-align: left;
+      border: 1px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer;
+    }
+    .review-staff-card:hover, .review-staff-card:focus-visible { border-color: var(--green); background: #f6fbf9; outline: none; }
+    .review-staff-card.active { border-color: var(--green); background: #eef8f4; box-shadow: 0 0 0 3px rgba(7,137,111,.12); }
+    .review-staff-card.is-idle { opacity: .62; }
+    .review-staff-name { font-size: 15px; font-weight: 950; }
+    .review-staff-figures { display: flex; gap: 14px; }
+    .review-figure { display: grid; gap: 2px; }
+    .review-figure span { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .review-figure strong { font-size: 18px; font-weight: 950; }
+    .review-figure.last strong { color: var(--muted); font-size: 15px; }
+    .review-staff-foot { color: var(--muted); font-size: 11px; font-weight: 700; }
+
+    .review-event-list { display: grid; gap: 7px; }
+    .review-event {
+      display: grid; grid-template-columns: 104px minmax(0, 1.2fr) minmax(0, 1fr) auto;
+      gap: 12px; align-items: center; padding: 11px 13px;
+      border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    }
+    .review-event-date { color: var(--muted); font-size: 12px; font-weight: 850; }
+    .review-event-customer { font-size: 14px; font-weight: 900; overflow-wrap: anywhere; }
+    .review-event-meta { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .review-event-points { color: var(--green); font-size: 13px; font-weight: 950; white-space: nowrap; }
+    .review-event.is-legacy .review-event-customer { color: var(--muted); font-style: italic; font-weight: 750; }
+
     .empty { padding: 30px; color: var(--muted); text-align: center; font-weight: 750; }
     .error { min-height: 20px; margin-top: 12px; color: var(--red); font-size: 13px; font-weight: 750; }
     .toast {
@@ -247,6 +275,9 @@
       .summary { grid-template-columns: 1fr; }
       .panel-head { align-items: stretch; flex-direction: column; }
       .search-input { width: 100%; }
+      .review-event { grid-template-columns: minmax(0, 1fr) auto; }
+      .review-event-date { grid-column: 1 / -1; }
+      .review-event-meta { grid-column: 1 / -1; }
       .staff-row { grid-template-columns: 42px minmax(0, 1fr) auto; }
       .store-field, .control-field { grid-column: 1 / -1; }
       .save-button { grid-column: 1 / -1; width: 100%; }
@@ -285,6 +316,35 @@
       <div id="staffList" class="staff-list"><div class="empty">Loading staff...</div></div>
       <div id="pageError" class="error" role="alert"></div>
     </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Google Reviews</h2>
+          <p class="subtitle">Each confirmed review is 5 points. Click a staff member to see only their reviews.</p>
+        </div>
+        <input id="reviewSearch" class="search-input" type="search" placeholder="Search customer, staff or store" aria-label="Search reviews">
+      </div>
+
+      <div class="summary" style="margin-bottom:16px;">
+        <div class="summary-item"><span>This month</span><strong id="reviewThisMonth">0</strong></div>
+        <div class="summary-item"><span>This month points</span><strong id="reviewThisMonthPoints">0</strong></div>
+        <div class="summary-item"><span>Last month</span><strong id="reviewLastMonth">0</strong></div>
+        <div class="summary-item"><span>All time</span><strong id="reviewTotal">0</strong></div>
+      </div>
+
+      <div id="reviewStaffList" class="review-staff-list"><div class="empty">Loading reviews...</div></div>
+
+      <div class="panel-head" style="margin-top:22px;">
+        <div>
+          <h2 id="reviewEventsTitle" style="font-size:17px;">Every Review</h2>
+          <p class="subtitle" id="reviewFilterNote">Newest first. Store, customer and date for every recorded review.</p>
+        </div>
+        <button id="reviewClearFilter" class="button" type="button" hidden><i class="bi bi-x-lg"></i> Show all staff</button>
+      </div>
+      <div id="reviewEventList" class="review-event-list"></div>
+      <div id="reviewError" class="error" role="alert"></div>
+    </section>
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -298,10 +358,23 @@
       unassignedCount: document.getElementById('unassignedCount'),
       inventoryCount: document.getElementById('inventoryCount'),
       pageError: document.getElementById('pageError'),
-      toast: document.getElementById('toast')
+      toast: document.getElementById('toast'),
+      reviewSearch: document.getElementById('reviewSearch'),
+      reviewThisMonth: document.getElementById('reviewThisMonth'),
+      reviewThisMonthPoints: document.getElementById('reviewThisMonthPoints'),
+      reviewLastMonth: document.getElementById('reviewLastMonth'),
+      reviewTotal: document.getElementById('reviewTotal'),
+      reviewStaffList: document.getElementById('reviewStaffList'),
+      reviewEventList: document.getElementById('reviewEventList'),
+      reviewEventsTitle: document.getElementById('reviewEventsTitle'),
+      reviewFilterNote: document.getElementById('reviewFilterNote'),
+      reviewClearFilter: document.getElementById('reviewClearFilter'),
+      reviewError: document.getElementById('reviewError')
     };
     let staffRows = [];
     let stores = [];
+    let reviewReport = null;
+    let reviewStaffFilter = '';
     const pendingStaff = new Set();
     const STAFF_MANAGEMENT_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-staff-management';
 
@@ -424,6 +497,101 @@
       }).join('');
     }
 
+    function reviewDateText(value) {
+      if (!value) return '';
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return String(value);
+      return parsed.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function renderReviewStaff() {
+      if (!reviewReport) return;
+      const rows = (reviewReport.staff || []).filter(row => row.total_reviews > 0 || row.active);
+      if (!rows.length) {
+        els.reviewStaffList.innerHTML = '<div class="empty">No staff yet.</div>';
+        return;
+      }
+      els.reviewStaffList.innerHTML = rows.map(row => `
+        <button class="review-staff-card ${reviewStaffFilter === row.normalized_staff_name ? 'active' : ''} ${row.total_reviews ? '' : 'is-idle'}"
+                type="button" data-review-staff="${escapeHtml(row.normalized_staff_name)}">
+          <span class="review-staff-name">${escapeHtml(row.staff_name)}${row.active ? '' : ' · inactive'}</span>
+          <span class="review-staff-figures">
+            <span class="review-figure"><span>This month</span><strong>${row.this_month_points} pts</strong></span>
+            <span class="review-figure last"><span>Last month</span><strong>${row.last_month_points} pts</strong></span>
+          </span>
+          <span class="review-staff-foot">${row.this_month_reviews} this month · ${row.total_reviews} all time${row.last_review_date ? ' · last ' + escapeHtml(reviewDateText(row.last_review_date)) : ''}</span>
+        </button>
+      `).join('');
+    }
+
+    function renderReviewEvents() {
+      if (!reviewReport) return;
+      const query = String(els.reviewSearch.value || '').trim().toLowerCase();
+      let events = reviewReport.events || [];
+      if (reviewStaffFilter) {
+        events = events.filter(row => String(row.staff_name || '').trim().toLowerCase() === reviewStaffFilter);
+      }
+      if (query) {
+        events = events.filter(row => [row.customer_name, row.staff_name, row.store_name, row.store_code]
+          .some(value => String(value || '').toLowerCase().includes(query)));
+      }
+
+      const staffRow = reviewStaffFilter
+        ? (reviewReport.staff || []).find(row => row.normalized_staff_name === reviewStaffFilter)
+        : null;
+      els.reviewEventsTitle.textContent = staffRow ? `${staffRow.staff_name} · Reviews` : 'Every Review';
+      els.reviewFilterNote.textContent = staffRow
+        ? `${staffRow.this_month_points} pts this month · ${staffRow.last_month_points} pts last month · ${staffRow.total_reviews} reviews all time.`
+        : 'Newest first. Store, customer and date for every recorded review.';
+      els.reviewClearFilter.hidden = !reviewStaffFilter;
+
+      if (!events.length) {
+        els.reviewEventList.innerHTML = '<div class="empty">No reviews match.</div>';
+        return;
+      }
+      els.reviewEventList.innerHTML = events.map(row => {
+        const legacy = String(row.customer_name || '') === '(not recorded)';
+        return `
+          <article class="review-event ${legacy ? 'is-legacy' : ''}">
+            <div class="review-event-date">${escapeHtml(reviewDateText(row.business_date))}</div>
+            <div class="review-event-customer">${escapeHtml(legacy ? 'Name not recorded' : row.customer_name)}</div>
+            <div class="review-event-meta">${escapeHtml(row.store_name || row.store_code || '')} · ${escapeHtml(row.staff_name || '')}</div>
+            <div class="review-event-points">+${row.points} pts</div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderReviews() {
+      if (!reviewReport) return;
+      const totals = reviewReport.totals || {};
+      els.reviewThisMonth.textContent = String(totals.this_month_reviews ?? 0);
+      els.reviewThisMonthPoints.textContent = String(totals.this_month_points ?? 0);
+      els.reviewLastMonth.textContent = String(totals.last_month_reviews ?? 0);
+      els.reviewTotal.textContent = String(totals.total_reviews ?? 0);
+      renderReviewStaff();
+      renderReviewEvents();
+    }
+
+    async function loadReviews() {
+      els.reviewError.textContent = '';
+      try {
+        const response = await fetch(`${STAFF_MANAGEMENT_ENDPOINT}?mode=reviews`, {
+          headers: { 'x-admin-session': window.Techm8StaffAuth.getToken() }
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.message || 'Reviews could not be loaded.');
+        reviewReport = result;
+        renderReviews();
+      } catch (error) {
+        console.error(error);
+        reviewReport = null;
+        els.reviewStaffList.innerHTML = '<div class="empty">Reviews unavailable.</div>';
+        els.reviewEventList.innerHTML = '';
+        els.reviewError.textContent = error.message || 'Reviews could not be loaded.';
+      }
+    }
+
     async function loadStaff() {
       els.pageError.textContent = '';
       els.refreshBtn.disabled = true;
@@ -486,8 +654,22 @@
       }
     }
 
-    els.refreshBtn.addEventListener('click', loadStaff);
+    els.refreshBtn.addEventListener('click', () => { loadStaff(); loadReviews(); });
     els.searchInput.addEventListener('input', renderStaff);
+    els.reviewSearch.addEventListener('input', renderReviewEvents);
+    els.reviewClearFilter.addEventListener('click', () => {
+      reviewStaffFilter = '';
+      renderReviewStaff();
+      renderReviewEvents();
+    });
+    els.reviewStaffList.addEventListener('click', event => {
+      const card = event.target.closest('[data-review-staff]');
+      if (!card) return;
+      const value = card.dataset.reviewStaff;
+      reviewStaffFilter = reviewStaffFilter === value ? '' : value;
+      renderReviewStaff();
+      renderReviewEvents();
+    });
     els.staffList.addEventListener('click', event => {
       const button = event.target.closest('[data-save-staff]');
       if (button) saveStaff(button);
@@ -512,7 +694,7 @@
       createRpc: 'create_admin_session',
       verifyRpc: 'verify_admin_session',
       revokeRpc: 'revoke_admin_session'
-    }).then(loadStaff);
+    }).then(() => { loadStaff(); loadReviews(); });
   </script>
 </body>
 </html>
