@@ -2046,10 +2046,10 @@
     .repair-card-test b.skip { color: var(--tm-muted); }
 
     .repair-card-signed {
-      border: 1px solid var(--line);
+      border: 1px solid var(--tm-line);
       border-radius: 12px;
       padding: 12px 14px;
-      background: var(--panel);
+      background: var(--tm-card);
       font-size: 13px;
     }
     .repair-card-signed img {
@@ -2060,7 +2060,7 @@
       object-fit: contain;
       object-position: left;
       margin-top: 10px;
-      border: 1px solid var(--line);
+      border: 1px solid var(--tm-line);
       border-radius: 10px;
       background: #fff;
     }
@@ -5474,46 +5474,117 @@
       align-items: flex-end;
       gap: 14px;
       justify-content: space-between;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
+
+    /* Hero: the one number staff look for, with the working figures beside it. */
     .perf-summary {
       display: flex;
       flex-wrap: wrap;
-      align-items: baseline;
-      gap: 10px 18px;
-      padding: 14px 16px;
-      margin-bottom: 14px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--panel);
+      align-items: center;
+      gap: 18px 28px;
+      padding: 20px 22px;
+      margin-bottom: 16px;
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f4faf8 0%, var(--tm-card) 55%);
+      box-shadow: 0 1px 2px rgba(23, 37, 44, .04);
     }
+    .perf-summary-headline { min-width: 190px; }
     .perf-summary-value {
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -1px;
+      color: var(--tm-ink);
     }
     .perf-summary-label {
-      color: var(--muted);
       font-size: 13px;
+      color: var(--tm-muted);
     }
-    .perf-category-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 12px;
+    .perf-summary-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 26px;
+      margin-left: auto;
+    }
+    .perf-stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--tm-muted);
+    }
+    .perf-stat-value {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--tm-ink);
+    }
+    .perf-stat-value.is-refund { color: var(--tm-red); }
+    .perf-summary-syncing {
+      font-size: 12px;
+      color: var(--tm-muted);
+    }
+
+    /* 30-day trend */
+    .perf-chart-card {
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: var(--tm-card);
+      padding: 16px 18px;
       margin-bottom: 16px;
     }
-    .perf-category {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--panel);
-      overflow: hidden;
+    .perf-chart-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
     }
+    .perf-chart-grid { stroke: var(--tm-line); stroke-width: 1; }
+    .perf-chart-axis { fill: var(--tm-muted); font-size: 11px; }
+    .perf-chart-area { fill: rgba(7, 137, 111, .16); }
+    .perf-chart-line { fill: none; stroke: var(--tm-green); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+    .perf-chart-dot { fill: var(--tm-green); }
+    .perf-chart-dot.is-peak { fill: var(--tm-orange); }
+    .perf-chart-hit { fill: transparent; cursor: pointer; }
+    .perf-chart-empty {
+      padding: 26px 0;
+      text-align: center;
+      font-size: 13px;
+      color: var(--tm-muted);
+    }
+    .perf-chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 18px;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--tm-muted);
+    }
+
+    /* Category cards */
+    .perf-category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: start;
+    }
+    .perf-category {
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: var(--tm-card);
+      overflow: hidden;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .perf-category:hover { box-shadow: 0 2px 8px rgba(23, 37, 44, .07); }
+    .perf-category.open { border-color: var(--tm-green); }
     .perf-category-head {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 13px;
       width: 100%;
-      padding: 14px 16px;
+      padding: 16px 18px;
       border: 0;
       background: none;
       color: inherit;
@@ -5521,42 +5592,64 @@
       text-align: left;
       cursor: pointer;
     }
-    .perf-category-head:hover { background: var(--panel-2, rgba(0,0,0,.03)); }
+    .perf-category-head:disabled { cursor: default; }
+    .perf-category-head:not(:disabled):hover { background: var(--tm-soft); }
     .perf-category-icon {
       display: grid;
       place-items: center;
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       flex: none;
-      border-radius: 11px;
-      background: var(--brand-soft, #e6f2ee);
-      color: var(--brand, #0f766e);
-      font-size: 17px;
+      border-radius: 12px;
+      background: rgba(7, 137, 111, .1);
+      color: var(--tm-green);
+      font-size: 18px;
     }
     .perf-category-body { flex: 1; min-width: 0; }
     .perf-category-name {
       display: block;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: .06em;
+      letter-spacing: .08em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--tm-muted);
     }
-    .perf-category-value { display: block; font-size: 20px; font-weight: 700; }
-    .perf-category-sub { display: block; font-size: 12px; color: var(--muted); }
-    .perf-category-caret { color: var(--muted); flex: none; transition: transform .15s ease; }
+    .perf-category-value {
+      display: block;
+      font-size: 23px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      color: var(--tm-ink);
+    }
+    .perf-category-sub {
+      display: block;
+      font-size: 12px;
+      color: var(--tm-muted);
+    }
+    .perf-category-caret {
+      color: var(--tm-muted);
+      flex: none;
+      transition: transform .18s ease;
+    }
     .perf-category.open .perf-category-caret { transform: rotate(180deg); }
-    .perf-category-orders { display: none; border-top: 1px solid var(--line); }
+    .perf-category-orders {
+      display: none;
+      border-top: 1px solid var(--tm-line);
+      max-height: 320px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
     .perf-category.open .perf-category-orders { display: block; }
     .perf-order {
       display: grid;
       grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: 4px 10px;
+      gap: 3px 10px;
       width: 100%;
-      padding: 10px 16px;
+      padding: 11px 18px;
       border: 0;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid var(--tm-line);
       background: none;
       color: inherit;
       font: inherit;
@@ -5564,8 +5657,12 @@
       cursor: pointer;
     }
     .perf-order:last-child { border-bottom: 0; }
-    .perf-order:hover { background: var(--panel-2, rgba(0,0,0,.03)); }
-    .perf-order-number { font-weight: 700; font-size: 13px; }
+    .perf-order:hover { background: var(--tm-soft); }
+    .perf-order-number {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--tm-green);
+    }
     .perf-order-name {
       font-size: 13px;
       overflow: hidden;
@@ -5576,19 +5673,21 @@
     .perf-order-meta {
       grid-column: 1 / -1;
       font-size: 11px;
-      color: var(--muted);
+      color: var(--tm-muted);
     }
     .perf-order-more {
-      padding: 10px 16px;
+      padding: 10px 18px;
       font-size: 12px;
-      color: var(--muted);
-      border-top: 1px solid var(--line);
+      color: var(--tm-muted);
+      border-top: 1px solid var(--tm-line);
     }
+
+    /* Panels */
     .perf-panel {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--panel);
-      padding: 16px;
+      border: 1px solid var(--tm-line);
+      border-radius: 16px;
+      background: var(--tm-card);
+      padding: 18px;
       margin-bottom: 16px;
     }
     .perf-panel-head {
@@ -5597,7 +5696,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 15px;
     }
     .perf-panel-title {
       display: flex;
@@ -5605,39 +5704,60 @@
       gap: 8px;
       margin: 0;
       font-size: 15px;
+      color: var(--tm-ink);
     }
-    .perf-panel-sub { font-size: 12px; color: var(--muted); }
+    .perf-panel-sub { font-size: 12px; color: var(--tm-muted); }
     .perf-payment-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
       gap: 10px;
     }
     .perf-payment {
-      padding: 12px 14px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--tm-line);
+      border-radius: 13px;
+      background: var(--tm-card);
     }
     .perf-payment-name {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      letter-spacing: .06em;
+      letter-spacing: .08em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--tm-muted);
     }
-    .perf-payment-value { font-size: 19px; font-weight: 700; }
-    .perf-payment-sub { font-size: 11px; color: var(--muted); }
+    .perf-payment-value {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--tm-ink);
+    }
+    .perf-payment-sub { font-size: 11px; color: var(--tm-muted); }
     .perf-payment.is-total {
-      border-color: var(--brand, #0f766e);
-      background: var(--brand-soft, #e6f2ee);
+      border-color: var(--tm-green);
+      background: rgba(7, 137, 111, .07);
     }
+    .perf-payment.is-total .perf-payment-name { color: var(--tm-green-dark); }
     .perf-note {
       margin-top: 12px;
       font-size: 12px;
-      color: var(--muted);
+      color: var(--tm-muted);
+    }
+    /* The SVG scales with its container, so axis text has to grow in viewBox
+       units to stay readable once the column narrows on a portrait tablet. */
+    @media (max-width: 1100px) {
+      .perf-chart-axis { font-size: 15px; }
+      .perf-chart-dot { r: 3.4; }
+    }
+    @media (max-width: 820px) {
+      .perf-chart-axis { font-size: 19px; }
+      .perf-chart-line { stroke-width: 3; }
     }
     @media (max-width: 720px) {
       .perf-category-grid { grid-template-columns: 1fr; }
       .perf-date-panel { flex-direction: column; align-items: stretch; }
+      .perf-summary { gap: 14px 20px; }
+      .perf-summary-stats { margin-left: 0; }
+      .perf-summary-value { font-size: 29px; }
     }
 
     .invoice-date-presets {
@@ -7858,6 +7978,7 @@
               <button class="invoice-date-preset" type="button" data-invoice-date-preset="yesterday">Yesterday</button>
               <button class="invoice-date-preset" type="button" data-invoice-date-preset="last7">Last 7 Days</button>
               <button class="invoice-date-preset" type="button" data-invoice-date-preset="month">This Month</button>
+              <button class="invoice-date-preset" type="button" data-invoice-date-preset="lastmonth">Last Month</button>
             </div>
             <div class="invoice-date-fields">
               <label class="invoice-date-field">
@@ -7872,6 +7993,7 @@
           </div>
 
           <div id="perfSummary" class="perf-summary"></div>
+          <div id="perfTrend" class="perf-chart-card"></div>
           <div id="perfCategories" class="perf-category-grid"></div>
 
           <section class="perf-panel" aria-label="Payment methods">
@@ -9041,6 +9163,7 @@
       invoiceDateToInput: document.getElementById('invoiceDateToInput'),
       invoiceDatePresets: document.getElementById('invoiceDatePresets'),
       perfSummary: document.getElementById('perfSummary'),
+      perfTrend: document.getElementById('perfTrend'),
       perfCategories: document.getElementById('perfCategories'),
       perfPayments: document.getElementById('perfPayments'),
       perfPrintBtn: document.getElementById('perfPrintBtn'),
@@ -19073,6 +19196,11 @@
       } else if (preset === 'month') {
         state.invoiceDateFrom = `${today.slice(0, 7)}-01`;
         state.invoiceDateTo = today;
+      } else if (preset === 'lastmonth') {
+        // Step back from the 1st of this month to land on the last day of the previous one.
+        const lastDay = shiftInvoiceDate(`${today.slice(0, 7)}-01`, -1);
+        state.invoiceDateFrom = `${lastDay.slice(0, 7)}-01`;
+        state.invoiceDateTo = lastDay;
       } else {
         state.invoiceDateFrom = today;
         state.invoiceDateTo = today;
@@ -19126,6 +19254,121 @@
       }
     }
 
+    /** Round an axis maximum up to a readable step so the gridlines read cleanly. */
+    function niceAxisMax(value) {
+      const raw = Math.abs(Number(value) || 0);
+      if (raw <= 0) return 100;
+      const magnitude = Math.pow(10, Math.floor(Math.log10(raw)));
+      const step = [1, 2, 2.5, 5, 10].find(multiple => raw <= multiple * magnitude) || 10;
+      return step * magnitude;
+    }
+
+    function shortAxisMoney(value) {
+      const amount = Math.round(Number(value) || 0);
+      if (Math.abs(amount) >= 10000) return `$${Math.round(amount / 1000)}k`;
+      return `$${amount.toLocaleString('en-AU')}`;
+    }
+
+    function shortAxisDate(iso) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+      if (!match) return '';
+      return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+        .toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+    }
+
+    function renderPerformanceTrend() {
+      if (!els.perfTrend) return;
+      const report = state.performance;
+      const rows = report && Array.isArray(report.daily_trend) ? report.daily_trend : [];
+
+      if (rows.length < 2) {
+        els.perfTrend.innerHTML = `
+          <div class="perf-panel-head">
+            <div>
+              <h2 class="perf-panel-title"><i class="bi bi-graph-up"></i> 30-Day Takings</h2>
+            </div>
+          </div>
+          <div class="perf-chart-empty">Not enough history yet to draw a trend.</div>
+        `;
+        return;
+      }
+
+      const width = 760;
+      const height = 210;
+      const padLeft = 52;
+      const padRight = 10;
+      const padTop = 12;
+      const padBottom = 26;
+      const plotWidth = width - padLeft - padRight;
+      const plotHeight = height - padTop - padBottom;
+
+      const values = rows.map(row => Number(row.net || 0));
+      const peak = Math.max(...values);
+      const trough = Math.min(...values);
+      const total = values.reduce((sum, value) => sum + value, 0);
+      const busiest = rows[values.indexOf(peak)];
+
+      const axisMax = niceAxisMax(Math.max(peak, 0)) || 100;
+      const axisMin = trough < 0 ? -niceAxisMax(-trough) : 0;
+      const span = (axisMax - axisMin) || 1;
+
+      const xAt = index => padLeft + (rows.length === 1 ? plotWidth / 2 : (index * plotWidth) / (rows.length - 1));
+      const yAt = value => padTop + plotHeight * (1 - (value - axisMin) / span);
+
+      const linePoints = values.map((value, index) => `${xAt(index).toFixed(1)},${yAt(value).toFixed(1)}`);
+      const baseline = yAt(Math.max(axisMin, 0)).toFixed(1);
+      const areaPath = `M${xAt(0).toFixed(1)},${baseline} L${linePoints.join(' L')} L${xAt(rows.length - 1).toFixed(1)},${baseline} Z`;
+
+      const gridValues = [0, 0.25, 0.5, 0.75, 1].map(fraction => axisMin + span * fraction);
+      const gridLines = gridValues.map(value => `
+        <line class="perf-chart-grid" x1="${padLeft}" y1="${yAt(value).toFixed(1)}" x2="${width - padRight}" y2="${yAt(value).toFixed(1)}"></line>
+        <text class="perf-chart-axis" x="${padLeft - 8}" y="${(yAt(value) + 4).toFixed(1)}" text-anchor="end">${shortAxisMoney(value)}</text>
+      `).join('');
+
+      // Label roughly every week so the axis stays readable at any width.
+      const labelStep = Math.max(1, Math.round(rows.length / 5));
+      const xLabels = rows.map((row, index) => {
+        if (index % labelStep !== 0 && index !== rows.length - 1) return '';
+        const anchor = index === 0 ? 'start' : index === rows.length - 1 ? 'end' : 'middle';
+        return `<text class="perf-chart-axis" x="${xAt(index).toFixed(1)}" y="${height - 8}" text-anchor="${anchor}">${escapeHtml(shortAxisDate(row.date))}</text>`;
+      }).join('');
+
+      const dots = rows.map((row, index) => {
+        const value = Number(row.net || 0);
+        const isPeak = value === peak && peak > 0;
+        return `
+          <g>
+            <circle class="perf-chart-dot ${isPeak ? 'is-peak' : ''}" cx="${xAt(index).toFixed(1)}" cy="${yAt(value).toFixed(1)}" r="${isPeak ? 4 : 2.6}"></circle>
+            <circle class="perf-chart-hit" cx="${xAt(index).toFixed(1)}" cy="${yAt(value).toFixed(1)}" r="9">
+              <title>${escapeHtml(shortAxisDate(row.date))} — ${money(value)}</title>
+            </circle>
+          </g>
+        `;
+      }).join('');
+
+      els.perfTrend.innerHTML = `
+        <div class="perf-panel-head">
+          <div>
+            <h2 class="perf-panel-title"><i class="bi bi-graph-up"></i> 30-Day Takings</h2>
+            <div class="perf-panel-sub">${escapeHtml(shortAxisDate(rows[0].date))} to ${escapeHtml(shortAxisDate(rows[rows.length - 1].date))} &middot; net of refunds</div>
+          </div>
+          <div class="perf-stat-value">${money(total)}</div>
+        </div>
+        <svg class="perf-chart-svg" viewBox="0 0 ${width} ${height}" role="img"
+             aria-label="Daily net takings for the last 30 days">
+          ${gridLines}
+          <path class="perf-chart-area" d="${areaPath}"></path>
+          <polyline class="perf-chart-line" points="${linePoints.join(' ')}"></polyline>
+          ${dots}
+          ${xLabels}
+        </svg>
+        <div class="perf-chart-legend">
+          <span>Best day ${escapeHtml(shortAxisDate(busiest && busiest.date))} &middot; ${money(peak)}</span>
+          <span>Daily average ${money(total / rows.length)}</span>
+        </div>
+      `;
+    }
+
     function renderPerformanceReport() {
       if (!els.perfCategories) return;
       renderInvoiceDateControls();
@@ -19133,12 +19376,14 @@
 
       if (state.performanceError) {
         els.perfSummary.innerHTML = `<div class="perf-summary-label">${escapeHtml(state.performanceError)}</div>`;
+        els.perfTrend.innerHTML = '';
         els.perfCategories.innerHTML = '';
         els.perfPayments.innerHTML = '';
         return;
       }
       if (!report) {
         els.perfSummary.innerHTML = '<div class="perf-summary-label">Loading performance...</div>';
+        els.perfTrend.innerHTML = '';
         els.perfCategories.innerHTML = '';
         els.perfPayments.innerHTML = '';
         return;
@@ -19147,17 +19392,36 @@
       const totals = report.totals || {};
       const orderCount = Number(totals.order_count || 0);
       const returnedUnits = Number(totals.returned_units || 0);
+      const refundedTotal = Number(totals.refunded || 0);
       els.perfSummary.innerHTML = `
-        <div>
+        <div class="perf-summary-headline">
           <div class="perf-summary-value">${money(totals.net || 0)}</div>
           <div class="perf-summary-label">net takings &middot; ${escapeHtml(performanceRangeLabel())}</div>
+          ${state.performanceLoading ? '<div class="perf-summary-syncing">Refreshing...</div>' : ''}
         </div>
-        <div class="perf-summary-label">${orderCount} invoice${orderCount === 1 ? '' : 's'}</div>
-        <div class="perf-summary-label">${money(totals.received || 0)} received</div>
-        ${Number(totals.refunded || 0) > 0 ? `<div class="perf-summary-label">${money(totals.refunded)} refunded</div>` : ''}
-        ${returnedUnits > 0 ? `<div class="perf-summary-label">${returnedUnits} item${returnedUnits === 1 ? '' : 's'} returned</div>` : ''}
-        ${state.performanceLoading ? '<div class="perf-summary-label">Refreshing...</div>' : ''}
+        <div class="perf-summary-stats">
+          <div>
+            <div class="perf-stat-label">Received</div>
+            <div class="perf-stat-value">${money(totals.received || 0)}</div>
+          </div>
+          <div>
+            <div class="perf-stat-label">Refunded</div>
+            <div class="perf-stat-value ${refundedTotal > 0 ? 'is-refund' : ''}">${money(refundedTotal)}</div>
+          </div>
+          <div>
+            <div class="perf-stat-label">Invoices</div>
+            <div class="perf-stat-value">${orderCount}</div>
+          </div>
+          ${returnedUnits > 0 ? `
+            <div>
+              <div class="perf-stat-label">Items returned</div>
+              <div class="perf-stat-value is-refund">${returnedUnits}</div>
+            </div>
+          ` : ''}
+        </div>
       `;
+
+      renderPerformanceTrend();
 
       const byType = {};
       (report.categories || []).forEach(row => { byType[row.type] = row; });
