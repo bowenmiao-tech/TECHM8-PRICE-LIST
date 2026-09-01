@@ -235,6 +235,17 @@ Deno.serve(async (request) => {
         return jsonResponse(result.body, result.status);
       }
 
+      if (mode === "performance") {
+        const result = await callRpc("get_pos_performance_report", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          date_from: url.searchParams.get("from_date") || null,
+          date_to: url.searchParams.get("to_date") || null,
+          order_limit: Math.min(Math.max(Number(url.searchParams.get("order_limit") || 300), 1), 1000),
+        });
+        return jsonResponse(result.body, result.status);
+      }
+
       if (mode === "today-progress") {
         const requestedStaff = url.searchParams.get("staff_name") || "";
         if (!requestedStaff) return jsonResponse({ ok: false, message: "staff_name is required." }, 400);

@@ -5412,8 +5412,11 @@
     .invoice-page {
       height: 100%;
       min-height: 0;
-      display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-right: 4px;
     }
 
     .invoice-head {
@@ -5465,6 +5468,178 @@
     }
 
     .invoice-date-fields,
+    .perf-date-panel {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 14px;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .perf-summary {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px 18px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+    .perf-summary-value {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .perf-summary-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .perf-category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .perf-category {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+    .perf-category-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 16px;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .perf-category-head:hover { background: var(--panel-2, rgba(0,0,0,.03)); }
+    .perf-category-icon {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      flex: none;
+      border-radius: 11px;
+      background: var(--brand-soft, #e6f2ee);
+      color: var(--brand, #0f766e);
+      font-size: 17px;
+    }
+    .perf-category-body { flex: 1; min-width: 0; }
+    .perf-category-name {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .perf-category-value { display: block; font-size: 20px; font-weight: 700; }
+    .perf-category-sub { display: block; font-size: 12px; color: var(--muted); }
+    .perf-category-caret { color: var(--muted); flex: none; transition: transform .15s ease; }
+    .perf-category.open .perf-category-caret { transform: rotate(180deg); }
+    .perf-category-orders { display: none; border-top: 1px solid var(--line); }
+    .perf-category.open .perf-category-orders { display: block; }
+    .perf-order {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 4px 10px;
+      width: 100%;
+      padding: 10px 16px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .perf-order:last-child { border-bottom: 0; }
+    .perf-order:hover { background: var(--panel-2, rgba(0,0,0,.03)); }
+    .perf-order-number { font-weight: 700; font-size: 13px; }
+    .perf-order-name {
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .perf-order-amount { font-weight: 700; font-size: 13px; }
+    .perf-order-meta {
+      grid-column: 1 / -1;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .perf-order-more {
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+    .perf-panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .perf-panel-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .perf-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 15px;
+    }
+    .perf-panel-sub { font-size: 12px; color: var(--muted); }
+    .perf-payment-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .perf-payment {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .perf-payment-name {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .perf-payment-value { font-size: 19px; font-weight: 700; }
+    .perf-payment-sub { font-size: 11px; color: var(--muted); }
+    .perf-payment.is-total {
+      border-color: var(--brand, #0f766e);
+      background: var(--brand-soft, #e6f2ee);
+    }
+    .perf-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    @media (max-width: 720px) {
+      .perf-category-grid { grid-template-columns: 1fr; }
+      .perf-date-panel { flex-direction: column; align-items: stretch; }
+    }
+
     .invoice-date-presets {
       display: flex;
       flex-wrap: wrap;
@@ -5520,7 +5695,8 @@
 
     .invoice-list {
       min-height: 0;
-      overflow: auto;
+      max-height: 46vh;
+      overflow-y: auto;
       display: grid;
       align-content: start;
       gap: 10px;
@@ -7666,48 +7842,65 @@
         </div>
       </section>
 
-      <section id="ordersView" class="workspace-view invoice-view" aria-label="Invoice history">
+      <section id="ordersView" class="workspace-view invoice-view" aria-label="Sales performance">
         <div class="invoice-page">
           <div class="invoice-head">
             <div>
-              <h1 class="invoice-title">Invoice History</h1>
-              <div class="repair-subtitle">Search all invoices for the current store by date or customer details.</div>
+              <h1 class="invoice-title">Sales Performance</h1>
+              <div class="repair-subtitle">Money actually received, by category and by payment method.</div>
             </div>
             <button id="invoiceReloadBtn" class="repair-action" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
           </div>
-          <div>
+
+          <div class="perf-date-panel">
+            <div id="invoiceDatePresets" class="invoice-date-presets" aria-label="Report period">
+              <button class="invoice-date-preset active" type="button" data-invoice-date-preset="today">Today</button>
+              <button class="invoice-date-preset" type="button" data-invoice-date-preset="yesterday">Yesterday</button>
+              <button class="invoice-date-preset" type="button" data-invoice-date-preset="last7">Last 7 Days</button>
+              <button class="invoice-date-preset" type="button" data-invoice-date-preset="month">This Month</button>
+            </div>
+            <div class="invoice-date-fields">
+              <label class="invoice-date-field">
+                <span id="invoiceDateFromLabel">From</span>
+                <input id="invoiceDateFromInput" class="invoice-date-input" type="date">
+              </label>
+              <label id="invoiceDateToField" class="invoice-date-field">
+                <span>To</span>
+                <input id="invoiceDateToInput" class="invoice-date-input" type="date">
+              </label>
+            </div>
+          </div>
+
+          <div id="perfSummary" class="perf-summary"></div>
+          <div id="perfCategories" class="perf-category-grid"></div>
+
+          <section class="perf-panel" aria-label="Payment methods">
+            <div class="perf-panel-head">
+              <div>
+                <h2 class="perf-panel-title"><i class="bi bi-cash-stack"></i> Payment Methods</h2>
+                <div class="perf-panel-sub">Check this against what the till and the terminal actually took.</div>
+              </div>
+              <button id="perfPrintBtn" class="repair-action primary" type="button"><i class="bi bi-printer"></i> Print</button>
+            </div>
+            <div id="perfPayments" class="perf-payment-grid"></div>
+          </section>
+
+          <section class="perf-panel" aria-label="Invoice search">
+            <div class="perf-panel-head">
+              <div>
+                <h2 class="perf-panel-title"><i class="bi bi-search"></i> Find an Invoice</h2>
+                <div class="perf-panel-sub">Latest 20 invoices &middot; search all dates.</div>
+              </div>
+              <div id="invoiceResultCount" class="invoice-result-count"></div>
+            </div>
             <div class="invoice-toolbar">
               <div class="search-wrap">
                 <i class="bi bi-search"></i>
                 <input id="invoiceSearchInput" class="search-input" type="search" placeholder="Invoice / customer / phone / ticket / product">
               </div>
-              <div id="invoiceResultCount" class="invoice-result-count">0 invoices</div>
             </div>
-            <div class="invoice-date-panel">
-              <div id="invoiceDateMode" class="invoice-date-mode" role="group" aria-label="Invoice date search mode">
-                <button class="invoice-date-mode-button active" type="button" data-invoice-date-mode="day"><i class="bi bi-calendar-day"></i> Specific date</button>
-                <button class="invoice-date-mode-button" type="button" data-invoice-date-mode="range"><i class="bi bi-calendar-range"></i> Date range</button>
-              </div>
-              <div class="invoice-date-fields">
-                <label class="invoice-date-field">
-                  <span id="invoiceDateFromLabel">Date</span>
-                  <input id="invoiceDateFromInput" class="invoice-date-input" type="date">
-                </label>
-                <label id="invoiceDateToField" class="invoice-date-field" hidden>
-                  <span>End date</span>
-                  <input id="invoiceDateToInput" class="invoice-date-input" type="date">
-                </label>
-              </div>
-              <div id="invoiceDatePresets" class="invoice-date-presets" aria-label="Invoice date shortcuts">
-                <button class="invoice-date-preset active" type="button" data-invoice-date-preset="today">Today</button>
-                <button class="invoice-date-preset" type="button" data-invoice-date-preset="yesterday">Yesterday</button>
-                <button class="invoice-date-preset" type="button" data-invoice-date-preset="last7">Last 7 Days</button>
-                <button class="invoice-date-preset" type="button" data-invoice-date-preset="month">This Month</button>
-                <button class="invoice-date-preset" type="button" data-invoice-date-preset="all">All Dates</button>
-              </div>
-            </div>
-          </div>
-          <div id="invoiceList" class="invoice-list"></div>
+            <div id="invoiceList" class="invoice-list"></div>
+          </section>
         </div>
       </section>
 
@@ -8684,10 +8877,13 @@
       previousPosView: 'target',
       activeInternalTool: '',
       invoiceSearch: '',
-      invoiceDateMode: 'day',
       invoiceDateFrom: brisbaneDateIso(),
       invoiceDateTo: brisbaneDateIso(),
       invoiceDatePreset: 'today',
+      performance: null,
+      performanceLoading: false,
+      performanceError: '',
+      performanceOpen: {},
       invoiceOrders: [],
       invoiceLoading: false,
       todayProgress: null,
@@ -8839,12 +9035,15 @@
       transferModalClose: document.getElementById('transferModalClose'),
       invoiceSearchInput: document.getElementById('invoiceSearchInput'),
       invoiceReloadBtn: document.getElementById('invoiceReloadBtn'),
-      invoiceDateMode: document.getElementById('invoiceDateMode'),
       invoiceDateFromLabel: document.getElementById('invoiceDateFromLabel'),
       invoiceDateFromInput: document.getElementById('invoiceDateFromInput'),
       invoiceDateToField: document.getElementById('invoiceDateToField'),
       invoiceDateToInput: document.getElementById('invoiceDateToInput'),
       invoiceDatePresets: document.getElementById('invoiceDatePresets'),
+      perfSummary: document.getElementById('perfSummary'),
+      perfCategories: document.getElementById('perfCategories'),
+      perfPayments: document.getElementById('perfPayments'),
+      perfPrintBtn: document.getElementById('perfPrintBtn'),
       invoiceResultCount: document.getElementById('invoiceResultCount'),
       invoiceList: document.getElementById('invoiceList'),
       usedDeviceSubtitle: document.getElementById('usedDeviceSubtitle'),
@@ -9880,7 +10079,7 @@
         loadRepairTickets().then(() => {
           if (state.activeView === 'repair') renderRepairWorkspace();
         });
-        if (state.activeView === 'orders') loadInvoiceHistory();
+        if (state.activeView === 'orders') { loadPerformanceReport(); loadInvoiceHistory(); }
         if (state.activeView === 'target') loadTodayProgress();
         if (state.activeView === 'used-devices') loadUsedDevices();
       }
@@ -12921,7 +13120,7 @@
           if (!state.repair.started) renderRepairWorkspace();
         });
       }
-      if (view === 'orders') loadInvoiceHistory();
+      if (view === 'orders') { loadPerformanceReport(); loadInvoiceHistory(); }
       if (view === 'used-devices') loadUsedDevices();
       if (view === 'transfers') {
         if (typeof localTransferTestMode !== 'undefined' && localTransferTestMode) renderTransfers();
@@ -18842,22 +19041,13 @@
     }
 
     function invoiceDateRange() {
-      const from = String(state.invoiceDateFrom || '');
-      if (!from) return { from: '', to: '' };
-      if (state.invoiceDateMode === 'day') return { from, to: from };
-      return { from, to: String(state.invoiceDateTo || '') };
+      const from = String(state.invoiceDateFrom || brisbaneDateIso());
+      return { from, to: String(state.invoiceDateTo || from) };
     }
 
     function renderInvoiceDateControls() {
-      if (!els.invoiceDateMode) return;
-      els.invoiceDateMode.querySelectorAll('[data-invoice-date-mode]').forEach(button => {
-        const active = button.dataset.invoiceDateMode === state.invoiceDateMode;
-        button.classList.toggle('active', active);
-        button.setAttribute('aria-pressed', String(active));
-      });
-      els.invoiceDateFromLabel.textContent = state.invoiceDateMode === 'day' ? 'Date' : 'Start date';
+      if (!els.invoiceDatePresets) return;
       els.invoiceDateFromInput.value = state.invoiceDateFrom || '';
-      els.invoiceDateToField.hidden = state.invoiceDateMode !== 'range';
       els.invoiceDateToInput.value = state.invoiceDateTo || '';
       els.invoiceDateToInput.min = state.invoiceDateFrom || '';
       els.invoiceDatePresets.querySelectorAll('[data-invoice-date-preset]').forEach(button => {
@@ -18871,29 +19061,220 @@
       const today = brisbaneDateIso();
       state.invoiceDatePreset = preset;
       if (preset === 'today') {
-        state.invoiceDateMode = 'day';
         state.invoiceDateFrom = today;
         state.invoiceDateTo = today;
       } else if (preset === 'yesterday') {
         const yesterday = shiftInvoiceDate(today, -1);
-        state.invoiceDateMode = 'day';
         state.invoiceDateFrom = yesterday;
         state.invoiceDateTo = yesterday;
       } else if (preset === 'last7') {
-        state.invoiceDateMode = 'range';
         state.invoiceDateFrom = shiftInvoiceDate(today, -6);
         state.invoiceDateTo = today;
       } else if (preset === 'month') {
-        state.invoiceDateMode = 'range';
         state.invoiceDateFrom = `${today.slice(0, 7)}-01`;
         state.invoiceDateTo = today;
       } else {
-        state.invoiceDateMode = 'range';
-        state.invoiceDateFrom = '';
-        state.invoiceDateTo = '';
+        state.invoiceDateFrom = today;
+        state.invoiceDateTo = today;
       }
       renderInvoiceDateControls();
-      loadInvoiceHistory();
+      loadPerformanceReport();
+    }
+
+    const PERF_CATEGORIES = [
+      { type: 'repair', label: 'Repairs', icon: 'bi-tools' },
+      { type: 'retail', label: 'Products', icon: 'bi-box-seam' },
+      { type: 'used_device', label: 'Devices', icon: 'bi-phone' }
+    ];
+
+    function formatInvoiceDate(value) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+      if (!match) return String(value || '');
+      return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+        .toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    }
+
+    function performanceRangeLabel() {
+      const range = invoiceDateRange();
+      if (range.from === range.to) return formatInvoiceDate(range.from);
+      return `${formatInvoiceDate(range.from)} - ${formatInvoiceDate(range.to)}`;
+    }
+
+    async function loadPerformanceReport() {
+      if (!els.perfCategories) return;
+      state.performanceLoading = true;
+      state.performanceError = '';
+      renderPerformanceReport();
+      const range = invoiceDateRange();
+      const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+      url.searchParams.set('mode', 'performance');
+      url.searchParams.set('store_code', repairTicketStoreCode());
+      url.searchParams.set('from_date', range.from);
+      url.searchParams.set('to_date', range.to);
+      try {
+        const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) throw new Error(payload.message || 'Performance report unavailable.');
+        state.performance = payload;
+      } catch (error) {
+        console.error(error);
+        state.performance = null;
+        state.performanceError = error.message || 'Performance report unavailable.';
+      } finally {
+        state.performanceLoading = false;
+        renderPerformanceReport();
+      }
+    }
+
+    function renderPerformanceReport() {
+      if (!els.perfCategories) return;
+      renderInvoiceDateControls();
+      const report = state.performance;
+
+      if (state.performanceError) {
+        els.perfSummary.innerHTML = `<div class="perf-summary-label">${escapeHtml(state.performanceError)}</div>`;
+        els.perfCategories.innerHTML = '';
+        els.perfPayments.innerHTML = '';
+        return;
+      }
+      if (!report) {
+        els.perfSummary.innerHTML = '<div class="perf-summary-label">Loading performance...</div>';
+        els.perfCategories.innerHTML = '';
+        els.perfPayments.innerHTML = '';
+        return;
+      }
+
+      const totals = report.totals || {};
+      const orderCount = Number(totals.order_count || 0);
+      const returnedUnits = Number(totals.returned_units || 0);
+      els.perfSummary.innerHTML = `
+        <div>
+          <div class="perf-summary-value">${money(totals.net || 0)}</div>
+          <div class="perf-summary-label">received &middot; ${escapeHtml(performanceRangeLabel())}</div>
+        </div>
+        <div class="perf-summary-label">${orderCount} invoice${orderCount === 1 ? '' : 's'}</div>
+        ${Number(totals.refunded || 0) > 0 ? `<div class="perf-summary-label">${money(totals.refunded)} refunded</div>` : ''}
+        ${returnedUnits > 0 ? `<div class="perf-summary-label">${returnedUnits} item${returnedUnits === 1 ? '' : 's'} returned</div>` : ''}
+        ${state.performanceLoading ? '<div class="perf-summary-label">Refreshing...</div>' : ''}
+      `;
+
+      const byType = {};
+      (report.categories || []).forEach(row => { byType[row.type] = row; });
+
+      els.perfCategories.innerHTML = PERF_CATEGORIES.map(meta => {
+        const row = byType[meta.type] || { units: 0, order_count: 0, net: 0, orders: [], truncated: false };
+        const orders = Array.isArray(row.orders) ? row.orders : [];
+        const open = Boolean(state.performanceOpen[meta.type]) && orders.length > 0;
+        const units = Number(row.units || 0);
+        const categoryReturns = Number(row.returned_units || 0);
+        const invoices = Number(row.order_count || 0);
+        return `
+          <div class="perf-category ${open ? 'open' : ''}" data-perf-category="${meta.type}">
+            <button class="perf-category-head" type="button" data-perf-toggle="${meta.type}" ${orders.length ? '' : 'disabled'}>
+              <span class="perf-category-icon"><i class="bi ${meta.icon}"></i></span>
+              <span class="perf-category-body">
+                <span class="perf-category-name">${meta.label}</span>
+                <span class="perf-category-value">${money(row.net || 0)}</span>
+                <span class="perf-category-sub">${units} item${units === 1 ? '' : 's'}${categoryReturns > 0 ? ` &middot; ${categoryReturns} returned` : ''} &middot; ${invoices} invoice${invoices === 1 ? '' : 's'}</span>
+              </span>
+              ${orders.length ? '<i class="bi bi-chevron-down perf-category-caret"></i>' : ''}
+            </button>
+            <div class="perf-category-orders">
+              ${orders.map(order => {
+                const orderUnits = Number(order.units || 0);
+                const orderReturns = Number(order.returned_units || 0);
+                const staffLabels = [];
+                if (order.staff_name) staffLabels.push(`Collected by ${order.staff_name}`);
+                if (Number(order.refunded || 0) > 0 && order.refund_staff_name) staffLabels.push(`Refunded by ${order.refund_staff_name}`);
+                return `
+                  <button class="perf-order" type="button" data-perf-invoice="${escapeHtml(order.order_code || '')}">
+                    <span class="perf-order-number">#${escapeHtml(String(order.invoice_number || order.order_code || ''))}</span>
+                    <span class="perf-order-name">${escapeHtml(order.customer_name || 'Walk-in Customer')}</span>
+                    <span class="perf-order-amount">${money(order.net || 0)}</span>
+                    <span class="perf-order-meta">${escapeHtml(formatInvoiceDate(order.paid_on))} &middot; ${orderUnits} item${orderUnits === 1 ? '' : 's'}${orderReturns > 0 ? ` &middot; ${orderReturns} returned` : ''}${staffLabels.length ? ` &middot; ${escapeHtml(staffLabels.join(' &middot; '))}` : ''}</span>
+                  </button>
+                `;
+              }).join('')}
+              ${row.truncated ? `<div class="perf-order-more">Showing the largest ${orders.length} of ${invoices} invoices.</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const payments = Array.isArray(report.payment_totals) ? report.payment_totals : [];
+      els.perfPayments.innerHTML = `
+        ${payments.map(row => `
+          <div class="perf-payment">
+            <div class="perf-payment-name">${escapeHtml(row.method || 'Unknown')}</div>
+            <div class="perf-payment-value">${money(row.net || 0)}</div>
+            ${Number(row.refunded || 0) > 0 ? `<div class="perf-payment-sub">${money(row.received)} in &middot; ${money(row.refunded)} out</div>` : ''}
+          </div>
+        `).join('')}
+        <div class="perf-payment is-total">
+          <div class="perf-payment-name">Total</div>
+          <div class="perf-payment-value">${money(totals.net || 0)}</div>
+          <div class="perf-payment-sub">${orderCount} invoice${orderCount === 1 ? '' : 's'}</div>
+        </div>
+      `;
+
+      // Old exchange invoices whose lines cancel out cannot be split across the
+      // three categories, so the leftover is stated rather than quietly dropped.
+      const unallocated = Number(totals.unallocated || 0);
+      const existingNote = els.perfPayments.parentElement.querySelector('[data-perf-unallocated]');
+      if (existingNote) existingNote.remove();
+      if (Math.abs(unallocated) >= 0.01) {
+        els.perfPayments.insertAdjacentHTML('afterend',
+          `<div class="perf-note" data-perf-unallocated>${money(unallocated)} could not be split across the three categories (historical exchange invoices). The payment totals above still include it.</div>`);
+      }
+    }
+
+    function performanceSlipDocument() {
+      const report = state.performance;
+      if (!report) return '';
+      const totals = report.totals || {};
+      const shiftSummary = report.shift_summary || {};
+      const payments = Array.isArray(report.payment_totals) ? report.payment_totals : [];
+      const rows = payments.map(row => `
+        <div class="row"><span>${escapeHtml(row.method || 'Unknown')}</span><span>${money(row.net || 0)}</span></div>
+      `).join('');
+      return `<!doctype html><html><head><meta charset="utf-8"><title>Takings ${escapeHtml(performanceRangeLabel())}</title>
+        <style>
+          @page { size: 58mm auto; margin: 3mm; }
+          body { font-family: "Segoe UI", Arial, sans-serif; width: 52mm; margin: 0; color: #000; }
+          h1 { font-size: 13px; margin: 0 0 2px; text-align: center; }
+          .meta { font-size: 10px; text-align: center; margin-bottom: 8px; }
+          .row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; }
+          .total { border-top: 1px dashed #000; margin-top: 6px; padding-top: 6px; font-weight: 700; }
+          .foot { margin-top: 10px; font-size: 9px; text-align: center; }
+        </style></head><body>
+        <h1>Takings</h1>
+        <div class="meta">${escapeHtml(report.store_name || '')}<br>${escapeHtml(performanceRangeLabel())}</div>
+        ${rows || '<div class="row"><span>No payments</span><span>$0.00</span></div>'}
+        <div class="row total"><span>Total</span><span>${money(totals.net || 0)}</span></div>
+        <div class="row"><span>Refunds</span><span>${money(totals.refunded || 0)}</span></div>
+        <div class="row"><span>Returned items</span><span>${Number(totals.returned_units || 0)}</span></div>
+        <div class="row"><span>Cash difference</span><span>${shiftSummary.cash_difference_recorded ? money(shiftSummary.cash_difference || 0) : 'Not counted'}</span></div>
+        <div class="row"><span>Handover staff</span><span>${escapeHtml(shiftSummary.handover_staff || 'Not closed')}</span></div>
+        <div class="row"><span>Invoices</span><span>${Number(totals.order_count || 0)}</span></div>
+        <div class="foot">Printed ${escapeHtml(formatDateTime(new Date().toISOString()))}</div>
+        </body></html>`;
+    }
+
+    function printPerformanceSlip() {
+      if (!state.performance) {
+        showToast('Wait for the report to load before printing.');
+        return;
+      }
+      const printWindow = window.open('', '_blank', 'width=380,height=640');
+      if (!printWindow) {
+        showToast('Allow pop-ups to print the takings slip.');
+        return;
+      }
+      printWindow.document.open();
+      printWindow.document.write(performanceSlipDocument());
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 250);
     }
 
     function renderInvoiceHistory() {
@@ -18947,12 +19328,9 @@
       state.invoiceLoading = true;
       renderInvoiceHistory();
       const url = new URL(POS_SALES_ORDERS_ENDPOINT);
-      const dateRange = invoiceDateRange();
       url.searchParams.set('store_code', repairTicketStoreCode());
       url.searchParams.set('q', state.invoiceSearch || '');
-      url.searchParams.set('limit', '200');
-      if (dateRange.from) url.searchParams.set('from_date', dateRange.from);
-      if (dateRange.to) url.searchParams.set('to_date', dateRange.to);
+      url.searchParams.set('limit', String(state.invoiceSearch.trim() ? 50 : 20));
       try {
         const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
         const payload = await response.json().catch(() => ({}));
@@ -20515,31 +20893,36 @@
       closeUsedDeviceDetail();
       viewInvoiceById(invoiceButton.dataset.usedViewInvoice);
     });
-    els.invoiceReloadBtn.addEventListener('click', loadInvoiceHistory);
+    els.invoiceReloadBtn.addEventListener('click', () => {
+      loadPerformanceReport();
+      loadInvoiceHistory();
+    });
+    els.perfPrintBtn.addEventListener('click', printPerformanceSlip);
+    els.perfCategories.addEventListener('click', event => {
+      const invoiceButton = event.target.closest('[data-perf-invoice]');
+      if (invoiceButton) {
+        viewInvoiceById(invoiceButton.dataset.perfInvoice);
+        return;
+      }
+      const toggle = event.target.closest('[data-perf-toggle]');
+      if (!toggle) return;
+      const type = toggle.dataset.perfToggle;
+      state.performanceOpen[type] = !state.performanceOpen[type];
+      renderPerformanceReport();
+    });
     els.invoiceSearchInput.addEventListener('input', event => {
       state.invoiceSearch = event.target.value;
       clearTimeout(loadInvoiceHistory.searchTimer);
       loadInvoiceHistory.searchTimer = setTimeout(loadInvoiceHistory, 300);
     });
-    els.invoiceDateMode.addEventListener('click', event => {
-      const button = event.target.closest('[data-invoice-date-mode]');
-      if (!button) return;
-      state.invoiceDateMode = button.dataset.invoiceDateMode;
-      state.invoiceDatePreset = '';
-      if (state.invoiceDateMode === 'range' && state.invoiceDateFrom && !state.invoiceDateTo) {
-        state.invoiceDateTo = state.invoiceDateFrom;
-      }
-      renderInvoiceDateControls();
-      loadInvoiceHistory();
-    });
     els.invoiceDateFromInput.addEventListener('change', event => {
       state.invoiceDateFrom = event.target.value;
       state.invoiceDatePreset = '';
-      if (state.invoiceDateMode === 'range' && state.invoiceDateFrom && (!state.invoiceDateTo || state.invoiceDateTo < state.invoiceDateFrom)) {
+      if (state.invoiceDateFrom && (!state.invoiceDateTo || state.invoiceDateTo < state.invoiceDateFrom)) {
         state.invoiceDateTo = state.invoiceDateFrom;
       }
       renderInvoiceDateControls();
-      loadInvoiceHistory();
+      loadPerformanceReport();
     });
     els.invoiceDateToInput.addEventListener('change', event => {
       state.invoiceDateTo = event.target.value;
@@ -20552,7 +20935,7 @@
         showToast('End date cannot be before start date.');
       }
       renderInvoiceDateControls();
-      loadInvoiceHistory();
+      loadPerformanceReport();
     });
     els.invoiceDatePresets.addEventListener('click', event => {
       const button = event.target.closest('[data-invoice-date-preset]');
