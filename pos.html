@@ -5547,6 +5547,26 @@
     .perf-chart-dot { fill: var(--tm-green); }
     .perf-chart-dot.is-peak { fill: var(--tm-orange); }
     .perf-chart-hit { fill: transparent; cursor: pointer; }
+    .perf-chart-bar { fill: var(--tm-green); opacity: .85; }
+    .perf-chart-bar:hover { opacity: 1; }
+    .perf-chart-count-line {
+      fill: none;
+      stroke: var(--tm-orange);
+      stroke-width: 2;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    .perf-chart-count-dot { fill: var(--tm-orange); }
+    .perf-chart-axis.is-count { fill: var(--tm-orange); }
+    .perf-legend-key { display: inline-flex; align-items: center; gap: 6px; }
+    .perf-swatch {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
+    }
+    .perf-swatch.is-bar { background: var(--tm-green); }
+    .perf-swatch.is-line { background: var(--tm-orange); border-radius: 50%; height: 9px; width: 9px; }
     .perf-chart-empty {
       padding: 26px 0;
       text-align: center;
@@ -19276,18 +19296,123 @@
         .toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'UTC' });
     }
 
+    function formatHourLabel(hour) {
+      const value = Number(hour) || 0;
+      const suffix = value < 12 ? 'am' : 'pm';
+      const display = value % 12 === 0 ? 12 : value % 12;
+      return `${display}${suffix}`;
+    }
+
+    /** A single day is shown hour by hour; anything wider gets the 30-day trend. */
     function renderPerformanceTrend() {
       if (!els.perfTrend) return;
       const report = state.performance;
-      const rows = report && Array.isArray(report.daily_trend) ? report.daily_trend : [];
+      const range = invoiceDateRange();
+      const hourly = report && Array.isArray(report.hourly_trend) ? report.hourly_trend : [];
+      if (range.from === range.to && hourly.length) {
+        renderHourlyTrend(hourly);
+        return;
+      }
+      renderDailyTrend(report && Array.isArray(report.daily_trend) ? report.daily_trend : []);
+    }
 
+    function trendPanelHead(title, subtitle, figure) {
+      return `
+        <div class="perf-panel-head">
+          <div>
+            <h2 class="perf-panel-title"><i class="bi bi-graph-up"></i> ${escapeHtml(title)}</h2>
+            <div class="perf-panel-sub">${subtitle}</div>
+          </div>
+          <div class="perf-stat-value">${figure}</div>
+        </div>
+      `;
+    }
+
+    function renderHourlyTrend(rows) {
+      const width = 760;
+      const height = 210;
+      const padLeft = 52;
+      const padRight = 46;
+      const padTop = 12;
+      const padBottom = 26;
+      const plotWidth = width - padLeft - padRight;
+      const plotHeight = height - padTop - padBottom;
+
+      const takings = rows.map(row => Number(row.net || 0));
+      const customers = rows.map(row => Number(row.order_count || 0));
+      const totalTakings = takings.reduce((sum, value) => sum + value, 0);
+      const totalCustomers = customers.reduce((sum, value) => sum + value, 0);
+      const peakTakings = Math.max(...takings, 0);
+      const busiest = rows[takings.indexOf(peakTakings)];
+
+      const moneyMax = niceAxisMax(peakTakings) || 100;
+      const countMax = Math.max(niceAxisMax(Math.max(...customers, 0)), 1);
+      const band = plotWidth / rows.length;
+      const barWidth = Math.max(6, band * 0.54);
+
+      const yMoney = value => padTop + plotHeight * (1 - value / moneyMax);
+      const yCount = value => padTop + plotHeight * (1 - value / countMax);
+      const xCentre = index => padLeft + band * (index + 0.5);
+
+      const gridLines = [0, 0.25, 0.5, 0.75, 1].map(fraction => {
+        const y = yMoney(moneyMax * fraction);
+        return `
+          <line class="perf-chart-grid" x1="${padLeft}" y1="${y.toFixed(1)}" x2="${width - padRight}" y2="${y.toFixed(1)}"></line>
+          <text class="perf-chart-axis" x="${padLeft - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end">${shortAxisMoney(moneyMax * fraction)}</text>
+          <text class="perf-chart-axis is-count" x="${width - padRight + 8}" y="${(y + 4).toFixed(1)}" text-anchor="start">${Math.round(countMax * fraction)}</text>
+        `;
+      }).join('');
+
+      const bars = rows.map((row, index) => {
+        const value = Number(row.net || 0);
+        const top = value > 0 ? yMoney(value) : yMoney(0);
+        const barHeight = Math.max(value > 0 ? 2 : 0, yMoney(0) - top);
+        return `
+          <g>
+            <rect class="perf-chart-bar" x="${(xCentre(index) - barWidth / 2).toFixed(1)}" y="${top.toFixed(1)}"
+                  width="${barWidth.toFixed(1)}" height="${barHeight.toFixed(1)}" rx="3"></rect>
+            <rect class="perf-chart-hit" x="${(xCentre(index) - band / 2).toFixed(1)}" y="${padTop}"
+                  width="${band.toFixed(1)}" height="${plotHeight.toFixed(1)}">
+              <title>${escapeHtml(formatHourLabel(row.hour))} — ${money(value)} · ${Number(row.order_count || 0)} customer${Number(row.order_count || 0) === 1 ? '' : 's'}</title>
+            </rect>
+          </g>
+        `;
+      }).join('');
+
+      const countPoints = customers.map((value, index) => `${xCentre(index).toFixed(1)},${yCount(value).toFixed(1)}`);
+      const countDots = customers.map((value, index) =>
+        `<circle class="perf-chart-count-dot" cx="${xCentre(index).toFixed(1)}" cy="${yCount(value).toFixed(1)}" r="3"></circle>`
+      ).join('');
+
+      const labelStep = Math.max(1, Math.round(rows.length / 8));
+      const xLabels = rows.map((row, index) => {
+        if (index % labelStep !== 0 && index !== rows.length - 1) return '';
+        return `<text class="perf-chart-axis" x="${xCentre(index).toFixed(1)}" y="${height - 8}" text-anchor="middle">${escapeHtml(formatHourLabel(row.hour))}</text>`;
+      }).join('');
+
+      els.perfTrend.innerHTML = `
+        ${trendPanelHead('Takings by Hour', `${escapeHtml(performanceRangeLabel())} &middot; net of refunds`, money(totalTakings))}
+        <svg class="perf-chart-svg" viewBox="0 0 ${width} ${height}" role="img"
+             aria-label="Takings and customer count by hour">
+          ${gridLines}
+          ${bars}
+          <polyline class="perf-chart-count-line" points="${countPoints.join(' ')}"></polyline>
+          ${countDots}
+          ${xLabels}
+        </svg>
+        <div class="perf-chart-legend">
+          <span class="perf-legend-key"><i class="perf-swatch is-bar"></i> Takings</span>
+          <span class="perf-legend-key"><i class="perf-swatch is-line"></i> Customers</span>
+          ${peakTakings > 0 ? `<span>Busiest ${escapeHtml(formatHourLabel(busiest && busiest.hour))} &middot; ${money(peakTakings)}</span>` : ''}
+          <span>${totalCustomers} customer${totalCustomers === 1 ? '' : 's'} today</span>
+        </div>
+      `;
+    }
+
+    function renderDailyTrend(rows) {
       if (rows.length < 2) {
         els.perfTrend.innerHTML = `
-          <div class="perf-panel-head">
-            <div>
-              <h2 class="perf-panel-title"><i class="bi bi-graph-up"></i> 30-Day Takings</h2>
-            </div>
-          </div>
+          ${trendPanelHead('30-Day Takings', 'Daily net takings', '')}
           <div class="perf-chart-empty">Not enough history yet to draw a trend.</div>
         `;
         return;
@@ -19347,13 +19472,7 @@
       }).join('');
 
       els.perfTrend.innerHTML = `
-        <div class="perf-panel-head">
-          <div>
-            <h2 class="perf-panel-title"><i class="bi bi-graph-up"></i> 30-Day Takings</h2>
-            <div class="perf-panel-sub">${escapeHtml(shortAxisDate(rows[0].date))} to ${escapeHtml(shortAxisDate(rows[rows.length - 1].date))} &middot; net of refunds</div>
-          </div>
-          <div class="perf-stat-value">${money(total)}</div>
-        </div>
+        ${trendPanelHead('30-Day Takings', `${escapeHtml(shortAxisDate(rows[0].date))} to ${escapeHtml(shortAxisDate(rows[rows.length - 1].date))} &middot; net of refunds`, money(total))}
         <svg class="perf-chart-svg" viewBox="0 0 ${width} ${height}" role="img"
              aria-label="Daily net takings for the last 30 days">
           ${gridLines}
