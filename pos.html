@@ -7789,7 +7789,7 @@
         <section class="payment-entry-panel" aria-label="Payment entry">
           <div class="payment-entry-card">
             <div class="payment-due-large">
-              <span id="paymentCurrentMethod">Cash</span>
+              <span id="paymentCurrentMethod">Card</span>
               <strong id="paymentRemainingLarge">$0.00</strong>
             </div>
             <input id="paymentAmountInput" class="payment-amount-input" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off" placeholder="0.00">
@@ -8673,9 +8673,9 @@
       allowedStoreIds: [],
       scheduledStoreId: '',
       openingConfirmed: false,
-      payment: 'Cash',
+      payment: 'Card',
       paymentSession: {
-        method: 'Cash',
+        method: 'Card',
         payments: [],
         amount: ''
       },
@@ -18564,6 +18564,21 @@
       return Math.max(0, roundedMoneyValue(paymentSessionTotal() - paymentPaidTotal()));
     }
 
+    function checkoutShiftIsReady(shift) {
+      return Boolean(
+        shift
+        && shift.status === 'open'
+        && shift.date === brisbaneDateIso()
+        && state.openingConfirmed
+      );
+    }
+
+    async function resolveCheckoutShift() {
+      const synchronizedShift = await syncCurrentShiftWithDatabase();
+      const activeShift = synchronizedShift || readActiveShift();
+      return checkoutShiftIsReady(activeShift) ? activeShift : null;
+    }
+
     function setPaymentAmountToRemaining() {
       const remaining = paymentRemaining();
       state.paymentSession.amount = remaining > 0 ? remaining.toFixed(2) : '';
@@ -18692,7 +18707,7 @@
         return;
       }
       state.paymentSession = {
-        method: 'Cash',
+        method: 'Card',
         payments: [],
         amount: '',
         balanceOrderId: ''
@@ -18744,6 +18759,7 @@
         const payments = state.paymentSession.payments.slice();
         const balanceOrderId = state.paymentSession.balanceOrderId;
         closePaymentModal();
+        showToast(balanceOrderId ? 'Processing balance payment...' : 'Processing full payment...');
         if (balanceOrderId) submitBalancePayment(balanceOrderId, payments);
         else checkout(payments);
         return;
@@ -19668,7 +19684,7 @@
         return;
       }
       const paymentSummary = summarizePayments(normalizedPayments);
-      const activeShift = readActiveShift();
+      const activeShift = await resolveCheckoutShift();
       if (!activeShift || activeShift.status !== 'open' || activeShift.date !== brisbaneDateIso() || !state.openingConfirmed) {
         showToast('Start today\'s shift before checkout.');
         ensureOpeningCash();
@@ -19848,14 +19864,14 @@
         showToast('This invoice is already fully paid.');
         return;
       }
-      const activeShift = readActiveShift();
+      const activeShift = await resolveCheckoutShift();
       if (!activeShift || activeShift.status !== 'open' || activeShift.date !== brisbaneDateIso() || !state.openingConfirmed) {
         showToast('Start today\'s shift before taking a payment.');
         ensureOpeningCash();
         return;
       }
       state.paymentSession = {
-        method: 'Cash',
+        method: 'Card',
         payments: [],
         amount: '',
         balanceOrderId: order.id,
@@ -19875,7 +19891,12 @@
     }
 
     async function submitBalancePayment(orderId, payments) {
-      const activeShift = readActiveShift();
+      const activeShift = await resolveCheckoutShift();
+      if (!activeShift) {
+        showToast('Start today\'s shift before taking a payment.');
+        ensureOpeningCash();
+        return;
+      }
       const normalizedPayments = (Array.isArray(payments) ? payments : [])
         .map(payment => ({ method: paymentMethodLabel(payment.method), amount: roundedMoneyValue(payment.amount) }))
         .filter(payment => payment.amount > 0);
