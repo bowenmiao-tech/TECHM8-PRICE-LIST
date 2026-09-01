@@ -19150,9 +19150,10 @@
       els.perfSummary.innerHTML = `
         <div>
           <div class="perf-summary-value">${money(totals.net || 0)}</div>
-          <div class="perf-summary-label">received &middot; ${escapeHtml(performanceRangeLabel())}</div>
+          <div class="perf-summary-label">net takings &middot; ${escapeHtml(performanceRangeLabel())}</div>
         </div>
         <div class="perf-summary-label">${orderCount} invoice${orderCount === 1 ? '' : 's'}</div>
+        <div class="perf-summary-label">${money(totals.received || 0)} received</div>
         ${Number(totals.refunded || 0) > 0 ? `<div class="perf-summary-label">${money(totals.refunded)} refunded</div>` : ''}
         ${returnedUnits > 0 ? `<div class="perf-summary-label">${returnedUnits} item${returnedUnits === 1 ? '' : 's'} returned</div>` : ''}
         ${state.performanceLoading ? '<div class="perf-summary-label">Refreshing...</div>' : ''}
@@ -19207,11 +19208,12 @@
           <div class="perf-payment">
             <div class="perf-payment-name">${escapeHtml(row.method || 'Unknown')}</div>
             <div class="perf-payment-value">${money(row.net || 0)}</div>
-            ${Number(row.refunded || 0) > 0 ? `<div class="perf-payment-sub">${money(row.received)} in &middot; ${money(row.refunded)} out</div>` : ''}
+            <div class="perf-payment-sub">net</div>
+            ${Number(row.refunded || 0) > 0 ? `<div class="perf-payment-sub">${money(row.received)} received &middot; ${money(row.refunded)} refunded</div>` : ''}
           </div>
         `).join('')}
         <div class="perf-payment is-total">
-          <div class="perf-payment-name">Total</div>
+          <div class="perf-payment-name">Net takings</div>
           <div class="perf-payment-value">${money(totals.net || 0)}</div>
           <div class="perf-payment-sub">${orderCount} invoice${orderCount === 1 ? '' : 's'}</div>
         </div>
@@ -19234,9 +19236,18 @@
       const totals = report.totals || {};
       const shiftSummary = report.shift_summary || {};
       const payments = Array.isArray(report.payment_totals) ? report.payment_totals : [];
-      const rows = payments.map(row => `
-        <div class="row"><span>${escapeHtml(row.method || 'Unknown')}</span><span>${money(row.net || 0)}</span></div>
-      `).join('');
+      const rows = payments.map(row => {
+        const method = escapeHtml(row.method || 'Unknown');
+        const refunded = Math.abs(Number(row.refunded || 0));
+        return `
+          <div class="method">
+            <div class="row"><span>${method} received</span><span>${money(row.received || 0)}</span></div>
+            <div class="row refund"><span>${method} refunds</span><span>${money(-refunded)}</span></div>
+            <div class="row method-net"><span>${method} net</span><span>${money(row.net || 0)}</span></div>
+          </div>
+        `;
+      }).join('');
+      const refundedTotal = Math.abs(Number(totals.refunded || 0));
       return `<!doctype html><html><head><meta charset="utf-8"><title>Takings ${escapeHtml(performanceRangeLabel())}</title>
         <style>
           @page { size: 58mm auto; margin: 3mm; }
@@ -19244,16 +19255,25 @@
           h1 { font-size: 13px; margin: 0 0 2px; text-align: center; }
           .meta { font-size: 10px; text-align: center; margin-bottom: 8px; }
           .row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; }
-          .total { border-top: 1px dashed #000; margin-top: 6px; padding-top: 6px; font-weight: 700; }
+          .method { border-bottom: 1px dotted #777; padding: 3px 0; }
+          .refund { color: #333; }
+          .method-net { font-weight: 700; }
+          .summary { margin-top: 7px; padding-top: 4px; }
+          .net-total { border-top: 1px solid #000; border-bottom: 1px solid #000; margin-top: 3px; padding: 6px 0; font-size: 13px; font-weight: 700; }
+          .note { margin: 3px 0 7px; font-size: 9px; line-height: 1.25; }
           .foot { margin-top: 10px; font-size: 9px; text-align: center; }
         </style></head><body>
         <h1>Takings</h1>
         <div class="meta">${escapeHtml(report.store_name || '')}<br>${escapeHtml(performanceRangeLabel())}</div>
         ${rows || '<div class="row"><span>No payments</span><span>$0.00</span></div>'}
-        <div class="row total"><span>Total</span><span>${money(totals.net || 0)}</span></div>
-        <div class="row"><span>Refunds</span><span>${money(totals.refunded || 0)}</span></div>
+        <div class="summary">
+          <div class="row"><span>Gross received</span><span>${money(totals.received || 0)}</span></div>
+          <div class="row refund"><span>Refunds</span><span>${money(-refundedTotal)}</span></div>
+          <div class="row net-total"><span>NET TAKINGS</span><span>${money(totals.net || 0)}</span></div>
+        </div>
         <div class="row"><span>Returned items</span><span>${Number(totals.returned_units || 0)}</span></div>
-        <div class="row"><span>Cash difference</span><span>${shiftSummary.cash_difference_recorded ? money(shiftSummary.cash_difference || 0) : 'Not counted'}</span></div>
+        <div class="row"><span>Cash variance</span><span>${shiftSummary.cash_difference_recorded ? money(shiftSummary.cash_difference || 0) : 'Not counted'}</span></div>
+        ${shiftSummary.cash_difference_recorded ? '<div class="note">Cash variance is an end-shift drawer check and is not deducted from net takings.</div>' : ''}
         <div class="row"><span>Handover staff</span><span>${escapeHtml(shiftSummary.handover_staff || 'Not closed')}</span></div>
         <div class="row"><span>Invoices</span><span>${Number(totals.order_count || 0)}</span></div>
         <div class="foot">Printed ${escapeHtml(formatDateTime(new Date().toISOString()))}</div>
