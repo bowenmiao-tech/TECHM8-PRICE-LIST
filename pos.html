@@ -3472,6 +3472,11 @@
       overflow: hidden;
     }
 
+    .receipt-complete-modal.invoice-history-view {
+      width: min(900px, calc(100vw - 36px));
+      max-height: calc(100vh - 36px);
+    }
+
     .receipt-complete-head,
     .email-receipt-head {
       display: flex;
@@ -3488,6 +3493,16 @@
       gap: 18px;
       padding: 30px 24px 26px;
       text-align: center;
+      overflow-y: auto;
+    }
+
+    .invoice-history-view .receipt-complete-body {
+      justify-items: stretch;
+      padding-top: 22px;
+    }
+
+    .invoice-history-view .receipt-success-icon {
+      display: none;
     }
 
     .receipt-success-icon {
@@ -3528,6 +3543,154 @@
 
     .receipt-sync-note.pending {
       color: #b36a16;
+    }
+
+    .receipt-invoice-details {
+      width: 100%;
+      display: grid;
+      gap: 16px;
+      text-align: left;
+    }
+
+    .receipt-invoice-details[hidden] {
+      display: none;
+    }
+
+    .invoice-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .invoice-detail-field,
+    .invoice-detail-payment,
+    .invoice-detail-line,
+    .invoice-repair-record {
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .invoice-detail-field {
+      min-width: 0;
+      padding: 10px 12px;
+    }
+
+    .invoice-detail-field span,
+    .invoice-detail-section-title,
+    .invoice-line-meta,
+    .invoice-repair-note {
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .invoice-detail-field strong {
+      display: block;
+      margin-top: 3px;
+      overflow-wrap: anywhere;
+      color: var(--tm-ink);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .invoice-detail-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .invoice-detail-section-title {
+      text-transform: uppercase;
+    }
+
+    .invoice-detail-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .invoice-detail-line strong,
+    .invoice-detail-payment strong,
+    .invoice-repair-record strong {
+      color: var(--tm-ink);
+    }
+
+    .invoice-line-note {
+      margin-top: 7px;
+      white-space: pre-wrap;
+      color: #394a52;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .invoice-detail-payments {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .invoice-detail-payment {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .invoice-repair-record {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      background: #f8fcfb;
+    }
+
+    .invoice-repair-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .invoice-repair-badge {
+      flex: 0 0 auto;
+      padding: 4px 7px;
+      border-radius: 6px;
+      color: #08705e;
+      background: #dff5ef;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .invoice-repair-open {
+      min-height: 40px;
+      border: 0;
+      border-radius: 7px;
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #fff;
+      background: var(--tm-green);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .invoice-repair-open:disabled {
+      opacity: .62;
+      cursor: wait;
+    }
+
+    @media (max-width: 700px) {
+      .invoice-detail-grid,
+      .invoice-detail-payments {
+        grid-template-columns: 1fr;
+      }
+
+      .invoice-repair-head {
+        display: grid;
+      }
     }
 
     .receipt-action-grid {
@@ -8157,6 +8320,7 @@
           <span id="receiptCompleteMeta">Order completed</span>
         </div>
         <div id="receiptSyncNote" class="receipt-sync-note">Order saved to POS.</div>
+        <div id="receiptInvoiceDetails" class="receipt-invoice-details" hidden></div>
         <div class="receipt-action-grid">
           <button id="printThermalReceiptBtn" class="receipt-action-button primary" type="button">
             <i class="bi bi-printer-fill"></i>
@@ -9258,6 +9422,7 @@
       receiptCompleteTotal: document.getElementById('receiptCompleteTotal'),
       receiptCompleteMeta: document.getElementById('receiptCompleteMeta'),
       receiptSyncNote: document.getElementById('receiptSyncNote'),
+      receiptInvoiceDetails: document.getElementById('receiptInvoiceDetails'),
       printThermalReceiptBtn: document.getElementById('printThermalReceiptBtn'),
       emailThermalReceiptBtn: document.getElementById('emailThermalReceiptBtn'),
       emailReceiptModal: document.getElementById('emailReceiptModal'),
@@ -13817,7 +13982,7 @@
         const order = cached || await invoiceOrderById(orderId);
         closeCustomerHistory();
         state.lastCompletedOrder = order;
-        openReceiptCompleteModal(order);
+        openReceiptCompleteModal(order, { history: true });
       } catch (error) {
         console.error(error);
         showToast(error.message || 'Invoice could not be loaded.');
@@ -19772,7 +19937,7 @@
       try {
         const order = await invoiceOrderById(orderId);
         closeTicketDetailModal();
-        openReceiptCompleteModal(order);
+        openReceiptCompleteModal(order, { history: true });
       } catch (error) {
         console.error(error);
         showToast(error.message || 'Invoice could not be loaded.');
@@ -20173,8 +20338,174 @@
 </html>`;
     }
 
-    function openReceiptCompleteModal(order) {
+    function invoiceDetailField(label, value) {
+      const text = String(value ?? '').trim();
+      if (!text || text === '-') return '';
+      return `<div class="invoice-detail-field"><span>${escapeHtml(label)}</span><strong>${escapeHtml(text)}</strong></div>`;
+    }
+
+    function usefulLegacyValue(value) {
+      const text = String(value ?? '').trim();
+      return text && text !== '-' && !/^n\/?a$/i.test(text) ? text : '';
+    }
+
+    function legacyRepairRecords(items) {
+      const records = new Map();
+      items.forEach(item => {
+        const ticketId = usefulLegacyValue(item.source_ticket_id);
+        if (!ticketId) return;
+        const record = records.get(ticketId) || { ticketId, lines: [] };
+        record.lines.push(item);
+        [
+          'source_assigned_to', 'source_manufacturer', 'source_device', 'source_serial',
+          'source_description', 'source_invoice_notes', 'source_warranty_duration',
+          'source_warranty_start_date', 'source_warranty_end_date', 'source_condition'
+        ].forEach(key => {
+          const value = usefulLegacyValue(item[key]);
+          if (value && !record[key]) record[key] = value;
+        });
+        records.set(ticketId, record);
+      });
+      return [...records.values()];
+    }
+
+    function invoiceRepairRecordsHtml(items) {
+      const currentTickets = [...new Set(items.map(item => usefulLegacyValue(item.ticket_id)).filter(Boolean))];
+      const legacyTickets = legacyRepairRecords(items);
+      if (!currentTickets.length && !legacyTickets.length) return '';
+
+      return `
+        <section class="invoice-detail-section">
+          <div class="invoice-detail-section-title">Repair records</div>
+          ${currentTickets.map(ticketId => `
+            <article class="invoice-repair-record">
+              <div class="invoice-repair-head">
+                <div><strong>${escapeHtml(ticketId)}</strong><div class="invoice-repair-note">Checks, notes, photos and customer signatures are kept in the repair record.</div></div>
+                <span class="invoice-repair-badge">POS repair</span>
+              </div>
+              <div><button class="invoice-repair-open" type="button" data-invoice-repair-ticket="${escapeHtml(ticketId)}"><i class="bi bi-clipboard2-pulse"></i> View full repair record</button></div>
+            </article>
+          `).join('')}
+          ${legacyTickets.map(record => {
+            const warranty = [record.source_warranty_duration, record.source_warranty_start_date && `from ${record.source_warranty_start_date}`, record.source_warranty_end_date && `to ${record.source_warranty_end_date}`].filter(Boolean).join(' ');
+            const details = [
+              invoiceDetailField('Assigned to', record.source_assigned_to),
+              invoiceDetailField('Brand', record.source_manufacturer),
+              invoiceDetailField('Device / model', record.source_device),
+              invoiceDetailField('IMEI / serial', record.source_serial),
+              invoiceDetailField('Condition', record.source_condition),
+              invoiceDetailField('Warranty', warranty)
+            ].join('');
+            return `
+              <article class="invoice-repair-record">
+                <div class="invoice-repair-head">
+                  <div><strong>${escapeHtml(record.ticketId)}</strong><div class="invoice-repair-note">Original RepairDesk repair record</div></div>
+                  <span class="invoice-repair-badge">Historical</span>
+                </div>
+                ${details ? `<div class="invoice-detail-grid">${details}</div>` : ''}
+                ${record.source_description ? `<div><div class="invoice-detail-section-title">Repair details</div><div class="invoice-line-note">${escapeHtml(record.source_description)}</div></div>` : ''}
+                ${record.source_invoice_notes ? `<div><div class="invoice-detail-section-title">Invoice notes</div><div class="invoice-line-note">${escapeHtml(record.source_invoice_notes)}</div></div>` : ''}
+                <div class="invoice-repair-note">The historical RepairDesk export did not include inspection forms or signature files. No replacement record has been created.</div>
+              </article>
+            `;
+          }).join('')}
+        </section>
+      `;
+    }
+
+    function invoiceDetailsHtml(order) {
+      const items = Array.isArray(order.items) ? order.items : [];
+      const payments = Array.isArray(order.payments) ? order.payments : [];
+      const refunds = Array.isArray(order.refunds) ? order.refunds : [];
+      const fallbackPayments = payments.length ? payments : numberValue(order.amount_paid) > 0 ? [{
+        method: order.payment_method || 'Payment',
+        amount: order.amount_paid,
+        staff_name: order.staff_name,
+        taken_at: order.created_at
+      }] : [];
+      const detailFields = [
+        invoiceDetailField('Customer', order.customer_name || 'Walk-in Customer'),
+        invoiceDetailField('Phone', order.customer_phone),
+        invoiceDetailField('Email', order.customer_email),
+        invoiceDetailField('Checkout staff', order.staff_name),
+        invoiceDetailField('Date', formatDateTime(order.created_at || order.database_saved_at)),
+        invoiceDetailField('Store', order.store_name),
+        invoiceDetailField('Order reference', order.id),
+        invoiceDetailField('Payment status', order.payment_status || order.refund_status),
+        orderBalanceDue(order) > 0 ? invoiceDetailField('Balance due', money(orderBalanceDue(order))) : ''
+      ].join('');
+
+      return `
+        ${detailFields ? `<div class="invoice-detail-grid">${detailFields}</div>` : ''}
+        <section class="invoice-detail-section">
+          <div class="invoice-detail-section-title">Items</div>
+          ${items.map(item => {
+            const qty = Math.max(numberValue(item.qty ?? item.quantity), 0);
+            const unitPrice = numberValue(item.unit_price ?? item.sale_price);
+            const lineTotal = numberValue(item.line_total ?? unitPrice * qty);
+            const note = usefulLegacyValue(item.note);
+            const refunded = numberValue(item.refunded_amount);
+            return `
+              <article class="invoice-detail-line">
+                <div>
+                  <strong>${escapeHtml(item.name || 'Item')}</strong>
+                  <div class="invoice-line-meta">${escapeHtml(item.sku ? `SKU ${item.sku} · ` : '')}${escapeHtml(`${qty} × ${money(unitPrice)}`)}${item.category ? ` · ${escapeHtml(item.category)}` : ''}</div>
+                  ${note ? `<div class="invoice-line-note">${escapeHtml(note)}</div>` : ''}
+                  ${refunded > 0 ? `<div class="invoice-line-meta">Refunded ${money(refunded)}${numberValue(item.refunded_quantity) ? ` · ${numberValue(item.refunded_quantity)} returned` : ''}</div>` : ''}
+                </div>
+                <strong>${money(lineTotal)}</strong>
+              </article>
+            `;
+          }).join('') || '<div class="invoice-repair-note">No invoice items available.</div>'}
+        </section>
+        ${invoiceRepairRecordsHtml(items)}
+        ${(fallbackPayments.length || refunds.length) ? `
+          <section class="invoice-detail-section">
+            <div class="invoice-detail-section-title">Payments and refunds</div>
+            <div class="invoice-detail-payments">
+              ${fallbackPayments.map(payment => `<div class="invoice-detail-payment"><span>${escapeHtml(payment.method || 'Payment')}${payment.staff_name ? ` · ${escapeHtml(payment.staff_name)}` : ''}</span><strong>${money(numberValue(payment.amount))}</strong></div>`).join('')}
+              ${refunds.map(refund => `<div class="invoice-detail-payment"><span>Refund · ${escapeHtml(refund.method || '')}${refund.staff_name ? ` · ${escapeHtml(refund.staff_name)}` : ''}</span><strong>-${money(numberValue(refund.amount))}</strong></div>`).join('')}
+            </div>
+          </section>
+        ` : ''}
+      `;
+    }
+
+    async function openRepairTicketFromInvoice(ticketCode, button) {
+      if (!ticketCode) return;
+      const originalHtml = button ? button.innerHTML : '';
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-arrow-repeat"></i> Loading record';
+      }
+      try {
+        const url = new URL(POS_REPAIR_TICKETS_ENDPOINT);
+        url.searchParams.set('store_code', repairTicketStoreCode());
+        url.searchParams.set('ticket_code', ticketCode);
+        const response = await fetch(url.toString(), { headers: repairTicketApiHeaders() });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false || !payload.ticket) {
+          throw new Error(payload.message || 'Repair record could not be loaded.');
+        }
+        const ticket = normalizeRepairTicket(payload.ticket);
+        const existingIndex = state.repairTickets.findIndex(item => item.id === ticket.id);
+        if (existingIndex >= 0) state.repairTickets.splice(existingIndex, 1, ticket);
+        else state.repairTickets.unshift(ticket);
+        closeReceiptCompleteModal();
+        openTicketDetailModal(ticket.id);
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Repair record could not be loaded.');
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = originalHtml;
+        }
+      }
+    }
+
+    function openReceiptCompleteModal(order, options = {}) {
       state.lastCompletedOrder = order;
+      const historyView = Boolean(options.history);
       const profile = receiptProfileForOrder(order);
       const invoiceNumber = invoiceNumberText(order);
       const total = numberValue(order.total);
@@ -20183,7 +20514,7 @@
       let amountPaid = numberValue(order.amount_paid);
       if (amountPaid <= 0 && !isDeposit) amountPaid = total;
       const invoiceLabel = invoiceNumber === 'Pending' ? order.id : `Invoice #${invoiceNumber}`;
-      els.receiptCompleteTitle.textContent = isDeposit ? 'Deposit Taken' : 'Payment Complete';
+      els.receiptCompleteTitle.textContent = historyView ? invoiceLabel : isDeposit ? 'Deposit Taken' : 'Payment Complete';
       els.receiptCompleteTotal.textContent = isDeposit
         ? `${money(amountPaid)} deposit paid`
         : `${money(amountPaid)} paid`;
@@ -20194,6 +20525,10 @@
         ? 'Saved locally. Database sync is pending and will retry automatically.'
         : 'Order saved to the POS database.';
       els.receiptSyncNote.classList.toggle('pending', Boolean(order.sync_pending || invoiceNumber === 'Pending'));
+      const modal = els.receiptCompleteModal.querySelector('.receipt-complete-modal');
+      if (modal) modal.classList.toggle('invoice-history-view', historyView);
+      els.receiptInvoiceDetails.hidden = !historyView;
+      els.receiptInvoiceDetails.innerHTML = historyView ? invoiceDetailsHtml(order) : '';
       els.receiptCompleteModal.classList.add('show');
       els.receiptCompleteModal.setAttribute('aria-hidden', 'false');
     }
@@ -20201,6 +20536,10 @@
     function closeReceiptCompleteModal() {
       els.receiptCompleteModal.classList.remove('show');
       els.receiptCompleteModal.setAttribute('aria-hidden', 'true');
+      const modal = els.receiptCompleteModal.querySelector('.receipt-complete-modal');
+      if (modal) modal.classList.remove('invoice-history-view');
+      els.receiptInvoiceDetails.hidden = true;
+      els.receiptInvoiceDetails.innerHTML = '';
     }
 
     async function printThermalReceipt() {
@@ -21762,6 +22101,11 @@
     els.paymentFullBtn.addEventListener('click', () => confirmPaymentAmount(true));
     els.receiptCompleteCloseBtn.addEventListener('click', closeReceiptCompleteModal);
     els.receiptCompleteModal.addEventListener('click', event => {
+      const repairButton = event.target.closest('[data-invoice-repair-ticket]');
+      if (repairButton) {
+        openRepairTicketFromInvoice(repairButton.dataset.invoiceRepairTicket, repairButton);
+        return;
+      }
       if (event.target === els.receiptCompleteModal) closeReceiptCompleteModal();
     });
     els.printThermalReceiptBtn.addEventListener('click', printThermalReceipt);

@@ -98,6 +98,14 @@ Deno.serve(async (request) => {
         return jsonResponse({ ok: false, message: "store_code is required." }, 400);
       }
       await authorize(request, sessionToken, storeCode);
+      const ticketCode = (url.searchParams.get("ticket_code") || "").trim();
+      if (ticketCode) {
+        return await rpcJson(request, "get_pos_repair_ticket_for_store", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          target_ticket_code: ticketCode,
+        });
+      }
       const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 200), 1), 500);
       return await rpcJson(request, "search_pos_repair_tickets", {
         session_token: sessionToken,
