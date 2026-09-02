@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -22,12 +23,19 @@ DEFAULT_KEY_FILE = Path(".secrets/supabase-service-role-key.txt")
 RPC_PATH = "/rest/v1/rpc/import_repairdesk_sales_batch"
 
 
+def extract_key(raw: bytes) -> str:
+    """Pull the key out of a file that may carry a BOM or a stray encoding."""
+    text = raw.decode("ascii", "ignore")
+    match = re.search(r"(sb_secret_[A-Za-z0-9_\-]{8,}|eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+)", text)
+    return match.group(1) if match else ""
+
+
 def load_service_role_key(key_file: Path) -> str:
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    key = extract_key(os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").encode("utf-8", "ignore"))
     if key:
         return key
     if key_file.exists():
-        key = key_file.read_text(encoding="utf-8").strip()
+        key = extract_key(key_file.read_bytes())
         if key:
             return key
     raise SystemExit(

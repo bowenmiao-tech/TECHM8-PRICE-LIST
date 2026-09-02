@@ -192,6 +192,18 @@ Toowong RepairDesk history completed on 1 September 2026:
 - Imported history is shift-free and does not change product inventory. The Toowong counter is set to `3848`, so the next live Toowong sale receives invoice `3849`.
 - Rebuild deterministic full or incremental import batches with `scripts/build-repairdesk-toowong-invoice-import.py` and its `--min-invoice` / `--max-invoice` options. Generated SQL and customer data must stay in an ignored temporary directory and must not be committed.
 
+Fairfield RepairDesk history completed on 3 September 2026:
+- All existing RepairDesk invoices in the `1`-`11877` range are stored as 11,840 Fairfield sales orders, 16,591 invoice lines, and 11,793 payment rows covering 17 December 2022 to 2 September 2026.
+- RepairDesk has no records for 37 invoice numbers in that range; those gaps remain empty rather than being synthesized.
+- Imported totals are `$909,140.74` invoiced and `$881,805.42` paid, including 100 negative refund invoices, 138 zero-value invoices, and 315 deposit or partially paid invoices.
+- The RepairDesk item-wise sales export does not quote its `Category` column, so 138 rows whose category name contains a comma arrive with every later column shifted. The importer rejoins that overflow before matching; the invoice export itself parsed cleanly and remains the financial source of truth.
+- 134 lines are multi-job repairs that RepairDesk merges into a single invoice line while the item report splits them per job. Their prices and totals are complete; only the per-job device metadata is unavailable.
+- The invoice customer sync matched 2,222 existing customer records and created 23 new ones, so Fairfield contacts did not duplicate the customer master import.
+- Imported history is shift-free and does not change product inventory. The Fairfield counter is set to `11877`, so the next live Fairfield sale receives invoice `11878`.
+- Verified twice: database aggregates matched the build manifest, and an independent recomputation straight from the RepairDesk export reproduced the same per-invoice fingerprint across all 11,840 invoices.
+
+Park Ridge and North Lakes are not imported yet. Both already hold live POS sales on low invoice numbers (`1`-`7` at Park Ridge, `1` at North Lakes) that collide with their RepairDesk history, so those two stores need an agreed numbering decision before any import.
+
 Completed receipt flow:
 - Completing payment opens receipt actions after the database save.
 - Available actions are `Print Thermal Receipt` and `Email Thermal Receipt` only.

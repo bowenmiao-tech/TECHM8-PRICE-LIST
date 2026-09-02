@@ -318,6 +318,20 @@ python scripts/build-repairdesk-toowong-invoice-import.py --invoice-export <invo
 
 The completed Toowong import contains 3,843 invoices, 4,913 lines, and 3,841 payments. RepairDesk does not contain invoice numbers `300`, `314`, `1035`, `2114`, or `3570`. The store counter is `3848`, making `3849` the next live invoice. Generated batches contain customer data and must remain outside version control.
 
+`20260903012000_import_repairdesk_fairfield_invoice_history.sql` makes the importer store-aware. Each approved store is pinned to its own store code, order-code prefix and maximum invoice number (`TechM8 Toowong` → `toowong` / `RD-TW-INV-` / `3848`, `TechM8 Fairfield` → `fairfield` / `RD-FF-INV-` / `11877`), a batch must carry exactly one source store, and an unlisted store is rejected. `20260903013000_generalize_repairdesk_invoice_customer_sync.sql` replaces the Toowong-only customer sync with `sync_repairdesk_invoice_customers(store_code)` and keeps `sync_repairdesk_toowong_invoice_customers()` as a wrapper.
+
+Build a store's batches by passing its RepairDesk name and order-code prefix, then stream them to the RPC:
+
+```text
+python scripts/build-repairdesk-toowong-invoice-import.py --invoice-export <invoices.xlsx> --item-report <item-wise-sales.csv> --output-dir <temporary-output-directory> --store-name "TechM8 Fairfield" --order-prefix RD-FF-INV- --min-invoice 1 --max-invoice 11877
+python scripts/run-repairdesk-import-batches.py --prepared <temporary-output-directory>/prepared-invoices.json
+select public.sync_repairdesk_invoice_customers('fairfield');
+```
+
+`run-repairdesk-import-batches.py` reads the service role key from `SUPABASE_SERVICE_ROLE_KEY` or `.secrets/supabase-service-role-key.txt`, never from an argument, and records progress so an interrupted run can resume. Both exports must cover the same full date range; a shorter item-wise report makes the builder refuse the whole import rather than import partial history.
+
+The completed Fairfield import contains 11,840 invoices, 16,591 lines, and 11,793 payments totalling `$909,140.74`. The store counter is `11877`, making `11878` the next live invoice. Generated batches contain customer data and must remain outside version control.
+
 ## POS Receipt Email
 
 `send-pos-receipt-email` loads an already-saved POS order, renders the store-specific email receipt, sends it through Resend, and records the successful delivery on the order.
