@@ -45,6 +45,14 @@ def money_text(value) -> str:
     return format(money(value), ".2f")
 
 
+def optional_money_text(value) -> str:
+    """RepairDesk writes "-" when a report figure was never recorded."""
+    raw = clean_text(value)
+    if raw in {"", "-"}:
+        return ""
+    return money_text(raw)
+
+
 def numeric_text(value, places: int = 6) -> str:
     quantizer = Decimal(1).scaleb(-places)
     return format(decimal_value(value).quantize(quantizer, rounding=ROUND_HALF_UP), f".{places}f")
@@ -126,8 +134,8 @@ def load_invoice_export(path: Path, store_name: str, min_invoice: int, max_invoi
 
 def load_item_report(path: Path, store_name: str, min_invoice: int, max_invoice: int):
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
-        reader = csv.DictReader(handle)
-        headers = [clean_text(value) for value in (reader.fieldnames or [])]
+        reader = csv.reader(handle)
+        headers = [clean_text(value) for value in next(reader, [])]
         required = {
             "Store Name", "Date", "Invoice ID", "Customer", "Email Address", "Phone Number", "Type",
             "Item ID", "SKU", "Ticket ID", "Created By", "Assigned To", "Category", "Manufacturer",
@@ -138,9 +146,24 @@ def load_item_report(path: Path, store_name: str, min_invoice: int, max_invoice:
         if missing:
             raise ValueError(f"Item report is missing columns: {', '.join(missing)}")
 
+        # RepairDesk does not quote the Category column, so category names that
+        # contain commas ("9. Holder, Stand, Fans") split into extra fields and
+        # shift every later column. Rejoin the overflow back into Category.
+        category_index = headers.index("Category")
+        expected_width = len(headers) + 1
         selected = []
-        for raw_row in reader:
-            row = {clean_text(key): value for key, value in raw_row.items() if key is not None}
+        repaired_rows = 0
+        for values in reader:
+            overflow = len(values) - expected_width
+            if overflow > 0:
+                merged = ",".join(values[category_index:category_index + overflow + 1])
+                values = (
+                    values[:category_index]
+                    + [merged]
+                    + values[category_index + overflow + 1:]
+                )
+                repaired_rows += 1
+            row = dict(zip(headers, values))
             number = invoice_number(row.get("Invoice ID"))
             if key_text(row.get("Store Name")) != key_text(store_name):
                 continue
@@ -148,7 +171,7 @@ def load_item_report(path: Path, store_name: str, min_invoice: int, max_invoice:
                 continue
             row["_invoice_number"] = number
             selected.append(row)
-    return headers, selected
+    return headers, selected, repaired_rows
 
 
 def workbook_line_key(row) -> tuple:
@@ -293,8 +316,8 @@ def line_payload(workbook_row, report_row, invoice_notes: str, line_number: int)
             "source_condition": clean_text(report_row.get("Condition")),
             "source_total_sales_ex_gst": money_text(ex_gst),
             "source_tax": money_text(tax),
-            "source_discount": money_text(report_row.get("Discount")),
-            "source_cogs": money_text(report_row.get("COGS")),
+            "source_discount": optional_money_text(report_row.get("Discount")),
+            "source_cogs": optional_money_text(report_row.get("COGS")),
             "source_description": description,
             "source_invoice_notes": invoice_notes,
             "source_warranty_duration": clean_text(workbook_row.get("Warranty Duration")),
@@ -314,11 +337,13 @@ def sql_json(value) -> str:
 def build_import(args) -> dict:
     if args.min_invoice < 1 or args.max_invoice < args.min_invoice:
         raise ValueError("Invoice range must be positive and ordered")
+    if not re.fullmatch(r"RD-[A-Z]{2}-INV-", args.order_prefix):
+        raise ValueError(f"Unsupported order code prefix: {args.order_prefix!r}")
 
     invoice_headers, workbook_rows = load_invoice_export(
         args.invoice_export, args.store_name, args.min_invoice, args.max_invoice
     )
-    report_headers, report_rows = load_item_report(
+    report_headers, report_rows, repaired_report_rows = load_item_report(
         args.item_report, args.store_name, args.min_invoice, args.max_invoice
     )
 
@@ -418,7 +443,7 @@ def build_import(args) -> dict:
             "source_system": "repairdesk",
             "source_store_name": args.store_name,
             "source_hash": source_hash,
-            "order_code": f"RD-TW-INV-{number}",
+            "order_code": f"{args.order_prefix}{number}",
             "invoice_number": number,
             "business_date": invoice_at.date().isoformat(),
             "created_at": iso_timestamp(invoice_at),
@@ -459,6 +484,7 @@ def build_import(args) -> dict:
             "invoice_export": str(args.invoice_export),
             "item_report": str(args.item_report),
             "store_name": args.store_name,
+            "order_prefix": args.order_prefix,
             "invoice_range": [args.min_invoice, args.max_invoice],
             "invoice_export_headers": invoice_headers,
             "item_report_headers": report_headers,
@@ -466,6 +492,7 @@ def build_import(args) -> dict:
         "counts": {
             "invoice_export_rows": len(workbook_rows),
             "item_report_rows": len(report_rows),
+            "item_report_rows_repaired_for_unquoted_category": repaired_report_rows,
             "invoice_export_invoices": len(workbook_ids),
             "item_report_invoices": len(report_ids),
             "prepared_invoices": len(prepared),
@@ -523,6 +550,7 @@ def parse_args():
     parser.add_argument("--item-report", type=Path, default=Path.home() / "Downloads" / "Item Wise Sales Report.csv")
     parser.add_argument("--output-dir", type=Path, default=Path(".codex-temp/repairdesk-toowong-invoice-import"))
     parser.add_argument("--store-name", default="TechM8 Toowong")
+    parser.add_argument("--order-prefix", default="RD-TW-INV-")
     parser.add_argument("--min-invoice", type=int, default=1)
     parser.add_argument("--max-invoice", type=int, default=3848)
     parser.add_argument("--batch-size", type=int, default=50)

@@ -1,7 +1,7 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-staff-session",
-  "Access-Control-Allow-Methods": "GET, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -115,6 +115,39 @@ Deno.serve(async (request) => {
       });
     }
 
+    if (request.method === "POST") {
+      const payload = await request.json().catch(() => null);
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+        return jsonResponse({ ok: false, message: "Job payload must be an object." }, 400);
+      }
+      const jobPayload = payload as JsonRecord;
+      const storeCode = String(jobPayload.store_code || jobPayload.store_db_code || "").trim().toLowerCase();
+      if (!storeCode) return jsonResponse({ ok: false, message: "store_code is required." }, 400);
+      if (!String(jobPayload.ticket_code || "").trim() && !String(jobPayload.job_code || "").trim()) {
+        return jsonResponse({ ok: false, message: "ticket_code or job_code is required." }, 400);
+      }
+      const actor = await authorize(request, sessionToken, storeCode, String(jobPayload.staff_name || ""));
+      const action = String(jobPayload.action || "add");
+      const rpcName = action === "update"
+        ? "update_pos_repair_ticket_job"
+        : action === "delete"
+          ? "delete_pos_repair_ticket_job"
+          : action === "finalize"
+            ? "finalize_pos_repair_ticket_after_checkout"
+          : action === "add"
+            ? "add_pos_repair_ticket_job"
+            : "";
+      if (!rpcName) return jsonResponse({ ok: false, message: "Unknown repair job action." }, 400);
+      return await rpcJson(request, rpcName, {
+        session_token: sessionToken,
+        payload: {
+          ...jobPayload,
+          store_code: String(actor.store_code || storeCode),
+          staff_name: String(actor.staff_name || ""),
+        },
+      });
+    }
+
     if (request.method === "PUT") {
       const payload = await request.json().catch(() => null);
       if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
@@ -165,6 +198,10 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: false, message: "Method not allowed." }, 405);
   } catch (error) {
     console.error(error);
-    return jsonResponse({ ok: false, message: "Repair ticket request failed." }, 500);
+    // An expired session was being reported as a server error, which reads to
+    // staff as "the POS is broken" rather than "sign in again".
+    const message = error instanceof Error ? error.message : "Repair ticket request failed.";
+    const status = /denied|assigned|session|store/i.test(message) ? 403 : 500;
+    return jsonResponse({ ok: false, message }, status);
   }
 });

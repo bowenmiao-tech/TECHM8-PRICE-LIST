@@ -131,9 +131,10 @@ It reviews 49 RepairDesk products and validates one current RepairDesk POS image
 Browser calls:
 
 ```text
-GET https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-repair-tickets?store_code=parkridge
-PUT https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-repair-tickets
-DELETE https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-repair-tickets?ticket_code=RPR-...&staff_name=Andy
+GET https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-repair-tickets?store_code=parkridge
+PUT https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-repair-tickets
+DELETE https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-repair-tickets?ticket_code=RPR-...&staff_name=Andy
+POST https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-repair-tickets
 ```
 
 Browser headers:
@@ -157,6 +158,8 @@ supabase functions deploy pos-repair-tickets --no-verify-jwt
 ```
 
 `--no-verify-jwt` is intentional here because the function verifies the existing staff session token through the database RPCs.
+
+`POST` accepts `add_job`, `update_job`, `delete_job`, and `finalize` actions. Extra repairs are separately approved, billed, and linked to invoice lines. Payment records billing activity but never closes a Repair Board card automatically; staff must explicitly keep it open or finish it after checkout.
 
 ## POS Sales Orders
 
@@ -185,7 +188,7 @@ Invoice History can combine its keyword search with `from_date` and `to_date` (`
 
 Every store has one shared invoice sequence across all sale types. A retail sale, repair sale, or mixed sale consumes the next number from the same store counter. Repair invoices are not stored in a separate invoice table.
 
-Repair tickets require a real customer name and phone at both the browser and database layers. A repair ticket can be linked to only one original sales-order line, preventing duplicate checkout. Refunds create separate immutable refund records and do not alter or delete the original invoice.
+Repair tickets require a real customer name and phone at both the browser and database layers. The original intake repair and every approved extra repair can each link to one sales-order line, preventing duplicate billing while preserving a complete invoice history for the card. Refunds create separate immutable refund records and do not alter or delete the original invoice.
 
 Apply `supabase/migrations/20260714103000_add_pos_reports_and_shared_state.sql` after the invoice date-filter migration. Report mode calls `get_pos_sales_report` and returns database totals for sales, refunds, GST, invoice count, units, average invoice, sale type, category, payment method, staff, and day.
 

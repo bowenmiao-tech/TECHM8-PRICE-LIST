@@ -247,10 +247,13 @@ Open Board columns:
 
 Repair rules:
 - `cancelled` and `returned_unrepaired` are resolutions that remain in Waiting pickup until collected.
-- A paid repair is closed and removed from the open Board.
-- A paid repair card cannot be added to the cart again.
-- A paid repair can only open its invoice or refund flow.
-- One repair ticket can be linked to only one original invoice line.
+- A repair card may contain the original intake repair plus additional approved work, such as Inspection, Battery, and Screen.
+- Each repair is a separate invoice line and can be billed only once. Proposed or cancelled work cannot be added to checkout.
+- Payment never closes a repair card automatically. After full payment, staff explicitly keep the card in an open status or finish it.
+- Finishing is blocked while work is unbilled, unfinished, or any linked invoice has a balance.
+- Every invoice linked to a repair card remains available from the card, and comments can continue after an earlier repair has been paid.
+- Re-signing freezes the current repair list, prices, notes, approval state, intake checks, and customer signature as a new revision.
+- Existing one-line repair cards remain compatible and do not require historical conversion.
 - Board search supports ticket, customer, phone, device, issue, and IMEI/intake content.
 - Finished invoices are searched in Invoice History, not in a separate Finished Board column.
 
@@ -324,6 +327,11 @@ Required POS migrations, in order:
 30. `20260826135945_restrict_scoped_pos_invoice_rpc_roles.sql`
 31. `20260831194500_add_repairdesk_historical_sales_import.sql`
 32. `20260831194600_extend_repairdesk_toowong_invoice_import.sql`
+33. `20260902085959_add_repair_ticket_extra_jobs.sql`
+34. `20260902090101_expose_repair_ticket_jobs_in_payload.sql`
+35. `20260902090201_add_repair_ticket_job_rpcs.sql`
+36. `20260902090400_bill_repair_jobs_as_separate_lines.sql`
+37. `20260902100623_finalize_multi_job_repair_workflow.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
