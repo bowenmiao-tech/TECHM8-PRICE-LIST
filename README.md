@@ -344,6 +344,7 @@ Required POS migrations, in order:
 35. `20260902090201_add_repair_ticket_job_rpcs.sql`
 36. `20260902090400_bill_repair_jobs_as_separate_lines.sql`
 37. `20260902142143_finalize_multi_job_repair_workflow.sql`
+38. `20260903110750_fix_ambiguous_repair_close_overload.sql`
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`

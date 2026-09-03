@@ -85,7 +85,7 @@ create or replace function public.close_pos_repair_tickets_for_order(
   target_invoice_number bigint,
   target_customer_name text,
   target_customer_phone text,
-  should_close boolean default false
+  should_close boolean
 )
 returns void
 language plpgsql
