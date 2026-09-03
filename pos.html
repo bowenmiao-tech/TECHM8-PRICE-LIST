@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-pos-build" content="2026-09-03-multi-job-repair-workflow">
+  <meta name="techm8-pos-build" content="2026-09-03-repair-continue-or-close">
   <title>TECHM8 POS</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -5742,6 +5742,41 @@
       gap: 12px;
       margin: 8px 0 14px;
     }
+    .finish-card-path { min-width: 0; }
+    .finish-card-path + .finish-card-path {
+      border-left: 1px solid var(--tm-line);
+      padding-left: 12px;
+    }
+    .finish-card-path-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+      color: var(--tm-ink);
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .finish-card-path-title i { color: var(--tm-green); }
+    .finish-card-path p {
+      min-height: 34px;
+      margin: 0 0 10px;
+      color: var(--tm-muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .finish-card-path .pay-action,
+    .finish-card-path .soft-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 44px;
+      margin-top: 10px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+    .finish-card-path .soft-action i { font-size: 16px; }
     .finish-card-controls label,
     .repair-job-fields label {
       display: grid;
@@ -5804,6 +5839,13 @@
     @media (max-width: 620px) {
       .finish-card-controls,
       .repair-job-fields { grid-template-columns: 1fr; }
+      .finish-card-path + .finish-card-path {
+        border-left: 0;
+        border-top: 1px solid var(--tm-line);
+        padding-top: 12px;
+        padding-left: 0;
+      }
+      .finish-card-path p { min-height: 0; }
       .repair-job-fields .wide { grid-column: auto; }
       .ticket-job { grid-template-columns: minmax(0, 1fr) auto; }
       .ticket-job-actions { grid-column: 1 / -1; justify-content: flex-end; }
@@ -8593,37 +8635,43 @@
     <div class="special-modal finish-card-modal" role="dialog" aria-modal="true" aria-labelledby="finishCardTitle">
       <div class="repair-card-head">
         <div>
-          <h2 id="finishCardTitle" class="repair-card-title">Repair card after payment</h2>
+          <h2 id="finishCardTitle" class="repair-card-title">Continue or finish this repair?</h2>
           <div id="finishCardSubtitle" class="repair-card-subtitle"></div>
         </div>
-        <button id="finishCardClose" class="icon-button" type="button" aria-label="Keep repair card open"><i class="bi bi-x-lg"></i></button>
+        <button id="finishCardClose" class="icon-button" type="button" aria-label="Continue repair and close this window"><i class="bi bi-x-lg"></i></button>
       </div>
       <div id="finishCardBody" class="finish-card-body"></div>
       <div class="finish-card-controls">
-        <label>Keep in status
-          <select id="finishCardStatus">
-            <option value="repairing">Parts arrived / Repairing</option>
-            <option value="waiting_customer_confirmation">Waiting customer confirmation</option>
-            <option value="need_to_order">Need to order</option>
-            <option value="waiting_shipping">Waiting shipping</option>
-            <option value="waiting_pickup">Waiting pickup</option>
-          </select>
-        </label>
-        <label>Finish outcome
-          <select id="finishCardResolution">
-            <option value="repaired">Repaired / completed</option>
-            <option value="no_fault_found">No fault found</option>
-            <option value="customer_declined">Customer declined</option>
-            <option value="unrepairable">Unrepairable</option>
-            <option value="returned_unrepaired">Returned unrepaired</option>
-            <option value="referred">Referred elsewhere</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </label>
-      </div>
-      <div class="repair-card-foot">
-        <button id="finishCardDone" class="soft-action" type="button"><i class="bi bi-archive"></i> Finish &amp; remove</button>
-        <button id="finishCardKeep" class="pay-action" type="button"><i class="bi bi-pin-angle"></i> Keep on board</button>
+        <section class="finish-card-path">
+          <div class="finish-card-path-title"><i class="bi bi-tools"></i> Continue repair</div>
+          <p>Keep this repair card active on the Repair Board for more work.</p>
+          <label>Next Repair Board status
+            <select id="finishCardStatus">
+              <option value="repairing">Parts arrived / Repairing</option>
+              <option value="waiting_customer_confirmation">Waiting customer confirmation</option>
+              <option value="need_to_order">Need to order</option>
+              <option value="waiting_shipping">Waiting shipping</option>
+              <option value="waiting_pickup">Waiting pickup</option>
+            </select>
+          </label>
+          <button id="finishCardKeep" class="pay-action" type="button"><i class="bi bi-arrow-repeat"></i> Continue repair</button>
+        </section>
+        <section class="finish-card-path">
+          <div class="finish-card-path-title"><i class="bi bi-check-circle"></i> Finish repair ticket</div>
+          <p>Close this ticket completely and remove it from the Repair Board.</p>
+          <label>Close ticket as
+            <select id="finishCardResolution">
+              <option value="repaired">Repaired / completed</option>
+              <option value="no_fault_found">No fault found</option>
+              <option value="customer_declined">Customer declined</option>
+              <option value="unrepairable">Unrepairable</option>
+              <option value="returned_unrepaired">Returned unrepaired</option>
+              <option value="referred">Referred elsewhere</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
+          <button id="finishCardDone" class="soft-action" type="button"><i class="bi bi-check-lg"></i> Finish ticket</button>
+        </section>
       </div>
     </div>
   </div>
@@ -13967,7 +14015,11 @@
     }
 
     function currentStoreRepairTickets() {
-      return state.repairTickets.filter(repairTicketStoreMatches);
+      return state.repairTickets.filter(ticket => (
+        repairTicketStoreMatches(ticket)
+        && !ticket.closedAt
+        && ticket.status !== 'closed'
+      ));
     }
 
     function currentRepairSnapshot() {
@@ -21486,7 +21538,7 @@
             ` : ''}
           </div>
           ${finishBlocked ? `
-            <div class="finish-card-blocked"><i class="bi bi-exclamation-triangle"></i><span>This card must stay open because it still has unbilled work, unfinished work, or an invoice balance.</span></div>
+            <div class="finish-card-blocked"><i class="bi bi-exclamation-triangle"></i><span>Finish ticket is unavailable because this card still has unbilled work, unfinished work, or an invoice balance. Continue repair instead.</span></div>
           ` : ''}
         `;
 
@@ -21543,7 +21595,17 @@
           const updated = payload.ticket ? normalizeRepairTicket(payload.ticket) : null;
           if (updated) {
             const index = state.repairTickets.findIndex(item => item.id === updated.id);
-            if (index >= 0) state.repairTickets[index] = updated;
+            if (choice.decision === 'finish') {
+              if (index >= 0) state.repairTickets.splice(index, 1);
+            } else if (index >= 0) {
+              state.repairTickets[index] = updated;
+            }
+          }
+          if (choice.decision === 'finish') {
+            showToast(`${ticket.id} finished and removed from the Repair Board.`);
+          } else {
+            const statusLabel = (repairBoardColumns.find(column => column.id === choice.next_status) || {}).label || 'Repairing';
+            showToast(`${ticket.id} will continue in ${statusLabel}.`);
           }
         } catch (error) {
           console.error(error);
@@ -23383,6 +23445,7 @@
       state.dashboardQuote.issueKey = dashboardQuoteKey(state.dashboardQuote.rows[0]);
       state.dashboardQuote.appleModelMap = { iphone: { A3102: 'iPhone 15 Pro' } };
       if (testParams.has('repair-test')) {
+        const finishTest = testParams.has('finish-test');
         state.repairTickets = [normalizeRepairTicket({
           id: 'RPR-LOCAL-TEST',
           store_id: 'toowong',
@@ -23396,14 +23459,14 @@
           customerName: 'Test Customer',
           customerPhone: '0400 000 000',
           paymentStatus: 'paid',
-          outstandingTotal: 258,
-          unbilledTotal: 258,
-          canClose: false,
+          outstandingTotal: finishTest ? 0 : 258,
+          unbilledTotal: finishTest ? 0 : 258,
+          canClose: finishTest,
           createdBy: 'Bowen',
           createdAt: new Date().toISOString(),
           jobs: [
-            { id: 'RJB-LOCAL-BATTERY', name: 'Battery Replacement', price: 159, note: 'Approved after inspection', status: 'approved', approvalMethod: 'phone', invoiced: false },
-            { id: 'RJB-LOCAL-SCREEN', name: 'Screen Replacement', price: 99, note: 'Waiting for customer', status: 'proposed', approvalMethod: '', invoiced: false }
+            { id: 'RJB-LOCAL-BATTERY', name: 'Battery Replacement', price: 159, note: 'Approved after inspection', status: finishTest ? 'completed' : 'approved', approvalMethod: 'phone', invoiced: finishTest },
+            { id: 'RJB-LOCAL-SCREEN', name: 'Screen Replacement', price: 99, note: 'Waiting for customer', status: finishTest ? 'cancelled' : 'proposed', approvalMethod: '', invoiced: finishTest }
           ],
           invoiceHistory: [
             { orderId: 'POS-LOCAL-1', invoiceNumber: 101, paymentStatus: 'paid', total: 49, amountPaid: 49, balanceDue: 0, createdAt: new Date().toISOString(), lines: [{ name: 'Inspection', amount: 49 }] },
@@ -23419,7 +23482,16 @@
       renderAll();
       if (testParams.has('repair-test')) {
         setActiveView('repair');
-        openTicketDetailModal('RPR-LOCAL-TEST');
+        if (testParams.has('finish-test')) {
+          const ticket = state.repairTickets[0];
+          confirmRepairCardCompletion(ticket, { id: 'POS-LOCAL-3', invoice_number: 103 }, [
+            { ticket_id: ticket.id, name: 'Battery Replacement', sale_price: 159 }
+          ]).then(choice => {
+            document.body.dataset.finishTestChoice = JSON.stringify(choice);
+          });
+        } else {
+          openTicketDetailModal('RPR-LOCAL-TEST');
+        }
       }
       document.body.dataset.dashboardTestReady = 'true';
     }
