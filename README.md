@@ -167,10 +167,13 @@ Completed checkout flow:
 Completed second-hand device flow:
 - `Used Devices` is a separate POS workspace for both customer buyback and device sale.
 - Acquisitions are purchase/intake records and never create negative sales invoices.
-- Seller name, phone, address, ID reference, age, ownership, how the device was obtained, declaration, payout method, and staff/store audit are mandatory.
+- Seller name, phone, address, ID reference, identity confirmation, ownership, declaration, payout method, and staff/store audit are mandatory. How the device was obtained is an optional note; the seller declaration confirms identity was sighted and matches the recorded ID, not an age of 18 or over.
 - Device records use their own acquisition, inventory, and immutable transaction-ledger tables.
-- IMEI or serial is unique across the device inventory; phones require a 15-digit IMEI.
-- Inspection, IMEI status/reference, activation-lock removal, and data-erasure checks gate `Ready for sale`.
+- Brand and model are picked from the same `repair_prices` catalogue the quote tool uses, with the shorthand search staff already use elsewhere (`12pm`, `s24u`). Anything missing from that list can still be typed manually. There is no separate variant field.
+- Storage is required for every category except `Other`.
+- One device identifier is enough: staff choose IMEI or serial number, the same way repair intake does. A supplied IMEI must still be 15 digits, and IMEI or serial remains unique across the device inventory.
+- The inspection checklist follows `TECHM8_Buyback_Device_Inspection_Form.pdf` and switches with the category. Phone and Tablet share one 23-point list; Laptop, Watch, Game Console, and Other have their own. Checks stored against older records stay visible even when they are not in the current list.
+- Inspection, IMEI status/reference, activation-lock removal, and data-erasure checks gate `Ready for sale`. Every answer must be Pass or N/A.
 - Every acquisition must use the selected store's open shift. Cash and bank-transfer payouts are included in shift reconciliation as paid-out amounts.
 - Ready devices can be added to the normal cart as one unique item. The database locks the record during checkout and blocks duplicate sales.
 - Used-device sales use the existing store invoice sequence, split payments, receipt, Invoice History, and refund flow.

@@ -5423,6 +5423,69 @@
       resize: vertical;
     }
 
+    .used-model-search {
+      position: relative;
+      grid-column: 1 / -1;
+    }
+
+    .used-model-results {
+      position: absolute;
+      z-index: 40;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 262px;
+      overflow-y: auto;
+      margin-top: 4px;
+      border: 1px solid var(--tm-line);
+      border-radius: 9px;
+      background: #fff;
+      box-shadow: 0 16px 34px rgba(12, 38, 45, .16);
+    }
+
+    .used-model-option {
+      display: block;
+      width: 100%;
+      padding: 9px 11px;
+      border: 0;
+      border-bottom: 1px solid #eef2f4;
+      text-align: left;
+      color: var(--tm-ink);
+      background: none;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .used-model-option:last-child { border-bottom: 0; }
+    .used-model-option:hover { background: #eff7f5; }
+    .used-model-option span { display: block; color: #7b8c92; font-size: 11px; font-weight: 700; }
+    .used-model-empty { padding: 10px 11px; color: #7b8c92; font-size: 12px; font-weight: 750; }
+
+    .used-id-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    .used-id-chip {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 999px;
+      color: #4a5d66;
+      background: #fff;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .used-id-chip.active {
+      border-color: var(--tm-green);
+      color: #fff;
+      background: var(--tm-green);
+    }
+
+    .used-field-hint { color: #7b8c92; font-size: 11px; font-weight: 700; }
+
     .used-inspection-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -9964,20 +10027,199 @@
       'Liquid Damage Indicators'
     ];
 
-    const usedDeviceInspectionItems = [
-      { key: 'power', label: 'Power and boot' },
-      { key: 'display_touch', label: 'Display and touch' },
-      { key: 'housing', label: 'Housing and back glass' },
-      { key: 'buttons', label: 'Buttons and switches' },
-      { key: 'cameras', label: 'Front and rear cameras' },
-      { key: 'charging', label: 'Charging and battery' },
-      { key: 'audio', label: 'Speakers and microphone' },
-      { key: 'connectivity', label: 'Wi-Fi and Bluetooth' },
-      { key: 'network', label: 'SIM and mobile network' },
-      { key: 'biometrics', label: 'Face ID / fingerprint' },
-      { key: 'ports', label: 'Ports and accessories' },
-      { key: 'liquid', label: 'Liquid damage indicators' }
-    ];
+    // Buyback inspection follows TECHM8_Buyback_Device_Inspection_Form.pdf, so the
+    // POS record and the signed paper register cover the same checks. The seller's
+    // activation-lock and data-erase declarations stay in Compliance instead of
+    // being duplicated here. Tablets deliberately share the phone checklist.
+    const usedDeviceInspectionProfiles = {
+      phone: [
+        { key: 'power', label: 'Power and boot' },
+        { key: 'touch', label: 'Touch working' },
+        { key: 'display_lcd', label: 'LCD / display working' },
+        { key: 'back_glass', label: 'Back glass intact' },
+        { key: 'housing', label: 'Housing and frame intact' },
+        { key: 'power_button', label: 'Power button working' },
+        { key: 'volume_buttons', label: 'Volume buttons working' },
+        { key: 'vibrate', label: 'Vibrate switch / haptics' },
+        { key: 'fingerprint', label: 'Fingerprint scanner' },
+        { key: 'face_id', label: 'Face ID working' },
+        { key: 'charging_port', label: 'Charging port working' },
+        { key: 'ear_speaker', label: 'Ear speaker working' },
+        { key: 'loudspeaker', label: 'Loudspeaker working' },
+        { key: 'mic', label: 'Microphone working' },
+        { key: 'proximity', label: 'Proximity sensor working' },
+        { key: 'rear_camera', label: 'Rear camera working' },
+        { key: 'front_camera', label: 'Front camera working' },
+        { key: 'flash', label: 'Torch / flash working' },
+        { key: 'sim_reader', label: 'SIM card reader working' },
+        { key: 'wifi', label: 'Wi-Fi working' },
+        { key: 'bluetooth', label: 'Bluetooth working' },
+        { key: 'battery', label: 'Battery charging and health' },
+        { key: 'liquid', label: 'Liquid damage indicators' }
+      ],
+      laptop: [
+        { key: 'power', label: 'Power and boot' },
+        { key: 'os_boot', label: 'Boot / operating system' },
+        { key: 'display_lcd', label: 'Screen / display condition' },
+        { key: 'touchscreen', label: 'Touchscreen (if fitted)' },
+        { key: 'keyboard', label: 'Keyboard working' },
+        { key: 'touchpad', label: 'Touch pad working' },
+        { key: 'camera', label: 'Camera working' },
+        { key: 'mic', label: 'Microphone working' },
+        { key: 'speakers', label: 'Speakers working' },
+        { key: 'wifi', label: 'Wi-Fi working' },
+        { key: 'bluetooth', label: 'Bluetooth working' },
+        { key: 'ports_io', label: 'USB / I/O ports' },
+        { key: 'charging_port', label: 'Charging port and charger detection' },
+        { key: 'battery', label: 'Battery health and charging' },
+        { key: 'storage_check', label: 'Storage check' },
+        { key: 'fans_thermal', label: 'Fan / thermal condition' },
+        { key: 'hinges_housing', label: 'Hinges and housing condition' },
+        { key: 'liquid', label: 'Liquid damage indicators' }
+      ],
+      watch: [
+        { key: 'power', label: 'Power and boot' },
+        { key: 'display_lcd', label: 'Display working' },
+        { key: 'touch', label: 'Touch working' },
+        { key: 'housing', label: 'Housing and glass intact' },
+        { key: 'buttons_crown', label: 'Buttons / crown working' },
+        { key: 'charging_port', label: 'Charging contacts working' },
+        { key: 'sensors', label: 'Heart rate and sensors' },
+        { key: 'speakers', label: 'Speaker and microphone' },
+        { key: 'bluetooth', label: 'Bluetooth / Wi-Fi pairing' },
+        { key: 'battery', label: 'Battery charging and health' },
+        { key: 'band', label: 'Band / strap present' },
+        { key: 'liquid', label: 'Liquid damage indicators' }
+      ],
+      console: [
+        { key: 'power', label: 'Power and boot' },
+        { key: 'os_boot', label: 'Boot / system software' },
+        { key: 'video_output', label: 'Video output working' },
+        { key: 'controller_ports', label: 'Controller ports and pairing' },
+        { key: 'disc_drive', label: 'Disc drive working (if fitted)' },
+        { key: 'storage_check', label: 'Storage check' },
+        { key: 'wifi', label: 'Wi-Fi / network working' },
+        { key: 'fans_thermal', label: 'Fan / thermal condition' },
+        { key: 'housing', label: 'Housing condition' },
+        { key: 'accessories', label: 'Controller and cables present' },
+        { key: 'liquid', label: 'Liquid damage indicators' }
+      ],
+      other: [
+        { key: 'power', label: 'Power and boot' },
+        { key: 'display_lcd', label: 'Display working (if fitted)' },
+        { key: 'housing', label: 'Housing condition' },
+        { key: 'buttons_crown', label: 'Buttons and controls' },
+        { key: 'charging_port', label: 'Charging port working' },
+        { key: 'speakers', label: 'Audio working' },
+        { key: 'bluetooth', label: 'Wireless connectivity' },
+        { key: 'battery', label: 'Battery charging and health' },
+        { key: 'accessories', label: 'Accessories present' },
+        { key: 'liquid', label: 'Liquid damage indicators' }
+      ]
+    };
+
+    // Records saved before the per-category checklists still need readable labels.
+    const usedDeviceLegacyInspectionLabels = {
+      display_touch: 'Display and touch',
+      buttons: 'Buttons and switches',
+      cameras: 'Front and rear cameras',
+      charging: 'Charging and battery',
+      audio: 'Speakers and microphone',
+      connectivity: 'Wi-Fi and Bluetooth',
+      network: 'SIM and mobile network',
+      biometrics: 'Face ID / fingerprint',
+      ports: 'Ports and accessories'
+    };
+
+    function usedDeviceInspectionProfileKey(category) {
+      switch (String(category || '').trim()) {
+        case 'Laptop': return 'laptop';
+        case 'Watch': return 'watch';
+        case 'Game Console': return 'console';
+        case 'Other': return 'other';
+        default: return 'phone';
+      }
+    }
+
+    function usedDeviceInspectionItemsFor(category) {
+      return usedDeviceInspectionProfiles[usedDeviceInspectionProfileKey(category)]
+        || usedDeviceInspectionProfiles.phone;
+    }
+
+    // Keeps any check stored against an older record visible instead of dropping it.
+    function usedDeviceInspectionItemsForRecord(device = {}) {
+      const items = usedDeviceInspectionItemsFor(device.category);
+      const known = new Set(items.map(item => item.key));
+      const extras = Object.keys(device.inspection || {})
+        .filter(key => !known.has(key))
+        .map(key => ({
+          key,
+          label: usedDeviceLegacyInspectionLabels[key] || String(key).replace(/_/g, ' ')
+        }));
+      return items.concat(extras);
+    }
+
+    // Brand and model are picked from the same repair_prices catalogue the quote
+    // tool uses, so a buyback record matches the repair price list instead of
+    // being free-typed. Anything missing from that list can still be entered by
+    // hand through the manual toggle.
+    function usedDeviceModelCatalogue() {
+      const seen = new Set();
+      const options = [];
+      (Array.isArray(state.repairQuotes) ? state.repairQuotes : []).forEach(row => {
+        const brand = String(row.brand || '').trim();
+        const model = String(row.model || '').trim();
+        if (!brand || !model) return;
+        const key = `${brand.toLowerCase()}|||${model.toLowerCase()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        options.push({ brand, model, label: `${brand} ${model}` });
+      });
+      return options.sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' }));
+    }
+
+    // Accepts the shorthand staff already type in the product search, so "12pm"
+    // finds iPhone 12 Pro Max and "s24u" finds Galaxy S24 Ultra.
+    function usedDeviceModelAliases(brand, model) {
+      const aliases = new Set();
+      const compactPair = compactProductSearch(`${brand} ${model}`);
+      const compactModel = compactProductSearch(model);
+      if (compactPair) aliases.add(compactPair);
+      if (compactModel) aliases.add(compactModel);
+
+      const apple = String(model).match(/^\s*(?:iphone\s*)?(\d{1,2})\s*(pro max|pro|plus|mini|air|e)?\s*$/i);
+      if (apple) {
+        const suffix = ({ 'pro max': 'pm', pro: 'pro', plus: 'plus', mini: 'mini', air: 'air', e: 'e' })[
+          String(apple[2] || '').toLowerCase()
+        ] || '';
+        aliases.add(`${apple[1]}${suffix}`);
+        aliases.add(`ip${apple[1]}${suffix}`);
+      }
+
+      const samsung = String(model).match(/(?:galaxy\s*)?([sanzmf]\s*\d{1,3})\s*(ultra|plus|edge|fe|\+)?/i);
+      if (samsung) {
+        const suffix = ({ ultra: 'u', plus: 'p', '+': 'p', edge: 'e', fe: 'fe' })[
+          String(samsung[2] || '').toLowerCase()
+        ] || '';
+        aliases.add(`${compactProductSearch(samsung[1])}${suffix}`);
+      }
+
+      return Array.from(aliases).filter(Boolean);
+    }
+
+    function usedDeviceModelMatches(query, limit = 14) {
+      const catalogue = usedDeviceModelCatalogue();
+      const raw = String(query || '').trim();
+      if (!raw) return catalogue.slice(0, limit);
+      const compactQuery = compactProductSearch(raw);
+      return catalogue.filter(option => {
+        if (fuzzySearchMatch(raw, [option.brand, option.model])) return true;
+        if (compactQuery.length < 2) return false;
+        return usedDeviceModelAliases(option.brand, option.model).some(alias => (
+          alias.includes(compactQuery) || (alias.length >= 3 && compactQuery.includes(alias))
+        ));
+      }).slice(0, limit);
+    }
 
     const repairBoardColumns = [
       { id: 'need_to_order', label: 'Need to order' },
@@ -17835,8 +18077,8 @@
       return 'No identifier';
     }
 
-    function usedDeviceInspectionFields(inspection = {}, prefix = 'buy') {
-      return usedDeviceInspectionItems.map(item => {
+    function usedDeviceInspectionFields(inspection = {}, prefix = 'buy', items = null) {
+      return (items || usedDeviceInspectionItemsFor('Phone')).map(item => {
         const value = String(inspection[item.key] || 'not_tested');
         return `
           <label class="used-inspection-item">
@@ -17859,9 +18101,10 @@
       }, {});
     }
 
-    function inspectionReadyForSale(inspection) {
-      const values = usedDeviceInspectionItems.map(item => inspection[item.key]);
-      return values.every(value => value === 'pass' || value === 'na');
+    function inspectionReadyForSale(inspection, items = null) {
+      const list = items || usedDeviceInspectionItemsFor('Phone');
+      const values = list.map(item => inspection[item.key]);
+      return values.length > 0 && values.every(value => value === 'pass' || value === 'na');
     }
 
     async function usedDeviceApiGet(resource = 'devices') {
@@ -18007,7 +18250,9 @@
               </label>
               <label class="used-field" data-used-owner-field hidden>Owner name *<input name="owner_name" type="text"></label>
               <label class="used-field span-2" data-used-owner-field hidden>Owner address *<input name="owner_address" type="text"></label>
-              <label class="used-field span-3">How the seller obtained the device *<textarea name="acquisition_statement" required></textarea></label>
+              <label class="used-field span-3">Note — how the seller obtained the device
+                <textarea name="acquisition_statement" placeholder="Optional. Example: bought new from Telstra in 2023, or upgraded and no longer needed."></textarea>
+              </label>
             </div>
           </section>
 
@@ -18015,15 +18260,30 @@
             <h2>Device</h2>
             <div class="used-form-grid">
               <label class="used-field">Category *
-                <select name="category" required><option>Phone</option><option>Tablet</option><option>Laptop</option><option>Watch</option><option>Game Console</option><option>Other</option></select>
+                <select id="usedDeviceCategory" name="category" required><option>Phone</option><option>Tablet</option><option>Laptop</option><option>Watch</option><option>Game Console</option><option>Other</option></select>
               </label>
-              <label class="used-field">Brand *<input name="brand" type="text" required></label>
-              <label class="used-field">Model *<input name="model" type="text" required></label>
-              <label class="used-field">Variant<input name="variant" type="text" placeholder="Example: Pro Max"></label>
-              <label class="used-field">Storage<input name="storage" type="text" placeholder="Example: 256GB"></label>
+              <label class="used-field span-2">Storage *<input name="storage" type="text" placeholder="Example: 256GB" required></label>
+              <div class="used-field used-model-search">Find brand and model *
+                <input id="usedDeviceModelSearch" type="search" autocomplete="off" placeholder="Search the repair price list, e.g. 12pm, iphone 13, s24u">
+                <div id="usedDeviceModelResults" class="used-model-results" hidden></div>
+                <div class="used-field-hint">Picked from the repair price list. <button id="usedDeviceModelManual" class="used-id-chip" type="button">Not listed? Type it manually</button></div>
+              </div>
+              <label class="used-field">Brand *<input id="usedDeviceBrandInput" name="brand" type="text" placeholder="Choose from the search above" required readonly></label>
+              <label class="used-field">Model *<input id="usedDeviceModelInput" name="model" type="text" placeholder="Choose from the search above" required readonly></label>
               <label class="used-field">Color<input name="color" type="text"></label>
-              <label class="used-field">IMEI<input name="imei" type="text" inputmode="numeric" maxlength="20"></label>
-              <label class="used-field">Serial number<input name="serial_number" type="text"></label>
+              <div class="used-field span-2">Device ID *
+                <div class="used-id-chips" id="usedDeviceIdChips">
+                  <button class="used-id-chip active" type="button" data-used-id-type="imei">IMEI</button>
+                  <button class="used-id-chip" type="button" data-used-id-type="serial">Serial number</button>
+                </div>
+                <label class="used-field" id="usedDeviceImeiField">
+                  <input name="imei" type="text" inputmode="numeric" maxlength="20" placeholder="Scan or type the 15-digit IMEI" required>
+                </label>
+                <label class="used-field" id="usedDeviceSerialField" hidden>
+                  <input name="serial_number" type="text" placeholder="Type the serial number">
+                </label>
+                <div class="used-field-hint">Either an IMEI or a serial number is enough.</div>
+              </div>
               <label class="used-field">Condition *
                 <select name="condition_grade" required><option>As New</option><option>Good</option><option>Fair</option><option>Poor</option><option>Faulty</option></select>
               </label>
@@ -18034,7 +18294,8 @@
 
           <section class="used-form-section">
             <h2>Inspection</h2>
-            <div class="used-inspection-grid">${usedDeviceInspectionFields({}, 'buy')}</div>
+            <div class="used-field-hint" id="usedDeviceInspectionHint" style="margin-bottom:8px;">Checklist follows the selected category. Phone and Tablet share one list.</div>
+            <div class="used-inspection-grid" id="usedDeviceInspectionGrid">${usedDeviceInspectionFields({}, 'buy', usedDeviceInspectionItemsFor('Phone'))}</div>
           </section>
 
           <section class="used-form-section">
@@ -18054,7 +18315,7 @@
             <div class="used-declaration-grid">
               <label class="used-check"><input name="activation_lock_removed" type="checkbox" required><span>Apple, Google, Samsung, PIN, and other activation locks are removed.</span></label>
               <label class="used-check"><input name="data_erased_confirmed" type="checkbox" required><span>Customer data is erased and SIM / memory cards are removed.</span></label>
-              <label class="used-check"><input name="seller_age_confirmed" type="checkbox" required><span>Seller identity has been viewed and the seller is 18 years or older.</span></label>
+              <label class="used-check"><input name="seller_age_confirmed" type="checkbox" required><span>Seller identity has been viewed and matches the ID recorded above.</span></label>
               <label class="used-check"><input name="ownership_declaration" type="checkbox" required><span>Seller confirms the legal right to sell this device and that it is not financed, leased, lost, stolen, or blocked.</span></label>
               <a class="repair-action" href="https://amta.org.au/consumer-advice/check-the-status-of-your-handset/" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Open AMTA IMEI Check</a>
             </div>
@@ -18127,6 +18388,104 @@
       renderUsedDeviceView();
       if (state.usedDeviceTab === 'inventory') loadUsedDevices();
       if (state.usedDeviceTab === 'transactions') loadUsedDeviceTransactions();
+      if (state.usedDeviceTab === 'buy' && !state.dashboardQuote.loaded) {
+        // The brand/model picker reads the repair price list.
+        loadRepairQuotes().then(() => {
+          const search = els.usedDeviceContent.querySelector('#usedDeviceModelSearch');
+          if (search && search.value.trim()) renderUsedDeviceModelResults(search.value);
+        }).catch(() => {});
+      }
+    }
+
+    function usedDeviceBuyFormEl() {
+      return els.usedDeviceContent.querySelector('#usedDeviceBuyForm');
+    }
+
+    function renderUsedDeviceModelResults(query) {
+      const form = usedDeviceBuyFormEl();
+      const results = form && form.querySelector('#usedDeviceModelResults');
+      if (!results) return;
+      if (!String(query || '').trim()) {
+        results.hidden = true;
+        results.innerHTML = '';
+        return;
+      }
+      const matches = usedDeviceModelMatches(query);
+      if (!matches.length) {
+        results.innerHTML = state.dashboardQuote.loaded
+          ? '<div class="used-model-empty">No match in the repair price list. Use &ldquo;Not listed? Type it manually&rdquo;.</div>'
+          : '<div class="used-model-empty">Loading the repair price list...</div>';
+        results.hidden = false;
+        return;
+      }
+      results.innerHTML = matches.map(option => `
+        <button class="used-model-option" type="button" data-used-model-brand="${escapeHtml(option.brand)}" data-used-model-name="${escapeHtml(option.model)}">
+          ${escapeHtml(option.model)}<span>${escapeHtml(option.brand)}</span>
+        </button>
+      `).join('');
+      results.hidden = false;
+    }
+
+    function applyUsedDeviceModelChoice(brand, model) {
+      const form = usedDeviceBuyFormEl();
+      if (!form) return;
+      const brandInput = form.querySelector('#usedDeviceBrandInput');
+      const modelInput = form.querySelector('#usedDeviceModelInput');
+      if (brandInput) brandInput.value = brand;
+      if (modelInput) modelInput.value = model;
+      const search = form.querySelector('#usedDeviceModelSearch');
+      if (search) search.value = `${brand} ${model}`;
+      const results = form.querySelector('#usedDeviceModelResults');
+      if (results) {
+        results.hidden = true;
+        results.innerHTML = '';
+      }
+    }
+
+    function setUsedDeviceIdType(type) {
+      const form = usedDeviceBuyFormEl();
+      if (!form) return;
+      const useImei = type !== 'serial';
+      form.querySelectorAll('[data-used-id-type]').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.usedIdType === (useImei ? 'imei' : 'serial'));
+      });
+      [['#usedDeviceImeiField', useImei], ['#usedDeviceSerialField', !useImei]].forEach(([selector, active]) => {
+        const field = form.querySelector(selector);
+        if (!field) return;
+        field.hidden = !active;
+        const input = field.querySelector('input');
+        if (!input) return;
+        input.required = active;
+        // Only one identifier is kept, so the hidden one must not be submitted.
+        if (!active) input.value = '';
+      });
+    }
+
+    function refreshUsedDeviceCategoryFields() {
+      const form = usedDeviceBuyFormEl();
+      if (!form) return;
+      const category = String((form.querySelector('#usedDeviceCategory') || {}).value || 'Phone');
+      const grid = form.querySelector('#usedDeviceInspectionGrid');
+      if (grid) grid.innerHTML = usedDeviceInspectionFields({}, 'buy', usedDeviceInspectionItemsFor(category));
+      const storage = form.querySelector('[name="storage"]');
+      if (storage) storage.required = category !== 'Other';
+    }
+
+    function enableUsedDeviceManualModel(button) {
+      const form = usedDeviceBuyFormEl();
+      if (!form) return;
+      ['#usedDeviceBrandInput', '#usedDeviceModelInput'].forEach(selector => {
+        const input = form.querySelector(selector);
+        if (!input) return;
+        input.readOnly = false;
+        input.placeholder = 'Type it manually';
+      });
+      if (button) {
+        button.textContent = 'Manual entry on';
+        button.classList.add('active');
+      }
+      const brandInput = form.querySelector('#usedDeviceBrandInput');
+      if (brandInput) brandInput.focus();
     }
 
     async function submitUsedDevicePurchase(form) {
@@ -18135,12 +18494,28 @@
       const data = new FormData(form);
       const inspection = collectUsedDeviceInspection(form, 'buy');
       const requestedStatus = String(data.get('status') || 'inspection');
-      if (requestedStatus === 'ready_for_sale' && !inspectionReadyForSale(inspection)) {
+      const category = String(data.get('category') || '');
+      if (requestedStatus === 'ready_for_sale'
+        && !inspectionReadyForSale(inspection, usedDeviceInspectionItemsFor(category))) {
         error.textContent = 'Every inspection item must be Pass or N/A before the device can be ready for sale.';
         return;
       }
-      if (data.get('category') === 'Phone' && String(data.get('imei') || '').replace(/\D/g, '').length !== 15) {
-        error.textContent = 'Phones require a valid 15-digit IMEI.';
+      const imeiDigits = String(data.get('imei') || '').replace(/\D/g, '');
+      const serialValue = String(data.get('serial_number') || '').trim();
+      if (!imeiDigits && !serialValue) {
+        error.textContent = 'Record either an IMEI or a serial number for this device.';
+        return;
+      }
+      if (imeiDigits && imeiDigits.length !== 15) {
+        error.textContent = 'An IMEI must contain exactly 15 digits. Use the serial number option instead if it is unavailable.';
+        return;
+      }
+      if (category !== 'Other' && !String(data.get('storage') || '').trim()) {
+        error.textContent = 'Storage is required.';
+        return;
+      }
+      if (!String(data.get('brand') || '').trim() || !String(data.get('model') || '').trim()) {
+        error.textContent = 'Choose a brand and model from the search, or type them manually.';
         return;
       }
       if (data.get('clean_check_status') === 'Clean' && !String(data.get('clean_check_reference') || '').trim()) {
@@ -18246,7 +18621,7 @@
               <label class="used-field span-2">Check reference<input name="clean_check_reference" type="text" value="${escapeHtml(device.clean_check_reference || '')}"></label>
               <label class="used-field">Notes<input name="notes" type="text" value="${escapeHtml(device.notes || '')}"></label>
             </div>
-            <div class="used-inspection-grid" style="margin-top:12px;">${usedDeviceInspectionFields(device.inspection || {}, 'detail')}</div>
+            <div class="used-inspection-grid" style="margin-top:12px;">${usedDeviceInspectionFields(device.inspection || {}, 'detail', usedDeviceInspectionItemsForRecord(device))}</div>
             <div class="used-declaration-grid">
               <label class="used-check"><input name="activation_lock_removed" type="checkbox" ${device.activation_lock_removed ? 'checked' : ''}><span>Activation and account locks removed</span></label>
               <label class="used-check"><input name="data_erased_confirmed" type="checkbox" ${device.data_erased_confirmed ? 'checked' : ''}><span>Customer data erased</span></label>
@@ -18296,7 +18671,8 @@
       const inspection = collectUsedDeviceInspection(form, 'detail');
       const status = String(data.get('status') || device.status);
       const error = form.querySelector('#usedDeviceUpdateError');
-      if (status === 'ready_for_sale' && !inspectionReadyForSale(inspection)) {
+      if (status === 'ready_for_sale'
+        && !inspectionReadyForSale(inspection, usedDeviceInspectionItemsForRecord(device))) {
         error.textContent = 'Every inspection item must be Pass or N/A before the device can be ready for sale.';
         return;
       }
@@ -22438,6 +22814,24 @@
       else loadUsedDevices();
     });
     els.usedDeviceContent.addEventListener('click', event => {
+      const modelOption = event.target.closest('[data-used-model-brand]');
+      if (modelOption) {
+        applyUsedDeviceModelChoice(modelOption.dataset.usedModelBrand, modelOption.dataset.usedModelName);
+        return;
+      }
+      const idChip = event.target.closest('[data-used-id-type]');
+      if (idChip) {
+        setUsedDeviceIdType(idChip.dataset.usedIdType);
+        return;
+      }
+      if (event.target.closest('#usedDeviceModelManual')) {
+        enableUsedDeviceManualModel(event.target.closest('#usedDeviceModelManual'));
+        return;
+      }
+      const openResults = els.usedDeviceContent.querySelector('#usedDeviceModelResults');
+      if (openResults && !openResults.hidden && !event.target.closest('#usedDeviceModelSearch')) {
+        openResults.hidden = true;
+      }
       const statusButton = event.target.closest('[data-used-status]');
       const sellButton = event.target.closest('[data-used-sell]');
       const tabButton = event.target.closest('[data-used-tab-action]');
@@ -22466,6 +22860,10 @@
       openUsedDeviceDetail(deviceRow.dataset.usedDeviceDetails);
     });
     els.usedDeviceContent.addEventListener('input', event => {
+      if (event.target.id === 'usedDeviceModelSearch') {
+        renderUsedDeviceModelResults(event.target.value);
+        return;
+      }
       if (!['usedDeviceSearch', 'usedDeviceTransactionSearch'].includes(event.target.id)) return;
       state.usedDeviceSearch = event.target.value;
       clearTimeout(loadUsedDevices.searchTimer);
@@ -22475,6 +22873,10 @@
       }, 300);
     });
     els.usedDeviceContent.addEventListener('change', event => {
+      if (event.target.id === 'usedDeviceCategory') {
+        refreshUsedDeviceCategoryFields();
+        return;
+      }
       if (event.target.id !== 'usedSellerIsOwner') return;
       const showOwner = event.target.value === 'false';
       els.usedDeviceContent.querySelectorAll('[data-used-owner-field]').forEach(field => {
