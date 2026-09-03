@@ -57,6 +57,8 @@ Password rules:
 - Staff passwords and POS PINs are individual credentials, not one shared front-end password.
 - `price-admin.html` does not change staff credentials.
 - Do not expose password hashes or PIN hashes in browser-readable tables or API responses.
+- `Forgot password?` sends a single-use link to the staff email. The link expires after 30 minutes, does not reveal whether an email exists, and revokes every existing staff session after a successful reset.
+- Password-reset RPCs remain `service_role` only. The browser calls `pos-staff-password-reset`; email delivery is handed to the separately secured `staff-reset-email-relay` rather than exposing or duplicating the Resend key.
 
 ## POS System
 
@@ -346,6 +348,9 @@ Required POS migrations, in order:
 37. `20260902142143_finalize_multi_job_repair_workflow.sql`
 38. `20260903110750_fix_ambiguous_repair_close_overload.sql`
 39. `20260903111713_separate_repair_continue_and_close_status.sql`
+40. `20260903221500_add_admin_four_store_sales_overview.sql`
+
+The Admin Portal opens on the four-store sales overview. Its management-only RPC reports Park Ridge, Fairfield, North Lakes, and Toowong together; the MIS column is reserved for used-device sales.
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`

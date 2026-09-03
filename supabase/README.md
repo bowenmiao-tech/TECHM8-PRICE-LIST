@@ -361,3 +361,35 @@ supabase functions deploy send-pos-receipt-email --no-verify-jwt
 ```
 
 Both functions use `x-staff-session` and the same public Supabase headers documented above. Email provider keys remain server-side.
+
+## Staff Password Reset
+
+`index.html` provides a `Forgot password?` flow for active staff accounts. The public response is deliberately identical for known and unknown email addresses, so the form cannot be used to enumerate staff. A valid request creates a random one-time token, stores only its SHA-256 digest, and emails a link that expires after 30 minutes. Completing the reset updates the password, optionally updates the four-digit PIN, and revokes all existing sessions for that staff member.
+
+Database objects are installed by:
+
+```text
+20260903020000_add_staff_password_reset.sql
+```
+
+The database RPCs are executable only by `service_role`. The browser talks to `pos-staff-password-reset` in the staff-auth project. That function sends through `staff-reset-email-relay` in the website project, where the existing Resend provider configuration remains. The relay rejects every call without the shared internal secret and only accepts a correctly formed `https://oztechm8.com.au/?reset=...` link.
+
+Required project secrets:
+
+```text
+Staff-auth project:
+  STAFF_RESET_RELAY_URL
+  STAFF_RESET_RELAY_SECRET
+
+Website/email project:
+  STAFF_RESET_RELAY_SECRET
+  RESEND_API_KEY or RESEND_API_KEY_BOOKING
+  STAFF_RESET_FROM, POS_RECEIPT_FROM, or BOOKING_FROM_EMAIL
+```
+
+Deploy both functions without gateway JWT verification. This is intentional: the reset endpoint is public but exposes no staff lookup result, while the email relay performs its own secret authentication.
+
+```bash
+supabase functions deploy pos-staff-password-reset --project-ref <staff-auth-project> --no-verify-jwt
+supabase functions deploy staff-reset-email-relay --project-ref <website-project> --no-verify-jwt
+```

@@ -112,6 +112,28 @@
       cursor: pointer;
     }
     .show-password input { accent-color: var(--green); }
+    .link-button {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: #0b6f7d;
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .link-button:hover { color: #033e47; }
+    .form-hint { margin: 0; color: #596b72; font-size: 13px; }
+    .form-actions { display: flex; align-items: center; gap: 16px; }
+    .form-success {
+      padding: 13px 14px;
+      border: 1px solid #cce7df;
+      border-radius: 12px;
+      color: #176c5b;
+      background: #effaf7;
+      font-size: 13px;
+      line-height: 1.5;
+    }
     .login-button {
       width: fit-content;
       min-width: 108px;
@@ -273,11 +295,42 @@
             <label class="field">Password<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Enter your password" required></label>
             <div class="password-options">
               <label class="show-password"><input id="showPassword" type="checkbox">Show password</label>
-              <span>First login uses the temporary password.</span>
+              <button id="forgotPasswordLink" class="link-button" type="button">Forgot password?</button>
             </div>
+            <div id="loginNotice" class="form-success" hidden></div>
             <button id="loginButton" class="login-button" type="submit">Login</button>
+            <p class="form-hint">First login uses the temporary password.</p>
             <div id="loginError" class="form-error" role="alert"></div>
           </form>
+        </section>
+        <section id="resetRequestStep" hidden>
+          <h1>Reset Password</h1>
+          <p class="intro">Enter your staff email and we will send you a link to set a new password.</p>
+          <form id="resetRequestForm" class="form-stack">
+            <label class="field">Email<input id="resetEmail" type="email" autocomplete="username" placeholder="Enter your staff email" required></label>
+            <div class="form-actions">
+              <button id="resetRequestButton" class="login-button" type="submit">Send reset link</button>
+              <button id="backToLoginFromRequest" class="link-button" type="button">Back to login</button>
+            </div>
+            <div id="resetRequestNotice" class="form-success" hidden></div>
+            <div id="resetRequestError" class="form-error" role="alert"></div>
+          </form>
+        </section>
+        <section id="resetStep" hidden>
+          <h1>Set New Password</h1>
+          <p id="resetIntro" class="intro">Checking your reset link...</p>
+          <form id="resetForm" class="form-stack" hidden>
+            <div class="first-login-note"><i class="bi bi-shield-lock"></i><span>This link works once and expires 30 minutes after it was sent. Saving signs you out on every device.</span></div>
+            <label class="field">New account password<input id="resetPassword" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required></label>
+            <label class="field">Confirm account password<input id="resetConfirmPassword" type="password" minlength="8" autocomplete="new-password" placeholder="Repeat your password" required></label>
+            <label class="field">New 4-digit PIN <span style="font-weight:600;color:#7b8c92">(optional)</span><input id="resetPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="new-password" placeholder="Leave blank to keep your current PIN"></label>
+            <button id="resetButton" class="login-button" type="submit">Save & Continue</button>
+            <div id="resetError" class="form-error" role="alert"></div>
+          </form>
+          <div id="resetFallback" class="form-stack" hidden>
+            <div id="resetFallbackMessage" class="form-error" role="alert"></div>
+            <button id="backToLoginFromReset" class="link-button" type="button">Back to login</button>
+          </div>
         </section>
         <section id="setupStep" hidden>
           <h1>Secure Your Account</h1>
@@ -325,17 +378,122 @@
     const setupButton = document.getElementById('setupButton');
     const setupError = document.getElementById('setupError');
 
+    const PASSWORD_RESET_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-staff-password-reset';
+    const resetRequestStep = document.getElementById('resetRequestStep');
+    const resetStep = document.getElementById('resetStep');
+    const resetToken = (new URLSearchParams(window.location.search).get('reset') || '').trim();
+    let resetStaffEmail = '';
+
     function openPos() { window.location.replace('./pos.html'); }
+    function showStep(step) {
+      [loginStep, setupStep, resetRequestStep, resetStep].forEach(section => {
+        section.hidden = section !== step;
+      });
+    }
     function showSetup(profile) {
-      loginStep.hidden = true;
-      setupStep.hidden = false;
+      showStep(setupStep);
       document.getElementById('setupIntro').textContent = `${profile.staff_name || profile.staff_email || 'Staff'}, create your private password and POS PIN.`;
       document.getElementById('newPassword').focus();
+    }
+
+    async function callReset(payload) {
+      const response = await fetch(PASSWORD_RESET_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.message || 'Password reset is unavailable right now.');
+      return body;
     }
 
     document.getElementById('showPassword').addEventListener('change', event => {
       loginPassword.type = event.target.checked ? 'text' : 'password';
     });
+
+    const loginNotice = document.getElementById('loginNotice');
+    const resetEmail = document.getElementById('resetEmail');
+    const resetRequestForm = document.getElementById('resetRequestForm');
+    const resetRequestButton = document.getElementById('resetRequestButton');
+    const resetRequestNotice = document.getElementById('resetRequestNotice');
+    const resetRequestError = document.getElementById('resetRequestError');
+    const resetForm = document.getElementById('resetForm');
+    const resetButton = document.getElementById('resetButton');
+    const resetError = document.getElementById('resetError');
+    const resetFallback = document.getElementById('resetFallback');
+    const resetIntro = document.getElementById('resetIntro');
+
+    function backToLogin() {
+      showStep(loginStep);
+      loginError.textContent = '';
+      loginEmail.focus();
+    }
+
+    document.getElementById('forgotPasswordLink').addEventListener('click', () => {
+      resetEmail.value = loginEmail.value.trim();
+      resetRequestNotice.hidden = true;
+      resetRequestError.textContent = '';
+      showStep(resetRequestStep);
+      resetEmail.focus();
+    });
+    document.getElementById('backToLoginFromRequest').addEventListener('click', backToLogin);
+    document.getElementById('backToLoginFromReset').addEventListener('click', backToLogin);
+
+    resetRequestForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      resetRequestError.textContent = '';
+      resetRequestNotice.hidden = true;
+      resetRequestButton.disabled = true;
+      resetRequestButton.textContent = 'Sending...';
+      try {
+        const body = await callReset({ action: 'request', email: resetEmail.value });
+        resetRequestNotice.textContent = body.message
+          || 'If that email belongs to a staff account, a reset link is on its way.';
+        resetRequestNotice.hidden = false;
+      } catch (error) {
+        resetRequestError.textContent = error.message || 'The reset link could not be sent.';
+      } finally {
+        resetRequestButton.disabled = false;
+        resetRequestButton.textContent = 'Send reset link';
+      }
+    });
+
+    resetForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const password = document.getElementById('resetPassword').value;
+      const confirmedPassword = document.getElementById('resetConfirmPassword').value;
+      const pin = document.getElementById('resetPin').value.trim();
+      resetError.textContent = '';
+      if (password.length < 8) { resetError.textContent = 'Password must be at least 8 characters.'; return; }
+      if (password === '123456') { resetError.textContent = 'Choose a password different from the temporary password.'; return; }
+      if (password !== confirmedPassword) { resetError.textContent = 'The account passwords do not match.'; return; }
+      if (pin && !/^\d{4}$/.test(pin)) { resetError.textContent = 'PIN must contain exactly four digits.'; return; }
+      if (pin && pin === password) { resetError.textContent = 'Password and PIN must be different.'; return; }
+      resetButton.disabled = true;
+      resetButton.textContent = 'Saving...';
+      try {
+        await callReset({ action: 'complete', token: resetToken, password, pin });
+        window.history.replaceState({}, '', window.location.pathname);
+        loginNotice.textContent = 'Your password has been updated. Sign in with your new password.';
+        loginNotice.hidden = false;
+        if (resetStaffEmail) loginEmail.value = resetStaffEmail;
+        showStep(loginStep);
+        loginPassword.focus();
+      } catch (error) {
+        resetError.textContent = error.message || 'The password could not be updated.';
+      } finally {
+        resetButton.disabled = false;
+        resetButton.textContent = 'Save & Continue';
+      }
+    });
+
+    function showInvalidResetLink() {
+      resetIntro.textContent = 'This reset link is no longer valid.';
+      resetForm.hidden = true;
+      document.getElementById('resetFallbackMessage').textContent =
+        'Reset links can only be used once and expire 30 minutes after they are sent. Request a new one from the login page.';
+      resetFallback.hidden = false;
+    }
 
     loginForm.addEventListener('submit', async event => {
       event.preventDefault();
@@ -379,11 +537,24 @@
       }
     });
 
-    window.Techm8StaffAuth.verify().then(profile => {
-      if (!profile) return;
-      if (profile.must_change_credentials) showSetup(profile);
-      else openPos();
-    }).catch(() => {});
+    if (resetToken) {
+      // Arriving from a reset email must never bounce straight into POS on an
+      // existing session, so the resumed-session check is skipped here.
+      showStep(resetStep);
+      callReset({ action: 'verify', token: resetToken }).then(body => {
+        if (!body || !body.valid) { showInvalidResetLink(); return; }
+        resetStaffEmail = body.staff_email || '';
+        resetIntro.textContent = `${body.staff_name || 'Staff'}, choose a new password for your account.`;
+        resetForm.hidden = false;
+        document.getElementById('resetPassword').focus();
+      }).catch(() => showInvalidResetLink());
+    } else {
+      window.Techm8StaffAuth.verify().then(profile => {
+        if (!profile) return;
+        if (profile.must_change_credentials) showSetup(profile);
+        else openPos();
+      }).catch(() => {});
+    }
   </script>
 </body>
 </html>

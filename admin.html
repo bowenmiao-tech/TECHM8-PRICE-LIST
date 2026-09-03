@@ -3,396 +3,761 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="techm8-admin-build" content="2026-09-03-four-store-sales-dashboard">
   <title>TECHM8 Admin Portal</title>
+  <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js?v=20260826.1"></script>
   <style>
     :root {
-      --tm-dark: #163129;
-      --tm-dark-2: #24463b;
-      --tm-bg: #eef3f6;
-      --tm-border: #dce5e9;
-      --tm-text: #16242b;
-      --tm-muted: #667781;
-      --tm-accent: #ef7204;
+      --green: #07896f;
+      --green-dark: #076d5b;
+      --green-deep: #102f28;
+      --orange: #ef7204;
+      --blue: #3d78c5;
+      --purple: #7657b4;
+      --red: #d84b3e;
+      --ink: #17252c;
+      --muted: #657680;
+      --soft: #f2f5f7;
+      --line: #dce5e9;
+      --line-strong: #c9d5da;
+      --card: #ffffff;
+      --sidebar: 244px;
     }
 
     * { box-sizing: border-box; }
-
+    html, body { height: 100%; }
     body {
       margin: 0;
-      background:
-        radial-gradient(circle at top left, rgba(239,114,4,0.12), transparent 24%),
-        radial-gradient(circle at top right, rgba(22,49,41,0.10), transparent 28%),
-        linear-gradient(180deg, #f7f9fb 0%, var(--tm-bg) 100%);
-      color: var(--tm-text);
+      color: var(--ink);
+      background: var(--soft);
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
+    button, input { font: inherit; }
+    button { color: inherit; }
 
-    .page {
-      max-width: 1360px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .shell {
-      overflow: hidden;
-      border-radius: 30px;
-      border: 1px solid var(--tm-border);
-      background: rgba(255,255,255,0.94);
-      box-shadow: 0 24px 64px rgba(14, 24, 32, 0.12);
-    }
-
-    .hero {
-      padding: 32px;
-      background: linear-gradient(135deg, var(--tm-dark) 0%, var(--tm-dark-2) 100%);
-      color: #fff;
-    }
-
-    .hero h1 {
-      margin: 0;
-      font-size: clamp(34px, 5vw, 52px);
-      line-height: 1;
-      font-weight: 800;
-    }
-
-    .hero p {
-      margin: 14px 0 0;
-      max-width: 760px;
-      color: rgba(255,255,255,0.84);
-      line-height: 1.7;
-      font-size: 15px;
-    }
-
-    .hero-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .hero-tag {
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.14);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .03em;
-    }
-
-    .content {
-      padding: 22px;
-    }
-
-    .section-title {
-      margin: 0 0 8px;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .section-copy {
-      margin: 0 0 18px;
-      font-size: 14px;
-      line-height: 1.7;
-      color: var(--tm-muted);
-    }
-
-    .card-grid {
+    .app-shell {
+      min-height: 100vh;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
     }
-
-    .admin-card {
-      position: relative;
+    .sidebar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      min-height: 300px;
-      padding: 26px;
-      border-radius: 24px;
-      border: 1px solid var(--tm-border);
-      background:
-        radial-gradient(circle at top right, rgba(239,114,4,0.10), transparent 24%),
-        linear-gradient(180deg, #ffffff 0%, #fbfdfe 100%);
-    }
-
-    .icon-box {
-      width: 64px;
-      height: 64px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 20px;
-      background: linear-gradient(135deg, var(--tm-dark) 0%, #295545 100%);
+      padding: 18px 14px 14px;
       color: #fff;
-      font-size: 30px;
-      font-weight: 800;
-      box-shadow: 0 16px 28px rgba(22,49,41,0.18);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(18, 201, 165, .18), transparent 25%),
+        linear-gradient(180deg, #102f28 0%, #0d251f 100%);
+      box-shadow: 8px 0 32px rgba(12, 31, 27, .10);
     }
-
-    .card-label {
-      font-size: 12px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 58px;
+      padding: 6px 9px 13px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .brand img {
+      width: 38px;
+      height: 38px;
+      object-fit: cover;
+      object-position: left;
+      filter: brightness(0) invert(1);
+    }
+    .brand-copy { min-width: 0; }
+    .brand-name { font-size: 16px; line-height: 1.1; font-weight: 900; letter-spacing: .035em; }
+    .brand-label {
+      margin-top: 3px;
+      color: rgba(255,255,255,.58);
+      font-size: 10px;
       font-weight: 800;
-      letter-spacing: .09em;
-      color: #8798a2;
+      letter-spacing: .12em;
       text-transform: uppercase;
     }
-
-    .card-title {
+    .nav-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      padding: 13px 0;
+    }
+    .nav-section { margin: 0 0 18px; }
+    .nav-heading {
       margin: 0;
-      font-size: 28px;
-      line-height: 1.1;
+      padding: 0 12px 7px;
+      color: rgba(255,255,255,.42);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .nav-item {
+      width: 100%;
+      min-height: 43px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin: 2px 0;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 12px;
+      color: rgba(255,255,255,.68);
+      background: transparent;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+    .nav-item:hover { color: #fff; background: rgba(255,255,255,.08); transform: translateX(2px); }
+    .nav-item.active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--green) 0%, #08745f 100%);
+      box-shadow: 0 8px 18px rgba(0,0,0,.18);
+    }
+    .nav-item i { width: 20px; color: rgba(255,255,255,.82); font-size: 17px; text-align: center; }
+    .nav-item.active i { color: #fff; }
+    .sidebar-footer { padding-top: 12px; border-top: 1px solid rgba(255,255,255,.10); }
+    .admin-profile { display: flex; align-items: center; gap: 10px; padding: 5px 8px 11px; }
+    .avatar {
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      color: #0e5c4d;
+      background: #d8f5ee;
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .admin-profile strong { display: block; color: #fff; font-size: 11px; }
+    .admin-profile span { display: block; margin-top: 2px; color: rgba(255,255,255,.48); font-size: 9px; }
+    .logout-button {
+      width: 100%;
+      min-height: 39px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 11px;
+      color: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.06);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .logout-button:hover { color: #fff; background: rgba(255,255,255,.11); }
+
+    .main-column { min-width: 0; min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(12px);
+    }
+    .topbar-left, .topbar-right { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .mobile-menu {
+      width: 40px;
+      height: 40px;
+      display: none;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .breadcrumb-kicker { color: var(--green); font-size: 9px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    .breadcrumb-title { margin-top: 2px; overflow: hidden; font-size: 13px; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      color: #416159;
+      background: #ecf7f4;
+      font-size: 10px;
       font-weight: 800;
     }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(7,137,111,.12); }
 
-    .card-copy {
-      margin: 0;
-      color: #4f616a;
-      line-height: 1.8;
-      font-size: 15px;
-      flex: 1;
+    .content-view { display: none; }
+    .content-view.active { display: block; }
+    .overview-view { width: 100%; max-width: 1540px; margin: 0 auto; padding: 26px 28px 42px; }
+    .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+    .eyebrow { margin: 0 0 7px; color: var(--green); font-size: 9px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(27px, 3vw, 38px); line-height: 1.08; letter-spacing: -.035em; }
+    .page-subtitle { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .updated-at { flex: 0 0 auto; color: #84939a; font-size: 10px; font-weight: 700; }
+
+    .filters-card {
+      margin-bottom: 16px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: var(--card);
+      box-shadow: 0 5px 20px rgba(32, 52, 61, .04);
     }
-
-    .card-list {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      gap: 10px;
-      color: #33454e;
-      font-size: 14px;
+    .preset-row { display: flex; align-items: center; gap: 7px; overflow-x: auto; padding-bottom: 11px; scrollbar-width: thin; }
+    .preset-button {
+      flex: 0 0 auto;
+      min-height: 32px;
+      padding: 0 12px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      color: #667680;
+      background: #f4f6f7;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
     }
-
-    .card-list li {
-      position: relative;
-      padding-left: 20px;
+    .preset-button:hover { color: var(--green-dark); border-color: #cfe6e0; }
+    .preset-button.active { color: #fff; background: var(--green); box-shadow: 0 5px 12px rgba(7,137,111,.20); }
+    .filter-fields { display: flex; align-items: flex-end; gap: 10px; padding-top: 12px; border-top: 1px solid #edf1f3; }
+    .date-field { display: grid; gap: 6px; }
+    .date-field span { color: #798991; font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .date-field input {
+      width: 162px;
+      height: 38px;
+      padding: 0 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+      font-size: 11px;
+      font-weight: 750;
     }
-
-    .card-list li::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 8px;
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--tm-accent);
-    }
-
-    .card-button {
+    .date-field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7,137,111,.11); }
+    .filter-spacer { flex: 1; }
+    .refresh-button {
+      height: 38px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      min-height: 54px;
-      width: fit-content;
-      padding: 0 22px;
-      border-radius: 999px;
-      background: var(--tm-dark);
-      color: #fff;
-      text-decoration: none;
-      font-size: 16px;
-      font-weight: 800;
+      gap: 8px;
+      padding: 0 16px;
       border: 0;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--green);
+      font-size: 10px;
+      font-weight: 850;
       cursor: pointer;
+      box-shadow: 0 6px 14px rgba(7,137,111,.18);
     }
+    .refresh-button:hover { background: var(--green-dark); }
+    .refresh-button:disabled { cursor: wait; opacity: .62; }
+    .refresh-button.loading i { animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .card-button-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .top-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 16px;
-    }
-
-    .ghost-button {
-      min-height: 48px;
-      padding: 0 18px;
-      border-radius: 999px;
-      border: 1px solid var(--tm-border);
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .summary-card {
+      position: relative;
+      min-height: 122px;
+      overflow: hidden;
+      padding: 17px 18px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
       background: #fff;
-      color: var(--tm-text);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(32, 52, 61, .035);
     }
-
-    @media (max-width: 1100px) {
-      .card-grid {
-        grid-template-columns: 1fr;
-      }
+    .summary-card::after {
+      content: '';
+      position: absolute;
+      right: -30px;
+      bottom: -48px;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: rgba(7,137,111,.055);
     }
+    .summary-card.orange::after { background: rgba(239,114,4,.07); }
+    .summary-card.blue::after { background: rgba(61,120,197,.07); }
+    .summary-card.red::after { background: rgba(216,75,62,.06); }
+    .summary-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .summary-label { color: #687983; font-size: 9px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; }
+    .summary-icon { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; color: var(--green-dark); background: #eaf7f3; font-size: 13px; }
+    .summary-card.orange .summary-icon { color: #bc5600; background: #fff1e5; }
+    .summary-card.blue .summary-icon { color: #285d9f; background: #edf4fd; }
+    .summary-card.red .summary-icon { color: #b53c31; background: #fff0ee; }
+    .summary-value { position: relative; z-index: 1; margin-top: 10px; font-size: clamp(22px, 2.35vw, 31px); line-height: 1; font-weight: 900; letter-spacing: -.035em; }
+    .summary-meta { position: relative; z-index: 1; margin-top: 7px; color: #84939a; font-size: 9px; font-weight: 650; }
 
-    @media (max-width: 640px) {
-      .page {
-        padding: 12px;
-      }
+    .section-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 23px 0 11px; }
+    .section-bar h2 { margin: 0; font-size: 15px; letter-spacing: -.015em; }
+    .section-bar p { margin: 3px 0 0; color: #819097; font-size: 9px; }
+    .legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 11px; color: #6e7f87; font-size: 9px; font-weight: 750; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend i { width: 7px; height: 7px; border-radius: 2px; background: var(--green); }
+    .legend .mis { background: var(--orange); }
+    .legend .products { background: var(--blue); }
+    .legend .other { background: #b3bec4; }
 
-      .hero,
-      .content {
-        padding: 16px;
-      }
+    .store-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .store-card {
+      position: relative;
+      padding: 17px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: #fff;
+      box-shadow: 0 5px 20px rgba(32, 52, 61, .035);
+    }
+    .store-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--store-color, var(--green)); }
+    .store-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .store-name { font-size: 12px; font-weight: 900; }
+    .store-rank { display: inline-flex; align-items: center; gap: 4px; padding: 5px 7px; border-radius: 7px; color: #657680; background: #f2f5f6; font-size: 8px; font-weight: 850; }
+    .store-total { margin-top: 13px; font-size: clamp(20px, 2vw, 27px); font-weight: 900; letter-spacing: -.035em; }
+    .store-total-label { margin-top: 3px; color: #89969c; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .mix-bar { height: 6px; display: flex; gap: 2px; overflow: hidden; margin: 15px 0 13px; border-radius: 999px; background: #e9eef0; }
+    .mix-bar span { min-width: 0; }
+    .mix-repair { background: var(--green); }
+    .mix-mis { background: var(--orange); }
+    .mix-product { background: var(--blue); }
+    .mix-other { background: #b3bec4; }
+    .store-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; }
+    .store-metric span { display: block; color: #87959b; font-size: 8px; font-weight: 750; }
+    .store-metric strong { display: block; margin-top: 3px; font-size: 11px; }
 
-      .admin-card {
-        min-height: unset;
-        padding: 20px;
-      }
+    .table-card { overflow: hidden; border: 1px solid var(--line); border-radius: 17px; background: #fff; box-shadow: 0 5px 20px rgba(32, 52, 61, .035); }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 10px; }
+    th, td { height: 48px; padding: 0 15px; border-bottom: 1px solid #edf1f3; text-align: right; white-space: nowrap; }
+    th { height: 40px; color: #84939a; background: #f8fafb; font-size: 8px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
+    th:first-child, td:first-child { text-align: left; }
+    td { color: #41545e; font-weight: 650; }
+    td:first-child { color: var(--ink); font-weight: 850; }
+    tbody tr:hover td { background: #fbfcfc; }
+    tfoot td { border-bottom: 0; color: var(--ink); background: #f6f9f9; font-weight: 900; }
+    .value-main { color: var(--ink); font-weight: 900; }
+    .value-mis { color: #c75d06; font-weight: 850; }
+    .value-refund { color: var(--red); }
+    .store-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 3px; background: var(--store-color); }
 
-      .card-title {
-        font-size: 24px;
+    .error-panel {
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+      margin: 12px 0 16px;
+      padding: 15px 17px;
+      border: 1px solid #f0cbc7;
+      border-radius: 14px;
+      color: #96362e;
+      background: #fff4f2;
+      font-size: 10px;
+      line-height: 1.55;
+    }
+    .error-panel.show { display: flex; }
+    .error-panel strong { display: block; margin-bottom: 2px; font-size: 11px; }
+    .skeleton {
+      border-radius: 7px;
+      color: transparent !important;
+      background: linear-gradient(90deg, #edf1f3 25%, #f8fafb 50%, #edf1f3 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.25s infinite linear;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    .tool-view { flex: 1; min-height: calc(100vh - 66px); }
+    .tool-panel { height: calc(100vh - 66px); display: flex; flex-direction: column; padding: 16px 18px 18px; }
+    .tool-panel-head { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 5px; }
+    .tool-panel-head h1 { font-size: 18px; }
+    .open-new {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      color: #4d626c;
+      background: #fff;
+      text-decoration: none;
+      font-size: 9px;
+      font-weight: 850;
+    }
+    .tool-frame-wrap { position: relative; flex: 1; min-height: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(32, 52, 61, .07); }
+    .tool-frame { width: 100%; height: 100%; border: 0; background: #fff; }
+    .frame-loader { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; color: var(--green-dark); background: rgba(255,255,255,.94); font-size: 22px; }
+    .frame-loader.hidden { display: none; }
+    .frame-loader i { animation: spin .8s linear infinite; }
+    .sidebar-backdrop { display: none; }
+
+    @media (max-width: 1180px) {
+      .summary-grid, .store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 820px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { position: fixed; inset: 0 auto 0 0; width: min(280px, 86vw); transform: translateX(-105%); transition: transform .22s ease; }
+      body.menu-open .sidebar { transform: translateX(0); }
+      .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 25;
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        border: 0;
+        background: rgba(8, 23, 19, .48);
+        transition: opacity .22s ease, visibility .22s ease;
       }
+      body.menu-open .sidebar-backdrop { visibility: visible; opacity: 1; }
+      .mobile-menu { display: grid; }
+      .topbar { padding: 0 16px; }
+      .overview-view { padding: 20px 16px 34px; }
+      .tool-panel { padding: 12px; }
+    }
+    @media (max-width: 580px) {
+      .live-pill { display: none; }
+      .page-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+      .summary-grid, .store-grid { grid-template-columns: 1fr; }
+      .filter-fields { align-items: stretch; flex-wrap: wrap; }
+      .date-field { flex: 1 1 140px; }
+      .date-field input { width: 100%; }
+      .filter-spacer { display: none; }
+      .refresh-button { flex: 1 1 100%; }
+      .section-bar { align-items: flex-start; flex-direction: column; }
+      .legend { justify-content: flex-start; }
+      .tool-panel-head h1 { font-size: 15px; }
     }
   </style>
 </head>
 <body>
-  <div class="page" data-auth-protected>
-    <div class="shell">
-      <div class="hero">
-        <h1>Admin Portal</h1>
-        <p>
-          Use one admin account and password to open the backend. From here you can manage repair prices,
-          review daily reports, and maintain screen and battery inventory for each store.
-        </p>
-        <div class="hero-tags">
-          <div class="hero-tag">Admin account login</div>
-          <div class="hero-tag">Price management</div>
-          <div class="hero-tag">Daily report review</div>
-          <div class="hero-tag">Parts inventory control</div>
-        </div>
+  <div class="app-shell" data-auth-protected>
+    <aside class="sidebar" aria-label="Admin navigation">
+      <div class="brand">
+        <img src="./assets/brand/techm8-logo.png" alt="TECHM8">
+        <div class="brand-copy"><div class="brand-name">TECHM8</div><div class="brand-label">Admin Portal</div></div>
       </div>
 
-      <div class="content">
-        <div class="top-actions">
-          <button class="ghost-button" type="button" id="logoutButton">Logout</button>
+      <div class="nav-scroll">
+        <section class="nav-section">
+          <h2 class="nav-heading">Overview</h2>
+          <button class="nav-item active" type="button" data-route="sales" data-title="Four Store Sales"><i class="bi bi-grid-1x2-fill"></i><span>Sales Overview</span></button>
+        </section>
+        <section class="nav-section">
+          <h2 class="nav-heading">Pricing</h2>
+          <button class="nav-item" type="button" data-route="auto-price" data-title="Auto Price List" data-src="./auto-price-list.html"><i class="bi bi-arrow-repeat"></i><span>Auto Price List</span></button>
+          <button class="nav-item" type="button" data-route="repair-prices" data-title="Repair Prices" data-src="./price-admin.html"><i class="bi bi-tags"></i><span>Repair Prices</span></button>
+        </section>
+        <section class="nav-section">
+          <h2 class="nav-heading">Reports</h2>
+          <button class="nav-item" type="button" data-route="daily-reports" data-title="Daily Reports" data-src="./daily-report-admin.html"><i class="bi bi-file-earmark-bar-graph"></i><span>Daily Reports</span></button>
+          <button class="nav-item" type="button" data-route="north-lakes" data-title="North Lakes Reports" data-src="./nl-report-admin.html"><i class="bi bi-shop-window"></i><span>North Lakes Reports</span></button>
+        </section>
+        <section class="nav-section">
+          <h2 class="nav-heading">Operations</h2>
+          <button class="nav-item" type="button" data-route="inventory" data-title="Parts Inventory" data-src="./lcd-inventory-admin.html"><i class="bi bi-boxes"></i><span>Parts Inventory</span></button>
+          <button class="nav-item" type="button" data-route="staff" data-title="Staff Management" data-src="./stocktake-admin.html"><i class="bi bi-people"></i><span>Staff Management</span></button>
+          <button class="nav-item" type="button" data-route="schedule" data-title="Staff Schedule" data-src="./schedule-admin.html"><i class="bi bi-calendar3"></i><span>Staff Schedule</span></button>
+        </section>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="admin-profile"><div class="avatar">A</div><div><strong>Administrator</strong><span>All-store access</span></div></div>
+        <button class="logout-button" type="button" id="logoutButton"><i class="bi bi-box-arrow-left"></i> Sign Out</button>
+      </div>
+    </aside>
+
+    <button class="sidebar-backdrop" type="button" id="sidebarBackdrop" aria-label="Close navigation"></button>
+
+    <div class="main-column">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu" id="mobileMenu" type="button" aria-label="Open navigation"><i class="bi bi-list"></i></button>
+          <div><div class="breadcrumb-kicker">Admin Portal</div><div class="breadcrumb-title" id="breadcrumbTitle">Four Store Sales</div></div>
         </div>
+        <div class="topbar-right"><div class="live-pill"><span class="live-dot"></span> Live business data</div></div>
+      </header>
 
-        <h2 class="section-title">Select A Backend Tool</h2>
-        <p class="section-copy">
-          Each tool opens as a separate page. The pages do not need to cross-link with each other.
-        </p>
+      <main>
+        <section class="content-view overview-view active" id="overviewView" aria-labelledby="salesTitle">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">Performance at a glance</p>
+              <h1 id="salesTitle">Four Store Sales</h1>
+              <p class="page-subtitle">Park Ridge, Fairfield, North Lakes and Toowong in one view. MIS is used-device sales.</p>
+            </div>
+            <div class="updated-at" id="updatedAt">Waiting for data</div>
+          </div>
 
-        <div class="card-grid">
-          <section class="admin-card">
-            <div class="icon-box">A</div>
-            <div class="card-label">Automation</div>
-            <h3 class="card-title">Auto Price List</h3>
-            <p class="card-copy">
-              View the Crazy Parts automatic price update schedule, live progress, and the latest successful run for every brand.
-            </p>
-            <ul class="card-list">
-              <li>Live update progress</li>
-              <li>Monthly brand schedule</li>
-              <li>Last successful update time</li>
-            </ul>
-            <a class="card-button" href="./auto-price-list.html">Open Auto Price List</a>
-          </section>
-
-          <section class="admin-card">
-            <div class="icon-box">P</div>
-            <div class="card-label">Price</div>
-            <h3 class="card-title">Price List Admin</h3>
-            <p class="card-copy">
-              Edit retail prices, maintain cost prices, and refresh FX-linked values.
-            </p>
-            <ul class="card-list">
-              <li>Single row price save</li>
-              <li>Retail and cost price maintenance</li>
-              <li>Individual staff account status</li>
-            </ul>
-            <a class="card-button" href="./price-admin.html">Open Price Admin</a>
-          </section>
-
-          <section class="admin-card">
-            <div class="icon-box">R</div>
-            <div class="card-label">Report</div>
-            <h3 class="card-title">Daily Report Admin</h3>
-            <p class="card-copy">
-              Query submitted reports by date and store, inspect repair lines, and check screen / battery reductions against store activity.
-            </p>
-            <ul class="card-list">
-              <li>Store and date filtering</li>
-              <li>Repair and sales summary view</li>
-              <li>Parts reduction audit</li>
-            </ul>
-            <div class="card-button-row">
-              <a class="card-button" href="./daily-report-admin.html">Open Report Admin</a>
-              <a class="card-button" href="./nl-report-admin.html">Open NL Admin</a>
+          <section class="filters-card" aria-label="Sales date filters">
+            <div class="preset-row" id="presetRow">
+              <button class="preset-button active" type="button" data-preset="today">Today</button>
+              <button class="preset-button" type="button" data-preset="yesterday">Yesterday</button>
+              <button class="preset-button" type="button" data-preset="last7">Last 7 Days</button>
+              <button class="preset-button" type="button" data-preset="month">This Month</button>
+              <button class="preset-button" type="button" data-preset="lastMonth">Last Month</button>
+              <button class="preset-button" type="button" data-preset="year">This Year</button>
+            </div>
+            <div class="filter-fields">
+              <label class="date-field"><span>From</span><input id="dateFrom" type="date"></label>
+              <label class="date-field"><span>To</span><input id="dateTo" type="date"></label>
+              <div class="filter-spacer"></div>
+              <button class="refresh-button" id="refreshButton" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh Sales</button>
             </div>
           </section>
 
-          <section class="admin-card">
-            <div class="icon-box">L</div>
-            <div class="card-label">Inventory</div>
-            <h3 class="card-title">Screen & Battery Inventory Admin</h3>
-            <p class="card-copy">
-              Add, edit, remove, and activate screen and battery stock rows per store.
-            </p>
-            <ul class="card-list">
-              <li>Per-store parts stock</li>
-              <li>Screen variants plus one Battery row per model</li>
-              <li>Active or inactive stock rows</li>
-            </ul>
-            <a class="card-button" href="./lcd-inventory-admin.html">Open Parts Admin</a>
-          </section>
+          <div class="error-panel" id="errorPanel" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div><strong>Sales data could not be loaded</strong><span id="errorMessage"></span></div>
+          </div>
 
-          <section class="admin-card">
-            <div class="icon-box">S</div>
-            <div class="card-label">Schedule</div>
-            <h3 class="card-title">POS Schedule Admin</h3>
-            <p class="card-copy">
-              Assign staff to stores by day, maintain staff PINs, and control which store POS opens for each staff member.
-            </p>
-            <ul class="card-list">
-              <li>Weekly roster table</li>
-              <li>Per-staff 4-digit POS PIN</li>
-              <li>Store-based POS opening control</li>
-            </ul>
-            <a class="card-button" href="./schedule-admin.html">Open Schedule Admin</a>
-          </section>
+          <section class="summary-grid" id="summaryGrid" aria-label="Combined sales summary"></section>
 
-          <section class="admin-card">
-            <div class="icon-box">E</div>
-            <div class="card-label">Employees</div>
-            <h3 class="card-title">Staff Management</h3>
-            <p class="card-copy">
-              Assign each staff member to their store and control whether their account can sign in to the POS.
-            </p>
-            <ul class="card-list">
-              <li>Assign one store to each staff account</li>
-              <li>Enable or disable staff login</li>
-              <li>Bowen remains administrator for all stores</li>
-            </ul>
-            <a class="card-button" href="./stocktake-admin.html">Open Staff Management</a>
+          <div class="section-bar">
+            <div><h2>Store Performance</h2><p id="rangeLabel">Today</p></div>
+            <div class="legend" aria-label="Sales category legend">
+              <span><i></i> Repairs</span><span><i class="mis"></i> MIS / Devices</span><span><i class="products"></i> Products</span><span><i class="other"></i> Other</span>
+            </div>
+          </div>
+          <section class="store-grid" id="storeGrid" aria-label="Sales by store"></section>
+
+          <div class="section-bar">
+            <div><h2>Four Store Comparison</h2><p>All amounts include GST and are net of refunds unless noted.</p></div>
+          </div>
+          <section class="table-card">
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Store</th><th>Repairs</th><th>MIS (Devices)</th><th>Products</th><th>Other</th><th>Total Sales</th><th>Payments Received</th><th>Refunds</th><th>Invoices</th></tr></thead>
+                <tbody id="salesTableBody"></tbody>
+                <tfoot id="salesTableFoot"></tfoot>
+              </table>
+            </div>
           </section>
-        </div>
-      </div>
+        </section>
+
+        <section class="content-view tool-view" id="toolView" aria-labelledby="toolTitle">
+          <div class="tool-panel">
+            <div class="tool-panel-head">
+              <h1 id="toolTitle">Admin Tool</h1>
+              <a class="open-new" id="openNew" href="#" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Open in new tab</a>
+            </div>
+            <div class="tool-frame-wrap">
+              <div class="frame-loader" id="frameLoader"><i class="bi bi-arrow-repeat"></i></div>
+              <iframe class="tool-frame" id="toolFrame" title="Admin tool"></iframe>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
 
   <script>
-    window.Techm8StaffAuth.init({
-      rootSelector: '[data-auth-protected]',
-      title: 'Admin Login',
-      subtitle: 'Sign in with the admin account and password to open the backend portal.',
-      requireLoginEmail: true,
-      loginInputType: 'text',
-      loginPlaceholder: 'Admin account',
-      sessionKey: 'techm8_admin_session_token',
-      createRpc: 'create_admin_session',
-      verifyRpc: 'verify_admin_session',
-      revokeRpc: 'revoke_admin_session'
-    });
+    (() => {
+      const STORE_META = {
+        parkridge: { name: 'Park Ridge', color: '#07896f' },
+        fairfield: { name: 'Fairfield', color: '#3d78c5' },
+        northlakes: { name: 'North Lakes', color: '#7657b4' },
+        toowong: { name: 'Toowong', color: '#ef7204' }
+      };
+      const STORE_ORDER = Object.keys(STORE_META);
+      const els = {
+        overview: document.getElementById('overviewView'),
+        tool: document.getElementById('toolView'),
+        breadcrumb: document.getElementById('breadcrumbTitle'),
+        dateFrom: document.getElementById('dateFrom'),
+        dateTo: document.getElementById('dateTo'),
+        refresh: document.getElementById('refreshButton'),
+        updatedAt: document.getElementById('updatedAt'),
+        rangeLabel: document.getElementById('rangeLabel'),
+        summary: document.getElementById('summaryGrid'),
+        stores: document.getElementById('storeGrid'),
+        tableBody: document.getElementById('salesTableBody'),
+        tableFoot: document.getElementById('salesTableFoot'),
+        error: document.getElementById('errorPanel'),
+        errorMessage: document.getElementById('errorMessage'),
+        frame: document.getElementById('toolFrame'),
+        frameLoader: document.getElementById('frameLoader'),
+        toolTitle: document.getElementById('toolTitle'),
+        openNew: document.getElementById('openNew')
+      };
+      let loading = false;
 
-    document.getElementById('logoutButton').addEventListener('click', function () {
-      window.Techm8StaffAuth.logout();
-    });
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+      }
+      function number(value) { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : 0; }
+      function money(value) {
+        return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number(value));
+      }
+      function brisbaneToday() {
+        const parts = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date()).reduce((result, part) => {
+          if (part.type !== 'literal') result[part.type] = part.value;
+          return result;
+        }, {});
+        return `${parts.year}-${parts.month}-${parts.day}`;
+      }
+      function isoDate(date) { return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`; }
+      function dateObject(iso) { return new Date(`${iso}T12:00:00Z`); }
+      function addDays(iso, days) { const date = dateObject(iso); date.setUTCDate(date.getUTCDate() + days); return isoDate(date); }
+      function presetRange(preset) {
+        const today = brisbaneToday();
+        const current = dateObject(today);
+        if (preset === 'yesterday') { const yesterday = addDays(today, -1); return [yesterday, yesterday]; }
+        if (preset === 'last7') return [addDays(today, -6), today];
+        if (preset === 'month') return [`${today.slice(0, 8)}01`, today];
+        if (preset === 'lastMonth') {
+          const first = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() - 1, 1));
+          const last = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), 0));
+          return [isoDate(first), isoDate(last)];
+        }
+        if (preset === 'year') return [`${today.slice(0, 4)}-01-01`, today];
+        return [today, today];
+      }
+      function readableDate(iso) { return new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }).format(dateObject(iso)); }
+      function rangeText(from, to) {
+        if (from === to) return from === brisbaneToday() ? 'Today · ' + readableDate(from) : readableDate(from);
+        return `${readableDate(from)} – ${readableDate(to)}`;
+      }
+      function setPreset(preset, shouldLoad = true) {
+        const [from, to] = presetRange(preset);
+        els.dateFrom.value = from;
+        els.dateTo.value = to;
+        document.querySelectorAll('[data-preset]').forEach(button => button.classList.toggle('active', button.dataset.preset === preset));
+        if (shouldLoad) loadSales();
+      }
+      function setCustomDates() { document.querySelectorAll('[data-preset]').forEach(button => button.classList.remove('active')); }
+      function summaryCard(label, value, meta, icon, tone = '') {
+        return `<article class="summary-card ${tone}"><div class="summary-top"><span class="summary-label">${escapeHtml(label)}</span><span class="summary-icon"><i class="bi ${icon}"></i></span></div><div class="summary-value">${escapeHtml(value)}</div><div class="summary-meta">${escapeHtml(meta)}</div></article>`;
+      }
+      function showLoading() {
+        els.summary.innerHTML = Array.from({ length: 4 }, () => summaryCard('Loading', '—', 'Updating sales data', 'bi-hourglass-split')).join('');
+        els.stores.innerHTML = STORE_ORDER.map(code => `<article class="store-card" style="--store-color:${STORE_META[code].color}"><div class="store-name">${STORE_META[code].name}</div><div class="store-total skeleton">$0,000.00</div><div class="mix-bar skeleton"></div><div class="store-metrics"><div class="store-metric"><span>Repairs</span><strong class="skeleton">$000.00</strong></div><div class="store-metric"><span>MIS / Devices</span><strong class="skeleton">$000.00</strong></div></div></article>`).join('');
+        els.tableBody.innerHTML = `<tr><td colspan="9" style="height:110px;text-align:center;color:#8a989e">Loading four-store sales…</td></tr>`;
+        els.tableFoot.innerHTML = '';
+      }
+      function normalizedStores(rows) {
+        const byCode = new Map((Array.isArray(rows) ? rows : []).map(row => [row.store_code, row]));
+        return STORE_ORDER.map(code => ({ store_code: code, ...STORE_META[code], ...(byCode.get(code) || {}) }));
+      }
+      function mixWidth(value, total) { if (number(value) <= 0 || total <= 0) return 0; return Math.max(2, number(value) / total * 100); }
+      function renderSales(report) {
+        const totals = report.totals || {};
+        const stores = normalizedStores(report.stores);
+        const ranked = [...stores].sort((a, b) => number(b.net_sales) - number(a.net_sales));
+        const rankByCode = new Map(ranked.map((row, index) => [row.store_code, index + 1]));
+        const invoiceCount = number(totals.invoice_count);
+        const refundCount = number(totals.refund_count);
+
+        els.summary.innerHTML = [
+          summaryCard('Net Sales', money(totals.net_sales), `${money(totals.gst)} GST included`, 'bi-graph-up-arrow'),
+          summaryCard('Payments Received', money(totals.payments_received), 'Payments taken in selected period', 'bi-wallet2', 'blue'),
+          summaryCard('MIS / Device Sales', money(totals.mis), 'Used-device sales across four stores', 'bi-phone', 'orange'),
+          summaryCard('Invoices', String(invoiceCount), `${refundCount} refund${refundCount === 1 ? '' : 's'} · ${money(totals.refunds)}`, 'bi-receipt', refundCount ? 'red' : '')
+        ].join('');
+
+        els.stores.innerHTML = stores.map(store => {
+          const positiveMix = ['repairs', 'mis', 'products', 'other'].reduce((sum, key) => sum + Math.max(0, number(store[key])), 0);
+          return `<article class="store-card" style="--store-color:${escapeHtml(store.color)}"><div class="store-card-head"><div class="store-name">${escapeHtml(store.name)}</div><div class="store-rank"><i class="bi bi-bar-chart-fill"></i> #${rankByCode.get(store.store_code)}</div></div><div class="store-total">${money(store.net_sales)}</div><div class="store-total-label">Net sales</div><div class="mix-bar" aria-label="Sales category mix"><span class="mix-repair" style="width:${mixWidth(store.repairs, positiveMix)}%"></span><span class="mix-mis" style="width:${mixWidth(store.mis, positiveMix)}%"></span><span class="mix-product" style="width:${mixWidth(store.products, positiveMix)}%"></span><span class="mix-other" style="width:${mixWidth(store.other, positiveMix)}%"></span></div><div class="store-metrics"><div class="store-metric"><span>Repairs</span><strong>${money(store.repairs)}</strong></div><div class="store-metric"><span>MIS / Devices</span><strong>${money(store.mis)}</strong></div><div class="store-metric"><span>Products</span><strong>${money(store.products)}</strong></div><div class="store-metric"><span>${number(store.invoice_count)} invoices</span><strong>${money(store.average_sale)} avg.</strong></div></div></article>`;
+        }).join('');
+
+        els.tableBody.innerHTML = stores.map(store => `<tr><td><span class="store-dot" style="--store-color:${escapeHtml(store.color)}"></span>${escapeHtml(store.name)}</td><td>${money(store.repairs)}</td><td class="value-mis">${money(store.mis)}</td><td>${money(store.products)}</td><td>${money(store.other)}</td><td class="value-main">${money(store.net_sales)}</td><td>${money(store.payments_received)}</td><td class="${number(store.refunds) ? 'value-refund' : ''}">${money(store.refunds)}</td><td>${number(store.invoice_count)}</td></tr>`).join('');
+        els.tableFoot.innerHTML = `<tr><td>All Stores</td><td>${money(totals.repairs)}</td><td class="value-mis">${money(totals.mis)}</td><td>${money(totals.products)}</td><td>${money(totals.other)}</td><td>${money(totals.net_sales)}</td><td>${money(totals.payments_received)}</td><td>${money(totals.refunds)}</td><td>${invoiceCount}</td></tr>`;
+        els.rangeLabel.textContent = rangeText(report.date_from || els.dateFrom.value, report.date_to || els.dateTo.value);
+        els.updatedAt.textContent = `Updated ${new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' }).format(new Date())}`;
+      }
+      async function loadSales() {
+        if (loading) return;
+        const from = els.dateFrom.value;
+        const to = els.dateTo.value;
+        if (!from || !to) return;
+        if (from > to) {
+          els.errorMessage.textContent = 'The start date must be on or before the end date.';
+          els.error.classList.add('show');
+          return;
+        }
+        loading = true;
+        els.refresh.disabled = true;
+        els.refresh.classList.add('loading');
+        els.error.classList.remove('show');
+        showLoading();
+        try {
+          const report = await window.Techm8StaffAuth.callRpc('get_admin_sales_overview', { session_token: window.Techm8StaffAuth.getToken(), date_from: from, date_to: to });
+          renderSales(report || {});
+        } catch (error) {
+          els.errorMessage.textContent = error.message || 'Please try again.';
+          els.error.classList.add('show');
+          els.updatedAt.textContent = 'Update failed';
+          renderSales({ date_from: from, date_to: to, totals: {}, stores: [] });
+        } finally {
+          loading = false;
+          els.refresh.disabled = false;
+          els.refresh.classList.remove('loading');
+        }
+      }
+      function navigate(button, updateHash = true) {
+        if (!button) button = document.querySelector('[data-route="sales"]');
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item === button));
+        const isSales = button.dataset.route === 'sales';
+        els.overview.classList.toggle('active', isSales);
+        els.tool.classList.toggle('active', !isSales);
+        els.breadcrumb.textContent = button.dataset.title || 'Admin Portal';
+        if (!isSales) {
+          const src = button.dataset.src;
+          els.toolTitle.textContent = button.dataset.title;
+          els.openNew.href = src;
+          if (els.frame.getAttribute('src') !== src) { els.frameLoader.classList.remove('hidden'); els.frame.src = src; }
+        }
+        if (updateHash) history.replaceState(null, '', `#${button.dataset.route}`);
+        document.body.classList.remove('menu-open');
+      }
+      function restoreRoute() {
+        const route = location.hash.replace(/^#/, '') || 'sales';
+        navigate(document.querySelector(`[data-route="${CSS.escape(route)}"]`) || document.querySelector('[data-route="sales"]'), false);
+      }
+
+      document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => setPreset(button.dataset.preset)));
+      document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => navigate(button)));
+      [els.dateFrom, els.dateTo].forEach(input => input.addEventListener('change', setCustomDates));
+      els.refresh.addEventListener('click', loadSales);
+      els.frame.addEventListener('load', () => els.frameLoader.classList.add('hidden'));
+      document.getElementById('mobileMenu').addEventListener('click', () => document.body.classList.toggle('menu-open'));
+      document.getElementById('sidebarBackdrop').addEventListener('click', () => document.body.classList.remove('menu-open'));
+      document.getElementById('logoutButton').addEventListener('click', () => window.Techm8StaffAuth.logout());
+      window.addEventListener('hashchange', restoreRoute);
+
+      setPreset('today', false);
+      window.Techm8StaffAuth.init({
+        rootSelector: '[data-auth-protected]',
+        title: 'Admin Login',
+        subtitle: 'Sign in with the admin account and password to open the management portal.',
+        requireLoginEmail: true,
+        loginInputType: 'text',
+        loginPlaceholder: 'Admin account',
+        sessionKey: 'techm8_admin_session_token',
+        createRpc: 'create_admin_session',
+        verifyRpc: 'verify_admin_session',
+        revokeRpc: 'revoke_admin_session'
+      }).then(() => {
+        restoreRoute();
+        loadSales();
+      }).catch(error => {
+        console.error(error);
+        els.errorMessage.textContent = error.message || 'Admin authentication failed.';
+        els.error.classList.add('show');
+      });
+    })();
   </script>
 </body>
 </html>
