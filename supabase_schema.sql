@@ -7233,7 +7233,7 @@ comment on column public.staff_sessions.token_digest is
 -- -----------------------------------------------------------------------------
 -- Self-service staff password reset
 -- Keep this block synchronized with
--- supabase/migrations/20260903020000_add_staff_password_reset.sql.
+-- supabase/migrations/20260903114417_add_staff_password_reset.sql.
 -- -----------------------------------------------------------------------------
 
 -- Self-service staff password reset backed by single-use, expiring tokens.

@@ -369,7 +369,7 @@ Both functions use `x-staff-session` and the same public Supabase headers docume
 Database objects are installed by:
 
 ```text
-20260903020000_add_staff_password_reset.sql
+20260903114417_add_staff_password_reset.sql
 ```
 
 The database RPCs are executable only by `service_role`. The browser talks to `pos-staff-password-reset` in the staff-auth project. That function sends through `staff-reset-email-relay` in the website project, where the existing Resend provider configuration remains. The relay rejects every call without the shared internal secret and only accepts a correctly formed `https://oztechm8.com.au/?reset=...` link.
