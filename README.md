@@ -21,7 +21,7 @@ Front-end staff pages:
 - `backup_price_lookup.html` - backup quote page
 
 Admin pages:
-- `admin.html` - admin portal entry page; admin login required here first
+- `admin.html` - admin portal entry page; admin login required here first. Opens on the four-store sales overview (Park Ridge, Fairfield, North Lakes, Toowong) served by `get_admin_sales_overview`. Each store row splits net sales into repairs, MIS/used devices and products, so the three categories always add up to that store's net sales. Refunds stay in their own column and are never netted off. GST is derived at the Australian 1/11 rate because no per-line tax column is stored, so it is indicative rather than a BAS figure.
 - `price-admin.html` - price admin
 - `daily-report-admin.html` - report review page
 - `nl-report-admin.html` - North Lakes product cost, payable, temporary save, and upload admin
