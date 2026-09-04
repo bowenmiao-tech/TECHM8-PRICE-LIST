@@ -9,6 +9,7 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const outputDir = path.join(projectRoot, 'outputs', 'crazyparts-price-monitor');
 const historyDir = path.join(outputDir, 'history');
 const backupDir = path.join(outputDir, 'supabase-backups');
+const minimumReplacementCoveragePercent = 70;
 
 const familyConfig = new Map([
   ['a series', { dbBrand: 'Samsung A Series', displayBrand: 'Samsung', statusFamily: 'A Series', mode: 'samsung' }],
@@ -326,8 +327,22 @@ function makeReplacementPlan(rawData, siteRows, configs) {
 
   const replaceBrands = configs.map((config) => config.dbBrand);
   for (const brand of replaceBrands) {
-    if (!updates.some((row) => row.brand === brand)) {
+    const existingBrandRows = siteRows.filter((row) => row.brand === brand);
+    const replacementBrandRows = updates.filter((row) => row.brand === brand);
+    if (!replacementBrandRows.length) {
       throw new Error(`Destructive brand replacement refused: ${brand} produced no eligible repair prices.`);
+    }
+
+    const existingModels = new Set(existingBrandRows.map((row) => row.model));
+    const replacementModels = new Set(replacementBrandRows.map((row) => row.model));
+    if (existingModels.size >= 20) {
+      const coveragePercent = (replacementModels.size / existingModels.size) * 100;
+      if (coveragePercent < minimumReplacementCoveragePercent) {
+        throw new Error(
+          `Destructive brand replacement refused: ${brand} produced ${replacementModels.size}/${existingModels.size} `
+          + `existing model coverage (${coveragePercent.toFixed(1)}%), below the ${minimumReplacementCoveragePercent}% safety limit.`,
+        );
+      }
     }
   }
   return {

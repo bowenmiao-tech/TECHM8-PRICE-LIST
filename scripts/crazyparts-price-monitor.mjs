@@ -136,7 +136,10 @@ function classifyProduct(name) {
   return null;
 }
 
-function productMatchesModel(productName, modelHeading) {
+function productMatchesModel(productName, modelHeading, model) {
+  const modelContext = `${model?.brand || ''} ${model?.family || ''}`;
+  if (!/\bsamsung\b|\ba series\b/i.test(modelContext)) return true;
+
   const title = String(productName || '');
   const heading = String(modelHeading || '');
   const parenthetical = [...heading.matchAll(/\(([^)]+)\)/g)].map((match) => match[1]).join(' ');
@@ -379,6 +382,24 @@ async function scrapeModel(page, model, config) {
   return { ...model, heading, products: [...productMap.values()] };
 }
 
+async function scrapeModelWithNetworkRetries(page, model, config) {
+  const attempts = Math.max(1, config.modelRetryAttempts || 1);
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await scrapeModel(page, model, config);
+    } catch (error) {
+      const transient = /ERR_NETWORK|ERR_CONNECTION|ERR_INTERNET_DISCONNECTED|Timeout/i.test(error.message || '');
+      if (!transient || attempt === attempts) throw error;
+      const waitMs = Math.max(1000, config.modelRetryDelayMs || 5000) * attempt;
+      console.warn(
+        `${model.name}: temporary network error; waiting ${Math.round(waitMs / 1000)} seconds before retry ${attempt + 1}/${attempts}.`,
+      );
+      await sleep(waitMs);
+    }
+  }
+  throw new Error(`Could not read ${model.name} after ${attempts} attempts.`);
+}
+
 function summariseModels(models, capturedAt) {
   const repairRows = [];
   const sourceRows = [];
@@ -388,7 +409,7 @@ function summariseModels(models, capturedAt) {
   for (const model of models) {
     if (!isEligibleRepairModel({ ...model, name: model.heading || model.name })) continue;
     const relevant = model.products.filter((product) => (
-      product.category && productMatchesModel(product.name, model.heading || model.name)
+      product.category && productMatchesModel(product.name, model.heading || model.name, model)
     ));
     for (const product of relevant) {
       sourceRows.push({
@@ -871,7 +892,7 @@ async function main() {
           const rateLimitAttempts = Math.max(1, config.rateLimitRetryAttempts || 1);
           for (let attempt = 1; attempt <= rateLimitAttempts; attempt += 1) {
             try {
-              result = await scrapeModel(workerPage, model, config);
+              result = await scrapeModelWithNetworkRetries(workerPage, model, config);
               break;
             } catch (error) {
               if (error.code !== 'CRAZYPARTS_RATE_LIMIT' || attempt === rateLimitAttempts) throw error;
@@ -951,6 +972,7 @@ async function main() {
     requestedFamilies: args.families,
     modelsSelected: selectedModels.length,
     modelsProcessed: scrapedModels.length,
+    modelCatalog: selectedModels.map(({ brand, family, name, href }) => ({ brand, family, name, href })),
     repairRows: summary.repairRows,
     sourceRows: summary.sourceRows,
     exceptions: summary.exceptions,

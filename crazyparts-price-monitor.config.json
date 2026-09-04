@@ -9,6 +9,8 @@
   "pageDelayMs": 7000,
   "loginAttempts": 3,
   "loginRetryDelayMs": 5000,
+  "modelRetryAttempts": 3,
+  "modelRetryDelayMs": 5000,
   "rateLimitRetryAttempts": 5,
   "rateLimitBackoffMs": 60000,
   "navigationTimeoutMs": 30000,
