@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="./supabase-config.js"></script>
-  <script src="./staff-auth.js?v=20260826.1"></script>
+  <script src="./staff-auth.js?v=20260904.1"></script>
   <style>
     :root {
       --ink: #10262b;
@@ -300,6 +300,10 @@
             <div id="loginNotice" class="form-success" hidden></div>
             <button id="loginButton" class="login-button" type="submit">Login</button>
             <p class="form-hint">First login uses the temporary password.</p>
+            <div id="storageWarning" class="form-hint" style="color:#a15316" hidden>
+              This browser is blocking saved site data, so you will be signed out when this tab closes.
+              In Safari, leave Private Browsing and turn off Settings &rsaquo; Safari &rsaquo; Block All Cookies, then reload.
+            </div>
             <div id="loginError" class="form-error" role="alert"></div>
           </form>
         </section>
@@ -536,6 +540,11 @@
         setupButton.textContent = 'Save & Continue';
       }
     });
+
+    if (window.Techm8StaffAuth.storageIsPersistent && !window.Techm8StaffAuth.storageIsPersistent()) {
+      const storageWarning = document.getElementById('storageWarning');
+      if (storageWarning) storageWarning.hidden = false;
+    }
 
     if (resetToken) {
       // Arriving from a reset email must never bounce straight into POS on an

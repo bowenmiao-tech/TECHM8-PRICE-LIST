@@ -26,26 +26,98 @@ window.Techm8StaffAuth = (function () {
       : activeSessionKey + '_profile';
   }
 
+  // Safari refuses browser storage in Private Browsing and whenever "Block All
+  // Cookies" is on. Reading window.localStorage throws there, and setItem throws
+  // a quota error, so an otherwise correct sign-in used to fail with a raw
+  // "The operation is insecure." A tab-lifetime memory store keeps the staff
+  // signed in for that tab instead of locking them out.
+  const memoryStore = (function () {
+    const values = {};
+    return {
+      isMemoryFallback: true,
+      getItem: function (key) {
+        return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : null;
+      },
+      setItem: function (key, value) { values[key] = String(value); },
+      removeItem: function (key) { delete values[key]; }
+    };
+  })();
+
+  function probeStorage(read) {
+    try {
+      const storage = read();
+      if (!storage) return null;
+      const probeKey = '__techm8_storage_probe__';
+      storage.setItem(probeKey, '1');
+      storage.removeItem(probeKey);
+      return storage;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  let storeCache = null;
+  let storeCacheKey = '';
+  let usingMemoryFallback = false;
+
   function sessionStores() {
-    return activeSessionKey === DEFAULT_SESSION_KEY
-      ? [sessionStorage, localStorage]
-      : [sessionStorage];
+    if (storeCache && storeCacheKey === activeSessionKey) return storeCache;
+    const readers = activeSessionKey === DEFAULT_SESSION_KEY
+      ? [function () { return sessionStorage; }, function () { return localStorage; }]
+      : [function () { return sessionStorage; }];
+    const stores = readers.map(probeStorage).filter(Boolean);
+    usingMemoryFallback = stores.length === 0;
+    storeCache = usingMemoryFallback ? [memoryStore] : stores;
+    storeCacheKey = activeSessionKey;
+    return storeCache;
+  }
+
+  function storageIsPersistent() {
+    sessionStores();
+    return !usingMemoryFallback;
+  }
+
+  function writeTo(storage, key, value) {
+    try {
+      storage.setItem(key, value);
+    } catch (error) {
+      // Storage can still fill or be revoked mid-session; a lost cache must
+      // never take down a working sign-in.
+    }
+  }
+
+  function dropFrom(storage, key) {
+    try {
+      storage.removeItem(key);
+    } catch (error) {
+      /* nothing to recover */
+    }
   }
 
   function getToken() {
-    for (const storage of sessionStores()) {
-      const token = storage.getItem(activeSessionKey) || '';
-      if (!token) continue;
-      const expiresAt = storage.getItem(expiryKey()) || '';
-      if (expiresAt && Date.parse(expiresAt) <= Date.now()) {
-        storage.removeItem(activeSessionKey);
-        storage.removeItem(expiryKey());
-        storage.removeItem(profileKey());
+    const stores = sessionStores();
+    for (let index = 0; index < stores.length; index += 1) {
+      const storage = stores[index];
+      let token = '';
+      let expiresAt = '';
+      try {
+        token = storage.getItem(activeSessionKey) || '';
+        expiresAt = storage.getItem(expiryKey()) || '';
+      } catch (error) {
         continue;
       }
-      if (activeSessionKey === DEFAULT_SESSION_KEY && storage === localStorage) {
-        sessionStorage.setItem(activeSessionKey, token);
-        if (expiresAt) sessionStorage.setItem(expiryKey(), expiresAt);
+      if (!token) continue;
+      if (expiresAt && Date.parse(expiresAt) <= Date.now()) {
+        dropFrom(storage, activeSessionKey);
+        dropFrom(storage, expiryKey());
+        dropFrom(storage, profileKey());
+        continue;
+      }
+      // A token found in the longer-lived store is mirrored into the first one
+      // so the rest of the tab reads it without touching persistent storage.
+      if (index > 0) {
+        writeTo(stores[0], activeSessionKey, token);
+        if (expiresAt) writeTo(stores[0], expiryKey(), expiresAt);
       }
       return token;
     }
@@ -55,9 +127,9 @@ window.Techm8StaffAuth = (function () {
   function setToken(token, expiresAt) {
     if (!token) return;
     sessionStores().forEach(storage => {
-      storage.setItem(activeSessionKey, token);
-      if (expiresAt) storage.setItem(expiryKey(), expiresAt);
-      else storage.removeItem(expiryKey());
+      writeTo(storage, activeSessionKey, token);
+      if (expiresAt) writeTo(storage, expiryKey(), expiresAt);
+      else dropFrom(storage, expiryKey());
     });
   }
 
@@ -67,7 +139,7 @@ window.Techm8StaffAuth = (function () {
         const profile = JSON.parse(storage.getItem(profileKey()) || 'null');
         if (profile) return profile;
       } catch (error) {
-        storage.removeItem(profileKey());
+        dropFrom(storage, profileKey());
       }
     }
     return null;
@@ -84,14 +156,14 @@ window.Techm8StaffAuth = (function () {
       default_store_name: profile.default_store_name || '',
       must_change_credentials: Boolean(profile.must_change_credentials)
     });
-    sessionStores().forEach(storage => storage.setItem(profileKey(), storedProfile));
+    sessionStores().forEach(storage => writeTo(storage, profileKey(), storedProfile));
   }
 
   function clearToken() {
     sessionStores().forEach(storage => {
-      storage.removeItem(activeSessionKey);
-      storage.removeItem(expiryKey());
-      storage.removeItem(profileKey());
+      dropFrom(storage, activeSessionKey);
+      dropFrom(storage, expiryKey());
+      dropFrom(storage, profileKey());
     });
   }
 
@@ -528,6 +600,7 @@ window.Techm8StaffAuth = (function () {
     completeFirstLogin,
     ensureCredentialsComplete,
     callRpc,
+    storageIsPersistent,
     logout
   };
 })();
