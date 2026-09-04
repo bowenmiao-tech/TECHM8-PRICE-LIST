@@ -266,6 +266,7 @@ Repair rules:
 - `cancelled` and `returned_unrepaired` are resolutions that remain in Waiting pickup until collected.
 - A repair card may contain the original intake repair plus additional approved work, such as Inspection, Battery, and Screen.
 - Each repair is a separate invoice line and can be billed only once. Proposed or cancelled work cannot be added to checkout.
+- A card can be billed more than once over its life, which is what makes an inspection today and the battery it uncovered next week possible. On one visit that is a mistake: the customer's card is charged twice. Checkout therefore warns, and names the amounts, whenever approved work on the card is being left off the invoice, and the cart reminds staff to add every repair before payment. A follow-up billed after the earlier invoice was already paid is not warned about, because that is the intended case.
 - Payment never closes a repair card automatically. After full payment, staff explicitly keep the card in an open status or finish it.
 - Finishing is blocked while work is unbilled, unfinished, or any linked invoice has a balance.
 - Every invoice linked to a repair card remains available from the card, and comments can continue after an earlier repair has been paid.

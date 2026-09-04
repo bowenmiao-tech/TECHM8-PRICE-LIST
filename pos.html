@@ -2497,6 +2497,14 @@
       font-weight: 800;
     }
 
+    .cart-repair-hint {
+      margin-top: 5px;
+      color: #6b7d84;
+      font-size: 11px;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
     .qty-control {
       display: inline-grid;
       grid-template-columns: 30px 36px 30px;
@@ -18919,6 +18927,7 @@
                     `}
                   </div>
                   ${overrideText ? `<div class="cart-price-override">${escapeHtml(overrideText)}</div>` : ''}
+                  ${item.is_repair ? '<div class="cart-repair-hint"><i class="bi bi-info-circle"></i> Add every repair for this device to the card before payment. One added afterwards becomes a second invoice and a second card charge.</div>' : ''}
                   <button class="cart-note-trigger${hasNote ? ' has-note' : ''}" type="button" data-open-cart-note="${escapeHtml(item.id)}" title="${hasNote ? 'Note added — click to edit' : 'Add a note to this item'}">
                     <i class="bi bi-chat-left-text"></i>
                     <span>Add note</span>
@@ -22058,6 +22067,35 @@
           showToast('Repair tickets for different customers must be checked out separately.');
           return;
         }
+      }
+
+      // A repair added to the card after payment becomes a second invoice and a
+      // second card charge on the same visit. Anything already approved on the
+      // card must go on this invoice, so it is caught before the money is taken.
+      const leftOffCard = repairTickets.reduce((rows, ticket) => {
+        const billing = new Set(
+          repairCartItems
+            .filter(item => item.ticket_id === ticket.id)
+            .map(item => item.repair_job_id || '__base__')
+        );
+        if (!ticket.baseInvoiced && !billing.has('__base__')) {
+          rows.push(`${ticket.baseJobName || ticket.issue || 'Repair service'} ${money(priceNumber(ticket.basePrice || ticket.price))}`);
+        }
+        (ticket.jobs || []).forEach(job => {
+          if (repairJobCanBill(job) && !billing.has(job.id)) {
+            rows.push(`${job.name} ${money(priceNumber(job.price))}`);
+          }
+        });
+        return rows;
+      }, []);
+      if (leftOffCard.length) {
+        const proceed = window.confirm(
+          `This repair card still has work that is not on this invoice:\n\n`
+          + leftOffCard.map(row => `  - ${row}`).join('\n')
+          + `\n\nBilling now leaves it for a second invoice and a second card charge.`
+          + `\n\nOK = take payment anyway.  Cancel = go back and add it to this sale.`
+        );
+        if (!proceed) return;
       }
 
       const usedDeviceItems = state.cart.filter(item => item.is_used_device && item.used_device_id);
