@@ -268,7 +268,7 @@ Repair rules:
 - Each repair is a separate invoice line and can be billed only once. Proposed or cancelled work cannot be added to checkout.
 - A card can be billed more than once over its life, which is what makes an inspection today and the battery it uncovered next week possible. On one visit that is a mistake: the customer's card is charged twice. Checkout therefore warns, and names the amounts, whenever approved work on the card is being left off the invoice, and the cart reminds staff to add every repair before payment. A follow-up billed after the earlier invoice was already paid is not warned about, because that is the intended case.
 - Payment never closes a repair card automatically. After full payment, staff explicitly keep the card in an open status or finish it.
-- Finishing is blocked while work is unbilled, unfinished, or any linked invoice has a balance.
+- Finishing is blocked while work is unbilled, unfinished, or any linked invoice has a balance. The finish dialog names what is holding the card open — the repairs that are not billed, the repairs that are not marked complete and their current status, and the amount still owing — because listing all three possible causes left staff guessing which one applied.
 - Every invoice linked to a repair card remains available from the card, and comments can continue after an earlier repair has been paid.
 - Re-signing freezes the current repair list, prices, notes, approval state, intake checks, and customer signature as a new revision.
 - Existing one-line repair cards remain compatible and do not require historical conversion.

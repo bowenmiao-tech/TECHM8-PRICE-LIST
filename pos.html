@@ -5910,6 +5910,16 @@
     .repair-job-fields .wide { grid-column: 1 / -1; }
     .repair-job-fields textarea { min-height: 82px; resize: vertical; }
     .repair-job-error { min-height: 18px; color: var(--tm-red); font-size: 12px; font-weight: 700; }
+    .finish-card-blockers {
+      margin: 6px 0 6px 0;
+      padding-left: 18px;
+    }
+
+    .finish-card-blockers li {
+      margin: 2px 0;
+      font-weight: 800;
+    }
+
     .finish-card-blocked {
       display: flex;
       gap: 8px;
@@ -21981,6 +21991,28 @@
           if (!job.invoiced && job.status !== 'cancelled') remaining.push(job);
         });
         const finishBlocked = !ticket.canClose;
+        // The server refuses for one of three reasons but reports all three, so
+        // staff could not tell which repair was holding the card open. These
+        // mirror the checks in finalize_pos_repair_ticket_after_checkout.
+        const finishBlockers = (() => {
+          if (!finishBlocked) return [];
+          const jobs = Array.isArray(ticket.jobs) ? ticket.jobs : [];
+          const reasons = [];
+          const unbilled = [];
+          if (!ticket.baseInvoiced) unbilled.push(ticket.baseJobName || ticket.issue || 'Repair service');
+          jobs.forEach(job => {
+            if (job.status !== 'cancelled' && !job.invoiced) unbilled.push(job.name);
+          });
+          if (unbilled.length) reasons.push(`Not billed yet: ${unbilled.join(', ')}`);
+          const unfinished = jobs
+            .filter(job => job.status !== 'completed' && job.status !== 'cancelled')
+            .map(job => `${job.name} (${String(job.status || '').replace(/_/g, ' ')})`);
+          if (unfinished.length) reasons.push(`Not marked complete: ${unfinished.join(', ')}`);
+          if (numberValue(ticket.balanceDue) > 0) {
+            reasons.push(`Invoice balance still owing: ${money(numberValue(ticket.balanceDue))}`);
+          }
+          return reasons;
+        })();
         const currentStatus = Array.from(els.finishCardStatus.options).some(option => option.value === ticket.status)
           ? ticket.status
           : 'repairing';
@@ -22001,7 +22033,14 @@
             ` : ''}
           </div>
           ${finishBlocked ? `
-            <div class="finish-card-blocked"><i class="bi bi-exclamation-triangle"></i><span>Finish ticket is unavailable because this card still has unbilled work, unfinished work, or an invoice balance. Continue repair instead.</span></div>
+            <div class="finish-card-blocked">
+              <i class="bi bi-exclamation-triangle"></i>
+              <span>
+                This card cannot be finished yet:
+                <ul class="finish-card-blockers">${finishBlockers.map(reason => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>
+                Fix that on the card under &ldquo;Repairs on this card&rdquo;, then finish. Continue repair for now.
+              </span>
+            </div>
           ` : ''}
         `;
 
