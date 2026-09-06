@@ -5803,6 +5803,12 @@
     .ticket-job-price { font-weight: 700; font-size: 13px; }
     .ticket-job-actions { display: flex; gap: 4px; }
     .ticket-job-actions .icon-button { width: 32px; height: 32px; }
+
+    .ticket-job-actions .icon-button.is-complete {
+      color: #fff;
+      background: var(--tm-green);
+      border-color: var(--tm-green);
+    }
     .ticket-jobs-foot {
       display: flex;
       align-items: baseline;
@@ -15886,7 +15892,12 @@
         const cancelled = job.status === 'cancelled';
         const canBill = base ? !billed : repairJobCanBill(job);
         const carted = inCart(job.id);
-        const status = billed ? 'Invoiced' : (base ? 'Intake repair' : (REPAIR_JOB_STATUS_LABELS[job.status] || job.status));
+        const needsCompleting = !base && !cancelled && job.status !== 'completed';
+        // "Invoiced" used to hide the real status, so staff could not see that
+        // the work itself was still open and holding the card.
+        const status = billed
+          ? (needsCompleting ? `Invoiced · ${REPAIR_JOB_STATUS_LABELS[job.status] || job.status}` : 'Invoiced')
+          : (base ? 'Intake repair' : (REPAIR_JOB_STATUS_LABELS[job.status] || job.status));
         const statusClass = billed ? '' : String(job.status || '').replace('_', '-');
         const approval = !base && job.approvalMethod ? REPAIR_APPROVAL_LABELS[job.approvalMethod] : '';
         const note = [job.note, approval].filter(Boolean).join(' · ');
@@ -15897,6 +15908,11 @@
         if (!base && !billed && !locked) {
           controls.push(`<button class="icon-button" type="button" data-job-edit="${escapeHtml(job.id)}" title="Edit repair"><i class="bi bi-pencil"></i></button>`);
           controls.push(`<button class="icon-button" type="button" data-job-remove="${escapeHtml(job.id)}" title="Remove repair"><i class="bi bi-trash3"></i></button>`);
+        }
+        // Editing is closed once a repair is invoiced, but the work still has to
+        // be signed off or the card can never be finished.
+        if (billed && needsCompleting && !locked) {
+          controls.push(`<button class="icon-button is-complete" type="button" data-job-complete="${escapeHtml(job.id)}" title="Mark this repair complete"><i class="bi bi-check2-circle"></i></button>`);
         }
         return `
           <div class="ticket-job ${billed ? 'is-billed' : ''} ${cancelled ? 'is-cancelled' : ''}">
@@ -23667,6 +23683,16 @@
       const jobAdd = event.target.closest('[data-job-add]');
       if (jobAdd && ticketForJobs) {
         openRepairJobModal(ticketForJobs);
+        return;
+      }
+      const jobComplete = event.target.closest('[data-job-complete]');
+      if (jobComplete && ticketForJobs) {
+        const job = (ticketForJobs.jobs || []).find(item => item.id === jobComplete.dataset.jobComplete);
+        applyRepairJobChange({
+          action: 'complete-job',
+          ticket_code: ticketForJobs.id,
+          job_code: jobComplete.dataset.jobComplete
+        }, `Marked complete: ${job ? job.name : 'repair'}.`);
         return;
       }
       const jobEdit = event.target.closest('[data-job-edit]');
