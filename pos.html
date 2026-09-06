@@ -5804,46 +5804,7 @@
     .ticket-job-actions { display: flex; gap: 4px; }
     .ticket-job-actions .icon-button { width: 32px; height: 32px; }
 
-    .ticket-finish-panel {
-      margin-top: 12px;
-      padding: 13px 14px;
-      border: 1px solid var(--tm-line);
-      border-radius: 12px;
-      background: #fff;
-    }
-
-    .ticket-finish-panel.is-closed {
-      color: #10645a;
-      background: #e9f7f2;
-      border-color: #bfe4d8;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .ticket-finish-head {
-      font-size: 14px;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
-
-    .ticket-finish-blockers {
-      margin-bottom: 10px;
-      color: var(--tm-orange);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .ticket-finish-blockers ul { margin: 4px 0 0; padding-left: 18px; }
-    .ticket-finish-blockers li { margin: 2px 0; }
-
-    .ticket-finish-controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .ticket-finish-controls .repair-select { flex: 1; min-width: 180px; }
+    #ticketFinishButton:disabled { opacity: .45; cursor: not-allowed; }
 
     .ticket-job-actions .icon-button.is-complete {
       color: #fff;
@@ -9057,6 +9018,7 @@
       <div class="ticket-detail-head">
         <div id="ticketDetailRef" class="ticket-detail-ref"></div>
         <div class="ticket-detail-head-actions">
+          <button id="ticketFinishButton" class="repair-action primary" type="button" hidden><i class="bi bi-check2-all"></i> Finish card</button>
           <select id="ticketDetailStatus" class="repair-select"></select>
           <button id="ticketDetailClose" class="repair-action" type="button" aria-label="Close ticket"><i class="bi bi-x-lg"></i></button>
         </div>
@@ -10041,6 +10003,7 @@
       ticketDetailSide: document.getElementById('ticketDetailSide'),
       ticketDetailRef: document.getElementById('ticketDetailRef'),
       ticketDetailStatus: document.getElementById('ticketDetailStatus'),
+      ticketFinishButton: document.getElementById('ticketFinishButton'),
       ticketDetailClose: document.getElementById('ticketDetailClose'),
       refundModal: document.getElementById('refundModal'),
       refundForm: document.getElementById('refundForm'),
@@ -15946,38 +15909,26 @@
 
     // Closing a card used to be possible only in the dialog that appears right
     // after payment. Once that was dismissed, or the payment happened on an
-    // earlier day, the card could not be closed from anywhere.
-    function ticketFinishPanelHtml(ticket) {
-      if (ticket.closedAt) {
-        return `<section class="ticket-finish-panel is-closed"><i class="bi bi-check2-circle"></i> This card is closed${ticket.resolution ? ` &middot; ${escapeHtml(String(ticket.resolution).replace(/_/g, ' '))}` : ''}.</section>`;
+    // earlier day, the card could not be closed from anywhere. The control now
+    // sits beside the status selector and only comes alive when the card
+    // actually qualifies, so staff are never invited to press something that
+    // will be refused.
+    function renderTicketFinishButton(ticket) {
+      const button = els.ticketFinishButton;
+      if (!button) return;
+      if (!ticket || ticket.closedAt) {
+        button.hidden = true;
+        return;
       }
       const blockers = repairFinishBlockers(ticket);
       const ready = Boolean(ticket.canClose) && Boolean(ticket.invoiceOrderId);
-      return `
-        <section class="ticket-finish-panel">
-          <div class="ticket-finish-head">Finish this card</div>
-          ${blockers.length ? `
-            <div class="ticket-finish-blockers">
-              <div>Not yet, because:</div>
-              <ul>${blockers.map(reason => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>
-            </div>
-          ` : ''}
-          ${!blockers.length && !ticket.invoiceOrderId ? '<div class="ticket-finish-blockers">This card has no paid invoice yet.</div>' : ''}
-          <div class="ticket-finish-controls">
-            <select id="ticketFinishResolution" class="repair-select" ${ready ? '' : 'disabled'}>
-              <option value="repaired">Repaired / completed</option>
-              <option value="no_fault_found">No fault found</option>
-              <option value="customer_declined">Customer declined</option>
-              <option value="unrepairable">Unrepairable</option>
-              <option value="returned_unrepaired">Returned unrepaired</option>
-              <option value="referred">Referred elsewhere</option>
-            </select>
-            <button id="ticketFinishButton" class="repair-action primary" type="button" ${ready ? '' : 'disabled'}>
-              <i class="bi bi-check2-all"></i> Finish and close
-            </button>
-          </div>
-        </section>
-      `;
+      button.hidden = false;
+      button.disabled = !ready;
+      button.title = ready
+        ? 'Close this repair card'
+        : (blockers.length
+          ? `Not ready to finish:\n${blockers.map(reason => `- ${reason}`).join('\n')}`
+          : 'This card has no paid invoice yet.');
     }
 
     function ticketJobsPanelHtml(ticket) {
@@ -16497,6 +16448,7 @@
       const intake = ticket.intake || {};
       els.ticketDetailStatus.innerHTML = repairBoardColumns.map(column => `<option value="${column.id}" ${ticket.status === column.id ? 'selected' : ''}>${escapeHtml(column.label)}</option>`).join('');
       els.ticketDetailStatus.disabled = Boolean(ticket.closedAt);
+      renderTicketFinishButton(ticket);
       const inCart = state.cart.some(item => item.ticket_id === ticket.id);
       state.selectedTicketInCart = inCart;
       const customerLocked = ticket.paymentStatus !== 'unpaid' || inCart;
@@ -16541,7 +16493,6 @@
         ` : ''}
         ${customerLocked ? '' : '<div class="ticket-detail-actions"><button id="ticketCustomerSave" class="repair-action primary" type="button"><i class="bi bi-floppy"></i> Save ticket details</button></div>'}
         ${ticketJobsPanelHtml(ticket)}
-        ${ticketFinishPanelHtml(ticket)}
         <div class="ticket-detail-sections">
           ${[
             ['password', 'Password'],
@@ -23734,6 +23685,18 @@
     els.ticketDetailModal.addEventListener('click', event => {
       if (event.target === els.ticketDetailModal) closeTicketDetailModal();
     });
+    els.ticketFinishButton.addEventListener('click', () => {
+      const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (!ticket || !ticket.canClose || !ticket.invoiceOrderId) return;
+      if (!window.confirm(`Close ${ticket.id} as repaired? The card leaves the Repair Board and cannot be reopened.`)) return;
+      applyRepairJobChange({
+        action: 'finalize',
+        ticket_code: ticket.id,
+        order_code: ticket.invoiceOrderId,
+        decision: 'finish',
+        resolution: 'repaired'
+      }, 'Repair card closed.');
+    });
     els.ticketDetailStatus.addEventListener('change', event => {
       if (state.selectedTicketId) updateRepairTicketStatus(state.selectedTicketId, event.target.value);
     });
@@ -23762,18 +23725,6 @@
       const jobAdd = event.target.closest('[data-job-add]');
       if (jobAdd && ticketForJobs) {
         openRepairJobModal(ticketForJobs);
-        return;
-      }
-      if (event.target.closest('#ticketFinishButton') && ticketForJobs) {
-        const select = els.ticketDetailMain.querySelector('#ticketFinishResolution');
-        if (!window.confirm(`Close ${ticketForJobs.id}? The card leaves the Repair Board and cannot be reopened.`)) return;
-        applyRepairJobChange({
-          action: 'finalize',
-          ticket_code: ticketForJobs.id,
-          order_code: ticketForJobs.invoiceOrderId,
-          decision: 'finish',
-          resolution: select ? select.value : 'repaired'
-        }, 'Repair card closed.');
         return;
       }
       const jobComplete = event.target.closest('[data-job-complete]');
