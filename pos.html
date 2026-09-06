@@ -5804,6 +5804,47 @@
     .ticket-job-actions { display: flex; gap: 4px; }
     .ticket-job-actions .icon-button { width: 32px; height: 32px; }
 
+    .ticket-finish-panel {
+      margin-top: 12px;
+      padding: 13px 14px;
+      border: 1px solid var(--tm-line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .ticket-finish-panel.is-closed {
+      color: #10645a;
+      background: #e9f7f2;
+      border-color: #bfe4d8;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .ticket-finish-head {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .ticket-finish-blockers {
+      margin-bottom: 10px;
+      color: var(--tm-orange);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .ticket-finish-blockers ul { margin: 4px 0 0; padding-left: 18px; }
+    .ticket-finish-blockers li { margin: 2px 0; }
+
+    .ticket-finish-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .ticket-finish-controls .repair-select { flex: 1; min-width: 180px; }
+
     .ticket-job-actions .icon-button.is-complete {
       color: #fff;
       background: var(--tm-green);
@@ -15881,6 +15922,64 @@
       return 'repair-' + ticketId + (jobCode && jobCode !== '__base__' ? '-' + jobCode : '');
     }
 
+    // Mirrors the three checks in finalize_pos_repair_ticket_after_checkout, so
+    // the POS names the same reasons the database would refuse on.
+    function repairFinishBlockers(ticket) {
+      if (!ticket || ticket.canClose) return [];
+      const jobs = Array.isArray(ticket.jobs) ? ticket.jobs : [];
+      const reasons = [];
+      const unbilled = [];
+      if (!ticket.baseInvoiced) unbilled.push(ticket.baseJobName || ticket.issue || 'Repair service');
+      jobs.forEach(job => {
+        if (job.status !== 'cancelled' && !job.invoiced) unbilled.push(job.name);
+      });
+      if (unbilled.length) reasons.push(`Not billed yet: ${unbilled.join(', ')}`);
+      const unfinished = jobs
+        .filter(job => job.status !== 'completed' && job.status !== 'cancelled')
+        .map(job => `${job.name} (${String(job.status || '').replace(/_/g, ' ')})`);
+      if (unfinished.length) reasons.push(`Not marked complete: ${unfinished.join(', ')}`);
+      if (numberValue(ticket.balanceDue) > 0) {
+        reasons.push(`Invoice balance still owing: ${money(numberValue(ticket.balanceDue))}`);
+      }
+      return reasons;
+    }
+
+    // Closing a card used to be possible only in the dialog that appears right
+    // after payment. Once that was dismissed, or the payment happened on an
+    // earlier day, the card could not be closed from anywhere.
+    function ticketFinishPanelHtml(ticket) {
+      if (ticket.closedAt) {
+        return `<section class="ticket-finish-panel is-closed"><i class="bi bi-check2-circle"></i> This card is closed${ticket.resolution ? ` &middot; ${escapeHtml(String(ticket.resolution).replace(/_/g, ' '))}` : ''}.</section>`;
+      }
+      const blockers = repairFinishBlockers(ticket);
+      const ready = Boolean(ticket.canClose) && Boolean(ticket.invoiceOrderId);
+      return `
+        <section class="ticket-finish-panel">
+          <div class="ticket-finish-head">Finish this card</div>
+          ${blockers.length ? `
+            <div class="ticket-finish-blockers">
+              <div>Not yet, because:</div>
+              <ul>${blockers.map(reason => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>
+            </div>
+          ` : ''}
+          ${!blockers.length && !ticket.invoiceOrderId ? '<div class="ticket-finish-blockers">This card has no paid invoice yet.</div>' : ''}
+          <div class="ticket-finish-controls">
+            <select id="ticketFinishResolution" class="repair-select" ${ready ? '' : 'disabled'}>
+              <option value="repaired">Repaired / completed</option>
+              <option value="no_fault_found">No fault found</option>
+              <option value="customer_declined">Customer declined</option>
+              <option value="unrepairable">Unrepairable</option>
+              <option value="returned_unrepaired">Returned unrepaired</option>
+              <option value="referred">Referred elsewhere</option>
+            </select>
+            <button id="ticketFinishButton" class="repair-action primary" type="button" ${ready ? '' : 'disabled'}>
+              <i class="bi bi-check2-all"></i> Finish and close
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
     function ticketJobsPanelHtml(ticket) {
       const locked = Boolean(ticket.closedAt);
       const outstanding = numberValue(ticket.outstandingTotal);
@@ -16442,6 +16541,7 @@
         ` : ''}
         ${customerLocked ? '' : '<div class="ticket-detail-actions"><button id="ticketCustomerSave" class="repair-action primary" type="button"><i class="bi bi-floppy"></i> Save ticket details</button></div>'}
         ${ticketJobsPanelHtml(ticket)}
+        ${ticketFinishPanelHtml(ticket)}
         <div class="ticket-detail-sections">
           ${[
             ['password', 'Password'],
@@ -22007,28 +22107,7 @@
           if (!job.invoiced && job.status !== 'cancelled') remaining.push(job);
         });
         const finishBlocked = !ticket.canClose;
-        // The server refuses for one of three reasons but reports all three, so
-        // staff could not tell which repair was holding the card open. These
-        // mirror the checks in finalize_pos_repair_ticket_after_checkout.
-        const finishBlockers = (() => {
-          if (!finishBlocked) return [];
-          const jobs = Array.isArray(ticket.jobs) ? ticket.jobs : [];
-          const reasons = [];
-          const unbilled = [];
-          if (!ticket.baseInvoiced) unbilled.push(ticket.baseJobName || ticket.issue || 'Repair service');
-          jobs.forEach(job => {
-            if (job.status !== 'cancelled' && !job.invoiced) unbilled.push(job.name);
-          });
-          if (unbilled.length) reasons.push(`Not billed yet: ${unbilled.join(', ')}`);
-          const unfinished = jobs
-            .filter(job => job.status !== 'completed' && job.status !== 'cancelled')
-            .map(job => `${job.name} (${String(job.status || '').replace(/_/g, ' ')})`);
-          if (unfinished.length) reasons.push(`Not marked complete: ${unfinished.join(', ')}`);
-          if (numberValue(ticket.balanceDue) > 0) {
-            reasons.push(`Invoice balance still owing: ${money(numberValue(ticket.balanceDue))}`);
-          }
-          return reasons;
-        })();
+        const finishBlockers = repairFinishBlockers(ticket);
         const currentStatus = Array.from(els.finishCardStatus.options).some(option => option.value === ticket.status)
           ? ticket.status
           : 'repairing';
@@ -23683,6 +23762,18 @@
       const jobAdd = event.target.closest('[data-job-add]');
       if (jobAdd && ticketForJobs) {
         openRepairJobModal(ticketForJobs);
+        return;
+      }
+      if (event.target.closest('#ticketFinishButton') && ticketForJobs) {
+        const select = els.ticketDetailMain.querySelector('#ticketFinishResolution');
+        if (!window.confirm(`Close ${ticketForJobs.id}? The card leaves the Repair Board and cannot be reopened.`)) return;
+        applyRepairJobChange({
+          action: 'finalize',
+          ticket_code: ticketForJobs.id,
+          order_code: ticketForJobs.invoiceOrderId,
+          decision: 'finish',
+          resolution: select ? select.value : 'repaired'
+        }, 'Repair card closed.');
         return;
       }
       const jobComplete = event.target.closest('[data-job-complete]');
