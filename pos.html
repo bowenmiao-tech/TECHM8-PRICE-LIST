@@ -5092,10 +5092,48 @@
       cursor: not-allowed;
     }
 
+    .ticket-title-wrap { min-width: 0; }
+
+    .ticket-label-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0 4px;
+    }
+
+    .ticket-label-input {
+      flex: 1;
+      min-width: 0;
+      min-height: 38px;
+      padding: 8px 11px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      color: var(--tm-ink);
+      background: #fff;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .ticket-label-hint {
+      margin-bottom: 10px;
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
     .ticket-title {
       font-size: 13px;
       font-weight: 950;
       line-height: 1.35;
+    }
+
+    .ticket-device-sub {
+      margin-top: 2px;
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 750;
+      line-height: 1.3;
     }
 
     .ticket-meta {
@@ -14228,6 +14266,9 @@
       ticket.comments = Array.isArray(ticket.comments) ? ticket.comments : [];
       ticket.intake = ticket.intake && typeof ticket.intake === 'object' ? ticket.intake : {};
       if (!ticket.customerName) ticket.customerName = 'Walk-in Customer';
+      // Board-only label. The device title stays untouched because it feeds the
+      // signed repair card and the repair-price suggestions.
+      ticket.displayLabel = String(ticket.displayLabel || '').trim();
       ticket.customerPhone = String(ticket.customerPhone || ticket.customerContact || '').trim();
       ticket.paymentStatus = ticket.paymentStatus || 'unpaid';
       ticket.jobs = (Array.isArray(ticket.jobs) ? ticket.jobs : []).map(job => ({
@@ -15769,7 +15810,10 @@
                 ${tickets.map(ticket => `
                   <div class="ticket-card" draggable="${ticket.closedAt ? 'false' : 'true'}" data-ticket-id="${escapeHtml(ticket.id)}">
                     <div class="ticket-top">
-                      <div class="ticket-title">${escapeHtml(ticket.title || 'Repair ticket')}</div>
+                      <div class="ticket-title-wrap">
+                        <div class="ticket-title">${escapeHtml(ticket.displayLabel || ticket.title || 'Repair ticket')}</div>
+                        ${ticket.displayLabel ? `<div class="ticket-device-sub">${escapeHtml(ticket.title || '')}</div>` : ''}
+                      </div>
                       ${!ticket.closedAt && ticket.paymentStatus !== 'deposit' && numberValue(ticket.unbilledTotal) > 0 ? `
                         <button class="ticket-cart-button" type="button" data-ticket-cart="${escapeHtml(ticket.id)}" title="Add ticket to cart" ${state.cart.some(item => item.ticket_id === ticket.id) ? 'disabled' : ''}>
                           <i class="bi bi-cart-plus"></i>
@@ -16337,7 +16381,15 @@
         els.ticketDetailRef.innerHTML = `<i class="bi bi-receipt-cutoff"></i><span>${escapeHtml(ticket.id)}</span>`;
       }
       els.ticketDetailMain.innerHTML = `
-        <h2 id="ticketDetailTitle" class="ticket-detail-title">${escapeHtml(ticket.title || 'Repair ticket')}</h2>
+        <h2 id="ticketDetailTitle" class="ticket-detail-title">${escapeHtml(ticket.displayLabel || ticket.title || 'Repair ticket')}</h2>
+        <div class="ticket-label-row">
+          <input id="ticketLabelInput" class="ticket-label-input" type="text" maxlength="80"
+            placeholder="Board label, e.g. black one / Mrs Chen"
+            value="${escapeHtml(ticket.displayLabel || '')}"
+            aria-label="Board label for this repair card">
+          <button id="ticketLabelSave" class="repair-action" type="button"><i class="bi bi-check2"></i> Save label</button>
+        </div>
+        <div class="ticket-label-hint">Board display only. The device, the invoice and the signed repair card are not changed.</div>
         <div class="ticket-detail-subtitle">
           <span>${escapeHtml(ticket.issue || 'Repair')}</span>
           ${priceLabel ? `<span>·</span><span class="price">${escapeHtml(priceLabel)}</span>` : ''}
@@ -23551,8 +23603,28 @@
     els.ticketDetailStatus.addEventListener('change', event => {
       if (state.selectedTicketId) updateRepairTicketStatus(state.selectedTicketId, event.target.value);
     });
+    function saveTicketBoardLabel() {
+      const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      const input = els.ticketDetailMain.querySelector('#ticketLabelInput');
+      if (!ticket || !input) return;
+      applyRepairJobChange({
+        action: 'label',
+        ticket_code: ticket.id,
+        display_label: input.value
+      }, input.value.trim() ? 'Board label saved.' : 'Board label cleared.');
+    }
+
+    els.ticketDetailMain.addEventListener('keydown', event => {
+      if (event.target.id !== 'ticketLabelInput' || event.key !== 'Enter') return;
+      event.preventDefault();
+      saveTicketBoardLabel();
+    });
     els.ticketDetailMain.addEventListener('click', event => {
       const ticketForJobs = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (event.target.closest('#ticketLabelSave')) {
+        saveTicketBoardLabel();
+        return;
+      }
       const jobAdd = event.target.closest('[data-job-add]');
       if (jobAdd && ticketForJobs) {
         openRepairJobModal(ticketForJobs);

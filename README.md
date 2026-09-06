@@ -272,7 +272,8 @@ Repair rules:
 - Every invoice linked to a repair card remains available from the card, and comments can continue after an earlier repair has been paid.
 - Re-signing freezes the current repair list, prices, notes, approval state, intake checks, and customer signature as a new revision.
 - Existing one-line repair cards remain compatible and do not require historical conversion.
-- Board search supports ticket, customer, phone, device, issue, and IMEI/intake content.
+- Every card carries an optional board label staff can type themselves, because service quotes share one brand and model and leave a column of identically named cards. The label replaces the heading on the Board and in the card detail, with the device kept underneath, and it is searchable. It is deliberately separate from the device title: the title is written into the repair card the customer signs and is matched against the repair price list to suggest prices for extra jobs, so it stays as recorded. Invoice lines are built from the base job name or the job's own name and are unaffected either way.
+- Board search supports ticket, customer, phone, device, issue, board label, and IMEI/intake content.
 - Finished invoices are searched in Invoice History, not in a separate Finished Board column.
 
 ### Data Ownership
