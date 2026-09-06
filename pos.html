@@ -8000,6 +8000,22 @@
 
     .transfer-route i { color: var(--tm-green); }
 
+    .transfer-direction {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+
+    .transfer-direction.incoming { color: #10645a; background: #e2f5ef; }
+    .transfer-direction.outgoing { color: #8a5212; background: #fdf0dd; }
+    .transfer-direction i { color: inherit; font-size: 12px; }
+
     .transfer-card-foot {
       color: var(--tm-muted);
       font-size: 12px;
@@ -8414,7 +8430,7 @@
             <div>
               <div class="transfer-kicker">Store to store</div>
               <h1 class="invoice-title">Stock Transfer</h1>
-              <div class="repair-subtitle">Dispatch from any store, then receive with photo evidence at the destination.</div>
+              <div class="repair-subtitle">Only transfers sent from or to your store. Dispatch, then receive with photo evidence at the destination.</div>
             </div>
             <div class="transfer-head-actions">
               <button id="newTransferBtn" class="repair-action primary" type="button"><i class="bi bi-plus-circle"></i> New Transfer</button>
@@ -9608,7 +9624,8 @@
       transfers: [],
       transferLoading: false,
       transferLoaded: false,
-      transferStatus: 'all',
+      // Opens on the work waiting at this store rather than the whole history.
+      transferStatus: 'open',
       transferStore: '',
       transferSearch: '',
       transferModalMode: '',
@@ -12752,8 +12769,8 @@
     }
 
     function currentRepairTestItems() {
+      // Phones and tablets are one profile; anything not a computer uses it.
       return state.repair.testProfile === 'computer' ? computerRepairTestItems : mobileRepairTestItems;
-      // 'tablet' deliberately shares the mobile checklist.
     }
 
     function repairTestOptions(itemName) {
@@ -13040,13 +13057,24 @@
           </div>`;
         return;
       }
-      els.transferList.innerHTML = state.transfers.map(transfer => `
+      els.transferList.innerHTML = state.transfers.map(transfer => {
+        // The list only ever contains this store's transfers, so the badge says
+        // which side of it this one sits on.
+        const incoming = String(transfer.destination_store_slug || '') === String(state.storeId || '');
+        const outgoing = String(transfer.source_store_slug || '') === String(state.storeId || '');
+        const direction = incoming
+          ? '<span class="transfer-direction incoming"><i class="bi bi-box-arrow-in-down"></i> Incoming</span>'
+          : outgoing
+            ? '<span class="transfer-direction outgoing"><i class="bi bi-box-arrow-up-right"></i> Sent</span>'
+            : '';
+        return `
         <button class="transfer-card" type="button" data-transfer-id="${transfer.id}">
           <div class="transfer-card-head">
             <span class="transfer-number">${escapeHtml(transfer.transfer_number)}</span>
             <span class="transfer-status ${escapeHtml(transfer.status)}">${escapeHtml(transferStatusText(transfer.status))}</span>
           </div>
           <div class="transfer-route">
+            ${direction}
             <span>${escapeHtml(transfer.source_store_name)}</span>
             <i class="bi bi-arrow-right"></i>
             <span>${escapeHtml(transfer.destination_store_name)}</span>
@@ -13061,7 +13089,8 @@
             <span>${escapeHtml(transfer.dispatched_by)} · ${escapeHtml(transferFormatDate(transfer.dispatched_at))}</span>
           </div>
         </button>
-      `).join('');
+      `;
+      }).join('');
     }
 
     function openTransferModalShell(title, subtitle) {
@@ -15086,8 +15115,7 @@
     function buildRepairCardSnapshot() {
       const quote = state.repair.quote || {};
       const basePrice = priceNumber(state.repair.quotedPrice || quote.price);
-      const profile = state.repair.testProfile === 'computer' ? 'Laptop / Desktop'
-        : state.repair.testProfile === 'tablet' ? 'Tablet' : 'Mobile Device';
+      const profile = state.repair.testProfile === 'computer' ? 'Laptop / Desktop' : 'Phone / Tablet';
       return {
         captured_at: new Date().toISOString(),
         store_name: storeById(state.storeId).name,
@@ -16151,8 +16179,7 @@
         work_items: workItems,
         work_total: workItems.reduce((sum, item) => sum + numberValue(item.price), 0),
         device_in_store: Boolean(ticket.deviceInStore),
-        test_profile: intake.testProfile === 'computer' ? 'Laptop / Desktop'
-          : intake.testProfile === 'tablet' ? 'Tablet' : 'Mobile Device',
+        test_profile: intake.testProfile === 'computer' ? 'Laptop / Desktop' : 'Phone / Tablet',
         testable: intake.testable || 'yes',
         cannot_test_reason: intake.cannotTestReason || '',
         tests: { ...(intake.tests || {}) },
@@ -16572,9 +16599,8 @@
               <div class="repair-field">
                 Test Profile
                 <div class="repair-chip-row" data-repair-chip-group="testProfile">
-                  <button class="repair-chip ${state.repair.testProfile === 'mobile' ? 'active' : ''}" type="button" data-value="mobile">Mobile Device</button>
+                  <button class="repair-chip ${state.repair.testProfile !== 'computer' ? 'active' : ''}" type="button" data-value="mobile">Phone / Tablet</button>
                   <button class="repair-chip ${state.repair.testProfile === 'computer' ? 'active' : ''}" type="button" data-value="computer">Laptop / Desktop</button>
-                  <button class="repair-chip ${state.repair.testProfile === 'tablet' ? 'active' : ''}" type="button" data-value="tablet">Tablet</button>
                 </div>
               </div>
               <p class="repair-panel-text">Mark each item as pass, fail, or not tested. Add extra notes below for anything that needs technician attention.</p>
