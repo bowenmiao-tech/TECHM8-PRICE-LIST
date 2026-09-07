@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-admin-build" content="2026-09-03-four-store-sales-dashboard">
+  <meta name="techm8-admin-build" content="2026-09-07-responsive-repair-follow-up">
   <title>TECHM8 Admin Portal</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -36,19 +36,22 @@
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-    button, input { font: inherit; }
+    button, input, select { font: inherit; }
     button { color: inherit; }
 
     .app-shell {
       min-height: 100vh;
+      min-height: 100dvh;
       display: grid;
       grid-template-columns: var(--sidebar) minmax(0, 1fr);
     }
+    .app-shell > * { min-width: 0; }
     .sidebar {
       position: sticky;
       top: 0;
       z-index: 30;
       height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       padding: 18px 14px 14px;
@@ -126,6 +129,18 @@
     }
     .nav-item i { width: 20px; color: rgba(255,255,255,.82); font-size: 17px; text-align: center; }
     .nav-item.active i { color: #fff; }
+    .nav-item span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .nav-count {
+      min-width: 22px;
+      margin-left: auto;
+      padding: 3px 6px;
+      border-radius: 999px;
+      color: #eafff9;
+      background: rgba(255,255,255,.14);
+      text-align: center;
+      font-size: 8px;
+      font-weight: 900;
+    }
     .sidebar-footer { padding-top: 12px; border-top: 1px solid rgba(255,255,255,.10); }
     .admin-profile { display: flex; align-items: center; gap: 10px; padding: 5px 8px 11px; }
     .avatar {
@@ -159,7 +174,7 @@
     }
     .logout-button:hover { color: #fff; background: rgba(255,255,255,.11); }
 
-    .main-column { min-width: 0; min-height: 100vh; display: flex; flex-direction: column; }
+    .main-column { min-width: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
     .topbar {
       position: sticky;
       top: 0;
@@ -200,6 +215,7 @@
     }
     .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(7,137,111,.12); }
 
+    main, .content-view { min-width: 0; }
     .content-view { display: none; }
     .content-view.active { display: block; }
     .overview-view { width: 100%; max-width: 1540px; margin: 0 auto; padding: 26px 28px 42px; }
@@ -217,7 +233,7 @@
       background: var(--card);
       box-shadow: 0 5px 20px rgba(32, 52, 61, .04);
     }
-    .preset-row { display: flex; align-items: center; gap: 7px; overflow-x: auto; padding-bottom: 11px; scrollbar-width: thin; }
+    .preset-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding-bottom: 11px; }
     .preset-button {
       flex: 0 0 auto;
       min-height: 32px;
@@ -232,7 +248,7 @@
     }
     .preset-button:hover { color: var(--green-dark); border-color: #cfe6e0; }
     .preset-button.active { color: #fff; background: var(--green); box-shadow: 0 5px 12px rgba(7,137,111,.20); }
-    .filter-fields { display: flex; align-items: flex-end; gap: 10px; padding-top: 12px; border-top: 1px solid #edf1f3; }
+    .filter-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding-top: 12px; border-top: 1px solid #edf1f3; }
     .date-field { display: grid; gap: 6px; }
     .date-field span { color: #798991; font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
     .date-field input {
@@ -354,6 +370,72 @@
     .value-refund { color: var(--red); }
     .store-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 3px; background: var(--store-color); }
 
+    .repair-toolbar { display: grid; grid-template-columns: minmax(220px, 1.4fr) repeat(2, minmax(150px, .65fr)) auto; gap: 10px; align-items: end; }
+    .control-field { min-width: 0; display: grid; gap: 6px; }
+    .control-field span { color: #798991; font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .control-wrap { position: relative; min-width: 0; }
+    .control-wrap i { position: absolute; left: 12px; top: 50%; color: #819097; font-size: 12px; transform: translateY(-50%); pointer-events: none; }
+    .control-field input, .control-field select {
+      width: 100%;
+      height: 40px;
+      padding: 0 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .control-field .control-wrap input { padding-left: 34px; }
+    .control-field input:focus, .control-field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7,137,111,.11); }
+    .repair-queues { display: flex; flex-wrap: wrap; gap: 7px; padding-top: 12px; margin-top: 12px; border-top: 1px solid #edf1f3; }
+    .repair-queue { min-height: 32px; padding: 0 11px; border: 1px solid #e2e8eb; border-radius: 9px; color: #667680; background: #f7f9fa; font-size: 9px; font-weight: 850; cursor: pointer; }
+    .repair-queue.active { color: #fff; border-color: var(--green); background: var(--green); }
+    .repair-queue span { margin-left: 4px; opacity: .75; }
+    .repair-table { min-width: 1120px; }
+    .repair-table th, .repair-table td { height: auto; min-height: 54px; padding-top: 11px; padding-bottom: 11px; vertical-align: top; text-align: left; white-space: normal; }
+    .repair-table th:nth-last-child(-n+2), .repair-table td:nth-last-child(-n+2) { text-align: right; }
+    .repair-code { display: block; margin-top: 3px; color: #87959b; font-size: 8px; font-weight: 750; }
+    .repair-title { display: block; max-width: 240px; color: var(--ink); font-size: 10px; font-weight: 850; overflow-wrap: anywhere; }
+    .repair-issue { display: block; max-width: 240px; margin-top: 4px; color: #7d8c93; font-size: 9px; line-height: 1.35; overflow-wrap: anywhere; }
+    .customer-name { display: block; color: var(--ink); font-weight: 850; }
+    .customer-phone { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--green-dark); text-decoration: none; font-size: 9px; }
+    .customer-phone:hover { text-decoration: underline; }
+    .status-chip, .payment-chip, .flag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      max-width: 190px;
+      padding: 5px 7px;
+      border-radius: 7px;
+      color: #426059;
+      background: #eaf7f3;
+      font-size: 8px;
+      font-weight: 850;
+      line-height: 1.25;
+    }
+    .status-chip.ordering { color: #a64c00; background: #fff1e5; }
+    .status-chip.shipping { color: #285d9f; background: #edf4fd; }
+    .status-chip.customer { color: #6b4b9e; background: #f2edfb; }
+    .status-chip.stale { color: #aa3b31; background: #fff0ee; }
+    .payment-chip { margin-top: 5px; }
+    .payment-chip.deposit { color: #a64c00; background: #fff1e5; }
+    .payment-chip.unpaid { color: #aa3b31; background: #fff0ee; }
+    .ticket-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+    .flag-chip { padding: 3px 6px; color: #667680; background: #f0f4f5; }
+    .job-list { max-width: 280px; display: grid; gap: 4px; }
+    .job-item { color: #41545e; font-size: 9px; line-height: 1.35; overflow-wrap: anywhere; }
+    .job-item strong { color: var(--ink); }
+    .job-note { color: #84939a; }
+    .waiting-age { display: block; color: var(--ink); font-size: 10px; font-weight: 900; }
+    .waiting-age.stale { color: var(--red); }
+    .waiting-sub { display: block; margin-top: 3px; color: #8a989e; font-size: 8px; }
+    .empty-state { padding: 48px 20px; color: #75868e; text-align: center; }
+    .empty-state i { display: block; margin-bottom: 8px; color: #a7b4b9; font-size: 25px; }
+    .empty-state strong { display: block; color: #41545e; font-size: 12px; }
+    .empty-state span { display: block; margin-top: 4px; font-size: 9px; }
+
     .error-panel {
       display: none;
       align-items: flex-start;
@@ -378,8 +460,8 @@
     }
     @keyframes shimmer { to { background-position: -200% 0; } }
 
-    .tool-view { flex: 1; min-height: calc(100vh - 66px); }
-    .tool-panel { height: calc(100vh - 66px); display: flex; flex-direction: column; padding: 16px 18px 18px; }
+    .tool-view { flex: 1; min-height: calc(100vh - 66px); min-height: calc(100dvh - 66px); }
+    .tool-panel { height: calc(100vh - 66px); height: calc(100dvh - 66px); display: flex; flex-direction: column; padding: 16px 18px 18px; }
     .tool-panel-head { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 5px; }
     .tool-panel-head h1 { font-size: 18px; }
     .open-new {
@@ -403,10 +485,12 @@
     .frame-loader i { animation: spin .8s linear infinite; }
     .sidebar-backdrop { display: none; }
 
-    @media (max-width: 1180px) {
+    @media (max-width: 1240px) {
       .summary-grid, .store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .repair-toolbar { grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(150px, .7fr)); }
+      .repair-toolbar .refresh-button { grid-column: 1 / -1; justify-self: end; }
     }
-    @media (max-width: 820px) {
+    @media (max-width: 960px) {
       .app-shell { grid-template-columns: 1fr; }
       .sidebar { position: fixed; inset: 0 auto 0 0; width: min(280px, 86vw); transform: translateX(-105%); transition: transform .22s ease; }
       body.menu-open .sidebar { transform: translateX(0); }
@@ -439,6 +523,48 @@
       .section-bar { align-items: flex-start; flex-direction: column; }
       .legend { justify-content: flex-start; }
       .tool-panel-head h1 { font-size: 15px; }
+      .repair-toolbar { grid-template-columns: 1fr; }
+      .repair-toolbar .refresh-button { grid-column: auto; width: 100%; }
+      .updated-at { white-space: normal; }
+    }
+    @media (max-width: 900px) {
+      .repair-toolbar { grid-template-columns: 1fr; }
+      .repair-toolbar .refresh-button { grid-column: auto; width: 100%; }
+      .responsive-table { min-width: 0; }
+      .responsive-table thead { display: none; }
+      .responsive-table tbody, .responsive-table tfoot { display: grid; gap: 10px; padding: 10px; }
+      .responsive-table tr { display: grid; overflow: hidden; border: 1px solid #e4eaed; border-radius: 12px; background: #fff; }
+      .responsive-table td,
+      .repair-table td,
+      .repair-table td:nth-last-child(-n+2) {
+        min-width: 0;
+        min-height: 37px;
+        height: auto;
+        display: grid;
+        grid-template-columns: minmax(82px, .38fr) minmax(0, 1fr);
+        align-items: start;
+        gap: 12px;
+        padding: 9px 11px;
+        border-bottom: 1px solid #edf1f3;
+        text-align: left;
+        white-space: normal;
+      }
+      .responsive-table td::before { content: attr(data-label); color: #89979d; font-size: 8px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+      .responsive-table td:last-child { border-bottom: 0; }
+      .responsive-table td[colspan] { display: block; padding: 0; }
+      .responsive-table td[colspan]::before { display: none; }
+      .responsive-table tfoot { padding-top: 0; }
+      .responsive-table tfoot tr { background: #f6f9f9; }
+      .repair-title, .repair-issue, .job-list { max-width: none; }
+    }
+    @media (max-width: 420px) {
+      .topbar { min-height: 60px; padding: 0 12px; }
+      .overview-view { padding: 17px 12px 28px; }
+      .filters-card { padding: 12px; border-radius: 14px; }
+      .preset-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+      .summary-card, .store-card { border-radius: 14px; }
+      h1 { font-size: 26px; }
+      .responsive-table td, .repair-table td, .repair-table td:nth-last-child(-n+2) { grid-template-columns: 76px minmax(0, 1fr); gap: 8px; }
     }
   </style>
 </head>
@@ -454,6 +580,7 @@
         <section class="nav-section">
           <h2 class="nav-heading">Overview</h2>
           <button class="nav-item active" type="button" data-route="sales" data-title="Four Store Sales"><i class="bi bi-grid-1x2-fill"></i><span>Sales Overview</span></button>
+          <button class="nav-item" type="button" data-route="repairs" data-title="Repair Follow-up"><i class="bi bi-tools"></i><span>Repair Follow-up</span><span class="nav-count" id="repairNavCount" hidden>0</span></button>
         </section>
         <section class="nav-section">
           <h2 class="nav-heading">Pricing</h2>
@@ -538,10 +665,70 @@
           </div>
           <section class="table-card">
             <div class="table-scroll">
-              <table>
+              <table class="responsive-table sales-table">
                 <thead><tr><th>Store</th><th>Repairs</th><th>MIS (Devices)</th><th>Products</th><th>Other</th><th>Total Sales</th><th>Payments Received</th><th>Refunds</th><th>Invoices</th></tr></thead>
                 <tbody id="salesTableBody"></tbody>
                 <tfoot id="salesTableFoot"></tfoot>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="content-view overview-view repair-overview-view" id="repairView" aria-labelledby="repairTitle">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">All-store workshop queue</p>
+              <h1 id="repairTitle">Repair Follow-up</h1>
+              <p class="page-subtitle">See every active repair in one place for parts ordering and customer follow-up. No separate store login is needed.</p>
+            </div>
+            <div class="updated-at" id="repairUpdatedAt">Waiting for data</div>
+          </div>
+
+          <section class="filters-card" aria-label="Repair filters">
+            <div class="repair-toolbar">
+              <label class="control-field">
+                <span>Search</span>
+                <span class="control-wrap"><i class="bi bi-search"></i><input id="repairSearch" type="search" placeholder="Ticket, device, customer or phone"></span>
+              </label>
+              <label class="control-field"><span>Store</span><select id="repairStoreFilter"><option value="all">All stores</option></select></label>
+              <label class="control-field">
+                <span>Status</span>
+                <select id="repairStatusFilter">
+                  <option value="all">All active statuses</option>
+                  <option value="need_to_order">Need to order</option>
+                  <option value="waiting_shipping">Waiting for shipping</option>
+                  <option value="repairing">Repairing</option>
+                  <option value="waiting_customer_confirmation">Waiting for customer approval</option>
+                  <option value="waiting_pickup">Waiting for pickup</option>
+                  <option value="over_3_months_uncollected">Over 3 months uncollected</option>
+                </select>
+              </label>
+              <button class="refresh-button" id="repairRefreshButton" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh Repairs</button>
+            </div>
+            <div class="repair-queues" id="repairQueues" aria-label="Repair work queues">
+              <button class="repair-queue active" type="button" data-repair-queue="all">All <span id="queueAllCount">0</span></button>
+              <button class="repair-queue" type="button" data-repair-queue="ordering">To order <span id="queueOrderingCount">0</span></button>
+              <button class="repair-queue" type="button" data-repair-queue="shipping">Shipping <span id="queueShippingCount">0</span></button>
+              <button class="repair-queue" type="button" data-repair-queue="customer">Customer follow-up <span id="queueCustomerCount">0</span></button>
+              <button class="repair-queue" type="button" data-repair-queue="stale">7+ days unchanged <span id="queueStaleCount">0</span></button>
+            </div>
+          </section>
+
+          <div class="error-panel" id="repairErrorPanel" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div><strong>Repair data could not be loaded</strong><span id="repairErrorMessage"></span></div>
+          </div>
+
+          <section class="summary-grid" id="repairSummaryGrid" aria-label="Repair follow-up summary"></section>
+
+          <div class="section-bar">
+            <div><h2>Active Repair List</h2><p id="repairResultLabel">Waiting for data</p></div>
+          </div>
+          <section class="table-card">
+            <div class="table-scroll">
+              <table class="responsive-table repair-table">
+                <thead><tr><th>Store</th><th>Repair</th><th>Customer</th><th>Status</th><th>Jobs / Parts</th><th>Payment</th><th>Waiting</th><th>Updated</th></tr></thead>
+                <tbody id="repairTableBody"></tbody>
               </table>
             </div>
           </section>
@@ -569,11 +756,21 @@
         parkridge: { name: 'Park Ridge', color: '#07896f' },
         fairfield: { name: 'Fairfield', color: '#3d78c5' },
         northlakes: { name: 'North Lakes', color: '#7657b4' },
-        toowong: { name: 'Toowong', color: '#ef7204' }
+        toowong: { name: 'Toowong', color: '#ef7204' },
+        brassall: { name: 'Brassall', color: '#b4588b' }
       };
-      const STORE_ORDER = Object.keys(STORE_META);
+      const SALES_STORE_ORDER = ['parkridge', 'fairfield', 'northlakes', 'toowong'];
+      const REPAIR_STATUS = {
+        need_to_order: { label: 'Need to order', tone: 'ordering' },
+        waiting_shipping: { label: 'Waiting for shipping', tone: 'shipping' },
+        repairing: { label: 'Repairing', tone: 'workshop' },
+        waiting_customer_confirmation: { label: 'Waiting for customer approval', tone: 'customer' },
+        waiting_pickup: { label: 'Waiting for pickup', tone: 'customer' },
+        over_3_months_uncollected: { label: 'Over 3 months uncollected', tone: 'stale' }
+      };
       const els = {
         overview: document.getElementById('overviewView'),
+        repairs: document.getElementById('repairView'),
         tool: document.getElementById('toolView'),
         breadcrumb: document.getElementById('breadcrumbTitle'),
         dateFrom: document.getElementById('dateFrom'),
@@ -587,12 +784,27 @@
         tableFoot: document.getElementById('salesTableFoot'),
         error: document.getElementById('errorPanel'),
         errorMessage: document.getElementById('errorMessage'),
+        repairRefresh: document.getElementById('repairRefreshButton'),
+        repairUpdatedAt: document.getElementById('repairUpdatedAt'),
+        repairSearch: document.getElementById('repairSearch'),
+        repairStore: document.getElementById('repairStoreFilter'),
+        repairStatus: document.getElementById('repairStatusFilter'),
+        repairSummary: document.getElementById('repairSummaryGrid'),
+        repairTableBody: document.getElementById('repairTableBody'),
+        repairResultLabel: document.getElementById('repairResultLabel'),
+        repairError: document.getElementById('repairErrorPanel'),
+        repairErrorMessage: document.getElementById('repairErrorMessage'),
+        repairNavCount: document.getElementById('repairNavCount'),
         frame: document.getElementById('toolFrame'),
         frameLoader: document.getElementById('frameLoader'),
         toolTitle: document.getElementById('toolTitle'),
         openNew: document.getElementById('openNew')
       };
       let loading = false;
+      let repairLoading = false;
+      let repairsLoaded = false;
+      let repairQueue = 'all';
+      let repairReport = { summary: {}, stores: [], tickets: [] };
 
       function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -643,13 +855,13 @@
       }
       function showLoading() {
         els.summary.innerHTML = Array.from({ length: 4 }, () => summaryCard('Loading', '—', 'Updating sales data', 'bi-hourglass-split')).join('');
-        els.stores.innerHTML = STORE_ORDER.map(code => `<article class="store-card" style="--store-color:${STORE_META[code].color}"><div class="store-name">${STORE_META[code].name}</div><div class="store-total skeleton">$0,000.00</div><div class="mix-bar skeleton"></div><div class="store-metrics"><div class="store-metric"><span>Repairs</span><strong class="skeleton">$000.00</strong></div><div class="store-metric"><span>MIS / Devices</span><strong class="skeleton">$000.00</strong></div></div></article>`).join('');
+        els.stores.innerHTML = SALES_STORE_ORDER.map(code => `<article class="store-card" style="--store-color:${STORE_META[code].color}"><div class="store-name">${STORE_META[code].name}</div><div class="store-total skeleton">$0,000.00</div><div class="mix-bar skeleton"></div><div class="store-metrics"><div class="store-metric"><span>Repairs</span><strong class="skeleton">$000.00</strong></div><div class="store-metric"><span>MIS / Devices</span><strong class="skeleton">$000.00</strong></div></div></article>`).join('');
         els.tableBody.innerHTML = `<tr><td colspan="9" style="height:110px;text-align:center;color:#8a989e">Loading four-store sales…</td></tr>`;
         els.tableFoot.innerHTML = '';
       }
       function normalizedStores(rows) {
         const byCode = new Map((Array.isArray(rows) ? rows : []).map(row => [row.store_code, row]));
-        return STORE_ORDER.map(code => ({ store_code: code, ...STORE_META[code], ...(byCode.get(code) || {}) }));
+        return SALES_STORE_ORDER.map(code => ({ store_code: code, ...STORE_META[code], ...(byCode.get(code) || {}) }));
       }
       function mixWidth(value, total) { if (number(value) <= 0 || total <= 0) return 0; return Math.max(2, number(value) / total * 100); }
       function renderSales(report) {
@@ -672,8 +884,8 @@
           return `<article class="store-card" style="--store-color:${escapeHtml(store.color)}"><div class="store-card-head"><div class="store-name">${escapeHtml(store.name)}</div><div class="store-rank"><i class="bi bi-bar-chart-fill"></i> #${rankByCode.get(store.store_code)}</div></div><div class="store-total">${money(store.net_sales)}</div><div class="store-total-label">Net sales</div><div class="mix-bar" aria-label="Sales category mix"><span class="mix-repair" style="width:${mixWidth(store.repairs, positiveMix)}%"></span><span class="mix-mis" style="width:${mixWidth(store.mis, positiveMix)}%"></span><span class="mix-product" style="width:${mixWidth(store.products, positiveMix)}%"></span><span class="mix-other" style="width:${mixWidth(store.other, positiveMix)}%"></span></div><div class="store-metrics"><div class="store-metric"><span>Repairs</span><strong>${money(store.repairs)}</strong></div><div class="store-metric"><span>MIS / Devices</span><strong>${money(store.mis)}</strong></div><div class="store-metric"><span>Products</span><strong>${money(store.products)}</strong></div><div class="store-metric"><span>${number(store.invoice_count)} invoices</span><strong>${money(store.average_sale)} avg.</strong></div></div></article>`;
         }).join('');
 
-        els.tableBody.innerHTML = stores.map(store => `<tr><td><span class="store-dot" style="--store-color:${escapeHtml(store.color)}"></span>${escapeHtml(store.name)}</td><td>${money(store.repairs)}</td><td class="value-mis">${money(store.mis)}</td><td>${money(store.products)}</td><td>${money(store.other)}</td><td class="value-main">${money(store.net_sales)}</td><td>${money(store.payments_received)}</td><td class="${number(store.refunds) ? 'value-refund' : ''}">${money(store.refunds)}</td><td>${number(store.invoice_count)}</td></tr>`).join('');
-        els.tableFoot.innerHTML = `<tr><td>All Stores</td><td>${money(totals.repairs)}</td><td class="value-mis">${money(totals.mis)}</td><td>${money(totals.products)}</td><td>${money(totals.other)}</td><td>${money(totals.net_sales)}</td><td>${money(totals.payments_received)}</td><td>${money(totals.refunds)}</td><td>${invoiceCount}</td></tr>`;
+        els.tableBody.innerHTML = stores.map(store => `<tr><td data-label="Store"><span class="store-dot" style="--store-color:${escapeHtml(store.color)}"></span>${escapeHtml(store.name)}</td><td data-label="Repairs">${money(store.repairs)}</td><td data-label="MIS / Devices" class="value-mis">${money(store.mis)}</td><td data-label="Products">${money(store.products)}</td><td data-label="Other">${money(store.other)}</td><td data-label="Total Sales" class="value-main">${money(store.net_sales)}</td><td data-label="Payments">${money(store.payments_received)}</td><td data-label="Refunds" class="${number(store.refunds) ? 'value-refund' : ''}">${money(store.refunds)}</td><td data-label="Invoices">${number(store.invoice_count)}</td></tr>`).join('');
+        els.tableFoot.innerHTML = `<tr><td data-label="Store">All Stores</td><td data-label="Repairs">${money(totals.repairs)}</td><td data-label="MIS / Devices" class="value-mis">${money(totals.mis)}</td><td data-label="Products">${money(totals.products)}</td><td data-label="Other">${money(totals.other)}</td><td data-label="Total Sales">${money(totals.net_sales)}</td><td data-label="Payments">${money(totals.payments_received)}</td><td data-label="Refunds">${money(totals.refunds)}</td><td data-label="Invoices">${invoiceCount}</td></tr>`;
         els.rangeLabel.textContent = rangeText(report.date_from || els.dateFrom.value, report.date_to || els.dateTo.value);
         els.updatedAt.textContent = `Updated ${new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' }).format(new Date())}`;
       }
@@ -706,14 +918,147 @@
           els.refresh.classList.remove('loading');
         }
       }
+
+      function formatDateTime(value) {
+        if (!value) return '—';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '—';
+        return new Intl.DateTimeFormat('en-AU', {
+          timeZone: 'Australia/Brisbane',
+          day: 'numeric',
+          month: 'short',
+          hour: 'numeric',
+          minute: '2-digit'
+        }).format(date);
+      }
+      function repairStatusMeta(status, statusDays) {
+        const meta = REPAIR_STATUS[status] || { label: String(status || 'Active repair').replaceAll('_', ' '), tone: 'workshop' };
+        return { ...meta, tone: number(statusDays) >= 7 ? 'stale' : meta.tone };
+      }
+      function repairDisplayName(ticket) {
+        return ticket.display_label || ticket.title || ticket.ticket_code || 'Repair';
+      }
+      function contactMarkup(ticket) {
+        const contact = String(ticket.customer_phone || ticket.customer_contact || '').trim();
+        if (!contact) return '<span class="repair-code">No contact saved</span>';
+        const dial = contact.replace(/[^+\d]/g, '');
+        if (dial.replace(/\D/g, '').length < 7) return `<span class="repair-code">${escapeHtml(contact)}</span>`;
+        return `<a class="customer-phone" href="tel:${escapeHtml(dial)}"><i class="bi bi-telephone"></i>${escapeHtml(contact)}</a>`;
+      }
+      function renderRepairLoading() {
+        els.repairSummary.innerHTML = Array.from({ length: 4 }, () => summaryCard('Loading', '—', 'Updating repair queue', 'bi-hourglass-split')).join('');
+        els.repairTableBody.innerHTML = '<tr><td colspan="8" style="height:120px;text-align:center;color:#8a989e">Loading active repairs…</td></tr>';
+        els.repairResultLabel.textContent = 'Updating all stores';
+      }
+      function updateRepairStoreOptions(stores) {
+        const selected = els.repairStore.value || 'all';
+        const options = (Array.isArray(stores) ? stores : []).map(store => `<option value="${escapeHtml(store.store_code)}">${escapeHtml(store.store_name)} (${number(store.active_count)})</option>`).join('');
+        els.repairStore.innerHTML = `<option value="all">All stores</option>${options}`;
+        els.repairStore.value = [...els.repairStore.options].some(option => option.value === selected) ? selected : 'all';
+      }
+      function filteredRepairs() {
+        const search = els.repairSearch.value.trim().toLocaleLowerCase();
+        const storeCode = els.repairStore.value;
+        const status = els.repairStatus.value;
+        return (Array.isArray(repairReport.tickets) ? repairReport.tickets : []).filter(ticket => {
+          if (storeCode !== 'all' && ticket.store_code !== storeCode) return false;
+          if (status !== 'all' && ticket.status !== status) return false;
+          if (repairQueue === 'stale' && number(ticket.status_days) < 7) return false;
+          if (repairQueue !== 'all' && repairQueue !== 'stale' && ticket.follow_up_group !== repairQueue) return false;
+          if (!search) return true;
+          const jobs = (Array.isArray(ticket.jobs) ? ticket.jobs : []).flatMap(job => [job.name, job.note]);
+          return [ticket.ticket_code, ticket.display_label, ticket.title, ticket.issue, ticket.customer_name, ticket.customer_phone, ticket.customer_contact, ticket.store_name, ...jobs]
+            .some(value => String(value || '').toLocaleLowerCase().includes(search));
+        });
+      }
+      function renderRepairTable() {
+        const tickets = filteredRepairs();
+        els.repairResultLabel.textContent = `${tickets.length} repair${tickets.length === 1 ? '' : 's'} shown`;
+        if (!tickets.length) {
+          els.repairTableBody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="bi bi-check2-circle"></i><strong>No repairs match these filters</strong><span>Try another store, status or search.</span></div></td></tr>';
+          return;
+        }
+        els.repairTableBody.innerHTML = tickets.map(ticket => {
+          const store = STORE_META[ticket.store_code] || { color: '#657680' };
+          const status = repairStatusMeta(ticket.status, ticket.status_days);
+          const jobs = Array.isArray(ticket.jobs) ? ticket.jobs : [];
+          const jobMarkup = jobs.length ? jobs.map(job => `<div class="job-item"><strong>${escapeHtml(job.name || 'Repair job')}</strong>${job.note ? `<span class="job-note"> · ${escapeHtml(job.note)}</span>` : ''}</div>`).join('') : '<div class="job-item job-note">No job / part lines added</div>';
+          const flags = [ticket.special_order ? 'Special order' : '', ticket.motherboard_repair ? 'Motherboard' : '', ticket.device_in_store === false ? 'Device not in store' : ''].filter(Boolean);
+          const paymentClass = ticket.payment_status === 'paid' ? '' : ticket.payment_status === 'deposit' ? 'deposit' : 'unpaid';
+          const paymentLabel = ticket.payment_status === 'paid' ? 'Paid' : ticket.payment_status === 'deposit' ? `${money(ticket.balance_due)} due` : 'Not invoiced';
+          return `<tr>
+            <td data-label="Store"><span class="store-dot" style="--store-color:${escapeHtml(store.color)}"></span>${escapeHtml(ticket.store_name || ticket.store_code || 'Store')}</td>
+            <td data-label="Repair"><span class="repair-title">${escapeHtml(repairDisplayName(ticket))}</span><span class="repair-code">${escapeHtml(ticket.ticket_code || '')}</span>${ticket.issue ? `<span class="repair-issue">${escapeHtml(ticket.issue)}</span>` : ''}</td>
+            <td data-label="Customer"><span class="customer-name">${escapeHtml(ticket.customer_name || 'No customer name')}</span>${contactMarkup(ticket)}</td>
+            <td data-label="Status"><span class="status-chip ${escapeHtml(status.tone)}">${escapeHtml(status.label)}</span>${flags.length ? `<span class="ticket-flags">${flags.map(flag => `<span class="flag-chip">${escapeHtml(flag)}</span>`).join('')}</span>` : ''}</td>
+            <td data-label="Jobs / Parts"><div class="job-list">${jobMarkup}</div></td>
+            <td data-label="Payment"><span class="payment-chip ${paymentClass}">${escapeHtml(paymentLabel)}</span></td>
+            <td data-label="Waiting"><span class="waiting-age ${number(ticket.status_days) >= 7 ? 'stale' : ''}">${number(ticket.status_days)} day${number(ticket.status_days) === 1 ? '' : 's'}</span><span class="waiting-sub">${number(ticket.open_days)} days open</span></td>
+            <td data-label="Updated"><span class="waiting-age">${escapeHtml(formatDateTime(ticket.status_updated_at || ticket.updated_at))}</span><span class="waiting-sub">${escapeHtml(ticket.updated_by || ticket.created_by || '')}</span></td>
+          </tr>`;
+        }).join('');
+      }
+      function renderRepairs(report) {
+        repairReport = report || { summary: {}, stores: [], tickets: [] };
+        const summary = repairReport.summary || {};
+        els.repairSummary.innerHTML = [
+          summaryCard('Active Repairs', String(number(summary.active)), 'Across every active store', 'bi-tools'),
+          summaryCard('Parts to Order', String(number(summary.need_to_order)), `${number(summary.waiting_shipping)} waiting for shipping`, 'bi-box-seam', 'orange'),
+          summaryCard('In Workshop', String(number(summary.repairing)), 'Currently marked as repairing', 'bi-wrench-adjustable', 'blue'),
+          summaryCard('Customer Follow-up', String(number(summary.customer_follow_up)), `${number(summary.stale)} unchanged for 7+ days`, 'bi-telephone-outbound', number(summary.stale) ? 'red' : '')
+        ].join('');
+        const counts = {
+          All: number(summary.active),
+          Ordering: number(summary.need_to_order),
+          Shipping: number(summary.waiting_shipping),
+          Customer: number(summary.customer_follow_up),
+          Stale: number(summary.stale)
+        };
+        Object.entries(counts).forEach(([name, count]) => {
+          const node = document.getElementById(`queue${name}Count`);
+          if (node) node.textContent = count;
+        });
+        els.repairNavCount.textContent = number(summary.active);
+        els.repairNavCount.hidden = number(summary.active) === 0;
+        updateRepairStoreOptions(repairReport.stores);
+        renderRepairTable();
+        repairsLoaded = true;
+        els.repairUpdatedAt.textContent = `Updated ${new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' }).format(new Date())}`;
+      }
+      async function loadRepairs() {
+        if (repairLoading) return;
+        repairLoading = true;
+        els.repairRefresh.disabled = true;
+        els.repairRefresh.classList.add('loading');
+        els.repairError.classList.remove('show');
+        renderRepairLoading();
+        try {
+          const report = await window.Techm8StaffAuth.callRpc('get_admin_repair_follow_up', { session_token: window.Techm8StaffAuth.getToken() });
+          renderRepairs(report || {});
+        } catch (error) {
+          els.repairErrorMessage.textContent = error.message || 'Please try again.';
+          els.repairError.classList.add('show');
+          els.repairUpdatedAt.textContent = 'Update failed';
+          els.repairSummary.innerHTML = '';
+          els.repairTableBody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><strong>Could not load repairs</strong><span>Refresh the page or try again.</span></div></td></tr>';
+        } finally {
+          repairLoading = false;
+          els.repairRefresh.disabled = false;
+          els.repairRefresh.classList.remove('loading');
+        }
+      }
       function navigate(button, updateHash = true) {
         if (!button) button = document.querySelector('[data-route="sales"]');
         document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item === button));
         const isSales = button.dataset.route === 'sales';
+        const isRepairs = button.dataset.route === 'repairs';
+        const isTool = !isSales && !isRepairs;
         els.overview.classList.toggle('active', isSales);
-        els.tool.classList.toggle('active', !isSales);
+        els.repairs.classList.toggle('active', isRepairs);
+        els.tool.classList.toggle('active', isTool);
         els.breadcrumb.textContent = button.dataset.title || 'Admin Portal';
-        if (!isSales) {
+        if (isRepairs && !repairsLoaded) loadRepairs();
+        if (isTool) {
           const src = button.dataset.src;
           els.toolTitle.textContent = button.dataset.title;
           els.openNew.href = src;
@@ -728,9 +1073,18 @@
       }
 
       document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => setPreset(button.dataset.preset)));
+      document.querySelectorAll('[data-repair-queue]').forEach(button => button.addEventListener('click', () => {
+        repairQueue = button.dataset.repairQueue;
+        document.querySelectorAll('[data-repair-queue]').forEach(item => item.classList.toggle('active', item === button));
+        renderRepairTable();
+      }));
       document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => navigate(button)));
       [els.dateFrom, els.dateTo].forEach(input => input.addEventListener('change', setCustomDates));
       els.refresh.addEventListener('click', loadSales);
+      els.repairRefresh.addEventListener('click', loadRepairs);
+      els.repairSearch.addEventListener('input', renderRepairTable);
+      els.repairStore.addEventListener('change', renderRepairTable);
+      els.repairStatus.addEventListener('change', renderRepairTable);
       els.frame.addEventListener('load', () => els.frameLoader.classList.add('hidden'));
       document.getElementById('mobileMenu').addEventListener('click', () => document.body.classList.toggle('menu-open'));
       document.getElementById('sidebarBackdrop').addEventListener('click', () => document.body.classList.remove('menu-open'));

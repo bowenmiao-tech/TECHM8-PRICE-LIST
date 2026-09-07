@@ -355,8 +355,11 @@ Required POS migrations, in order:
 38. `20260903110750_fix_ambiguous_repair_close_overload.sql`
 39. `20260903111713_separate_repair_continue_and_close_status.sql`
 40. `20260903221500_add_admin_four_store_sales_overview.sql`
+41. `20260907111037_add_admin_repair_follow_up.sql`
 
 The Admin Portal opens on the four-store sales overview. Its management-only RPC reports Park Ridge, Fairfield, North Lakes, and Toowong together; the MIS column is reserved for used-device sales.
+
+The Admin Portal also includes one responsive repair follow-up view for every active store. It reuses the single Admin session and only exposes the operational fields needed for parts ordering, workshop tracking and customer contact; sensitive intake security fields are excluded.
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`
