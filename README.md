@@ -359,7 +359,7 @@ Required POS migrations, in order:
 
 The Admin Portal opens on the four-store sales overview. Its management-only RPC reports Park Ridge, Fairfield, North Lakes, and Toowong together; the MIS column is reserved for used-device sales.
 
-The Admin Portal also includes one responsive repair follow-up view for every active store. It reuses the single Admin session and only exposes the operational fields needed for parts ordering, workshop tracking and customer contact; sensitive intake security fields are excluded.
+The Admin Portal repair view uses the employee Repair Board layout and the same six status columns. A store selector at the top left switches to one store at a time and remembers the last selection without a separate store login. Cards open repair details, customer contact and job notes for ordering and follow-up. The view reuses the Admin session; sensitive intake security fields are excluded.
 
 Product-project stocktake migration:
 - `supabase/website-migrations/20260812112500_add_pos_stocktake_updates.sql`

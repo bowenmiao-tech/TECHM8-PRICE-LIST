@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-admin-build" content="2026-09-07-responsive-repair-follow-up">
+  <meta name="techm8-admin-build" content="2026-09-07-admin-store-repair-board">
   <title>TECHM8 Admin Portal</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -370,71 +370,63 @@
     .value-refund { color: var(--red); }
     .store-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 3px; background: var(--store-color); }
 
-    .repair-toolbar { display: grid; grid-template-columns: minmax(220px, 1.4fr) repeat(2, minmax(150px, .65fr)) auto; gap: 10px; align-items: end; }
-    .control-field { min-width: 0; display: grid; gap: 6px; }
-    .control-field span { color: #798991; font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
-    .control-wrap { position: relative; min-width: 0; }
-    .control-wrap i { position: absolute; left: 12px; top: 50%; color: #819097; font-size: 12px; transform: translateY(-50%); pointer-events: none; }
-    .control-field input, .control-field select {
-      width: 100%;
-      height: 40px;
-      padding: 0 11px;
-      border: 1px solid var(--line-strong);
-      border-radius: 10px;
-      color: var(--ink);
-      background: #fff;
-      outline: none;
-      font-size: 11px;
-      font-weight: 700;
+
+    /* Match the employee Repair Board, keeping its scroll inside the workspace. */
+    .repair-overview-view { max-width: none; }
+    .repair-board-header { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin-bottom: 18px; }
+    .repair-store-picker { display: grid; gap: 6px; min-width: min(240px, 100%); }
+    .repair-store-picker > span { color: var(--muted); font-size: 11px; font-weight: 850; }
+    .repair-store-picker select { width: 100%; min-height: 44px; padding: 9px 36px 9px 12px; border: 1px solid var(--line-strong); border-radius: 10px; color: var(--ink); background: #fff; font-weight: 850; }
+    .repair-board-header .updated-at { margin-left: auto; align-self: center; }
+    .repair-panel { min-width: 0; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+    .repair-panel h1 { font-size: 22px; letter-spacing: -.02em; }
+    .repair-panel-text { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .repair-board-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 14px 0; }
+    .repair-search-wrap { position: relative; flex: 1 1 280px; min-width: 0; }
+    .repair-search-wrap i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    .repair-search-wrap input { width: 100%; min-height: 44px; padding: 10px 12px 10px 38px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: #fff; font-size: 13px; }
+    .repair-search-status { color: var(--muted); font-size: 12px; font-weight: 850; }
+    .repair-board-scroll { overflow-x: auto; padding-bottom: 12px; overscroll-behavior-x: contain; scrollbar-color: #bccdc7 #f1f6f4; }
+    .repair-board { display: grid; grid-template-columns: repeat(6, minmax(220px, 1fr)); gap: 12px; min-width: 1380px; }
+    .board-column { min-width: 0; min-height: 320px; border: 1px solid var(--line); border-radius: 16px; background: #f7fafb; padding: 12px; }
+    .board-column-title { display: flex; justify-content: space-between; gap: 8px; margin: 0 0 10px; color: #263941; font-size: 13px; font-weight: 950; min-height: 36px; }
+    .board-count { color: var(--muted); font-weight: 900; }
+    .ticket-card { width: 100%; display: grid; gap: 7px; padding: 12px; border: 1px solid #d8e3e8; border-radius: 12px; background: #fff; box-shadow: 0 8px 18px rgba(16,30,38,.04); margin-bottom: 10px; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
+    .ticket-card:hover { border-color: var(--green); }
+    .ticket-card:focus-visible, .repair-board-scroll:focus-visible, .repair-store-picker select:focus-visible, .repair-search-wrap input:focus-visible { outline: 3px solid #5bbca6; outline-offset: 2px; }
+    .ticket-title { font-size: 13px; font-weight: 950; line-height: 1.35; }
+    .ticket-device-sub { margin-top: 2px; color: var(--muted); font-size: 11px; font-weight: 750; line-height: 1.3; }
+    .ticket-meta { color: var(--muted); font-size: 12px; font-weight: 800; line-height: 1.5; }
+    .ticket-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ticket-tag { padding: 4px 7px; border-radius: 999px; background: #edf5f3; color: var(--green-dark); font-size: 11px; font-weight: 900; }
+    .ticket-tag.warn { background: #fff2df; color: #9b5b00; }
+    .ticket-tag.danger { background: #fff0ee; color: var(--red); }
+    .ticket-tag.paid { background: #e8f4ff; color: #12639a; }
+    .ticket-tag.deposit { background: #fbe9d4; color: #8a4f10; }
+    .repair-empty { padding: 24px 12px; color: var(--muted); text-align: center; font-size: 13px; }
+    .repair-dialog { width: min(680px, calc(100% - 24px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--line); border-radius: 18px; color: var(--ink); background: #fff; overflow: auto; }
+    .repair-dialog::backdrop { background: rgba(8,23,19,.48); }
+    .repair-dialog-head { position: sticky; top: 0; display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 18px; background: #fff; border-bottom: 1px solid var(--line); }
+    .repair-dialog-head h2 { margin: 0; font-size: 20px; }
+    .repair-dialog-close { flex-shrink: 0; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; background: #fff; cursor: pointer; font-size: 20px; }
+    .repair-dialog-body { padding: 18px; }
+    .repair-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; margin: 20px 0; }
+    .repair-detail-grid dt { margin-bottom: 5px; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .repair-detail-grid dd { margin: 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+    .repair-contact { display: block; color: var(--green-dark); margin-top: 4px; }
+    .repair-detail-jobs { list-style: none; padding: 0; margin: 12px 0 0; }
+    .repair-detail-jobs li { padding: 12px; margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+    .repair-detail-jobs small { display: block; color: var(--muted); white-space: pre-wrap; }
+    @media (max-width: 580px) {
+      .repair-board-header { align-items: stretch; gap: 10px; }
+      .repair-store-picker { flex: 1 1 100%; }
+      .repair-board-header .updated-at { margin-left: 0; }
+      .repair-panel { padding: 12px; }
+      .repair-board { grid-template-columns: repeat(6, minmax(240px, 78vw)); min-width: 0; width: max-content; }
+      .repair-board-scroll { scroll-snap-type: x proximity; }
+      .board-column { scroll-snap-align: start; }
+      .repair-detail-grid { grid-template-columns: 1fr; }
     }
-    .control-field .control-wrap input { padding-left: 34px; }
-    .control-field input:focus, .control-field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7,137,111,.11); }
-    .repair-queues { display: flex; flex-wrap: wrap; gap: 7px; padding-top: 12px; margin-top: 12px; border-top: 1px solid #edf1f3; }
-    .repair-queue { min-height: 32px; padding: 0 11px; border: 1px solid #e2e8eb; border-radius: 9px; color: #667680; background: #f7f9fa; font-size: 9px; font-weight: 850; cursor: pointer; }
-    .repair-queue.active { color: #fff; border-color: var(--green); background: var(--green); }
-    .repair-queue span { margin-left: 4px; opacity: .75; }
-    .repair-table { min-width: 1120px; }
-    .repair-table th, .repair-table td { height: auto; min-height: 54px; padding-top: 11px; padding-bottom: 11px; vertical-align: top; text-align: left; white-space: normal; }
-    .repair-table th:nth-last-child(-n+2), .repair-table td:nth-last-child(-n+2) { text-align: right; }
-    .repair-code { display: block; margin-top: 3px; color: #87959b; font-size: 8px; font-weight: 750; }
-    .repair-title { display: block; max-width: 240px; color: var(--ink); font-size: 10px; font-weight: 850; overflow-wrap: anywhere; }
-    .repair-issue { display: block; max-width: 240px; margin-top: 4px; color: #7d8c93; font-size: 9px; line-height: 1.35; overflow-wrap: anywhere; }
-    .customer-name { display: block; color: var(--ink); font-weight: 850; }
-    .customer-phone { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--green-dark); text-decoration: none; font-size: 9px; }
-    .customer-phone:hover { text-decoration: underline; }
-    .status-chip, .payment-chip, .flag-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      max-width: 190px;
-      padding: 5px 7px;
-      border-radius: 7px;
-      color: #426059;
-      background: #eaf7f3;
-      font-size: 8px;
-      font-weight: 850;
-      line-height: 1.25;
-    }
-    .status-chip.ordering { color: #a64c00; background: #fff1e5; }
-    .status-chip.shipping { color: #285d9f; background: #edf4fd; }
-    .status-chip.customer { color: #6b4b9e; background: #f2edfb; }
-    .status-chip.stale { color: #aa3b31; background: #fff0ee; }
-    .payment-chip { margin-top: 5px; }
-    .payment-chip.deposit { color: #a64c00; background: #fff1e5; }
-    .payment-chip.unpaid { color: #aa3b31; background: #fff0ee; }
-    .ticket-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-    .flag-chip { padding: 3px 6px; color: #667680; background: #f0f4f5; }
-    .job-list { max-width: 280px; display: grid; gap: 4px; }
-    .job-item { color: #41545e; font-size: 9px; line-height: 1.35; overflow-wrap: anywhere; }
-    .job-item strong { color: var(--ink); }
-    .job-note { color: #84939a; }
-    .waiting-age { display: block; color: var(--ink); font-size: 10px; font-weight: 900; }
-    .waiting-age.stale { color: var(--red); }
-    .waiting-sub { display: block; margin-top: 3px; color: #8a989e; font-size: 8px; }
-    .empty-state { padding: 48px 20px; color: #75868e; text-align: center; }
-    .empty-state i { display: block; margin-bottom: 8px; color: #a7b4b9; font-size: 25px; }
-    .empty-state strong { display: block; color: #41545e; font-size: 12px; }
-    .empty-state span { display: block; margin-top: 4px; font-size: 9px; }
 
     .error-panel {
       display: none;
@@ -487,8 +479,6 @@
 
     @media (max-width: 1240px) {
       .summary-grid, .store-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .repair-toolbar { grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(150px, .7fr)); }
-      .repair-toolbar .refresh-button { grid-column: 1 / -1; justify-self: end; }
     }
     @media (max-width: 960px) {
       .app-shell { grid-template-columns: 1fr; }
@@ -523,20 +513,14 @@
       .section-bar { align-items: flex-start; flex-direction: column; }
       .legend { justify-content: flex-start; }
       .tool-panel-head h1 { font-size: 15px; }
-      .repair-toolbar { grid-template-columns: 1fr; }
-      .repair-toolbar .refresh-button { grid-column: auto; width: 100%; }
       .updated-at { white-space: normal; }
     }
     @media (max-width: 900px) {
-      .repair-toolbar { grid-template-columns: 1fr; }
-      .repair-toolbar .refresh-button { grid-column: auto; width: 100%; }
       .responsive-table { min-width: 0; }
       .responsive-table thead { display: none; }
       .responsive-table tbody, .responsive-table tfoot { display: grid; gap: 10px; padding: 10px; }
       .responsive-table tr { display: grid; overflow: hidden; border: 1px solid #e4eaed; border-radius: 12px; background: #fff; }
-      .responsive-table td,
-      .repair-table td,
-      .repair-table td:nth-last-child(-n+2) {
+      .responsive-table td {
         min-width: 0;
         min-height: 37px;
         height: auto;
@@ -555,7 +539,6 @@
       .responsive-table td[colspan]::before { display: none; }
       .responsive-table tfoot { padding-top: 0; }
       .responsive-table tfoot tr { background: #f6f9f9; }
-      .repair-title, .repair-issue, .job-list { max-width: none; }
     }
     @media (max-width: 420px) {
       .topbar { min-height: 60px; padding: 0 12px; }
@@ -564,7 +547,7 @@
       .preset-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
       .summary-card, .store-card { border-radius: 14px; }
       h1 { font-size: 26px; }
-      .responsive-table td, .repair-table td, .repair-table td:nth-last-child(-n+2) { grid-template-columns: 76px minmax(0, 1fr); gap: 8px; }
+      .responsive-table td { grid-template-columns: 76px minmax(0, 1fr); gap: 8px; }
     }
   </style>
 </head>
@@ -580,7 +563,7 @@
         <section class="nav-section">
           <h2 class="nav-heading">Overview</h2>
           <button class="nav-item active" type="button" data-route="sales" data-title="Four Store Sales"><i class="bi bi-grid-1x2-fill"></i><span>Sales Overview</span></button>
-          <button class="nav-item" type="button" data-route="repairs" data-title="Repair Follow-up"><i class="bi bi-tools"></i><span>Repair Follow-up</span><span class="nav-count" id="repairNavCount" hidden>0</span></button>
+          <button class="nav-item" type="button" data-route="repairs" data-title="Repair Board"><i class="bi bi-tools"></i><span>Repair Board</span><span class="nav-count" id="repairNavCount" hidden>0</span></button>
         </section>
         <section class="nav-section">
           <h2 class="nav-heading">Pricing</h2>
@@ -675,63 +658,33 @@
         </section>
 
         <section class="content-view overview-view repair-overview-view" id="repairView" aria-labelledby="repairTitle">
-          <div class="page-heading">
-            <div>
-              <p class="eyebrow">All-store workshop queue</p>
-              <h1 id="repairTitle">Repair Follow-up</h1>
-              <p class="page-subtitle">See every active repair in one place for parts ordering and customer follow-up. No separate store login is needed.</p>
-            </div>
+          <div class="repair-board-header">
+            <label class="repair-store-picker"><span>Store</span><select id="repairStoreFilter" aria-label="Repair store" disabled><option value="">Loading stores…</option></select></label>
             <div class="updated-at" id="repairUpdatedAt">Waiting for data</div>
+            <button class="refresh-button" id="repairRefreshButton" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh Repairs</button>
           </div>
-
-          <section class="filters-card" aria-label="Repair filters">
-            <div class="repair-toolbar">
-              <label class="control-field">
-                <span>Search</span>
-                <span class="control-wrap"><i class="bi bi-search"></i><input id="repairSearch" type="search" placeholder="Ticket, device, customer or phone"></span>
-              </label>
-              <label class="control-field"><span>Store</span><select id="repairStoreFilter"><option value="all">All stores</option></select></label>
-              <label class="control-field">
-                <span>Status</span>
-                <select id="repairStatusFilter">
-                  <option value="all">All active statuses</option>
-                  <option value="need_to_order">Need to order</option>
-                  <option value="waiting_shipping">Waiting for shipping</option>
-                  <option value="repairing">Repairing</option>
-                  <option value="waiting_customer_confirmation">Waiting for customer approval</option>
-                  <option value="waiting_pickup">Waiting for pickup</option>
-                  <option value="over_3_months_uncollected">Over 3 months uncollected</option>
-                </select>
-              </label>
-              <button class="refresh-button" id="repairRefreshButton" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh Repairs</button>
-            </div>
-            <div class="repair-queues" id="repairQueues" aria-label="Repair work queues">
-              <button class="repair-queue active" type="button" data-repair-queue="all">All <span id="queueAllCount">0</span></button>
-              <button class="repair-queue" type="button" data-repair-queue="ordering">To order <span id="queueOrderingCount">0</span></button>
-              <button class="repair-queue" type="button" data-repair-queue="shipping">Shipping <span id="queueShippingCount">0</span></button>
-              <button class="repair-queue" type="button" data-repair-queue="customer">Customer follow-up <span id="queueCustomerCount">0</span></button>
-              <button class="repair-queue" type="button" data-repair-queue="stale">7+ days unchanged <span id="queueStaleCount">0</span></button>
-            </div>
-          </section>
-
           <div class="error-panel" id="repairErrorPanel" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i>
             <div><strong>Repair data could not be loaded</strong><span id="repairErrorMessage"></span></div>
           </div>
-
-          <section class="summary-grid" id="repairSummaryGrid" aria-label="Repair follow-up summary"></section>
-
-          <div class="section-bar">
-            <div><h2>Active Repair List</h2><p id="repairResultLabel">Waiting for data</p></div>
-          </div>
-          <section class="table-card">
-            <div class="table-scroll">
-              <table class="responsive-table repair-table">
-                <thead><tr><th>Store</th><th>Repair</th><th>Customer</th><th>Status</th><th>Jobs / Parts</th><th>Payment</th><th>Waiting</th><th>Updated</th></tr></thead>
-                <tbody id="repairTableBody"></tbody>
-              </table>
+          <section class="repair-panel">
+            <h1 id="repairTitle">Repair Board</h1>
+            <p class="repair-panel-text" id="repairStoreLabel">Select a store to view its repair tickets.</p>
+            <div class="repair-board-toolbar">
+              <div class="repair-search-wrap"><i class="bi bi-search" aria-hidden="true"></i><input id="repairSearch" type="search" aria-label="Search repairs" placeholder="Ticket / customer / phone / device"></div>
+              <div class="repair-search-status" id="repairResultLabel" role="status">Waiting for data</div>
+            </div>
+            <div class="repair-board-scroll" id="repairBoardScroll" tabindex="0" role="region" aria-label="Repair status columns — scroll horizontally to see all statuses">
+              <div class="repair-board" id="repairBoard"></div>
             </div>
           </section>
+          <dialog class="repair-dialog" id="repairDetailDialog" aria-labelledby="repairDetailTitle">
+            <div class="repair-dialog-head">
+              <div><h2 id="repairDetailTitle">Repair Details</h2><div class="ticket-device-sub" id="repairDetailSubtitle"></div></div>
+              <button class="repair-dialog-close" id="repairDetailClose" type="button" aria-label="Close repair details">×</button>
+            </div>
+            <div class="repair-dialog-body" id="repairDetailBody"></div>
+          </dialog>
         </section>
 
         <section class="content-view tool-view" id="toolView" aria-labelledby="toolTitle">
@@ -762,10 +715,10 @@
       const SALES_STORE_ORDER = ['parkridge', 'fairfield', 'northlakes', 'toowong'];
       const REPAIR_STATUS = {
         need_to_order: { label: 'Need to order', tone: 'ordering' },
-        waiting_shipping: { label: 'Waiting for shipping', tone: 'shipping' },
-        repairing: { label: 'Repairing', tone: 'workshop' },
-        waiting_customer_confirmation: { label: 'Waiting for customer approval', tone: 'customer' },
-        waiting_pickup: { label: 'Waiting for pickup', tone: 'customer' },
+        waiting_shipping: { label: 'Waiting shipping', tone: 'shipping' },
+        repairing: { label: 'Parts arrived / Repairing', tone: 'workshop' },
+        waiting_customer_confirmation: { label: 'Waiting customer confirmation', tone: 'customer' },
+        waiting_pickup: { label: 'Waiting pickup', tone: 'customer' },
         over_3_months_uncollected: { label: 'Over 3 months uncollected', tone: 'stale' }
       };
       const els = {
@@ -788,9 +741,13 @@
         repairUpdatedAt: document.getElementById('repairUpdatedAt'),
         repairSearch: document.getElementById('repairSearch'),
         repairStore: document.getElementById('repairStoreFilter'),
-        repairStatus: document.getElementById('repairStatusFilter'),
-        repairSummary: document.getElementById('repairSummaryGrid'),
-        repairTableBody: document.getElementById('repairTableBody'),
+        repairBoard: document.getElementById('repairBoard'),
+        repairBoardScroll: document.getElementById('repairBoardScroll'),
+        repairStoreLabel: document.getElementById('repairStoreLabel'),
+        repairDialog: document.getElementById('repairDetailDialog'),
+        repairDetailTitle: document.getElementById('repairDetailTitle'),
+        repairDetailSubtitle: document.getElementById('repairDetailSubtitle'),
+        repairDetailBody: document.getElementById('repairDetailBody'),
         repairResultLabel: document.getElementById('repairResultLabel'),
         repairError: document.getElementById('repairErrorPanel'),
         repairErrorMessage: document.getElementById('repairErrorMessage'),
@@ -803,7 +760,7 @@
       let loading = false;
       let repairLoading = false;
       let repairsLoaded = false;
-      let repairQueue = 'all';
+      const REPAIR_STORE_KEY = 'techm8_admin_repair_store';
       let repairReport = { summary: {}, stores: [], tickets: [] };
 
       function escapeHtml(value) {
@@ -931,120 +888,140 @@
           minute: '2-digit'
         }).format(date);
       }
-      function repairStatusMeta(status, statusDays) {
-        const meta = REPAIR_STATUS[status] || { label: String(status || 'Active repair').replaceAll('_', ' '), tone: 'workshop' };
-        return { ...meta, tone: number(statusDays) >= 7 ? 'stale' : meta.tone };
-      }
       function repairDisplayName(ticket) {
-        return ticket.display_label || ticket.title || ticket.ticket_code || 'Repair';
+        return ticket.display_label || ticket.title || ticket.ticket_code || 'Repair ticket';
       }
+      function repairDays(value) { return `${number(value)} day${number(value) === 1 ? '' : 's'}`; }
       function contactMarkup(ticket) {
         const contact = String(ticket.customer_phone || ticket.customer_contact || '').trim();
-        if (!contact) return '<span class="repair-code">No contact saved</span>';
+        if (!contact) return 'Phone missing';
         const dial = contact.replace(/[^+\d]/g, '');
-        if (dial.replace(/\D/g, '').length < 7) return `<span class="repair-code">${escapeHtml(contact)}</span>`;
-        return `<a class="customer-phone" href="tel:${escapeHtml(dial)}"><i class="bi bi-telephone"></i>${escapeHtml(contact)}</a>`;
+        if (!/^[+\d\s().-]+$/.test(contact) || dial.replace(/\D/g, '').length < 7) return escapeHtml(contact);
+        return `<a class="repair-contact" href="tel:${escapeHtml(dial)}">${escapeHtml(contact)}</a>`;
       }
       function renderRepairLoading() {
-        els.repairSummary.innerHTML = Array.from({ length: 4 }, () => summaryCard('Loading', '—', 'Updating repair queue', 'bi-hourglass-split')).join('');
-        els.repairTableBody.innerHTML = '<tr><td colspan="8" style="height:120px;text-align:center;color:#8a989e">Loading active repairs…</td></tr>';
-        els.repairResultLabel.textContent = 'Updating all stores';
+        els.repairBoard.setAttribute('aria-busy', 'true');
+        els.repairBoard.innerHTML = Object.entries(REPAIR_STATUS).map(([status, meta]) => `<section class="board-column"><h2 class="board-column-title"><span>${escapeHtml(meta.label)}</span><span class="board-count">—</span></h2><div class="ticket-meta">Loading…</div></section>`).join('');
+        els.repairResultLabel.textContent = 'Loading repairs…';
+        els.repairSearch.disabled = true;
+        els.repairStore.disabled = true;
       }
       function updateRepairStoreOptions(stores) {
-        const selected = els.repairStore.value || 'all';
-        const options = (Array.isArray(stores) ? stores : []).map(store => `<option value="${escapeHtml(store.store_code)}">${escapeHtml(store.store_name)} (${number(store.active_count)})</option>`).join('');
-        els.repairStore.innerHTML = `<option value="all">All stores</option>${options}`;
-        els.repairStore.value = [...els.repairStore.options].some(option => option.value === selected) ? selected : 'all';
+        let savedStore = '';
+        try { savedStore = localStorage.getItem(REPAIR_STORE_KEY) || ''; } catch {}
+        const selected = els.repairStore.value || savedStore;
+        const available = Array.isArray(stores) ? stores : [];
+        els.repairStore.innerHTML = available.map(store => `<option value="${escapeHtml(store.store_code)}">${escapeHtml(store.store_name)}</option>`).join('');
+        els.repairStore.value = available.some(store => store.store_code === selected) ? selected : (available[0]?.store_code || '');
+        if (!available.length) els.repairStore.innerHTML = '<option value="">No active stores</option>';
+      }
+      function selectedStoreRepairs() {
+        return (Array.isArray(repairReport.tickets) ? repairReport.tickets : []).filter(ticket => ticket.store_code === els.repairStore.value);
       }
       function filteredRepairs() {
         const search = els.repairSearch.value.trim().toLocaleLowerCase();
-        const storeCode = els.repairStore.value;
-        const status = els.repairStatus.value;
-        return (Array.isArray(repairReport.tickets) ? repairReport.tickets : []).filter(ticket => {
-          if (storeCode !== 'all' && ticket.store_code !== storeCode) return false;
-          if (status !== 'all' && ticket.status !== status) return false;
-          if (repairQueue === 'stale' && number(ticket.status_days) < 7) return false;
-          if (repairQueue !== 'all' && repairQueue !== 'stale' && ticket.follow_up_group !== repairQueue) return false;
+        return selectedStoreRepairs().filter(ticket => {
           if (!search) return true;
           const jobs = (Array.isArray(ticket.jobs) ? ticket.jobs : []).flatMap(job => [job.name, job.note]);
-          return [ticket.ticket_code, ticket.display_label, ticket.title, ticket.issue, ticket.customer_name, ticket.customer_phone, ticket.customer_contact, ticket.store_name, ...jobs]
+          return [ticket.ticket_code, ticket.display_label, ticket.title, ticket.issue, ticket.customer_name, ticket.customer_phone, ticket.customer_contact, ...jobs]
             .some(value => String(value || '').toLocaleLowerCase().includes(search));
         });
       }
-      function renderRepairTable() {
+      function repairTags(ticket) {
+        return [
+          ticket.special_order ? '<span class="ticket-tag">Special</span>' : '',
+          ticket.device_in_store ? '<span class="ticket-tag">Device in store</span>' : '',
+          ticket.motherboard_repair ? '<span class="ticket-tag danger">Mainboard</span>' : '',
+          ticket.payment_status === 'deposit' ? `<span class="ticket-tag deposit">Invoice balance · ${money(ticket.balance_due)} owing</span>` : '',
+          ticket.payment_status === 'paid' ? '<span class="ticket-tag paid">Paid</span>' : ''
+        ].join('');
+      }
+      function renderRepairBoard() {
+        if (repairLoading) return;
         const tickets = filteredRepairs();
-        els.repairResultLabel.textContent = `${tickets.length} repair${tickets.length === 1 ? '' : 's'} shown`;
-        if (!tickets.length) {
-          els.repairTableBody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="bi bi-check2-circle"></i><strong>No repairs match these filters</strong><span>Try another store, status or search.</span></div></td></tr>';
-          return;
+        const total = selectedStoreRepairs().length;
+        const store = (repairReport.stores || []).find(item => item.store_code === els.repairStore.value);
+        els.repairStoreLabel.textContent = store ? store.store_name : 'No active stores';
+        els.repairResultLabel.textContent = els.repairSearch.value.trim() ? `${tickets.length} of ${total} open tickets` : `${total} open ticket${total === 1 ? '' : 's'}`;
+        const columns = Object.entries(REPAIR_STATUS);
+        for (const ticket of tickets) {
+          if (!columns.some(([status]) => status === ticket.status)) columns.push([ticket.status, { label: String(ticket.status || 'Other').replaceAll('_', ' ') }]);
         }
-        els.repairTableBody.innerHTML = tickets.map(ticket => {
-          const store = STORE_META[ticket.store_code] || { color: '#657680' };
-          const status = repairStatusMeta(ticket.status, ticket.status_days);
-          const jobs = Array.isArray(ticket.jobs) ? ticket.jobs : [];
-          const jobMarkup = jobs.length ? jobs.map(job => `<div class="job-item"><strong>${escapeHtml(job.name || 'Repair job')}</strong>${job.note ? `<span class="job-note"> · ${escapeHtml(job.note)}</span>` : ''}</div>`).join('') : '<div class="job-item job-note">No job / part lines added</div>';
-          const flags = [ticket.special_order ? 'Special order' : '', ticket.motherboard_repair ? 'Motherboard' : '', ticket.device_in_store === false ? 'Device not in store' : ''].filter(Boolean);
-          const paymentClass = ticket.payment_status === 'paid' ? '' : ticket.payment_status === 'deposit' ? 'deposit' : 'unpaid';
-          const paymentLabel = ticket.payment_status === 'paid' ? 'Paid' : ticket.payment_status === 'deposit' ? `${money(ticket.balance_due)} due` : 'Not invoiced';
-          return `<tr>
-            <td data-label="Store"><span class="store-dot" style="--store-color:${escapeHtml(store.color)}"></span>${escapeHtml(ticket.store_name || ticket.store_code || 'Store')}</td>
-            <td data-label="Repair"><span class="repair-title">${escapeHtml(repairDisplayName(ticket))}</span><span class="repair-code">${escapeHtml(ticket.ticket_code || '')}</span>${ticket.issue ? `<span class="repair-issue">${escapeHtml(ticket.issue)}</span>` : ''}</td>
-            <td data-label="Customer"><span class="customer-name">${escapeHtml(ticket.customer_name || 'No customer name')}</span>${contactMarkup(ticket)}</td>
-            <td data-label="Status"><span class="status-chip ${escapeHtml(status.tone)}">${escapeHtml(status.label)}</span>${flags.length ? `<span class="ticket-flags">${flags.map(flag => `<span class="flag-chip">${escapeHtml(flag)}</span>`).join('')}</span>` : ''}</td>
-            <td data-label="Jobs / Parts"><div class="job-list">${jobMarkup}</div></td>
-            <td data-label="Payment"><span class="payment-chip ${paymentClass}">${escapeHtml(paymentLabel)}</span></td>
-            <td data-label="Waiting"><span class="waiting-age ${number(ticket.status_days) >= 7 ? 'stale' : ''}">${number(ticket.status_days)} day${number(ticket.status_days) === 1 ? '' : 's'}</span><span class="waiting-sub">${number(ticket.open_days)} days open</span></td>
-            <td data-label="Updated"><span class="waiting-age">${escapeHtml(formatDateTime(ticket.status_updated_at || ticket.updated_at))}</span><span class="waiting-sub">${escapeHtml(ticket.updated_by || ticket.created_by || '')}</span></td>
-          </tr>`;
+        els.repairBoard.innerHTML = columns.map(([status, meta]) => {
+          const columnTickets = tickets.filter(ticket => ticket.status === status);
+          return `<section class="board-column" data-board-status="${escapeHtml(status)}" aria-label="${escapeHtml(meta.label)}">
+            <h2 class="board-column-title"><span>${escapeHtml(meta.label)}</span><span class="board-count">${columnTickets.length}</span></h2>
+            ${columnTickets.map(ticket => `<button class="ticket-card" type="button" data-ticket-code="${escapeHtml(ticket.ticket_code)}" aria-label="Open repair ${escapeHtml(ticket.ticket_code)}">
+              <span class="ticket-title">${escapeHtml(repairDisplayName(ticket))}</span>
+              ${ticket.display_label ? `<span class="ticket-device-sub">${escapeHtml(ticket.title || '')}</span>` : ''}
+              <span class="ticket-meta">${escapeHtml(ticket.ticket_code)} · ${escapeHtml(ticket.issue || 'Repair')}</span>
+              <span class="ticket-meta">${escapeHtml(ticket.customer_name || '')} · ${escapeHtml(ticket.customer_phone || ticket.customer_contact || 'Phone missing')}</span>
+              <span class="ticket-tags">${repairTags(ticket)}</span>
+              <span class="ticket-device-sub">${repairDays(ticket.status_days)} in status · ${repairDays(ticket.open_days)} open</span>
+            </button>`).join('') || '<div class="ticket-meta">No tickets</div>'}
+          </section>`;
         }).join('');
+        els.repairBoard.removeAttribute('aria-busy');
+      }
+      function openRepairDetails(code) {
+        const ticket = selectedStoreRepairs().find(item => item.ticket_code === code);
+        if (!ticket) return;
+        els.repairDetailTitle.textContent = repairDisplayName(ticket);
+        els.repairDetailSubtitle.textContent = `${ticket.ticket_code} · ${ticket.store_name}`;
+        const jobs = Array.isArray(ticket.jobs) ? ticket.jobs : [];
+        const jobStatuses = { proposed: 'Waiting approval', approved: 'Approved', in_progress: 'In progress', completed: 'Completed' };
+        els.repairDetailBody.innerHTML = `<div class="ticket-tags"><span class="ticket-tag">${escapeHtml(REPAIR_STATUS[ticket.status]?.label || ticket.status)}</span>${repairTags(ticket)}</div>
+          <dl class="repair-detail-grid">
+            <div><dt>Device</dt><dd>${escapeHtml(ticket.title || '—')}</dd></div>
+            <div><dt>Customer</dt><dd>${escapeHtml(ticket.customer_name || 'No customer name')}${contactMarkup(ticket)}</dd></div>
+            <div><dt>Issue</dt><dd>${escapeHtml(ticket.issue || '—')}</dd></div>
+            <div><dt>Waiting</dt><dd>${repairDays(ticket.status_days)} in status · ${repairDays(ticket.open_days)} open</dd></div>
+            <div><dt>Last updated</dt><dd>${escapeHtml(formatDateTime(ticket.updated_at))}<br>${escapeHtml(ticket.updated_by || ticket.created_by || '')}</dd></div>
+            <div><dt>Payment</dt><dd>${ticket.payment_status === 'paid' ? 'Paid' : ticket.payment_status === 'deposit' ? `${money(ticket.balance_due)} remaining on linked invoice(s)` : 'Not invoiced'}</dd></div>
+          </dl>
+          <h3>Repair jobs / Parts</h3>
+          <ul class="repair-detail-jobs">
+            <li><strong>${escapeHtml(ticket.issue || 'Base repair')}</strong> · ${money(ticket.price)}</li>
+            ${jobs.map(job => `<li><strong>${escapeHtml(job.name || 'Repair job')}</strong> · ${money(job.price)}<small>${escapeHtml(jobStatuses[job.status] || job.status || '')}</small>${job.note ? `<small>${escapeHtml(job.note)}</small>` : ''}</li>`).join('')}
+          </ul>`;
+        els.repairDialog.showModal();
       }
       function renderRepairs(report) {
         repairReport = report || { summary: {}, stores: [], tickets: [] };
-        const summary = repairReport.summary || {};
-        els.repairSummary.innerHTML = [
-          summaryCard('Active Repairs', String(number(summary.active)), 'Across every active store', 'bi-tools'),
-          summaryCard('Parts to Order', String(number(summary.need_to_order)), `${number(summary.waiting_shipping)} waiting for shipping`, 'bi-box-seam', 'orange'),
-          summaryCard('In Workshop', String(number(summary.repairing)), 'Currently marked as repairing', 'bi-wrench-adjustable', 'blue'),
-          summaryCard('Customer Follow-up', String(number(summary.customer_follow_up)), `${number(summary.stale)} unchanged for 7+ days`, 'bi-telephone-outbound', number(summary.stale) ? 'red' : '')
-        ].join('');
-        const counts = {
-          All: number(summary.active),
-          Ordering: number(summary.need_to_order),
-          Shipping: number(summary.waiting_shipping),
-          Customer: number(summary.customer_follow_up),
-          Stale: number(summary.stale)
-        };
-        Object.entries(counts).forEach(([name, count]) => {
-          const node = document.getElementById(`queue${name}Count`);
-          if (node) node.textContent = count;
-        });
-        els.repairNavCount.textContent = number(summary.active);
-        els.repairNavCount.hidden = number(summary.active) === 0;
+        const count = number(repairReport.summary?.active);
+        els.repairNavCount.textContent = count;
+        els.repairNavCount.hidden = count === 0;
         updateRepairStoreOptions(repairReport.stores);
-        renderRepairTable();
         repairsLoaded = true;
-        els.repairUpdatedAt.textContent = `Updated ${new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' }).format(new Date())}`;
+        renderRepairBoard();
+        els.repairUpdatedAt.textContent = `Updated ${formatDateTime(repairReport.generated_at || new Date())}`;
       }
       async function loadRepairs() {
         if (repairLoading) return;
         repairLoading = true;
+        els.repairDialog.close();
         els.repairRefresh.disabled = true;
         els.repairRefresh.classList.add('loading');
         els.repairError.classList.remove('show');
         renderRepairLoading();
         try {
           const report = await window.Techm8StaffAuth.callRpc('get_admin_repair_follow_up', { session_token: window.Techm8StaffAuth.getToken() });
+          repairLoading = false;
           renderRepairs(report || {});
         } catch (error) {
+          repairsLoaded = false;
           els.repairErrorMessage.textContent = error.message || 'Please try again.';
           els.repairError.classList.add('show');
           els.repairUpdatedAt.textContent = 'Update failed';
-          els.repairSummary.innerHTML = '';
-          els.repairTableBody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><strong>Could not load repairs</strong><span>Refresh the page or try again.</span></div></td></tr>';
+          els.repairResultLabel.textContent = 'Repairs unavailable';
+          els.repairBoard.innerHTML = '<div class="repair-empty">Could not load repairs. Please refresh to try again.</div>';
+          els.repairBoard.removeAttribute('aria-busy');
         } finally {
           repairLoading = false;
           els.repairRefresh.disabled = false;
           els.repairRefresh.classList.remove('loading');
+          els.repairSearch.disabled = !repairsLoaded;
+          els.repairStore.disabled = !repairsLoaded || !(repairReport.stores || []).length;
         }
       }
       function navigate(button, updateHash = true) {
@@ -1055,6 +1032,7 @@
         const isTool = !isSales && !isRepairs;
         els.overview.classList.toggle('active', isSales);
         els.repairs.classList.toggle('active', isRepairs);
+        if (!isRepairs) els.repairDialog.close();
         els.tool.classList.toggle('active', isTool);
         els.breadcrumb.textContent = button.dataset.title || 'Admin Portal';
         if (isRepairs && !repairsLoaded) loadRepairs();
@@ -1073,18 +1051,23 @@
       }
 
       document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => setPreset(button.dataset.preset)));
-      document.querySelectorAll('[data-repair-queue]').forEach(button => button.addEventListener('click', () => {
-        repairQueue = button.dataset.repairQueue;
-        document.querySelectorAll('[data-repair-queue]').forEach(item => item.classList.toggle('active', item === button));
-        renderRepairTable();
-      }));
       document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => navigate(button)));
       [els.dateFrom, els.dateTo].forEach(input => input.addEventListener('change', setCustomDates));
       els.refresh.addEventListener('click', loadSales);
       els.repairRefresh.addEventListener('click', loadRepairs);
-      els.repairSearch.addEventListener('input', renderRepairTable);
-      els.repairStore.addEventListener('change', renderRepairTable);
-      els.repairStatus.addEventListener('change', renderRepairTable);
+      els.repairSearch.addEventListener('input', renderRepairBoard);
+      els.repairStore.addEventListener('change', () => {
+        try { localStorage.setItem(REPAIR_STORE_KEY, els.repairStore.value); } catch {}
+        els.repairSearch.value = '';
+        els.repairDialog.close();
+        els.repairBoardScroll.scrollLeft = 0;
+        renderRepairBoard();
+      });
+      els.repairBoard.addEventListener('click', event => {
+        const card = event.target.closest('[data-ticket-code]');
+        if (card) openRepairDetails(card.dataset.ticketCode);
+      });
+      document.getElementById('repairDetailClose').addEventListener('click', () => els.repairDialog.close());
       els.frame.addEventListener('load', () => els.frameLoader.classList.add('hidden'));
       document.getElementById('mobileMenu').addEventListener('click', () => document.body.classList.toggle('menu-open'));
       document.getElementById('sidebarBackdrop').addEventListener('click', () => document.body.classList.remove('menu-open'));
