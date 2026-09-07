@@ -276,7 +276,7 @@ Repair rules:
 - Every card carries an optional board label staff can type themselves, because service quotes share one brand and model and leave a column of identically named cards. The label replaces the heading on the Board and in the card detail, with the device kept underneath, and it is searchable. It is deliberately separate from the device title: the title is written into the repair card the customer signs and is matched against the repair price list to suggest prices for extra jobs, so it stays as recorded. Invoice lines are built from the base job name or the job's own name and are unaffected either way.
 - Cards are dragged both between columns and up and down inside a column. A line shows where the card will land, and the order is saved per store and column, so every terminal in that store sees the same board.
 - Ordering and the status change stay separate operations. Dropping into another column still goes through the normal status update, which refuses a card with no customer name or phone and writes the activity entry; the reorder only runs once that succeeds, and can never change anything but position.
-- Cards that have never been dragged keep the previous most-recent-first order and sit behind any card that has been placed by hand.
+- A brand new card carries no position yet and arrives at the top of its column, which is where the previous newest-first order put it. The order is applied by `search_pos_repair_tickets` before the POS receives it, so every terminal agrees without relying on client-side sorting.
 - Board search supports ticket, customer, phone, device, issue, board label, and IMEI/intake content.
 - Finished invoices are searched in Invoice History, not in a separate Finished Board column.
 

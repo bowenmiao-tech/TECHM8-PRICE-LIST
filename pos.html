@@ -15902,19 +15902,14 @@
         </div>
         <div class="repair-board">
           ${repairBoardColumns.map(column => {
-            // Manual order first; anything never dragged keeps the old
-            // most-recent-first order behind it.
+            // The server already orders by board position; this keeps the board
+            // in step after a local drag, before the reload comes back. A brand
+            // new card carries position 0 and stays at the top, which is where
+            // the previous newest-first order put it.
             const tickets = storeTickets
               .filter(ticket => ticket.status === column.id)
               .slice()
-              .sort((a, b) => {
-                const left = numberValue(a.boardPosition);
-                const right = numberValue(b.boardPosition);
-                if (left && right && left !== right) return left - right;
-                if (left && !right) return -1;
-                if (!left && right) return 1;
-                return 0;
-              });
+              .sort((a, b) => numberValue(a.boardPosition) - numberValue(b.boardPosition));
             return `
               <div class="board-column" data-board-status="${column.id}">
                 <div class="board-column-title">
