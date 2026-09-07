@@ -5067,6 +5067,21 @@
       cursor: grabbing;
     }
 
+    /* Drop position line. Box-shadow rather than a border so nothing shifts
+       while the card is being dragged over the column. */
+    .ticket-card.drop-before {
+      box-shadow: 0 -3px 0 -1px var(--tm-green);
+    }
+
+    .board-column.drop-at-end::after {
+      content: "";
+      display: block;
+      height: 3px;
+      margin: 2px 0 0;
+      border-radius: 2px;
+      background: var(--tm-green);
+    }
+
     .ticket-top {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 34px;
@@ -14289,6 +14304,7 @@
       // Board-only label. The device title stays untouched because it feeds the
       // signed repair card and the repair-price suggestions.
       ticket.displayLabel = String(ticket.displayLabel || '').trim();
+      ticket.boardPosition = numberValue(ticket.boardPosition);
       ticket.customerPhone = String(ticket.customerPhone || ticket.customerContact || '').trim();
       ticket.paymentStatus = ticket.paymentStatus || 'unpaid';
       ticket.jobs = (Array.isArray(ticket.jobs) ? ticket.jobs : []).map(job => ({
@@ -14941,6 +14957,72 @@
         localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
         changedTickets.forEach(ticket => persistRepairTicket(ticket));
       }
+    }
+
+    // Where the dragged card would land, from the pointer against the midpoint
+    // of each card already in the column.
+    function boardInsertIndex(column, clientY) {
+      const cards = Array.from(column.querySelectorAll('.ticket-card:not(.dragging)'));
+      for (let index = 0; index < cards.length; index += 1) {
+        const rect = cards[index].getBoundingClientRect();
+        if (clientY < rect.top + rect.height / 2) return index;
+      }
+      return cards.length;
+    }
+
+    function clearBoardDropMarkers() {
+      els.repairWorkspace.querySelectorAll('.drop-before, .drop-at-end')
+        .forEach(node => node.classList.remove('drop-before', 'drop-at-end'));
+    }
+
+    function markBoardDropTarget(column, clientY) {
+      clearBoardDropMarkers();
+      const cards = Array.from(column.querySelectorAll('.ticket-card:not(.dragging)'));
+      const index = boardInsertIndex(column, clientY);
+      if (index >= cards.length) column.classList.add('drop-at-end');
+      else cards[index].classList.add('drop-before');
+    }
+
+    async function persistBoardOrder(status, orderedIds, movedTicketId) {
+      try {
+        await repairJobRequest({
+          action: 'move',
+          ticket_code: movedTicketId,
+          status,
+          ordered_codes: orderedIds
+        });
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'The card order could not be saved.');
+        loadRepairTickets();
+      }
+    }
+
+    async function handleBoardDrop(column, ticketId, clientY) {
+      const status = column.dataset.boardStatus;
+      const ticket = state.repairTickets.find(item => item.id === ticketId);
+      if (!ticket || ticket.closedAt) return;
+
+      // Read the destination order before anything re-renders the board.
+      const index = boardInsertIndex(column, clientY);
+      const remaining = Array.from(column.querySelectorAll('.ticket-card:not(.dragging)'))
+        .map(card => card.dataset.ticketId)
+        .filter(id => id && id !== ticketId);
+      const orderedIds = remaining.slice(0, index).concat([ticketId], remaining.slice(index));
+
+      if (ticket.status !== status) {
+        await updateRepairTicketStatus(ticketId, status);
+        // That call refuses a card with no customer name or phone, and puts the
+        // status back when the save fails, so the reorder must not run blind.
+        if (ticket.status !== status) return;
+      }
+
+      orderedIds.forEach((id, position) => {
+        const row = state.repairTickets.find(item => item.id === id);
+        if (row) row.boardPosition = (position + 1) * 10;
+      });
+      renderRepairWorkspace();
+      persistBoardOrder(status, orderedIds, ticketId);
     }
 
     async function updateRepairTicketStatus(ticketId, status) {
@@ -15820,7 +15902,19 @@
         </div>
         <div class="repair-board">
           ${repairBoardColumns.map(column => {
-            const tickets = storeTickets.filter(ticket => ticket.status === column.id);
+            // Manual order first; anything never dragged keeps the old
+            // most-recent-first order behind it.
+            const tickets = storeTickets
+              .filter(ticket => ticket.status === column.id)
+              .slice()
+              .sort((a, b) => {
+                const left = numberValue(a.boardPosition);
+                const right = numberValue(b.boardPosition);
+                if (left && right && left !== right) return left - right;
+                if (left && !right) return -1;
+                if (!left && right) return 1;
+                return 0;
+              });
             return `
               <div class="board-column" data-board-status="${column.id}">
                 <div class="board-column-title">
@@ -23349,6 +23443,7 @@
       const card = event.target.closest('[data-ticket-id]');
       if (card) card.classList.remove('dragging');
       els.repairWorkspace.querySelectorAll('.board-column.drag-over').forEach(column => column.classList.remove('drag-over'));
+      clearBoardDropMarkers();
     });
 
     els.repairWorkspace.addEventListener('dragover', event => {
@@ -23357,11 +23452,15 @@
       event.preventDefault();
       column.classList.add('drag-over');
       event.dataTransfer.dropEffect = 'move';
+      markBoardDropTarget(column, event.clientY);
     });
 
     els.repairWorkspace.addEventListener('dragleave', event => {
       const column = event.target.closest('[data-board-status]');
-      if (column && !column.contains(event.relatedTarget)) column.classList.remove('drag-over');
+      if (column && !column.contains(event.relatedTarget)) {
+        column.classList.remove('drag-over');
+        clearBoardDropMarkers();
+      }
     });
 
     els.repairWorkspace.addEventListener('drop', event => {
@@ -23370,7 +23469,9 @@
       event.preventDefault();
       column.classList.remove('drag-over');
       const ticketId = event.dataTransfer.getData('text/plain');
-      if (ticketId) updateRepairTicketStatus(ticketId, column.dataset.boardStatus);
+      const dropY = event.clientY;
+      clearBoardDropMarkers();
+      if (ticketId) handleBoardDrop(column, ticketId, dropY);
     });
 
     els.cartArea.addEventListener('click', event => {

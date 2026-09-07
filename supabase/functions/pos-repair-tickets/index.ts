@@ -136,6 +136,8 @@ Deno.serve(async (request) => {
             ? "finalize_pos_repair_ticket_after_checkout"
           : action === "label"
             ? "set_pos_repair_ticket_label"
+          : action === "move"
+            ? "move_pos_repair_ticket"
           : action === "complete-job"
             ? "complete_pos_repair_ticket_job"
           : action === "add"
