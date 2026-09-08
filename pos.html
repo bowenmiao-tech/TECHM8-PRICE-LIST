@@ -14489,8 +14489,7 @@
     function currentStoreRepairTickets() {
       return state.repairTickets.filter(ticket => (
         repairTicketStoreMatches(ticket)
-        && !ticket.closedAt
-        && ticket.status !== 'closed'
+        && (state.repairSearch.trim() || (ticket.active !== false && !ticket.closedAt && ticket.status !== 'closed'))
       ));
     }
 
@@ -15058,6 +15057,7 @@
       const cutoff = Date.now() - (90 * 24 * 60 * 60 * 1000);
       const changedTickets = [];
       state.repairTickets.forEach(ticket => {
+        if (ticket.active === false || ticket.closedAt) return;
         if (!ticket.statusUpdatedAt) {
           ticket.statusUpdatedAt = ticket.createdAt || new Date().toISOString();
           changedTickets.push(ticket);
@@ -15116,8 +15116,9 @@
 
     async function handleBoardDrop(column, ticketId, clientY) {
       const status = column.dataset.boardStatus;
+      if (status === 'history') return;
       const ticket = state.repairTickets.find(item => item.id === ticketId);
-      if (!ticket || ticket.closedAt) return;
+      if (!ticket || ticket.active === false || ticket.closedAt) return;
 
       // Read the destination order before anything re-renders the board.
       const index = boardInsertIndex(column, clientY);
@@ -15144,7 +15145,7 @@
     async function updateRepairTicketStatus(ticketId, status) {
       const ticket = state.repairTickets.find(item => item.id === ticketId);
       if (!ticket || ticket.status === status) return;
-      if (ticket.closedAt) {
+      if (ticket.active === false || ticket.closedAt) {
         showToast('Closed repair cards cannot be moved.');
         return;
       }
@@ -16007,22 +16008,28 @@
     function repairBoardHtml() {
       applyRepairTicketAutomation();
       const storeTickets = currentStoreRepairTickets();
+      const columns = state.repairSearch.trim()
+        ? [...repairBoardColumns, { id: 'history', label: 'Done / Deleted' }]
+        : repairBoardColumns;
       return `
         <div class="repair-board-toolbar">
           <div class="search-wrap">
             <i class="bi bi-search"></i>
-            <input id="repairBoardSearch" class="search-input" type="search" value="${escapeHtml(state.repairSearch)}" placeholder="Ticket / customer / phone / device / IMEI">
+            <input id="repairBoardSearch" class="search-input" type="search" value="${escapeHtml(state.repairSearch)}" placeholder="Search tickets, including Done / Deleted">
           </div>
-          <div class="repair-search-status">${state.repairSearchLoading ? 'Searching...' : `${storeTickets.length} open ticket${storeTickets.length === 1 ? '' : 's'}`}</div>
+          <div class="repair-search-status">${state.repairSearchLoading ? 'Searching...' : `${storeTickets.length} ${state.repairSearch.trim() ? 'matching' : 'open'} ticket${storeTickets.length === 1 ? '' : 's'}`}</div>
         </div>
         <div class="repair-board">
-          ${repairBoardColumns.map(column => {
+          ${columns.map(column => {
             // The server already orders by board position; this keeps the board
             // in step after a local drag, before the reload comes back. A brand
             // new card carries position 0 and stays at the top, which is where
             // the previous newest-first order put it.
             const tickets = storeTickets
-              .filter(ticket => ticket.status === column.id)
+              .filter(ticket => {
+                const archived = ticket.active === false || ticket.closedAt || ticket.status === 'closed';
+                return column.id === 'history' ? archived : !archived && ticket.status === column.id;
+              })
               .slice()
               .sort((a, b) => numberValue(a.boardPosition) - numberValue(b.boardPosition));
             return `
@@ -16032,14 +16039,13 @@
                   <span class="board-count">${tickets.length}</span>
                 </div>
                 ${tickets.map(ticket => `
-                  <div class="ticket-card" draggable="${ticket.closedAt ? 'false' : 'true'}" data-ticket-id="${escapeHtml(ticket.id)}">
-                    <button class="repair-action ticket-delete" type="button" data-ticket-delete="${escapeHtml(ticket.id)}" aria-label="Delete repair ticket ${escapeHtml(ticket.id)}"><i class="bi bi-trash"></i> Delete</button>
+                  <div class="ticket-card" draggable="${ticket.active === false || ticket.closedAt ? 'false' : 'true'}" data-ticket-id="${escapeHtml(ticket.id)}">
                     <div class="ticket-top">
                       <div class="ticket-title-wrap">
                         <div class="ticket-title">${escapeHtml(ticket.displayLabel || ticket.title || 'Repair ticket')}</div>
                         ${ticket.displayLabel ? `<div class="ticket-device-sub">${escapeHtml(ticket.title || '')}</div>` : ''}
                       </div>
-                      ${!ticket.closedAt && ticket.paymentStatus !== 'deposit' && numberValue(ticket.unbilledTotal) > 0 ? `
+                      ${ticket.active !== false && !ticket.closedAt && ticket.paymentStatus !== 'deposit' && numberValue(ticket.unbilledTotal) > 0 ? `
                         <button class="ticket-cart-button" type="button" data-ticket-cart="${escapeHtml(ticket.id)}" title="Add ticket to cart" ${state.cart.some(item => item.ticket_id === ticket.id) ? 'disabled' : ''}>
                           <i class="bi bi-cart-plus"></i>
                         </button>
@@ -16048,6 +16054,7 @@
                     <div class="ticket-meta">${escapeHtml(ticket.id)} · ${escapeHtml(ticket.store_code || storeById(state.storeId).code)} · ${escapeHtml(ticket.issue || 'Repair')} · ${money(numberValue(ticket.outstandingTotal))}${(ticket.jobs || []).length ? ` · ${(ticket.jobs || []).length + 1} repairs` : ''}</div>
                     <div class="ticket-meta">${escapeHtml(ticket.customerName || '')} · ${escapeHtml(ticket.customerPhone || 'Phone missing')}</div>
                     <div class="ticket-tags">
+                      ${ticket.active === false ? '<span class="ticket-tag danger">Deleted</span>' : (ticket.closedAt ? '<span class="ticket-tag">Done</span>' : '')}
                       ${ticket.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
                       ${ticket.deviceInStore ? '<span class="ticket-tag">Device in store</span>' : ''}
                       ${ticket.motherboardRepair ? '<span class="ticket-tag danger">Mainboard</span>' : ''}
@@ -16121,7 +16128,7 @@
     function renderTicketFinishButton(ticket) {
       const button = els.ticketFinishButton;
       if (!button) return;
-      if (!ticket || ticket.closedAt) {
+      if (!ticket || ticket.active === false || ticket.closedAt) {
         button.hidden = true;
         return;
       }
@@ -16137,7 +16144,7 @@
     }
 
     function ticketJobsPanelHtml(ticket) {
-      const locked = Boolean(ticket.closedAt);
+      const locked = ticket.active === false || Boolean(ticket.closedAt);
       const outstanding = numberValue(ticket.outstandingTotal);
       const inCart = jobCode => state.cart.some(item => item.id === repairJobCartId(ticket.id, jobCode));
 
@@ -16262,7 +16269,7 @@
     }
 
     async function openRepairJobModal(ticket, existing = null) {
-      if (!ticket || ticket.closedAt) return;
+      if (!ticket || ticket.active === false || ticket.closedAt) return;
       if (!state.repairQuotes.length) await loadRepairQuotes().catch(() => {});
       const suggestions = repairJobSuggestionsForTicket(ticket);
       state.repairJobDraft = { ticketId: ticket.id, jobCode: existing ? existing.id : '', suggestions };
@@ -16568,7 +16575,11 @@
       signature: 'bi-pen',
       job: 'bi-tools',
       paid: 'bi-receipt',
-      finished: 'bi-check-circle'
+      finished: 'bi-check-circle',
+      deleted: 'bi-trash',
+      refund: 'bi-arrow-counterclockwise',
+      details: 'bi-pencil',
+      reorder: 'bi-arrows-move'
     };
 
     function isTicketComment(item) {
@@ -16580,7 +16591,7 @@
     }
 
     function ticketActivityHtml(ticket) {
-      const activity = Array.isArray(ticket.activity) ? ticket.activity : [];
+      const activity = Array.isArray(ticket.activity) ? ticket.activity.slice().sort((a, b) => new Date(b.at) - new Date(a.at)) : [];
       if (!activity.length) return '<div class="ticket-activity-empty">No comments or activity yet.</div>';
       return activity.map(item => {
         const staffName = item.staffName || 'Unknown staff';
@@ -16654,6 +16665,15 @@
       els.ticketDetailStatus.innerHTML = repairBoardColumns.map(column => `<option value="${column.id}" ${ticket.status === column.id ? 'selected' : ''}>${escapeHtml(column.label)}</option>`).join('');
       els.ticketDetailStatus.disabled = Boolean(ticket.closedAt);
       renderTicketFinishButton(ticket);
+      els.ticketDeleteButton.hidden = ticket.active === false;
+      if (ticket.active === false) {
+        els.ticketDetailStatus.disabled = true;
+        els.ticketFinishButton.disabled = true;
+        els.ticketDetailRef.textContent = ticket.id;
+        els.ticketDetailMain.innerHTML = `<h2 class="ticket-detail-title">${escapeHtml(ticket.title || 'Repair ticket')}</h2><p>Deleted — activity retained</p><p>${escapeHtml(ticket.customerName || '')} · ${escapeHtml(ticket.customerPhone || '')}</p><p>${escapeHtml(ticket.issue || '')}</p>`;
+        els.ticketDetailSide.innerHTML = `<h3 class="ticket-side-title">Invoices</h3>${ticketInvoiceHistoryHtml(ticket)}<h3 class="ticket-side-title">Comments and activity</h3><div class="ticket-activity-list">${ticketActivityHtml(ticket)}</div>`;
+        return;
+      }
       const inCart = state.cart.some(item => item.ticket_id === ticket.id);
       state.selectedTicketInCart = inCart;
       const customerLocked = ticket.paymentStatus !== 'unpaid' || inCart;
@@ -16731,7 +16751,7 @@
       renderTicketDetailModal();
     }
 
-    function openTicketDetailModal(ticketId) {
+    async function openTicketDetailModal(ticketId) {
       const ticket = state.repairTickets.find(item => item.id === ticketId);
       if (!ticket) return;
       state.selectedTicketId = ticketId;
@@ -16739,6 +16759,22 @@
       renderTicketDetailModal();
       els.ticketDetailModal.classList.add('show');
       els.ticketDetailModal.setAttribute('aria-hidden', 'false');
+      if (ticket.syncPending || (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode)) return;
+      try {
+        const url = new URL(POS_REPAIR_TICKETS_ENDPOINT);
+        url.searchParams.set('store_code', repairTicketStoreCode());
+        url.searchParams.set('ticket_code', ticketId);
+        const response = await fetch(url.toString(), { headers: repairTicketApiHeaders() });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false || !payload.ticket) throw new Error(payload.message || 'Could not refresh repair activity.');
+        if (state.selectedTicketId !== ticketId) return;
+        const index = state.repairTickets.findIndex(item => item.id === ticketId);
+        if (index < 0 || state.repairTickets[index].syncPending) return;
+        state.repairTickets.splice(index, 1, normalizeRepairTicket(payload.ticket));
+        renderTicketDetailModal();
+      } catch (error) {
+        if (state.selectedTicketId === ticketId) showToast('Showing cached repair activity. Refresh to load the latest records.');
+      }
     }
 
     function closeTicketDetailModal() {
@@ -20368,7 +20404,7 @@
       if (!ticket) return;
 
       normalizeRepairTicket(ticket);
-      if (ticket.closedAt) {
+      if (ticket.active === false || ticket.closedAt) {
         showToast('This repair card is closed.');
         return;
       }
@@ -22408,7 +22444,7 @@
     async function finalizeRepairCardsAfterPayment(order, ticketIds, repairCartItems) {
       for (const ticketId of [...new Set((ticketIds || []).filter(Boolean))]) {
         const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === ticketId));
-        if (!ticket || ticket.closedAt) continue;
+        if (!ticket || ticket.active === false || ticket.closedAt) continue;
         const choice = await confirmRepairCardCompletion(ticket, order, repairCartItems);
         try {
           const payload = await repairJobRequest({
@@ -23543,12 +23579,6 @@
     });
 
     els.repairWorkspace.addEventListener('click', event => {
-      const deleteButton = event.target.closest('[data-ticket-delete]');
-      if (deleteButton) {
-        event.stopPropagation();
-        deleteRepairTicket(deleteButton.dataset.ticketDelete, deleteButton);
-        return;
-      }
       const ticketCartButton = event.target.closest('[data-ticket-cart]');
       const confirmButton = event.target.closest('#confirmRepairBtn');
       const cameraButton = event.target.closest('#repairCameraBtn');
@@ -23619,7 +23649,7 @@
       const card = event.target.closest('[data-ticket-id]');
       if (!card) return;
       const ticket = state.repairTickets.find(item => item.id === card.dataset.ticketId);
-      if (!ticket || ticket.closedAt) {
+      if (!ticket || ticket.active === false || ticket.closedAt) {
         event.preventDefault();
         return;
       }
