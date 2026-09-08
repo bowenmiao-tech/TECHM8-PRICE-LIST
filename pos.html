@@ -9752,6 +9752,7 @@
       usedDeviceLoading: false,
       selectedUsedDeviceId: '',
       transferStores: [],
+      prTransferReserves: null,
       transfers: [],
       transferLoading: false,
       transferLoaded: false,
@@ -13135,15 +13136,16 @@
     }
 
     async function loadTransferContext() {
-      if (state.transferStores.length) {
-        state.transferStore = state.storeId;
-        return state.transferStores;
-      }
       const url = new URL(POS_STOCK_TRANSFERS_ENDPOINT);
       url.searchParams.set('mode', 'context');
       url.searchParams.set('staff_name', currentStaffName());
       const payload = await transferApiRequest(url.toString(), { headers: transferApiHeaders(false) });
       state.transferStores = Array.isArray(payload.stores) ? payload.stores : [];
+      if (!payload.pr_transfer_reserves || typeof payload.pr_transfer_reserves !== 'object') {
+        state.prTransferReserves = null;
+        throw new Error('Transfer stock is unavailable. Please retry.');
+      }
+      state.prTransferReserves = payload.pr_transfer_reserves;
       state.transferStore = state.storeId;
       const currentStore = state.transferStores.find(store => store.slug === state.storeId);
       els.transferStoreFilter.innerHTML = `<option value="${escapeHtml(state.storeId)}">${escapeHtml(currentStore ? currentStore.name : storeById(state.storeId).name)}</option>`;
@@ -13291,6 +13293,9 @@
 
     function transferProductStock(product, storeSlug) {
       const normalized = normalizeStoreKey(storeSlug);
+      if (normalized === normalizeStoreKey('park-ridge')) {
+        return Math.max(0, Number(state.prTransferReserves?.[String(product?.id)] ?? 0));
+      }
       if (product && product.store_stock && typeof product.store_stock === 'object') {
         const key = Object.keys(product.store_stock).find(value => normalizeStoreKey(value) === normalized);
         if (key) return Math.max(0, Number(product.store_stock[key] || 0));
@@ -13347,7 +13352,7 @@
             <img src="${escapeHtml(productImage(product))}" alt="">
             <div class="transfer-product-copy">
               <strong>${escapeHtml(product.name)}</strong>
-              <span>${escapeHtml(product.sku || 'No SKU')}${product.barcode ? ` · ${escapeHtml(product.barcode)}` : ''} · Source stock ${stock}</span>
+              <span>${escapeHtml(product.sku || 'No SKU')}${product.barcode ? ` · ${escapeHtml(product.barcode)}` : ''} · ${state.transferDraft.source === 'park-ridge' ? 'Transfer reserve' : 'Source stock'} ${stock}</span>
             </div>
             <button class="repair-action ${stock > 0 ? 'primary' : ''}" type="button" data-transfer-add-product="${escapeHtml(product.id)}" ${stock < 1 ? 'disabled' : ''}>${stock > 0 ? 'Add' : 'No stock'}</button>
           </div>`;
@@ -13357,7 +13362,7 @@
     function renderNewTransferModal() {
       const draft = state.transferDraft;
       if (!draft) return;
-      openTransferModalShell('New Stock Transfer', 'Stock leaves the source store as soon as you confirm dispatch.');
+      openTransferModalShell('New Stock Transfer', draft.source === 'park-ridge' ? 'Dispatch from the PR transfer reserve. Actual stock is added at the destination on receipt.' : 'Stock leaves the source store as soon as you confirm dispatch.');
       const selectedLines = draft.items.map(item => {
         const product = state.products.find(row => String(row.id) === String(item.productId));
         if (!product) return '';
@@ -13376,6 +13381,7 @@
           </div>`;
       }).join('');
       els.transferModalBody.innerHTML = `
+        ${draft.source === 'park-ridge' ? '<div class="transfer-help">PR transfer reserve starts at 999 per product. Dispatch uses this reserve; destination stock increases only when goods are received.</div>' : ''}
         <div class="transfer-form-grid">
           <label class="transfer-field">
             <span>From store</span>
@@ -13492,7 +13498,8 @@
       const source = state.transferStores.find(store => store.slug === draft.source);
       const destination = state.transferStores.find(store => store.slug === draft.destination);
       const unitCount = draft.items.reduce((sum, item) => sum + Number(item.quantity), 0);
-      if (!confirm(`Dispatch ${unitCount} unit${unitCount === 1 ? '' : 's'} from ${source.name} to ${destination.name}? Source stock will be deducted immediately.`)) return;
+      const stockNotice = draft.source === 'park-ridge' ? 'PR transfer reserve will be deducted. Store stock increases on receipt.' : 'Source stock will be deducted immediately.';
+      if (!confirm(`Dispatch ${unitCount} unit${unitCount === 1 ? '' : 's'} from ${source.name} to ${destination.name}? ${stockNotice}`)) return;
 
       draft.submitting = true;
       const submitButton = els.transferModalBody.querySelector('#dispatchTransferSubmit');
@@ -13584,7 +13591,7 @@
       const currentStoreRole = String(transfer.current_store_role || '');
       const canReceive = isOpen && currentStoreRole === 'destination';
       const canReturn = isOpen && currentStoreRole === 'source';
-      openTransferModalShell(transfer.transfer_number, `${transferStatusText(transfer.status)} · Dispatched by ${transfer.dispatched_by}`);
+      openTransferModalShell(transfer.transfer_number, `${transferStatusText(transfer.status)} · Dispatched by ${transfer.dispatched_by}${transfer.source_stock_mode === 'reserve' ? ' · PR transfer reserve' : ''}`);
       const itemRows = (transfer.items || []).map(item => `
         <div class="transfer-line">
           <img src="${escapeHtml(item.image_url || productPlaceholderImage(item))}" alt="">
@@ -13755,7 +13762,7 @@
       const remainingUnits = remainingItems.reduce((sum, item) => sum + Number(item.remaining_quantity || 0), 0);
       openTransferModalShell(`Return ${transfer.transfer_number}`, `${remainingUnits} remaining unit${remainingUnits === 1 ? '' : 's'} will go back to ${transfer.source_store.name}`);
       els.transferModalBody.innerHTML = `
-        <div class="transfer-warning"><i class="bi bi-arrow-return-left"></i> This closes the transfer and restores every remaining in-transit unit to the source store. Already received units stay at the destination.</div>
+        <div class="transfer-warning"><i class="bi bi-arrow-return-left"></i> This closes the transfer and restores every remaining in-transit unit to ${transfer.source_stock_mode === 'reserve' ? 'the PR transfer reserve' : 'the source store'}. Already received units stay at the destination.</div>
         <div class="transfer-panel">
           <strong>Products returning to source</strong>
           <div class="transfer-lines">${remainingItems.map(item => `

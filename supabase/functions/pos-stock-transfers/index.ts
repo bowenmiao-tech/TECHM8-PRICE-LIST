@@ -281,7 +281,9 @@ Deno.serve(async (request) => {
       if (mode === "context") {
         const { data, error } = await admin.rpc("list_pos_transfer_stores");
         if (error) throw error;
-        return jsonResponse({ ok: true, staff, stores: data || [] });
+        const { data: reserves, error: reserveError } = await admin.rpc("get_pos_pr_transfer_reserves");
+        if (reserveError) throw reserveError;
+        return jsonResponse({ ok: true, staff, stores: data || [], pr_transfer_reserves: reserves || {} });
       }
       if (mode === "detail") {
         const transferId = Number(url.searchParams.get("id"));

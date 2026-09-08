@@ -62,6 +62,15 @@ Password rules:
 
 ## POS System
 
+### Park Ridge transfer reserve
+
+- PR dispatches use a separate 999-unit allowance per POS-visible product in `pos_pr_transfer_reserves`, never artificial quantities in `product_store_inventory`. New products default to 999 in the context response and acquire a reserve row on their first dispatch.
+- `pos-stock-transfers?mode=context` returns all PR allowances as a JSON map. Transfer screens reload this map on opening; normal POS, stocktake, and public website stock continue reading physical inventory.
+- Each new transfer records `source_stock_mode`. PR reserve dispatches decrement the allowance; good receipts increase only the destination's physical stock. Explicit returns and final-receipt auto-returns restore the allowance. Damaged/missing units remain consumed. Old transfers and other source stores retain physical accounting.
+- Transfer headers and item/receipt quantities provide the reserve audit trail. Virtual dispatch/return quantities are not inserted into physical `inventory_movements`. Product stock recalculation continues to sum physical store inventory only.
+- Product-project migration: `supabase/website-migrations/20260908135603_add_pr_transfer_reserves.sql`. Validation: `supabase/tests/pr_transfer_reserves.sql` (rolls back all fixtures) and `node scripts/test-pos-transfer-reserve.mjs`.
+- Verified on 2026-09-08: TW 598 inventory rows / 1,042 units; NL 243 / 332; Fairfield 722 / 1,211. All 1,504 latest counted product/store pairs reconcile with subsequent stock movements. Website and physical inventory totals both equal 2,587. PR reserve provisioning changes none of these quantities.
+
 `pos.html` is the operational POS for Park Ridge, North Lakes, Fairfield, Toowong, and Brassall. Warehouse is not a POS store.
 
 ### Current Scope
