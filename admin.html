@@ -393,6 +393,12 @@
     .board-count { color: var(--muted); font-weight: 900; }
     .ticket-card { width: 100%; display: grid; gap: 7px; padding: 12px; border: 1px solid #d8e3e8; border-radius: 12px; background: #fff; box-shadow: 0 8px 18px rgba(16,30,38,.04); margin-bottom: 10px; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
     .ticket-card:hover { border-color: var(--green); }
+    .ticket-card { cursor: grab; }
+    .ticket-card.dragging { opacity: .55; cursor: grabbing; }
+    /* Box-shadow rather than a border so nothing shifts while dragging over. */
+    .ticket-card.drop-before { box-shadow: 0 -3px 0 -1px var(--green); }
+    .board-column.drag-over { background: #eef7f4; }
+    .board-column.drop-at-end::after { content: ""; display: block; height: 3px; border-radius: 2px; background: var(--green); }
     .ticket-card:focus-visible, .repair-board-scroll:focus-visible, .repair-store-picker select:focus-visible, .repair-search-wrap input:focus-visible { outline: 3px solid #5bbca6; outline-offset: 2px; }
     .ticket-title { font-size: 13px; font-weight: 950; line-height: 1.35; }
     .ticket-device-sub { margin-top: 2px; color: var(--muted); font-size: 11px; font-weight: 750; line-height: 1.3; }
@@ -948,10 +954,13 @@
           if (!columns.some(([status]) => status === ticket.status)) columns.push([ticket.status, { label: String(ticket.status || 'Other').replaceAll('_', ' ') }]);
         }
         els.repairBoard.innerHTML = columns.map(([status, meta]) => {
-          const columnTickets = tickets.filter(ticket => ticket.status === status);
+          const columnTickets = tickets
+            .filter(ticket => ticket.status === status)
+            .slice()
+            .sort((a, b) => (Number(a.board_position) || 0) - (Number(b.board_position) || 0));
           return `<section class="board-column" data-board-status="${escapeHtml(status)}" aria-label="${escapeHtml(meta.label)}">
             <h2 class="board-column-title"><span>${escapeHtml(meta.label)}</span><span class="board-count">${columnTickets.length}</span></h2>
-            ${columnTickets.map(ticket => `<button class="ticket-card" type="button" data-ticket-code="${escapeHtml(ticket.ticket_code)}" aria-label="Open repair ${escapeHtml(ticket.ticket_code)}">
+            ${columnTickets.map(ticket => `<button class="ticket-card" type="button" draggable="true" data-ticket-code="${escapeHtml(ticket.ticket_code)}" aria-label="Open repair ${escapeHtml(ticket.ticket_code)}">
               <span class="ticket-title">${escapeHtml(repairDisplayName(ticket))}</span>
               ${ticket.display_label ? `<span class="ticket-device-sub">${escapeHtml(ticket.title || '')}</span>` : ''}
               <span class="ticket-meta">${escapeHtml(ticket.ticket_code)} · ${escapeHtml(ticket.issue || 'Repair')}</span>
@@ -1063,7 +1072,116 @@
         els.repairBoardScroll.scrollLeft = 0;
         renderRepairBoard();
       });
+      // Cards are buttons, so a finished drag would otherwise open the details
+      // dialog on mouse release.
+      let repairDragging = null;
+      let suppressCardClick = false;
+
+      function boardInsertIndex(column, clientY) {
+        const cards = Array.from(column.querySelectorAll('.ticket-card:not(.dragging)'));
+        for (let index = 0; index < cards.length; index += 1) {
+          const rect = cards[index].getBoundingClientRect();
+          if (clientY < rect.top + rect.height / 2) return index;
+        }
+        return cards.length;
+      }
+
+      function clearBoardDropMarkers() {
+        els.repairBoard.querySelectorAll('.drop-before, .drop-at-end, .drag-over')
+          .forEach(node => node.classList.remove('drop-before', 'drop-at-end', 'drag-over'));
+      }
+
+      async function moveRepairCard(column, ticketCode, clientY) {
+        const status = column.dataset.boardStatus;
+        const ticket = selectedStoreRepairs().find(item => item.ticket_code === ticketCode);
+        if (!ticket || !status) return;
+
+        const index = boardInsertIndex(column, clientY);
+        const remaining = Array.from(column.querySelectorAll('.ticket-card:not(.dragging)'))
+          .map(card => card.dataset.ticketCode)
+          .filter(code => code && code !== ticketCode);
+        const orderedCodes = remaining.slice(0, index).concat([ticketCode], remaining.slice(index));
+
+        const previousStatus = ticket.status;
+        const previousPositions = orderedCodes.map(code => {
+          const row = selectedStoreRepairs().find(item => item.ticket_code === code);
+          return { code, status: row ? row.status : null, position: row ? row.board_position : 0 };
+        });
+
+        ticket.status = status;
+        orderedCodes.forEach((code, position) => {
+          const row = selectedStoreRepairs().find(item => item.ticket_code === code);
+          if (row) row.board_position = (position + 1) * 10;
+        });
+        renderRepairBoard();
+
+        try {
+          await window.Techm8StaffAuth.callRpc('move_admin_repair_ticket', {
+            session_token: window.Techm8StaffAuth.getToken(),
+            payload: { ticket_code: ticketCode, status, ordered_codes: orderedCodes }
+          });
+        } catch (error) {
+          // Put the board back rather than leaving the screen disagreeing with
+          // the database.
+          ticket.status = previousStatus;
+          previousPositions.forEach(entry => {
+            const row = selectedStoreRepairs().find(item => item.ticket_code === entry.code);
+            if (row) row.board_position = entry.position;
+          });
+          renderRepairBoard();
+          els.repairErrorMessage.textContent = error.message || 'The card could not be moved.';
+          els.repairError.classList.add('show');
+        }
+      }
+
+      els.repairBoard.addEventListener('dragstart', event => {
+        const card = event.target.closest('[data-ticket-code]');
+        if (!card) return;
+        repairDragging = card.dataset.ticketCode;
+        card.classList.add('dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', repairDragging);
+      });
+
+      els.repairBoard.addEventListener('dragend', event => {
+        const card = event.target.closest('[data-ticket-code]');
+        if (card) card.classList.remove('dragging');
+        clearBoardDropMarkers();
+        repairDragging = null;
+      });
+
+      els.repairBoard.addEventListener('dragover', event => {
+        const column = event.target.closest('[data-board-status]');
+        if (!column || !repairDragging) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        clearBoardDropMarkers();
+        column.classList.add('drag-over');
+        const cards = Array.from(column.querySelectorAll('.ticket-card:not(.dragging)'));
+        const index = boardInsertIndex(column, event.clientY);
+        if (index >= cards.length) column.classList.add('drop-at-end');
+        else cards[index].classList.add('drop-before');
+      });
+
+      els.repairBoard.addEventListener('dragleave', event => {
+        const column = event.target.closest('[data-board-status]');
+        if (column && !column.contains(event.relatedTarget)) clearBoardDropMarkers();
+      });
+
+      els.repairBoard.addEventListener('drop', event => {
+        const column = event.target.closest('[data-board-status]');
+        if (!column) return;
+        event.preventDefault();
+        const ticketCode = event.dataTransfer.getData('text/plain') || repairDragging;
+        const dropY = event.clientY;
+        clearBoardDropMarkers();
+        suppressCardClick = true;
+        setTimeout(() => { suppressCardClick = false; }, 0);
+        if (ticketCode) moveRepairCard(column, ticketCode, dropY);
+      });
+
       els.repairBoard.addEventListener('click', event => {
+        if (suppressCardClick) return;
         const card = event.target.closest('[data-ticket-code]');
         if (card) openRepairDetails(card.dataset.ticketCode);
       });

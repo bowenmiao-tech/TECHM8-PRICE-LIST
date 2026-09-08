@@ -22,6 +22,7 @@ Front-end staff pages:
 
 Admin pages:
 - `admin.html` - admin portal entry page; admin login required here first. Opens on the four-store sales overview (Park Ridge, Fairfield, North Lakes, Toowong) served by `get_admin_sales_overview`. Each store row splits net sales into repairs, MIS/used devices and products, so the three categories always add up to that store's net sales. Refunds stay in their own column and are never netted off. GST is derived at the Australian 1/11 rate because no per-line tax column is stored, so it is indicative rather than a BAS figure.
+- The admin Repair Board drags cards the same way the POS board does, between columns and up and down inside a column, for the store selected in its picker. It runs on the admin session through `move_admin_repair_ticket`, which is gated on `is_valid_admin_session` and only ever writes status, its timestamps, and board position. A failed move puts the board back rather than leaving the screen disagreeing with the database.
 - `price-admin.html` - price admin
 - `daily-report-admin.html` - report review page
 - `nl-report-admin.html` - North Lakes product cost, payable, temporary save, and upload admin
