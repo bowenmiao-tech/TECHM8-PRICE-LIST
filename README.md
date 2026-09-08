@@ -66,6 +66,13 @@ Password rules:
 
 ### Current Scope
 
+Warranty claims:
+- Historical and future saved invoice items include warranty eligibility, expiry, and claim history automatically through `pos_sales_order_payload`. Explicit warranty fields and item-name promises take precedence; native retail/repair sales use the existing six-month receipt policy when no specific term is recorded. Gift cards, vouchers, deposits, discounts, explicit no-warranty items, and standalone historical Warranty Replacement entries do not receive the default.
+- Invoice details show a Claim warranty button per eligible item and dated claim records with the signed-in employee beneath the items. Dates use Brisbane time. Reopening an invoice fetches current claim status.
+- `POST pos-sales-orders?mode=warranty-claim` verifies the staff session and invoice store. Claims use server timestamps, persistent request UUIDs across retries in the current page, and order/line locks. One-time replacements are limited by purchased quantity less returned units and claims; expired, future, returned, and credit lines cannot be claimed.
+- Claims record warranty usage only; no sale, refund, or inventory adjustment is created. Old unlinked replacement invoices are not assumed to have consumed a specific original item's entitlement.
+- Database regression checks: `supabase/tests/pos_warranty_claims.sql` (transactional, all test changes rolled back; uses the historical 3137 invoice fixture).
+
 Completed product-sale flow:
 - Live products load through the browser-safe `pos-products` Edge Function.
 - Product loading follows the API `has_more` pagination flag, so catalogues larger than 500 rows are loaded completely.

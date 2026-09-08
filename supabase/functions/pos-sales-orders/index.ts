@@ -120,6 +120,17 @@ Deno.serve(async (request) => {
       const record = payload as JsonRecord;
       const storeCode = String(record.store_db_code || record.store_code || record.store_id || "").trim().toLowerCase();
 
+      if (url.searchParams.get("mode") === "warranty-claim") {
+        const result = await callRpc("claim_pos_warranty_for_store", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          target_order_code: String(record.order_id || ""),
+          target_line_id: record.line_id,
+          request_id: record.request_id,
+        });
+        return jsonResponse(result.body, result.status);
+      }
+
       if ((url.searchParams.get("mode") || "") === "google-review") {
         const staffName = String(record.staff_name || "");
         const eventCode = String(record.event_code || "");

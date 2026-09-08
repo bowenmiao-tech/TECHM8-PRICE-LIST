@@ -3625,6 +3625,15 @@
       color: var(--tm-ink);
     }
 
+    .invoice-warranty-actions { max-width: 260px; text-align: right; }
+    .invoice-warranty-meta { margin-top: 7px; font-size: 12px; color: #394a52; line-height: 1.45; }
+    .invoice-warranty-meta button { margin-top: 8px; }
+    .invoice-warranty-meta button:disabled { opacity: .6; cursor: default; }
+    @media (max-width: 600px) {
+      .invoice-detail-line { grid-template-columns: minmax(0, 1fr); }
+      .invoice-warranty-actions { max-width: none; text-align: left; }
+    }
+
     .invoice-line-note {
       margin-top: 7px;
       white-space: pre-wrap;
@@ -21277,8 +21286,6 @@
     }
 
     async function invoiceOrderById(orderId) {
-      const cached = state.invoiceOrders.find(order => order.id === orderId);
-      if (cached) return cached;
       const url = new URL(POS_SALES_ORDERS_ENDPOINT);
       url.searchParams.set('order_id', orderId);
       url.searchParams.set('store_code', repairTicketStoreCode());
@@ -21774,6 +21781,67 @@
       `;
     }
 
+    function invoiceWarrantyButtonHtml(item) {
+      const warranty = item.warranty;
+      if (!warranty || !warranty.eligible) return '';
+      const expiry = warranty.expires_on ? ` · Until ${warranty.expires_on}` : '';
+      return `<div class="invoice-warranty-meta">
+        <div>${escapeHtml(warranty.duration || 'Warranty')}${escapeHtml(expiry)}${warranty.one_time ? ` · ${numberValue(warranty.remaining)} free replacement(s) remaining` : ''}</div>
+        <button class="invoice-repair-open" type="button" data-warranty-line="${escapeHtml(item.line_id)}" ${warranty.can_claim ? '' : 'disabled'}>
+          <i class="bi bi-shield-check"></i> ${escapeHtml(warranty.can_claim ? 'Claim warranty' : warranty.reason)}
+        </button>
+      </div>`;
+    }
+
+    function invoiceWarrantyHistoryHtml(items) {
+      const claims = items.flatMap(item => (item.warranty?.claims || []).map(claim => ({ ...claim, item_name: item.name, sku: item.sku })))
+        .sort((a, b) => String(b.claimed_at).localeCompare(String(a.claimed_at)));
+      if (!claims.length) return '';
+      return `<section class="invoice-detail-section">
+        <div class="invoice-detail-section-title">Warranty claims</div>
+        ${claims.map(claim => `<article class="invoice-repair-record">
+          <strong>${escapeHtml(claim.item_name || 'Item')}${claim.sku ? ` · SKU ${escapeHtml(claim.sku)}` : ''}</strong>
+          <div class="invoice-line-meta">Claimed ${escapeHtml(formatDateTime(claim.claimed_at))} · ${escapeHtml(claim.staff_name)} · Brisbane time</div>
+        </article>`).join('')}
+      </section>`;
+    }
+
+    const warrantyClaimRequests = new Map();
+    async function claimInvoiceWarranty(lineId, button) {
+      const order = state.lastCompletedOrder;
+      if (!order || button.disabled) return;
+      const item = (order.items || []).find(item => String(item.line_id) === String(lineId));
+      if (!item?.warranty?.can_claim) return;
+      const key = `${order.id}:${lineId}`;
+      if (!warrantyClaimRequests.has(key)) warrantyClaimRequests.set(key, crypto.randomUUID());
+      button.disabled = true;
+      button.textContent = 'Saving claim…';
+      try {
+        const response = await fetch(`${POS_SALES_ORDERS_ENDPOINT}?mode=warranty-claim`, {
+          method: 'POST',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify({
+            store_code: order.store_db_code, order_id: order.id,
+            line_id: lineId, request_id: warrantyClaimRequests.get(key)
+          })
+        });
+        const payload = await parsePosApiResponse(response, 'Warranty claim could not be saved. Please retry.');
+        if (!payload.order) throw new Error('Claim response is incomplete. Please retry.');
+        warrantyClaimRequests.delete(key);
+        Object.assign(order, payload.order);
+        const cached = state.invoiceOrders.find(row => row.id === order.id);
+        if (cached) Object.assign(cached, payload.order);
+        if (state.lastCompletedOrder?.id === order.id && els.receiptCompleteModal.classList.contains('show')) {
+          els.receiptInvoiceDetails.innerHTML = invoiceDetailsHtml(order);
+        }
+        showToast('Warranty claim saved with date and staff details.');
+      } catch (error) {
+        showToast(error.message || 'Warranty claim could not be saved. Please retry.');
+        button.disabled = false;
+        button.textContent = 'Retry claim';
+      }
+    }
+
     function invoiceDetailsHtml(order) {
       const items = Array.isArray(order.items) ? order.items : [];
       const payments = Array.isArray(order.payments) ? order.payments : [];
@@ -21814,11 +21882,12 @@
                   ${note ? `<div class="invoice-line-note">${escapeHtml(note)}</div>` : ''}
                   ${refunded > 0 ? `<div class="invoice-line-meta">Refunded ${money(refunded)}${numberValue(item.refunded_quantity) ? ` · ${numberValue(item.refunded_quantity)} returned` : ''}</div>` : ''}
                 </div>
-                <strong>${money(lineTotal)}</strong>
+                <div class="invoice-warranty-actions"><strong>${money(lineTotal)}</strong>${invoiceWarrantyButtonHtml(item)}</div>
               </article>
             `;
           }).join('') || '<div class="invoice-repair-note">No invoice items available.</div>'}
         </section>
+        ${invoiceWarrantyHistoryHtml(items)}
         ${invoiceRepairRecordsHtml(items)}
         ${(fallbackPayments.length || refunds.length) ? `
           <section class="invoice-detail-section">
@@ -21888,8 +21957,9 @@
       els.receiptSyncNote.classList.toggle('pending', Boolean(order.sync_pending || invoiceNumber === 'Pending'));
       const modal = els.receiptCompleteModal.querySelector('.receipt-complete-modal');
       if (modal) modal.classList.toggle('invoice-history-view', historyView);
-      els.receiptInvoiceDetails.hidden = !historyView;
-      els.receiptInvoiceDetails.innerHTML = historyView ? invoiceDetailsHtml(order) : '';
+      const showDetails = historyView || (order.items || []).some(item => item.warranty?.eligible);
+      els.receiptInvoiceDetails.hidden = !showDetails;
+      els.receiptInvoiceDetails.innerHTML = showDetails ? invoiceDetailsHtml(order) : '';
       els.receiptCompleteModal.classList.add('show');
       els.receiptCompleteModal.setAttribute('aria-hidden', 'false');
     }
@@ -23667,6 +23737,11 @@
     els.paymentFullBtn.addEventListener('click', () => confirmPaymentAmount(true));
     els.receiptCompleteCloseBtn.addEventListener('click', closeReceiptCompleteModal);
     els.receiptCompleteModal.addEventListener('click', event => {
+      const warrantyButton = event.target.closest('[data-warranty-line]');
+      if (warrantyButton) {
+        claimInvoiceWarranty(warrantyButton.dataset.warrantyLine, warrantyButton);
+        return;
+      }
       const repairButton = event.target.closest('[data-invoice-repair-ticket]');
       if (repairButton) {
         openRepairTicketFromInvoice(repairButton.dataset.invoiceRepairTicket, repairButton);
