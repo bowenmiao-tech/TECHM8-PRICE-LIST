@@ -4685,6 +4685,8 @@
       font-weight: 900;
     }
 
+    .repair-action.ticket-delete { color: #b42318; border-color: #f4b4ae; background: #fff4f2; }
+
     .repair-action.primary {
       border-color: var(--tm-green);
       color: #fff;
@@ -9090,6 +9092,7 @@
         <div id="ticketDetailRef" class="ticket-detail-ref"></div>
         <div class="ticket-detail-head-actions">
           <button id="ticketFinishButton" class="repair-action primary" type="button" hidden><i class="bi bi-check2-all"></i> Finish card</button>
+          <button id="ticketDeleteButton" class="repair-action ticket-delete" type="button"><i class="bi bi-trash"></i> Delete</button>
           <select id="ticketDetailStatus" class="repair-select"></select>
           <button id="ticketDetailClose" class="repair-action" type="button" aria-label="Close ticket"><i class="bi bi-x-lg"></i></button>
         </div>
@@ -14338,9 +14341,41 @@
         if (!response.ok || payload.ok === false) {
           throw new Error(payload.message || 'Repair ticket delete failed.');
         }
+        return true;
       } catch (error) {
         console.error(error);
-        showToast('Repair ticket removed locally. Database delete failed.');
+        showToast(error.message || 'Repair ticket could not be deleted. Please retry.');
+        return false;
+      }
+    }
+
+    const deletingRepairTickets = new Set();
+    async function deleteRepairTicket(ticketId, button) {
+      const ticket = state.repairTickets.find(item => item.id === ticketId);
+      if (!ticket || deletingRepairTickets.has(ticketId)) return false;
+      if (ticket.syncPending) {
+        showToast('This repair ticket is still waiting to save. Please retry after it has synced.');
+        return false;
+      }
+      if (!confirm(`Delete repair ticket ${ticket.id} — ${ticket.displayLabel || ticket.title || 'Repair ticket'}? It will be removed from the repair board and cart. Existing invoices and payments will be kept.`)) return false;
+      deletingRepairTickets.add(ticketId);
+      const originalHtml = button?.innerHTML;
+      if (button) { button.disabled = true; button.textContent = 'Deleting…'; }
+      try {
+        if (!await deleteRepairTicketFromDatabase(ticketId)) return false;
+        state.repairTickets = state.repairTickets.filter(item => item.id !== ticketId);
+        state.cart = state.cart.filter(item => item.ticket_id !== ticketId);
+        if (state.selectedTicketId === ticketId) closeTicketDetailModal();
+        if (state.repair.ticketId === ticketId) resetRepairState();
+        delete state.ticketCardSignatures[ticketId];
+        saveRepairTickets();
+        renderCart();
+        renderRepairWorkspace();
+        showToast(`Repair ticket ${ticketId} deleted.`);
+        return true;
+      } finally {
+        deletingRepairTickets.delete(ticketId);
+        if (button) { button.disabled = false; button.innerHTML = originalHtml; }
       }
     }
 
@@ -15762,14 +15797,13 @@
       return saved ? ticketId : '';
     }
 
-    function clearRepairTicket() {
+    async function clearRepairTicket() {
       if (!state.repair.started) return;
-      if (!confirm('Clear this repair ticket?')) return;
       if (state.repair.ticketId) {
-        deleteRepairTicketFromDatabase(state.repair.ticketId);
-        state.repairTickets = state.repairTickets.filter(ticket => ticket.id !== state.repair.ticketId);
-        saveRepairTickets();
+        await deleteRepairTicket(state.repair.ticketId);
+        return;
       }
+      if (!confirm('Clear this repair ticket?')) return;
       resetRepairState();
       renderRepairWorkspace();
       showToast('Repair ticket cleared.');
@@ -15992,6 +16026,7 @@
                 </div>
                 ${tickets.map(ticket => `
                   <div class="ticket-card" draggable="${ticket.closedAt ? 'false' : 'true'}" data-ticket-id="${escapeHtml(ticket.id)}">
+                    <button class="repair-action ticket-delete" type="button" data-ticket-delete="${escapeHtml(ticket.id)}" aria-label="Delete repair ticket ${escapeHtml(ticket.id)}"><i class="bi bi-trash"></i> Delete</button>
                     <div class="ticket-top">
                       <div class="ticket-title-wrap">
                         <div class="ticket-title">${escapeHtml(ticket.displayLabel || ticket.title || 'Repair ticket')}</div>
@@ -23501,6 +23536,12 @@
     });
 
     els.repairWorkspace.addEventListener('click', event => {
+      const deleteButton = event.target.closest('[data-ticket-delete]');
+      if (deleteButton) {
+        event.stopPropagation();
+        deleteRepairTicket(deleteButton.dataset.ticketDelete, deleteButton);
+        return;
+      }
       const ticketCartButton = event.target.closest('[data-ticket-cart]');
       const confirmButton = event.target.closest('#confirmRepairBtn');
       const cameraButton = event.target.closest('#repairCameraBtn');
@@ -23931,6 +23972,9 @@
       beginRepairIntakeFromDraft();
     });
     els.ticketDetailClose.addEventListener('click', closeTicketDetailModal);
+    document.getElementById('ticketDeleteButton').addEventListener('click', event => {
+      deleteRepairTicket(state.selectedTicketId, event.currentTarget);
+    });
     els.ticketDetailModal.addEventListener('click', event => {
       if (event.target === els.ticketDetailModal) closeTicketDetailModal();
     });
