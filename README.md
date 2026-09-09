@@ -417,6 +417,10 @@ Important behavior:
 - Customer-facing warning belongs on the password/login overlay, not the post-login homepage body.
 - Post-login homepage should focus on staff workflows only.
 - Keep official website link available from the login overlay.
+- The login screen is two panels: the sign-in form on the left, a points panel on the right.
+- The points panel states the three earning rules as fixed copy. It must stay static. The page is publicly reachable at oztechm8.com.au before anyone signs in, so it must never show live scores, targets, staff names or store figures.
+- If the point rules in `Points Rules` change, update that copy in `index.html` by hand; nothing syncs it.
+- Below 1000px the panel stacks under the form instead of being hidden, so the rules stay visible on a phone.
 
 ## Backup Quote Page Rules
 
