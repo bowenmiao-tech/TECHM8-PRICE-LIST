@@ -9,6 +9,10 @@ This repo is the internal staff site, not the public website.
 
 ## Core Entry Points
 
+Repair ticket comments and images are shared between the admin Repair Board and POS ticket details. `repair-ticket-updates.js` provides comment entry, local image upload, clipboard screenshot paste, retry-safe saves, and signed image previews. Records are appended independently of the main ticket snapshot so concurrent card edits do not overwrite them. Closed tickets accept follow-up evidence; deleted tickets are read-only. Comments and photos remain internal and do not change invoices or stock.
+
+Validation: `node tests/repair-ticket-updates.cjs`, `node tests/repair-updates-portals.cjs`, and `node tests/repair-updates-edge.mjs`. Browser tests use Playwright with installed Chrome and mocked APIs. `tests/repair-ticket-updates.sql` verifies staff/admin access, attribution, idempotency, photo linkage, and deleted-card protection inside a rolled-back transaction.
+
 Front-end staff pages:
 - `index.html` - staff email login; successful login opens POS
 - `pos.html` - Today Progress, store POS, Repair Board, Used Devices, and Invoice History

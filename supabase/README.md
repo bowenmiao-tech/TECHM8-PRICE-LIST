@@ -362,6 +362,12 @@ supabase functions deploy send-pos-receipt-email --no-verify-jwt
 
 Both functions use `x-staff-session` and the same public Supabase headers documented above. Email provider keys remain server-side.
 
+## Repair Comments And Images
+
+`pos-repair-updates` handles GET/POST requests from the admin and staff portals using `x-staff-session`. It deliberately uses custom session verification instead of gateway JWT verification. Every request checks the ticket's store and either an active admin session or the staff member's store access. Authors come from the authenticated account, not browser input.
+
+Migration `20260909135803_add_repair_comments_and_photos.sql` creates the append-only `pos_repair_ticket_updates` table and private `repair-ticket-photos` bucket. The table and RPCs are service-role-only; RLS with no client policies is intentional. Image reads use one-hour signed URLs after authorization. JPEG uploads are capped at 3 MB after browser compression. The browser keeps a stable update UUID for retries so a lost response cannot duplicate a saved comment or image. Existing ticket activity comments remain visible.
+
 ## Staff Password Reset
 
 `index.html` provides a `Forgot password?` flow for active staff accounts. The public response is deliberately identical for known and unknown email addresses, so the form cannot be used to enumerate staff. A valid request creates a random one-time token, stores only its SHA-256 digest, and emails a link that expires after 30 minutes. Completing the reset updates the password, optionally updates the four-digit PIN, and revokes all existing sessions for that staff member.

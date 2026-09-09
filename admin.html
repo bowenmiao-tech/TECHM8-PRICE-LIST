@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-admin-build" content="2026-09-07-admin-store-repair-board">
+  <meta name="techm8-admin-build" content="2026-09-10-repair-comments-photos">
   <title>TECHM8 Admin Portal</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js?v=20260904.1"></script>
+  <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
+  <script src="./repair-ticket-updates.js?v=20260909.1"></script>
   <style>
     :root {
       --green: #07896f;
@@ -992,8 +994,12 @@
           <ul class="repair-detail-jobs">
             <li><strong>${escapeHtml(ticket.issue || 'Base repair')}</strong> · ${money(ticket.price)}</li>
             ${jobs.map(job => `<li><strong>${escapeHtml(job.name || 'Repair job')}</strong> · ${money(job.price)}<small>${escapeHtml(jobStatuses[job.status] || job.status || '')}</small>${job.note ? `<small>${escapeHtml(job.note)}</small>` : ''}</li>`).join('')}
-          </ul>`;
+          </ul><div id="adminRepairUpdates"></div>`;
         els.repairDialog.showModal();
+        window.Techm8RepairUpdates.mount(document.getElementById('adminRepairUpdates'), {
+          ticketCode: ticket.ticket_code, storeCode: ticket.store_code,
+          getToken: () => window.Techm8StaffAuth.getToken(), mode: 'all'
+        });
       }
       function renderRepairs(report) {
         repairReport = report || { summary: {}, stores: [], tickets: [] };

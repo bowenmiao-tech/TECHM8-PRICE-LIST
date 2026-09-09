@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+let handler;
+globalThis.Deno={env:{get:name=>name==='SUPABASE_URL'?'https://backend.test':'server-only-key'},serve:fn=>{handler=fn;}};
+const calls=[];
+const saved=[];
+globalThis.fetch=async(url,options={})=>{
+  calls.push({url,options});
+  const body=options.body instanceof Uint8Array ? null : JSON.parse(options.body||'{}');
+  if(url.includes('/rpc/authorize_repair_ticket_update'))return Response.json({ok:true,ticket_id:99,store_id:1,writable:true});
+  if(url.includes('/rpc/add_repair_ticket_update')){saved.push(body.payload);return Response.json({ok:true,id:body.payload.id});}
+  if(url.includes('/rpc/get_repair_ticket_updates'))return Response.json({ok:true,writable:true,updates:[{kind:'photo',storage_path:'1/99/test.jpg',author:'Staff'}]});
+  if(url.includes('/object/sign/'))return Response.json({signedURL:'/object/sign/repair-ticket-photos/1/99/test.jpg?token=signed'});
+  if(url.includes('/object/repair-ticket-photos/'))return Response.json({Key:'saved'});
+  throw Error('Unexpected request '+url);
+};
+await import('../supabase/functions/pos-repair-updates/index.ts');
+const base={store_code:'toowong',ticket_code:'TEST',id:'ea4c2020-9300-45e9-8800-a62a2c6af320'};
+const post=payload=>handler(new Request('https://edge.test',{method:'POST',headers:{'x-staff-session':'test','Content-Type':'application/json'},body:JSON.stringify({...base,...payload})}));
+assert.equal((await handler(new Request('https://edge.test'))).status,401);
+assert.equal(calls.length,0);
+assert.equal((await post({kind:'photo',data_url:'data:text/html;base64,YQ=='})).status,400);
+assert.equal((await post({kind:'comment',body:'  A comment  '})).status,200);
+assert.equal(saved.at(-1).body,'A comment');
+assert.equal((await post({kind:'photo',data_url:'data:image/jpeg;base64,/9j/2Q==',file_name:'Screenshot.png'})).status,200);
+assert.equal(saved.at(-1).storage_path,`1/99/${base.id}.jpg`);
+const upload=calls.find(call=>call.url.includes('/object/repair-ticket-photos/'));
+assert.equal(upload.options.headers['x-upsert'],'false');
+assert(upload.options.body instanceof Uint8Array);
+const get=await handler(new Request('https://edge.test?store_code=toowong&ticket_code=TEST',{headers:{'x-staff-session':'test'}}));
+const data=await get.json();assert(data.updates[0].image_url.startsWith('https://backend.test/storage/v1/object/sign/'));assert(!('storage_path' in data.updates[0]));
+console.log('PASS: edge authentication, type validation, comment normalization, scoped storage upload and signed image response.');

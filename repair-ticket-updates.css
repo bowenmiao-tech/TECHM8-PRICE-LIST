@@ -1,0 +1,24 @@
+.rtu { margin-top: 18px; min-width: 0; color: #203139; font-size: 14px; }
+.rtu * { box-sizing: border-box; letter-spacing: 0; }
+.rtu [hidden] { display: none !important; }
+.rtu header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.rtu h3 { margin: 0; font-size: 16px; }
+.rtu button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 7px 10px; border: 1px solid #cddce1; border-radius: 6px; background: white; color: #20414a; font: inherit; }
+.rtu button:disabled { opacity: .5; cursor: wait; }
+.rtu button:focus-visible, .rtu textarea:focus-visible { outline: 2px solid #008b79; outline-offset: 2px; }
+.rtu .rtu-save { background: #008b79; border-color: #008b79; color: white; }
+.rtu textarea { display: block; width: 100%; min-height: 82px; resize: vertical; border: 1px solid #cddce1; border-radius: 6px; padding: 10px; font: inherit; background: white; color: #203139; }
+.rtu-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.rtu-status { margin: 8px 0; font-size: 13px; overflow-wrap: anywhere; }
+.rtu-status[data-error=true] { color: #b22c24; }
+.rtu-list { display: grid; gap: 12px; margin-top: 12px; max-height: 480px; overflow-y: auto; }
+.rtu-comment { border-bottom: 1px solid #e1e8eb; padding-bottom: 12px; }
+.rtu-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: #627983; overflow-wrap: anywhere; }
+.rtu-meta strong { color: #203139; }
+.rtu-comment p { margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rtu-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr)); gap: 10px; margin-top: 12px; }
+.rtu-photo { min-width: 0; }
+.rtu-photo a { display: block; }
+.rtu-photo img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #f1f5f6; border: 1px solid #dce5e9; border-radius: 6px; }
+.rtu-photo .rtu-meta { margin-top: 5px; }
+.rtu-empty { color: #627983; font-size: 13px; }
