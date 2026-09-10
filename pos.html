@@ -5050,6 +5050,10 @@
       font-weight: 800;
     }
 
+    .board-new-card { width:100%; justify-content:flex-start; margin-top:10px; }
+    .memo-preview { white-space:pre-wrap; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    .memo-fields { display:grid; gap:14px; margin:16px 0; }
+    .memo-fields textarea { min-height:170px; resize:vertical; font:inherit; }
     .repair-board {
       display: grid;
       grid-template-columns: repeat(6, minmax(220px, 1fr));
@@ -14419,7 +14423,7 @@
       ticket.activity = Array.isArray(ticket.activity) ? ticket.activity : [];
       ticket.comments = Array.isArray(ticket.comments) ? ticket.comments : [];
       ticket.intake = ticket.intake && typeof ticket.intake === 'object' ? ticket.intake : {};
-      if (!ticket.customerName) ticket.customerName = 'Walk-in Customer';
+      if (!ticket.customerName && ticket.cardKind !== 'memo') ticket.customerName = 'Walk-in Customer';
       // Board-only label. The device title stays untouched because it feeds the
       // signed repair card and the repair-price suggestions.
       ticket.displayLabel = String(ticket.displayLabel || '').trim();
@@ -14437,7 +14441,7 @@
         invoiced: Boolean(job.invoiced)
       }));
       ticket.invoiceHistory = Array.isArray(ticket.invoiceHistory) ? ticket.invoiceHistory : [];
-      ticket.baseInvoiced = Boolean(ticket.baseInvoiced);
+      ticket.baseInvoiced = ticket.cardKind === 'memo' || Boolean(ticket.baseInvoiced);
       ticket.baseJobName = String(ticket.baseJobName || ticket.issue || 'Repair service');
       ticket.canClose = Boolean(ticket.canClose);
       ticket.hasUnfinishedJobs = Boolean(ticket.hasUnfinishedJobs);
@@ -15060,7 +15064,7 @@
       const cutoff = Date.now() - (90 * 24 * 60 * 60 * 1000);
       const changedTickets = [];
       state.repairTickets.forEach(ticket => {
-        if (ticket.active === false || ticket.closedAt) return;
+        if (ticket.active === false || ticket.closedAt || ticket.cardKind === 'memo') return;
         if (!ticket.statusUpdatedAt) {
           ticket.statusUpdatedAt = ticket.createdAt || new Date().toISOString();
           changedTickets.push(ticket);
@@ -15150,6 +15154,11 @@
       if (!ticket || ticket.status === status) return;
       if (ticket.active === false || ticket.closedAt) {
         showToast('Closed repair cards cannot be moved.');
+        return;
+      }
+      if (ticket.cardKind === 'memo') {
+        const updated = await applyRepairJobChange({action: 'move-memo', ticket_code: ticket.id, status}, 'Card moved.');
+        if (updated) Object.assign(ticket, updated);
         return;
       }
       if (!ticket.customerName || ticket.customerName.toLowerCase() === 'walk-in customer' || !ticket.customerPhone) {
@@ -16008,6 +16017,80 @@
       `;
     }
 
+    let newMemoDraft = null;
+
+    function memoFieldsHtml(ticket, locked = false, customerLocked = false) {
+      return `<div class="memo-fields">
+        <label class="repair-field">Title (optional)<input id="memoTitle" class="repair-input" maxlength="80" placeholder="Order parts, warranty, customer follow-up…" value="${escapeHtml(ticket.displayLabel || '')}" ${locked ? 'disabled' : ''}></label>
+        <label class="repair-field">Notes (optional)<textarea id="memoNotes" class="repair-input" maxlength="10000" placeholder="What needs to be done? Add any details here." ${locked ? 'disabled' : ''}>${escapeHtml(ticket.intake?.memoNotes || '')}</textarea></label>
+        <div class="ticket-detail-grid">
+          <label class="repair-field">Customer (optional)<input id="memoCustomer" class="repair-input" maxlength="200" value="${escapeHtml(ticket.customerName || '')}" ${locked || customerLocked ? 'disabled' : ''}></label>
+          <label class="repair-field">Phone / contact (optional)<input id="memoPhone" class="repair-input" maxlength="200" value="${escapeHtml(ticket.customerPhone || '')}" ${locked || customerLocked ? 'disabled' : ''}></label>
+        </div>
+        ${locked ? '' : `<button id="memoSave" class="repair-action primary" type="button">${newMemoDraft ? 'Create card' : 'Save notes'}</button>`}
+        <div id="memoError" role="alert" class="ticket-meta"></div>
+      </div>`;
+    }
+
+    function openNewMemo(status) {
+      if (!repairBoardColumns.some(column => column.id === status)) return;
+      newMemoDraft = {id: 'MEMO-' + crypto.randomUUID(), status};
+      state.selectedTicketId = '';
+      els.ticketDetailRef.textContent = 'New card · ' + repairStatusLabel(status);
+      els.ticketDetailStatus.hidden = true;
+      els.ticketFinishButton.hidden = true;
+      els.ticketDeleteButton.hidden = true;
+      els.ticketDetailMain.innerHTML = '<h2 class="ticket-detail-title">New memo card</h2><p>Keep a note, track an order or follow up with a customer. All fields are optional.</p>' + memoFieldsHtml({});
+      els.ticketDetailSide.innerHTML = '<h3 class="ticket-side-title">Comments & images</h3><p>Create the card to add comments, upload images and track activity.</p>';
+      els.ticketDetailModal.classList.add('show');
+      els.ticketDetailModal.setAttribute('aria-hidden', 'false');
+      document.getElementById('memoTitle').focus();
+    }
+
+    function renderMemoDetail(ticket, inCart) {
+      newMemoDraft = null;
+      els.ticketDetailStatus.hidden = false;
+      state.selectedTicketInCart = inCart;
+      els.ticketDetailRef.textContent = ticket.id;
+      const locked = Boolean(ticket.closedAt) || ticket.active === false;
+      els.ticketDetailMain.innerHTML = `<h2 class="ticket-detail-title">${escapeHtml(ticket.displayLabel || 'Memo card')}</h2><div class="ticket-detail-subtitle">Memo · ${escapeHtml(ticket.store_name || '')}</div>`
+        + memoFieldsHtml(ticket, locked, inCart || ticket.paymentStatus !== 'unpaid')
+        + ticketJobsPanelHtml(ticket)
+        + `<div class="ticket-detail-sections">${[['password','Password'],['imei','IMEI'],['function','Function'],['photos','Photos And Evidence'],['card','Repair Card']].map(([id,label])=>`<button class="repair-chip ${state.selectedTicketSection === id ? 'active' : ''}" type="button" data-ticket-section="${id}">${label}</button>`).join('')}</div><div class="ticket-detail-content">${ticketDetailSectionHtml(ticket)}</div>`;
+      els.ticketDetailSide.innerHTML = `<h3 class="ticket-side-title">Invoices</h3>${ticketInvoiceHistoryHtml(ticket)}<div id="ticketSharedUpdates"></div><h3 class="ticket-side-title">Activity</h3><div class="ticket-activity-list">${ticketActivityHtml({...ticket,activity:ticket.activity.filter(item=>!isTicketComment(item))})}</div>`;
+      window.Techm8RepairUpdates.mount(document.getElementById('ticketSharedUpdates'), {ticketCode:ticket.id,storeCode:repairTicketStoreCode(),getToken:()=>window.Techm8StaffAuth.getToken(),mode:'all',readonly:ticket.active === false});
+    }
+
+    async function saveMemoCard(button) {
+      const draft = newMemoDraft;
+      const ticket = draft || state.repairTickets.find(item => item.id === state.selectedTicketId);
+      if (!ticket || button.disabled) return;
+      const body = {action:draft ? 'create-memo':'save-memo', ticket_code:ticket.id, status:ticket.status,
+        display_label:document.getElementById('memoTitle').value,
+        notes:document.getElementById('memoNotes').value,
+        customer_name:document.getElementById('memoCustomer').value,
+        customer_phone:document.getElementById('memoPhone').value};
+      button.disabled = true;
+      try {
+        const payload = await repairJobRequest(body);
+        if (!payload.ticket) throw new Error('Card was not returned. Please retry.');
+        const updated = normalizeRepairTicket(payload.ticket);
+        const index = state.repairTickets.findIndex(item=>item.id === updated.id);
+        if (index < 0) state.repairTickets.unshift(updated); else state.repairTickets[index] = updated;
+        localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0,500)));
+        newMemoDraft = null;
+        state.repairSearch = '';
+        renderRepairWorkspace();
+        state.selectedTicketId = updated.id;
+        state.selectedTicketSection = 'photos';
+        renderTicketDetailModal();
+        showToast(draft ? 'Memo card created.' : 'Notes saved.');
+      } catch (error) {
+        document.getElementById('memoError').textContent = error.message || 'Could not save. Please retry.';
+        button.disabled = false;
+      }
+    }
+
     function repairBoardHtml() {
       applyRepairTicketAutomation();
       const storeTickets = currentStoreRepairTickets();
@@ -16046,7 +16129,7 @@
                     <div class="ticket-top">
                       <div class="ticket-title-wrap">
                         <div class="ticket-title">${escapeHtml(ticket.displayLabel || ticket.title || 'Repair ticket')}</div>
-                        ${ticket.displayLabel ? `<div class="ticket-device-sub">${escapeHtml(ticket.title || '')}</div>` : ''}
+                        ${ticket.displayLabel && ticket.cardKind !== 'memo' ? `<div class="ticket-device-sub">${escapeHtml(ticket.title || '')}</div>` : ''}
                       </div>
                       ${ticket.active !== false && !ticket.closedAt && ticket.paymentStatus !== 'deposit' && numberValue(ticket.unbilledTotal) > 0 ? `
                         <button class="ticket-cart-button" type="button" data-ticket-cart="${escapeHtml(ticket.id)}" title="Add ticket to cart" ${state.cart.some(item => item.ticket_id === ticket.id) ? 'disabled' : ''}>
@@ -16054,10 +16137,13 @@
                         </button>
                       ` : '<span></span>'}
                     </div>
+                    ${ticket.cardKind === 'memo' ? `<div class="ticket-meta memo-preview">${escapeHtml(ticket.intake.memoNotes || 'Memo / follow-up')}</div><div class="ticket-meta">${escapeHtml([ticket.customerName, ticket.customerPhone].filter(Boolean).join(' · '))}</div>` : `
                     <div class="ticket-meta">${escapeHtml(ticket.id)} · ${escapeHtml(ticket.store_code || storeById(state.storeId).code)} · ${escapeHtml(ticket.issue || 'Repair')} · ${money(numberValue(ticket.outstandingTotal))}${(ticket.jobs || []).length ? ` · ${(ticket.jobs || []).length + 1} repairs` : ''}</div>
                     <div class="ticket-meta">${escapeHtml(ticket.customerName || '')} · ${escapeHtml(ticket.customerPhone || 'Phone missing')}</div>
+                    `}
                     <div class="ticket-tags">
                       ${ticket.active === false ? '<span class="ticket-tag danger">Deleted</span>' : (ticket.closedAt ? '<span class="ticket-tag">Done</span>' : '')}
+                      ${ticket.cardKind === 'memo' ? '<span class="ticket-tag">Memo</span>' : ''}
                       ${ticket.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
                       ${ticket.deviceInStore ? '<span class="ticket-tag">Device in store</span>' : ''}
                       ${ticket.motherboardRepair ? '<span class="ticket-tag danger">Mainboard</span>' : ''}
@@ -16069,6 +16155,7 @@
                     </div>
                   </div>
                 `).join('') || '<div class="ticket-meta">No tickets</div>'}
+                ${column.id === 'history' ? '' : `<button class="repair-action board-new-card" type="button" data-new-memo="${column.id}"><i class="bi bi-plus-lg"></i> New card</button>`}
               </div>
             `;
           }).join('')}
@@ -16136,7 +16223,7 @@
         return;
       }
       const blockers = repairFinishBlockers(ticket);
-      const ready = Boolean(ticket.canClose) && Boolean(ticket.invoiceOrderId);
+      const ready = Boolean(ticket.canClose) && (ticket.cardKind === 'memo' || Boolean(ticket.invoiceOrderId));
       button.hidden = false;
       button.disabled = !ready;
       button.title = ready
@@ -16194,7 +16281,7 @@
         `;
       };
 
-      const workItems = [{
+      const workItems = [...(ticket.cardKind === 'memo' ? [] : [{
         id: '__base__',
         base: true,
         name: ticket.baseJobName || ticket.issue || 'Repair service',
@@ -16202,7 +16289,7 @@
         invoiced: ticket.baseInvoiced,
         status: 'approved',
         note: ''
-      }, ...(ticket.jobs || [])];
+      }]), ...(ticket.jobs || [])];
 
       return `
         <section class="ticket-jobs">
@@ -16669,6 +16756,11 @@
       els.ticketDetailStatus.disabled = Boolean(ticket.closedAt);
       renderTicketFinishButton(ticket);
       els.ticketDeleteButton.hidden = ticket.active === false;
+      if (ticket.active === false && ticket.cardKind === 'memo') {
+        els.ticketDetailStatus.disabled = true;
+        renderMemoDetail(ticket, false);
+        return;
+      }
       if (ticket.active === false) {
         els.ticketDetailStatus.disabled = true;
         els.ticketFinishButton.disabled = true;
@@ -16682,6 +16774,7 @@
         return;
       }
       const inCart = state.cart.some(item => item.ticket_id === ticket.id);
+      if (ticket.cardKind === 'memo') { renderMemoDetail(ticket, inCart); return; }
       state.selectedTicketInCart = inCart;
       const customerLocked = ticket.paymentStatus !== 'unpaid' || inCart;
       const priceLabel = ticket.price || intake.quotedPrice || '';
@@ -16759,6 +16852,8 @@
     }
 
     async function openTicketDetailModal(ticketId) {
+      newMemoDraft = null;
+      els.ticketDetailStatus.hidden = false;
       const ticket = state.repairTickets.find(item => item.id === ticketId);
       if (!ticket) return;
       state.selectedTicketId = ticketId;
@@ -23586,6 +23681,8 @@
     });
 
     els.repairWorkspace.addEventListener('click', event => {
+      const newMemo = event.target.closest('[data-new-memo]');
+      if (newMemo) { openNewMemo(newMemo.dataset.newMemo); return; }
       const ticketCartButton = event.target.closest('[data-ticket-cart]');
       const confirmButton = event.target.closest('#confirmRepairBtn');
       const cameraButton = event.target.closest('#repairCameraBtn');
@@ -24024,6 +24121,10 @@
     });
     els.ticketFinishButton.addEventListener('click', () => {
       const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (ticket?.cardKind === 'memo') {
+        if (ticket.canClose) applyRepairJobChange({action:'finish-memo', ticket_code:ticket.id}, 'Card finished.');
+        return;
+      }
       if (!ticket || !ticket.canClose || !ticket.invoiceOrderId) return;
       if (!window.confirm(`Close ${ticket.id} as repaired? The card leaves the Repair Board and cannot be reopened.`)) return;
       applyRepairJobChange({
@@ -24055,6 +24156,7 @@
     });
     els.ticketDetailMain.addEventListener('click', event => {
       const ticketForJobs = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (event.target.closest('#memoSave')) { saveMemoCard(event.target.closest('#memoSave')); return; }
       if (event.target.closest('#ticketLabelSave')) {
         saveTicketBoardLabel();
         return;

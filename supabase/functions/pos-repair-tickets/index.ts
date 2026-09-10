@@ -128,7 +128,9 @@ Deno.serve(async (request) => {
       }
       const actor = await authorize(request, sessionToken, storeCode, String(jobPayload.staff_name || ""));
       const action = String(jobPayload.action || "add");
-      const rpcName = action === "update"
+      const rpcName = ["create-memo", "save-memo", "finish-memo", "move-memo"].includes(action)
+        ? "manage_pos_repair_memo"
+        : action === "update"
         ? "update_pos_repair_ticket_job"
         : action === "delete"
           ? "delete_pos_repair_ticket_job"

@@ -9,6 +9,8 @@ This repo is the internal staff site, not the public website.
 
 ## Core Entry Points
 
+The POS Repair Table has a `New card` button in each active column for memo cards (orders, warranty notes and customer follow-up). Title, notes and contact fields are optional. Memo cards use the existing comments, images, ordering, extra repairs and audit trail; they can finish without an invoice when no repair work or balance remains. Regular repair intake validation is unchanged. Deploy `20260910130233_add_repair_memo_cards.sql` and the updated `pos-repair-tickets` Edge Function before publishing `pos.html`. Validation: `node tests/repair-memo-cards.cjs`, `node tests/repair-memo-edge.mjs`, and the rollback-only `tests/repair-memo-cards.sql`.
+
 Repair ticket comments and images are shared between the admin Repair Board and POS ticket details. `repair-ticket-updates.js` provides comment entry, local image upload, clipboard screenshot paste, retry-safe saves, and signed image previews. Records are appended independently of the main ticket snapshot so concurrent card edits do not overwrite them. Closed tickets accept follow-up evidence; deleted tickets are read-only. Comments and photos remain internal and do not change invoices or stock.
 
 Validation: `node tests/repair-ticket-updates.cjs`, `node tests/repair-updates-portals.cjs`, and `node tests/repair-updates-edge.mjs`. Browser tests use Playwright with installed Chrome and mocked APIs. `tests/repair-ticket-updates.sql` verifies staff/admin access, attribution, idempotency, photo linkage, and deleted-card protection inside a rolled-back transaction.
