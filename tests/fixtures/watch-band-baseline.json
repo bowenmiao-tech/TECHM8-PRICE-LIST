@@ -1,0 +1,307 @@
+[
+  {
+    "sku": "TM8-WB-10341",
+    "group_code": "TM8-GRP-WB-FABRIC-BLACK",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-10340",
+    "group_code": "TM8-GRP-WB-FABRIC-BLACK",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6116",
+    "group_code": "TM8-GRP-WB-FABRIC-BLUE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6117",
+    "group_code": "TM8-GRP-WB-FABRIC-BLUE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-8279",
+    "group_code": "TM8-GRP-WB-FABRIC-CAMOUFLAGE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8280",
+    "group_code": "TM8-GRP-WB-FABRIC-CAMOUFLAGE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6120",
+    "group_code": "TM8-GRP-WB-FABRIC-GREEN",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-10376",
+    "group_code": "TM8-GRP-WB-FABRIC-GREEN",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-10374",
+    "group_code": "TM8-GRP-WB-FABRIC-PINK",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6114",
+    "group_code": "TM8-GRP-WB-FABRIC-PURPLE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6115",
+    "group_code": "TM8-GRP-WB-FABRIC-PURPLE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6112",
+    "group_code": "TM8-GRP-WB-FABRIC-RAINBOW",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8277",
+    "group_code": "TM8-GRP-WB-FABRIC-RAINBOW-PURPLE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8278",
+    "group_code": "TM8-GRP-WB-FABRIC-RAINBOW-PURPLE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6108",
+    "group_code": "TM8-GRP-WB-FABRIC-RED",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6109",
+    "group_code": "TM8-GRP-WB-FABRIC-RED",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6119",
+    "group_code": "TM8-GRP-WB-FABRIC-WHITE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6100",
+    "group_code": "TM8-GRP-WB-MAGNETIC-BLACK",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6102",
+    "group_code": "TM8-GRP-WB-MAGNETIC-BLACK",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6101",
+    "group_code": "TM8-GRP-WB-MAGNETIC-GOLD",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6107",
+    "group_code": "TM8-GRP-WB-MAGNETIC-GOLD",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-7818",
+    "group_code": "TM8-GRP-WB-MAGNETIC-PURPLE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-7819",
+    "group_code": "TM8-GRP-WB-MAGNETIC-PURPLE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-7820",
+    "group_code": "TM8-GRP-WB-MAGNETIC-RAINBOW",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8308",
+    "group_code": "TM8-GRP-WB-MAGNETIC-ROSE-BROWN",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8434",
+    "group_code": "TM8-GRP-WB-MAGNETIC-ROSE-BROWN",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6103",
+    "group_code": "TM8-GRP-WB-MAGNETIC-ROSE-GOLD",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6104",
+    "group_code": "TM8-GRP-WB-MAGNETIC-ROSE-GOLD",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6105",
+    "group_code": "TM8-GRP-WB-MAGNETIC-SILVER",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6106",
+    "group_code": "TM8-GRP-WB-MAGNETIC-SILVER",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-8933",
+    "group_code": "TM8-GRP-WB-OCEAN-BLACK",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-10360",
+    "group_code": "TM8-GRP-WB-OCEAN-IVORY",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8931",
+    "group_code": "TM8-GRP-WB-OCEAN-ORANGE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8932",
+    "group_code": "TM8-GRP-WB-OCEAN-ORANGE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-10354",
+    "group_code": "TM8-GRP-WB-OCEAN-PINK",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8935",
+    "group_code": "TM8-GRP-WB-OCEAN-SKY-BLUE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8936",
+    "group_code": "TM8-GRP-WB-OCEAN-SKY-BLUE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-8930",
+    "group_code": "TM8-GRP-WB-OCEAN-WHITE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6134",
+    "group_code": "TM8-GRP-WB-SILICONE-BLACK",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6135",
+    "group_code": "TM8-GRP-WB-SILICONE-BLACK",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-8289",
+    "group_code": "TM8-GRP-WB-SILICONE-BLUE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-8290",
+    "group_code": "TM8-GRP-WB-SILICONE-BLUE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6144",
+    "group_code": "TM8-GRP-WB-SILICONE-GREEN",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6145",
+    "group_code": "TM8-GRP-WB-SILICONE-GREEN",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6140",
+    "group_code": "TM8-GRP-WB-SILICONE-PINK",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6141",
+    "group_code": "TM8-GRP-WB-SILICONE-PINK",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6138",
+    "group_code": "TM8-GRP-WB-SILICONE-PURPLE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6139",
+    "group_code": "TM8-GRP-WB-SILICONE-PURPLE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6146",
+    "group_code": "TM8-GRP-WB-SILICONE-RED",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6147",
+    "group_code": "TM8-GRP-WB-SILICONE-RED",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6122",
+    "group_code": "TM8-GRP-WB-SPORT-BLACK",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6123",
+    "group_code": "TM8-GRP-WB-SPORT-BLACK",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6124",
+    "group_code": "TM8-GRP-WB-SPORT-GREY",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6125",
+    "group_code": "TM8-GRP-WB-SPORT-GREY",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6130",
+    "group_code": "TM8-GRP-WB-SPORT-MINT",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6128",
+    "group_code": "TM8-GRP-WB-SPORT-PINK",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6129",
+    "group_code": "TM8-GRP-WB-SPORT-PINK",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6126",
+    "group_code": "TM8-GRP-WB-SPORT-PURPLE",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6127",
+    "group_code": "TM8-GRP-WB-SPORT-PURPLE",
+    "size": "42/44mm"
+  },
+  {
+    "sku": "TM8-WB-6132",
+    "group_code": "TM8-GRP-WB-SPORT-RED",
+    "size": "38/40mm"
+  },
+  {
+    "sku": "TM8-WB-6133",
+    "group_code": "TM8-GRP-WB-SPORT-RED",
+    "size": "42/44mm"
+  }
+]
