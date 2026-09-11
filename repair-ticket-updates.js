@@ -5,6 +5,11 @@
   const escape = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const icon = name => `<i class="bi bi-${name}" aria-hidden="true"></i>`;
   const date = value => value && Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleString('en-AU') : '';
+  function stateFor(options) {
+    const key = `${options.storeCode}/${options.ticketCode}`;
+    if (!states.has(key)) states.set(key, {entries: [], draft: '', queue: [], writable: false});
+    return states.get(key);
+  }
   function notify(state) {
     for (const mount of mounts) {
       if (!mount.root.isConnected) { mount.controller.abort(); mounts.delete(mount); continue; }
@@ -78,9 +83,10 @@
     try {
       while (state.queue.length) {
         const item = state.queue[0];
-        state.message = `Uploading ${item.file.name || 'screenshot'} (${state.queue.length} remaining)...`; notify(state);
+        const fileName = item.file?.name || item.fileName || 'Screenshot.jpg';
+        state.message = `Uploading ${fileName} (${state.queue.length} remaining)...`; notify(state);
         item.data = item.data || await imageData(item.file);
-        await request(mount.options, {id: item.id, kind: 'photo', data_url: item.data, file_name: item.file.name || 'Screenshot.jpg'});
+        await request(mount.options, {id: item.id, kind: 'photo', data_url: item.data, file_name: fileName});
         state.queue.shift();
       }
       await load(mount);
@@ -91,9 +97,7 @@
   function mount(root, options) {
     if (!root) return;
     for (const old of mounts) if (old.root === root || !old.root.isConnected) { old.controller.abort(); mounts.delete(old); }
-    const key = `${options.storeCode}/${options.ticketCode}`;
-    if (!states.has(key)) states.set(key, {entries: [], draft: '', queue: [], writable: false});
-    const state = states.get(key);
+    const state = stateFor(options);
     const controller = new AbortController();
     const instance = {root, options, state, render, controller};
     mounts.add(instance);
@@ -170,6 +174,25 @@
     render(); load(instance);
     return instance;
   }
+  async function uploadPrepared(options, images) {
+    const state = stateFor(options);
+    const prepared = (Array.isArray(images) ? images : []).filter(item => item && item.data);
+    if (!prepared.length) return {ok: true, message: '', pending: state.queue.length};
+    if (state.queue.length + prepared.length > 10) {
+      state.error = true;
+      state.message = 'Choose up to 10 images at a time.';
+      notify(state);
+      return {ok: false, message: state.message, pending: state.queue.length};
+    }
+    state.writable = true;
+    state.queue.push(...prepared.map(item => ({
+      id: item.id || crypto.randomUUID(),
+      data: item.data,
+      fileName: item.fileName || 'Screenshot.jpg'
+    })));
+    await upload({state, options});
+    return {ok: !state.error && state.queue.length === 0, message: state.message, pending: state.queue.length};
+  }
   // Route image paste to the open ticket only; ordinary text paste is untouched.
   document.addEventListener('paste', event => {
     const files = Array.from(event.clipboardData?.items || []).filter(item => item.kind === 'file' && item.type.startsWith('image/')).map(item => item.getAsFile()).filter(Boolean);
@@ -179,5 +202,5 @@
     if (!target) return;
     event.preventDefault(); upload(target, files);
   });
-  window.Techm8RepairUpdates = {mount};
+  window.Techm8RepairUpdates = {mount, prepareImage: imageData, uploadPrepared};
 })();

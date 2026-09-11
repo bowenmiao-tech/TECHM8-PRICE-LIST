@@ -128,6 +128,8 @@ It reviews 49 RepairDesk products and validates one current RepairDesk POS image
 
 `pos-repair-tickets` is the browser-safe Repair Board endpoint. Repair tickets belong to a store, not to the staff member who created them. Staff identity is kept as the creator/updater/activity actor.
 
+New ticket intake is submitted through `pos-repair-cards`. Migration `20260912013126_atomic_repair_ticket_signature.sql` adds `create_pos_repair_ticket_with_signature`, which commits the new ticket and its first customer signature in one transaction. Any ticket validation, signature validation, staff-session, or store failure rolls back both records. Existing tickets continue to use the same endpoint's ordinary re-sign path.
+
 Browser calls:
 
 ```text
@@ -155,6 +157,7 @@ Deploy:
 
 ```bash
 supabase functions deploy pos-repair-tickets --no-verify-jwt
+supabase functions deploy pos-repair-cards --no-verify-jwt
 ```
 
 `--no-verify-jwt` is intentional here because the function verifies the existing staff session token through the database RPCs.
@@ -416,6 +419,8 @@ Both functions use `x-staff-session` and the same public Supabase headers docume
 `pos-repair-updates` handles GET/POST requests from the admin and staff portals using `x-staff-session`. It deliberately uses custom session verification instead of gateway JWT verification. Every request checks the ticket's store and either an active admin session or the staff member's store access. Authors come from the authenticated account, not browser input.
 
 Migration `20260909135803_add_repair_comments_and_photos.sql` creates the append-only `pos_repair_ticket_updates` table and private `repair-ticket-photos` bucket. The table and RPCs are service-role-only; RLS with no client policies is intentional. Image reads use one-hour signed URLs after authorization. JPEG uploads are capped at 3 MB after browser compression. The browser keeps a stable update UUID for retries so a lost response cannot duplicate a saved comment or image. Existing ticket activity comments remain visible.
+
+Intake photos use this same update path after the ticket and customer signature have committed. The POS limits a new intake to 10 photos, compresses each image before upload, and stores only filename/type metadata in the ticket snapshot. A failed image remains in the per-ticket retry queue, so image failure never turns a valid signed repair into a missing or duplicate ticket.
 
 ## Staff Password Reset
 

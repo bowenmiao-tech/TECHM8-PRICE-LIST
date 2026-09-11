@@ -146,6 +146,7 @@ Deno.serve(async (request) => {
     const storeCode = String(record.store_code || "");
     const ticketCode = String(record.ticket_code || "");
     const customerName = String(record.signed_customer_name || "").trim();
+    const ticketPayload = record.ticket_payload;
     if (!storeCode || !ticketCode) {
       return jsonResponse({ ok: false, message: "store_code and ticket_code are required." }, 400);
     }
@@ -161,6 +162,10 @@ Deno.serve(async (request) => {
     if (record.terms_acknowledged !== true) {
       return jsonResponse({ ok: false, message: "The customer must acknowledge the terms and conditions." }, 400);
     }
+    if (ticketPayload !== undefined
+      && (!ticketPayload || typeof ticketPayload !== "object" || Array.isArray(ticketPayload))) {
+      return jsonResponse({ ok: false, message: "Ticket payload must be an object." }, 400);
+    }
 
     let signature;
     try {
@@ -174,21 +179,34 @@ Deno.serve(async (request) => {
     const path = `${safeSegment(storeCode)}/${safeSegment(ticketCode)}/${crypto.randomUUID()}.${extension}`;
     await uploadSignature(path, signature.bytes, signature.contentType);
 
-    const result = await callRpc("save_pos_repair_card_signature", {
-      session_token: sessionToken,
-      payload: {
-        store_code: storeCode,
-        ticket_code: ticketCode,
-        staff_name: String(record.staff_name || ""),
-        signed_customer_name: customerName,
-        signature_path: path,
-        card_snapshot: record.card_snapshot,
-        resign_reason: record.resign_reason ? String(record.resign_reason) : null,
-      },
-    });
+    const signaturePayload = {
+      store_code: storeCode,
+      ticket_code: ticketCode,
+      staff_name: String(record.staff_name || ""),
+      signed_customer_name: customerName,
+      signature_path: path,
+      card_snapshot: record.card_snapshot,
+      resign_reason: record.resign_reason ? String(record.resign_reason) : null,
+    };
+    let result;
+    try {
+      result = ticketPayload
+        ? await callRpc("create_pos_repair_ticket_with_signature", {
+          session_token: sessionToken,
+          ticket_payload: ticketPayload as JsonRecord,
+          signature_payload: signaturePayload,
+        })
+        : await callRpc("save_pos_repair_card_signature", {
+          session_token: sessionToken,
+          payload: signaturePayload,
+        });
+    } catch (error) {
+      await deleteSignature(path);
+      throw error;
+    }
     if (result.status >= 400 || result.body.ok === false) {
-      // The image was stored before the row was accepted, so a rejected
-      // signature must not leave an orphan behind in the bucket.
+      // The image was stored before the database transaction was accepted, so
+      // a rejected ticket/signature must not leave an orphan in the bucket.
       await deleteSignature(path);
       return jsonResponse(result.body, result.status);
     }

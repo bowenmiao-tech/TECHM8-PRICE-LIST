@@ -10,7 +10,7 @@
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js?v=20260904.1"></script>
   <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
-  <script src="./repair-ticket-updates.js?v=20260909.1"></script>
+  <script src="./repair-ticket-updates.js?v=20260912.1"></script>
   <link rel="stylesheet" href="./used-device-evidence.css?v=20260910.1">
   <script src="./used-device-evidence.js?v=20260910.1"></script>
   <script src="./vendor/sortable.min.js"></script>
@@ -2145,6 +2145,14 @@
       color: var(--tm-red);
       font-size: 13px;
       font-weight: 850;
+    }
+
+    .repair-card-readiness {
+      min-height: 18px;
+      margin-top: 10px;
+      color: var(--tm-muted);
+      font-size: 13px;
+      font-weight: 800;
     }
 
     .repair-card-signed {
@@ -9890,6 +9898,7 @@
         testProfile: 'mobile',
         tests: {},
         media: [],
+        mediaBusy: false,
         deviceNotes: '',
         addedToCart: false
       }
@@ -14407,7 +14416,9 @@
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || payload.ok === false) {
-          throw new Error(payload.message || 'Repair ticket save failed.');
+          const requestError = new Error(payload.message || 'Repair ticket save failed.');
+          requestError.status = response.status;
+          throw requestError;
         }
         if (payload.ticket) {
           const savedTicket = normalizeRepairTicket(payload.ticket);
@@ -14420,9 +14431,17 @@
         return true;
       } catch (error) {
         console.error(error);
+        const message = error.message || 'Repair ticket could not be saved.';
+        const status = Number(error.status || 0);
+        const retryable = !status || status === 408 || status === 425 || status === 429 || status >= 500;
+        if (!retryable) {
+          delete ticket.syncPending;
+          showToast(message);
+          return false;
+        }
         ticket.syncPending = true;
         localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
-        showToast('Repair ticket saved locally. Database sync failed.');
+        showToast(`${message} This change is saved on this device and will retry syncing.`);
         return false;
       }
     }
@@ -14612,10 +14631,54 @@
         tests: { ...state.repair.tests },
         testNotes: state.repair.testNotes,
         deviceNotes: state.repair.deviceNotes,
-        media: state.repair.media.map(item => ({ ...item })),
+        // Images are uploaded through the repair-updates endpoint after the
+        // ticket and signature commit. Keep only small descriptive metadata in
+        // the ticket JSON so camera photos cannot make ticket creation too large.
+        media: state.repair.media.map(item => ({
+          type: item.type,
+          fileName: item.fileName || ''
+        })),
         quote: { ...quote },
         quotedPrice: state.repair.quotedPrice || quotePriceLabel(quote.price)
       };
+    }
+
+    async function prepareRepairPhotos(fileList) {
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+      const repairDraft = state.repair;
+      const existingImages = repairDraft.media.filter(item => item.type === 'image').length;
+      if (existingImages + files.length > 10) {
+        showToast(`Choose up to 10 intake photos. This repair already has ${existingImages}.`);
+        return;
+      }
+      if (!window.Techm8RepairUpdates?.prepareImage) {
+        showToast('The repair photo tool is unavailable. Refresh the page and try again.');
+        return;
+      }
+      repairDraft.mediaBusy = true;
+      renderRepairWorkspace();
+      const errors = [];
+      for (const file of files) {
+        try {
+          const src = await window.Techm8RepairUpdates.prepareImage(file);
+          if (state.repair !== repairDraft) return;
+          const baseName = String(file.name || 'Intake photo').replace(/\.[^.]+$/, '') || 'Intake photo';
+          repairDraft.media.push({
+            type: 'image',
+            src,
+            fileName: `${baseName}.jpg`,
+            uploadId: crypto.randomUUID()
+          });
+        } catch (error) {
+          errors.push(error.message || 'One repair photo could not be prepared.');
+        }
+      }
+      if (state.repair !== repairDraft) return;
+      repairDraft.mediaBusy = false;
+      renderRepairWorkspace();
+      if (errors.length) showToast(errors[0]);
+      else showToast(`${files.length} intake photo${files.length === 1 ? '' : 's'} ready to upload with the ticket.`);
     }
 
     function syncCurrentRepairTicketSnapshot(options = {}) {
@@ -15307,6 +15370,7 @@
         testProfile: 'mobile',
         tests: {},
         media: [],
+        mediaBusy: false,
         addedToCart: false,
         customerId: '',
         customerName: '',
@@ -15647,13 +15711,27 @@
       const ack = document.getElementById('repairCardAck');
       const nameInput = document.getElementById('repairCardCustomerName');
       const box = document.getElementById('repairCardSignatureBox');
+      const readiness = document.getElementById('repairCardReadiness');
       const acknowledged = Boolean(ack && ack.checked);
       if (box) box.classList.toggle('is-locked', !acknowledged);
       const named = Boolean(nameInput && nameInput.value.trim());
+      if (readiness && !state.repairCard.saving) {
+        readiness.textContent = !acknowledged
+          ? 'Tick the terms and conditions box to unlock signing.'
+          : !named
+            ? 'Type the customer name before continuing.'
+            : !state.repairCard.hasInk
+              ? 'Ask the customer to sign in the box above.'
+              : '';
+      }
       els.repairCardSubmit.disabled = !(acknowledged && named && state.repairCard.hasInk) || state.repairCard.saving;
     }
 
     async function openRepairCardSignature() {
+      if (state.repair.mediaBusy) {
+        showToast('Wait for the selected repair photos to finish preparing.');
+        return;
+      }
       if (!validateRepairIntake()) {
         showToast('Complete every required repair detail before the customer signs.');
         return;
@@ -15693,6 +15771,7 @@
               <button id="repairCardSignatureClear" class="repair-action" type="button">Clear</button>
             </div>
           </div>
+          <div id="repairCardReadiness" class="repair-card-readiness" role="status" aria-live="polite"></div>
           <div id="repairCardError" class="repair-card-error" role="alert"></div>
         </div>
       `;
@@ -15719,31 +15798,57 @@
     }
 
     async function saveRepairCardSignature(ticketCode, options = {}) {
+      const body = {
+        store_code: repairTicketStoreCode(),
+        ticket_code: ticketCode,
+        staff_name: state.selectedStaffName,
+        signed_customer_name: options.customerName,
+        card_snapshot: state.repairCard.snapshot,
+        terms_acknowledged: true,
+        signature_image: options.signature,
+        resign_reason: options.reason || null
+      };
+      if (options.ticket) body.ticket_payload = repairTicketPayload(options.ticket);
       const response = await fetch(REPAIR_CARDS_ENDPOINT, {
         method: 'POST',
         headers: posOrderApiHeaders(),
-        body: JSON.stringify({
-          store_code: repairTicketStoreCode(),
-          ticket_code: ticketCode,
-          staff_name: state.selectedStaffName,
-          signed_customer_name: options.customerName,
-          card_snapshot: state.repairCard.snapshot,
-          terms_acknowledged: true,
-          signature_image: options.signature,
-          resign_reason: options.reason || null
-        })
+        body: JSON.stringify(body)
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.ok === false) {
         throw new Error(payload.message || 'The signed repair card could not be saved.');
       }
-      return payload.signature;
+      return payload;
+    }
+
+    async function uploadRepairIntakePhotos(ticketCode) {
+      const images = state.repair.media.filter(item => item.type === 'image' && item.src);
+      if (!images.length) return { ok: true, message: '', pending: 0, uploaded: 0 };
+      if (!window.Techm8RepairUpdates?.uploadPrepared) {
+        return { ok: false, message: 'The photo uploader is unavailable. Refresh and add the photos from the ticket.', pending: images.length, uploaded: 0 };
+      }
+      const result = await window.Techm8RepairUpdates.uploadPrepared({
+        ticketCode,
+        storeCode: repairTicketStoreCode(),
+        getToken: () => window.Techm8StaffAuth.getToken(),
+        mode: 'photos'
+      }, images.map(item => ({
+        id: item.uploadId,
+        data: item.src,
+        fileName: item.fileName || 'Intake photo.jpg'
+      })));
+      return { ...result, uploaded: Math.max(0, images.length - numberValue(result.pending)) };
     }
 
     async function submitRepairCard() {
       if (state.repairCard.saving) return;
       const errorBox = document.getElementById('repairCardError');
+      const acknowledged = Boolean((document.getElementById('repairCardAck') || {}).checked);
       const customerName = (document.getElementById('repairCardCustomerName') || {}).value || '';
+      if (!acknowledged) {
+        if (errorBox) errorBox.textContent = 'Please acknowledge the terms and conditions.';
+        return;
+      }
       if (!customerName.trim()) {
         if (errorBox) errorBox.textContent = 'Please type your name.';
         return;
@@ -15799,16 +15904,22 @@
           return;
         }
 
-        const ticketCode = await createRepairTicketAfterIntake();
-        if (!ticketCode) throw new Error('The ticket could not be created, so nothing was signed.');
-        try {
-          await saveRepairCardSignature(ticketCode, { customerName: customerName.trim(), signature });
-          closeRepairCardModal();
-          showToast(`Ticket ${ticketCode} created and the signed repair card is on file.`);
-        } catch (signError) {
-          console.error(signError);
-          closeRepairCardModal();
-          showToast(`Ticket ${ticketCode} was created but the signature failed to save. Re-sign it from the ticket.`);
+        const pendingTicket = buildRepairTicketAfterIntake();
+        const saved = await saveRepairCardSignature(pendingTicket.id, {
+          customerName: customerName.trim(),
+          signature,
+          ticket: pendingTicket
+        });
+        const ticketCode = commitCreatedRepairTicket(saved.ticket);
+        const photoResult = await uploadRepairIntakePhotos(ticketCode);
+        closeRepairCardModal();
+        if (!photoResult.ok) {
+          showToast(`Ticket ${ticketCode} and its signature were saved. Photo upload needs attention: ${photoResult.message} Open Photos And Evidence to retry.`);
+        } else {
+          const photoText = photoResult.uploaded
+            ? ` ${photoResult.uploaded} intake photo${photoResult.uploaded === 1 ? '' : 's'} saved.`
+            : '';
+          showToast(`Ticket ${ticketCode} created and the signed repair card is on file.${photoText}`);
         }
       } catch (error) {
         console.error(error);
@@ -15839,34 +15950,32 @@
       return state.repairCardTerms;
     }
 
-    async function createRepairTicketAfterIntake() {
-      if (!state.repair.intakeOpen || state.repair.ticketId) return '';
+    function buildRepairTicketAfterIntake() {
+      if (!state.repair.intakeOpen) throw new Error('This repair draft is no longer open. Go back and start the repair again.');
+      if (state.repair.ticketId) throw new Error(`Ticket ${state.repair.ticketId} has already been created.`);
       if (!validateRepairIntake()) {
-        showToast('Complete every required repair detail before creating the ticket.');
-        return '';
+        throw new Error('Go back and complete the highlighted repair details before creating the ticket.');
       }
 
       const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
       if (price <= 0 || price > 1000000) {
-        showToast('Enter a valid repair price before creating the ticket.');
         const priceInput = els.repairWorkspace.querySelector('#repairQuotedPrice');
         if (priceInput) priceInput.focus();
-        return '';
+        throw new Error('Enter one valid repair price before creating the ticket.');
       }
 
       const currentCustomer = selectedRepairCustomer({ notify: false, focus: false });
       if (!currentCustomer
         || currentCustomer.name.toLowerCase() !== String(state.repair.customerName || '').toLowerCase()
         || currentCustomer.phone.replace(/\D/g, '') !== String(state.repair.customerPhone || '').replace(/\D/g, '')) {
-        showToast('The selected customer changed. Clear this draft and start again with the correct customer.');
-        return '';
+        throw new Error('The selected customer changed. Close this card, clear the draft, and start again with the correct customer.');
       }
 
       const ticketId = 'RPR-' + Date.now();
       const quote = state.repair.quote || {};
       const createdAt = new Date().toISOString();
       const currentStore = storeById(state.storeId);
-      const ticket = {
+      return normalizeRepairTicket({
         id: ticketId,
         store_id: currentStore.id,
         storeId: currentStore.id,
@@ -15894,22 +16003,22 @@
           at: createdAt
         }],
         comments: [],
-        intake: {}
-      };
+        intake: currentRepairSnapshot()
+      });
+    }
 
-      state.repair.ticketId = ticketId;
-      state.repair.quotedPrice = money(price);
-      state.repairTickets.unshift(ticket);
-      const completedTicket = syncCurrentRepairTicketSnapshot({ persist: false }) || ticket;
+    function commitCreatedRepairTicket(ticket) {
+      const savedTicket = normalizeRepairTicket(ticket);
+      if (!savedTicket?.id) throw new Error('The server did not return the created repair ticket. Refresh and check the Repair Board.');
+      delete savedTicket.syncPending;
+      state.repair.ticketId = savedTicket.id;
+      state.repair.quotedPrice = savedTicket.price || state.repair.quotedPrice;
+      const index = state.repairTickets.findIndex(item => item.id === savedTicket.id);
+      if (index >= 0) state.repairTickets[index] = savedTicket;
+      else state.repairTickets.unshift(savedTicket);
       localStorage.setItem(REPAIR_TICKETS_KEY, JSON.stringify(state.repairTickets.slice(0, 500)));
-      const saved = await persistRepairTicket(completedTicket);
       renderRepairWorkspace();
-      if (!state.repairCard || state.repairCard.mode !== 'create') {
-        showToast(saved
-          ? `Ticket ${ticketId} created after the device check was completed.`
-          : `Ticket ${ticketId} is complete and saved locally; database sync is pending.`);
-      }
-      return saved ? ticketId : '';
+      return savedTicket.id;
     }
 
     async function clearRepairTicket() {
@@ -16590,11 +16699,12 @@
       }
       if (section === 'card') return ticketRepairCardHtml(ticket);
       const media = Array.isArray(intake.media) ? intake.media : [];
+      const legacyMedia = media.filter(item => item && item.src);
       return `
         <div id="ticketPhotoUpdates"></div>
-        <div class="media-preview-list">
-          ${media.map(item => `<div class="media-preview">${item.type === 'image' ? `<img src="${item.src}" alt="">` : '<span>Video<br>placeholder</span>'}</div>`).join('')}
-        </div>
+        ${legacyMedia.length ? `<div class="media-preview-list">
+          ${legacyMedia.map(item => `<div class="media-preview">${item.type === 'image' ? `<img src="${escapeHtml(item.src)}" alt="">` : '<span>Video<br>placeholder</span>'}</div>`).join('')}
+        </div>` : ''}
       `;
     }
 
@@ -16739,6 +16849,7 @@
               <button id="repairCardSignatureClear" class="repair-action" type="button">Clear</button>
             </div>
           </div>
+          <div id="repairCardReadiness" class="repair-card-readiness" role="status" aria-live="polite"></div>
           <div id="repairCardError" class="repair-card-error" role="alert"></div>
         </div>
       `;
@@ -17136,13 +17247,13 @@
 
         <div class="repair-panel">
           <h2 class="repair-panel-title">Photos And Evidence</h2>
-          <p class="repair-panel-text">Capture photos of the device condition at drop-off. You can also add a video placeholder if media was recorded separately.</p>
+          <p class="repair-panel-text">Capture photos of the device condition at drop-off. Photos are compressed now and uploaded automatically after the ticket and signature are saved.</p>
           <div class="media-actions">
-            <button id="repairCameraBtn" class="repair-action primary" type="button">Open camera</button>
-            <button id="repairVideoBtn" class="repair-action" type="button">Add video placeholder</button>
+            <button id="repairCameraBtn" class="repair-action primary" type="button" ${state.repair.mediaBusy ? 'disabled' : ''}>${state.repair.mediaBusy ? 'Preparing photos...' : 'Open camera'}</button>
+            <button id="repairVideoBtn" class="repair-action" type="button" ${state.repair.mediaBusy ? 'disabled' : ''}>Add video placeholder</button>
             <input id="repairPhotoInput" type="file" accept="image/*" capture="environment" multiple hidden>
           </div>
-          <div class="repair-panel-text" style="margin-top:10px;">Photo previews stay in this browser session until a backend upload flow is connected.</div>
+          <div class="repair-panel-text" style="margin-top:10px;">Up to 10 photos. A failed upload stays available from the ticket's Photos And Evidence section for retry.</div>
           <div class="media-preview-list">${mediaHtml}</div>
         </div>
 
@@ -17207,7 +17318,7 @@
               ${state.repair.addedToCart ? 'Added to Cart' : 'Add to Cart'}
             </button>
           ` : `
-            <button id="createRepairTicketBtn" class="repair-action primary" type="button" ${cartPrice > 0 ? '' : 'disabled'}>
+            <button id="createRepairTicketBtn" class="repair-action primary" type="button" ${cartPrice > 0 && !state.repair.mediaBusy ? '' : 'disabled'}>
               Create Ticket
             </button>
           `}
@@ -24028,21 +24139,14 @@
     els.specialRepairBtn.addEventListener('click', openSpecialRepairModal);
     els.clearRepairBtn.addEventListener('click', clearRepairTicket);
 
-    els.repairWorkspace.addEventListener('change', event => {
+    els.repairWorkspace.addEventListener('change', async event => {
       if (event.target.id === 'repairBrandSelect') setRepairSelection('brand', event.target.value);
       if (event.target.id === 'repairModelSelect') setRepairSelection('model', event.target.value);
       if (event.target.id === 'repairIssueSelect') setRepairSelection('issue', event.target.value);
       if (event.target.id === 'repairPhotoInput') {
-        Array.from(event.target.files || []).forEach(file => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            state.repair.media.push({ type: 'image', src: reader.result });
-            syncCurrentRepairTicketSnapshot();
-            renderRepairWorkspace();
-          };
-          reader.readAsDataURL(file);
-        });
+        const files = Array.from(event.target.files || []);
         event.target.value = '';
+        await prepareRepairPhotos(files);
       }
     });
 
