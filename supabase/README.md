@@ -284,6 +284,14 @@ Apply these migrations after POS shared state:
 20260717134620_add_used_device_trading.sql
 20260717141622_fix_used_device_shift_integrity.sql
 20260717150100_index_used_device_sales_links.sql
+20260903040000_refine_used_device_buyback_rules.sql
+20260910135513_harden_used_device_buyback_intake.sql
+20260910234500_add_used_device_evidence.sql
+20260910235000_require_used_device_evidence.sql
+20260910235500_add_admin_used_device_oversight.sql
+20260911000500_add_used_device_inspection_checklist.sql
+20260911001000_add_used_device_refurbishment_costs.sql
+20260911002500_add_used_device_publish_queue.sql
 ```
 
 Deploy:
@@ -293,6 +301,47 @@ supabase functions deploy pos-used-devices --no-verify-jwt
 ```
 
 `--no-verify-jwt` is intentional because the Edge Function and database RPCs validate the existing `x-staff-session` token. Browser requests must also include the public anon `apikey` and bearer authorization headers documented above.
+
+### Buyback Evidence
+
+`pos-used-device-updates` stores the photographs and the running memo for a device, in the same shape as `pos-repair-updates`.
+
+```text
+GET  .../pos-used-device-updates?store_code=northlakes&device_code=USED-...
+GET  .../pos-used-device-updates?store_code=northlakes&intake_key=<uuid>
+POST .../pos-used-device-updates  {kind: photo|comment, stage: intake|seller_id|refurb|listing, ...}
+```
+
+`20260910235000_require_used_device_evidence.sql` changes what staff can do, so the database and `pos.html` have to go live together. Applying it while an older `pos.html` is still deployed blocks every purchase, because the old page does not upload intake photos.
+
+Intake photos are uploaded against a client-generated `intake_key` while the purchase form is still open and are claimed by the acquisition. Abandoned ones are cleared with `purge_pos_used_device_intake_uploads`, which returns the storage paths for the caller to delete.
+
+```bash
+supabase functions deploy pos-used-device-updates --no-verify-jwt
+```
+
+### Used Device Website Publishing
+
+Two functions in two projects. The staff project never holds the website project's service key; they share one secret, the same arrangement as the password-reset relay.
+
+```bash
+# Staff/POS project
+supabase secrets set WEBSITE_FUNCTIONS_URL=https://fwlronvmgqzkleofriis.supabase.co/functions/v1
+supabase secrets set USED_DEVICE_PUBLISH_SECRET=<generate one, share with both projects>
+supabase functions deploy pos-used-device-publish --no-verify-jwt
+
+# Website/product project
+supabase secrets set USED_DEVICE_PUBLISH_SECRET=<the same value>
+supabase functions deploy used-device-listings --project-ref fwlronvmgqzkleofriis --no-verify-jwt
+```
+
+Website project migration:
+
+```text
+supabase/website-migrations/20260911002000_add_used_device_listings.sql
+```
+
+`pos-used-device-publish` drains the queue when POSTed an empty body, so schedule it every few minutes; a publish that fails is retried up to five times before the device is marked `failed` in the POS. The storefront contract is in `USED_DEVICE_WEBSITE_API.md`.
 
 ### Invoice Numbers
 

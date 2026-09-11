@@ -81,6 +81,24 @@ Deno.serve(async (request) => {
         });
       }
 
+      // The inspection checklist the POS renders is the same data the
+      // ready-for-sale gate reads, so the two cannot drift apart.
+      if (resource === "checklists") {
+        return await rpcResponse(request, "get_pos_used_device_inspection_items", {
+          session_token: sessionToken,
+        });
+      }
+
+      if (resource === "costs") {
+        const deviceCode = url.searchParams.get("device_code") || "";
+        if (!deviceCode) return jsonResponse({ ok: false, message: "device_code is required." }, 400);
+        return await rpcResponse(request, "get_pos_used_device_costs", {
+          session_token: sessionToken,
+          store_code: storeCode,
+          device_code: deviceCode,
+        });
+      }
+
       return await rpcResponse(request, "search_pos_used_devices", {
         session_token: sessionToken,
         target_store_code: storeCode,
@@ -122,6 +140,22 @@ Deno.serve(async (request) => {
         return await rpcResponse(request, "update_pos_used_device", {
           session_token: sessionToken,
           payload: safeData,
+        });
+      }
+      if (action === "add-cost") {
+        const deviceCode = String(data.device_code || "").trim();
+        if (!deviceCode) return jsonResponse({ ok: false, message: "device_code is required." }, 400);
+        return await rpcResponse(request, "add_pos_used_device_cost", {
+          session_token: sessionToken,
+          store_code: String(actor.store_code || storeCode),
+          device_code: deviceCode,
+          payload: {
+            id: data.id,
+            kind: data.kind,
+            description: data.description,
+            amount: data.amount,
+            repair_ticket_code: data.repair_ticket_code,
+          },
         });
       }
       return jsonResponse({ ok: false, message: "Unknown used-device action." }, 400);

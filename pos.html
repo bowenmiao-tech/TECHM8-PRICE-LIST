@@ -11,6 +11,8 @@
   <script src="./staff-auth.js?v=20260904.1"></script>
   <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
   <script src="./repair-ticket-updates.js?v=20260909.1"></script>
+  <link rel="stylesheet" href="./used-device-evidence.css?v=20260910.1">
+  <script src="./used-device-evidence.js?v=20260910.1"></script>
   <script src="./vendor/sortable.min.js"></script>
   <style>
     :root {
@@ -2493,6 +2495,22 @@
       color: var(--tm-ink);
       font: inherit;
       font-size: 13px;
+    }
+
+    .cart-price-input-wrap.locked {
+      border-style: dashed;
+      background: #f2f5f6;
+      color: #6b7d84;
+    }
+
+    .cart-price-locked {
+      display: inline-flex;
+      align-items: center;
+      height: 32px;
+      padding-right: 9px;
+      font-size: 13px;
+      font-weight: 850;
+      color: var(--tm-ink);
     }
 
     .cart-price-override {
@@ -5478,6 +5496,70 @@
       margin: 0 0 12px;
       font-size: 16px;
       font-weight: 950;
+    }
+
+    .used-website-panel {
+      display: grid;
+      gap: 8px;
+    }
+
+    .used-website-state {
+      justify-self: start;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: #eef3f4;
+      color: #40575f;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .used-website-state.published { background: #e6f4f0; color: var(--tm-green); }
+    .used-website-state.queued { background: #fdf1e3; color: #a15316; }
+    .used-website-state.failed { background: #fdeae7; color: var(--tm-red); }
+
+    .used-cost-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .used-cost-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 11px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fbfdfd;
+    }
+
+    .used-cost-meta {
+      margin-top: 3px;
+      color: #6b7d84;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .used-margin-loss {
+      color: var(--tm-red);
+    }
+
+    .used-required-tag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #fdeeea;
+      color: #b22c24;
+      font-size: 11.5px;
+      font-weight: 850;
+      vertical-align: middle;
+    }
+
+    .used-required-tag.done {
+      background: #e6f4f0;
+      color: var(--tm-green);
     }
 
     .used-form-grid {
@@ -9756,6 +9838,10 @@
       usedDeviceSummary: null,
       usedDeviceTransactions: [],
       usedDeviceLoading: false,
+      usedDeviceIntakeKey: '',
+      usedDeviceIntakeCounts: null,
+      usedDeviceChecklists: null,
+      usedDeviceCosts: null,
       selectedUsedDeviceId: '',
       transferStores: [],
       prTransferReserves: null,
@@ -9814,6 +9900,9 @@
     const POS_SALES_ORDERS_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-sales-orders';
     const POS_SHARED_STATE_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-shared-state';
     const POS_USED_DEVICES_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-used-devices';
+    const POS_USED_DEVICE_PUBLISH_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-used-device-publish';
+    // Matches the floor enforced by create_pos_used_device_acquisition.
+    const USED_DEVICE_REQUIRED_INTAKE_PHOTOS = 3;
     const POS_STOCK_TRANSFERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-stock-transfers';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
     const INTERNAL_TOOLS = {
@@ -10307,7 +10396,13 @@
       }
     }
 
+    // The database holds the checklist the ready-for-sale gate enforces. Use it
+    // when it has loaded, so the screen and the gate cannot disagree; the lists
+    // above stay as the offline fallback.
     function usedDeviceInspectionItemsFor(category) {
+      const name = String(category || '').trim() || 'Phone';
+      const shared = state.usedDeviceChecklists && state.usedDeviceChecklists[name];
+      if (Array.isArray(shared) && shared.length) return shared;
       return usedDeviceInspectionProfiles[usedDeviceInspectionProfileKey(category)]
         || usedDeviceInspectionProfiles.phone;
     }
@@ -18613,15 +18708,30 @@
       return values.length > 0 && values.every(value => value === 'pass' || value === 'na');
     }
 
-    async function usedDeviceApiGet(resource = 'devices') {
+    async function usedDeviceApiGet(resource = 'devices', extraParams = {}) {
       const url = new URL(POS_USED_DEVICES_ENDPOINT);
       url.searchParams.set('resource', resource);
       url.searchParams.set('store_code', repairTicketStoreCode());
       url.searchParams.set('q', state.usedDeviceSearch || '');
       url.searchParams.set('limit', '500');
       if (resource === 'devices' && state.usedDeviceStatus) url.searchParams.set('status', state.usedDeviceStatus);
+      Object.entries(extraParams).forEach(([key, value]) => url.searchParams.set(key, value));
       const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
       return parsePosApiResponse(response, 'Used-device data could not be loaded.');
+    }
+
+    // Loaded once per session. A failure leaves the built-in lists in place
+    // rather than blocking the workspace.
+    async function loadUsedDeviceChecklists() {
+      if (state.usedDeviceChecklists) return;
+      try {
+        const payload = await usedDeviceApiGet('checklists');
+        if (payload && payload.checklists && typeof payload.checklists === 'object') {
+          state.usedDeviceChecklists = payload.checklists;
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     async function usedDeviceApiPost(action, payload) {
@@ -18637,6 +18747,7 @@
       if (!state.selectedStaffName) return;
       state.usedDeviceLoading = true;
       renderUsedDeviceView();
+      loadUsedDeviceChecklists();
       try {
         const payload = await usedDeviceApiGet('devices');
         state.usedDevices = Array.isArray(payload.devices) ? payload.devices : [];
@@ -18805,14 +18916,23 @@
           </section>
 
           <section class="used-form-section">
+            <h2>Photo Evidence <span class="used-required-tag" id="usedDeviceIntakeTag">${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} photos required</span></h2>
+            <div class="used-field-hint" style="margin-bottom:8px;">
+              Take these while the seller is still here. The purchase cannot be saved without at least
+              ${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} intake photos, and they stay attached to this device.
+            </div>
+            <div id="usedDeviceIntakeEvidence"></div>
+          </section>
+
+          <section class="used-form-section">
             <h2>Compliance and Pricing</h2>
             <div class="used-form-grid">
               <label class="used-field">IMEI / lost-stolen check *
                 <select name="clean_check_status" required><option value="Pending">Pending</option><option value="Clean">Clean</option><option value="Blocked">Blocked</option><option value="Not Applicable">Not Applicable</option></select>
               </label>
               <label class="used-field">Check reference<input name="clean_check_reference" type="text"></label>
-              <label class="used-field">Inventory status *
-                <select name="status" required><option value="inspection">Inspection</option><option value="ready_for_sale">Ready for sale</option></select>
+              <label class="used-field">Inventory status
+                <input name="status" type="text" value="Inspection" readonly title="Every purchase starts in inspection. Mark it ready once it is cleaned up and photographed for sale.">
               </label>
               <label class="used-field">Purchase price *<input name="purchase_cost" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
               <label class="used-field">Sale price *<input name="sale_price" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
@@ -18881,11 +19001,46 @@
       }
       if (state.usedDeviceTab === 'buy') {
         els.usedDeviceContent.innerHTML = renderUsedDeviceBuyForm();
+        mountUsedDeviceIntakeEvidence();
       } else if (state.usedDeviceTab === 'transactions') {
         els.usedDeviceContent.innerHTML = renderUsedDeviceTransactions();
       } else {
         els.usedDeviceContent.innerHTML = renderUsedDeviceInventory();
       }
+    }
+
+    // One intake key per purchase form. Photos are uploaded against it while the
+    // seller is still at the counter, and the acquisition claims them.
+    function mountUsedDeviceIntakeEvidence() {
+      const host = els.usedDeviceContent.querySelector('#usedDeviceIntakeEvidence');
+      if (!host || !window.Techm8UsedDeviceEvidence) return;
+      if (!state.usedDeviceIntakeKey) state.usedDeviceIntakeKey = crypto.randomUUID();
+      state.usedDeviceIntakeCounts = {intake: 0};
+      window.Techm8UsedDeviceEvidence.mount(host, {
+        storeCode: repairTicketStoreCode(),
+        intakeKey: state.usedDeviceIntakeKey,
+        getToken: () => window.Techm8StaffAuth.getToken(),
+        onChange: counts => {
+          state.usedDeviceIntakeCounts = counts;
+          refreshUsedDeviceIntakeTag();
+        }
+      });
+      refreshUsedDeviceIntakeTag();
+    }
+
+    function usedDeviceIntakePhotoCount() {
+      return Number((state.usedDeviceIntakeCounts || {}).intake || 0);
+    }
+
+    function refreshUsedDeviceIntakeTag() {
+      const tag = els.usedDeviceContent.querySelector('#usedDeviceIntakeTag');
+      if (!tag) return;
+      const taken = usedDeviceIntakePhotoCount();
+      const enough = taken >= USED_DEVICE_REQUIRED_INTAKE_PHOTOS;
+      tag.textContent = enough
+        ? `${taken} photos taken`
+        : `${taken} of ${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} required photos`;
+      tag.classList.toggle('done', enough);
     }
 
     function setUsedDeviceTab(tab) {
@@ -18999,11 +19154,9 @@
       const submit = form.querySelector('#usedDeviceBuySubmit');
       const data = new FormData(form);
       const inspection = collectUsedDeviceInspection(form, 'buy');
-      const requestedStatus = String(data.get('status') || 'inspection');
       const category = String(data.get('category') || '');
-      if (requestedStatus === 'ready_for_sale'
-        && !inspectionReadyForSale(inspection, usedDeviceInspectionItemsFor(category))) {
-        error.textContent = 'Every inspection item must be Pass or N/A before the device can be ready for sale.';
+      if (usedDeviceIntakePhotoCount() < USED_DEVICE_REQUIRED_INTAKE_PHOTOS) {
+        error.textContent = `Take at least ${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} intake photos before paying the seller: front, back, and the screen showing the IMEI or serial.`;
         return;
       }
       const imeiDigits = String(data.get('imei') || '').replace(/\D/g, '');
@@ -19022,6 +19175,10 @@
       }
       if (!String(data.get('brand') || '').trim() || !String(data.get('model') || '').trim()) {
         error.textContent = 'Choose a brand and model from the search, or type them manually.';
+        return;
+      }
+      if (data.get('clean_check_status') === 'Blocked') {
+        error.textContent = 'This device failed the lost or stolen check. Do not pay the seller and do not take the device. The purchase cannot be saved.';
         return;
       }
       if (data.get('clean_check_status') === 'Clean' && !String(data.get('clean_check_reference') || '').trim()) {
@@ -19075,14 +19232,18 @@
           purchase_cost: Number(data.get('purchase_cost')),
           sale_price: Number(data.get('sale_price')),
           payout_method: String(data.get('payout_method') || ''),
-          status: requestedStatus,
+          status: 'inspection',
+          intake_key: state.usedDeviceIntakeKey,
           notes: String(data.get('notes') || '').trim()
         });
         state.shiftPaymentTotals = null;
+        // A saved purchase consumes its intake photos; the next one starts a new key.
+        state.usedDeviceIntakeKey = '';
+        state.usedDeviceIntakeCounts = null;
         state.usedDeviceTab = 'inventory';
         state.usedDeviceSearch = '';
         await loadUsedDevices();
-        showToast('Device purchase saved and added to this store inventory.');
+        showToast('Purchase saved with its intake photos. The device is in inspection until it is photographed for sale.');
       } catch (requestError) {
         console.error(requestError);
         error.textContent = requestError.message || 'Device purchase could not be saved.';
@@ -19106,8 +19267,10 @@
         <div class="used-detail-summary">
           <div><span>Status</span><strong>${escapeHtml(usedDeviceStatusLabel(device.status))}</strong></div>
           <div><span>Condition</span><strong>${escapeHtml(device.condition_grade || '')}</strong></div>
-          <div><span>Cost</span><strong>${money(device.purchase_cost)}</strong></div>
+          <div><span>Paid</span><strong>${money(device.purchase_cost)}</strong></div>
+          <div><span>Total cost</span><strong>${money(usedDeviceTotalCost(device))}</strong></div>
           <div><span>Sale price</span><strong>${money(device.sale_price)}</strong></div>
+          <div><span>Margin</span><strong class="${numberValue(device.sale_price) < usedDeviceTotalCost(device) ? 'used-margin-loss' : ''}">${money(numberValue(device.sale_price) - usedDeviceTotalCost(device))}</strong></div>
           <div><span>Seller</span><strong>${escapeHtml(seller.name || '')}</strong></div>
           <div><span>Seller phone</span><strong>${escapeHtml(seller.phone || '')}</strong></div>
           <div><span>ID viewed</span><strong>${escapeHtml([seller.id_type, seller.id_reference].filter(Boolean).join(' - '))}</strong></div>
@@ -19126,6 +19289,8 @@
               </label>
               <label class="used-field span-2">Check reference<input name="clean_check_reference" type="text" value="${escapeHtml(device.clean_check_reference || '')}"></label>
               <label class="used-field">Notes<input name="notes" type="text" value="${escapeHtml(device.notes || '')}"></label>
+              <label class="used-field span-2">Reason for this change<input name="change_note" type="text" maxlength="500" placeholder="Optional. Recorded against this change only, not on the device."></label>
+              <label class="used-field span-3">Reason for pricing below cost<input name="below_cost_reason" type="text" maxlength="500" placeholder="Required only when the new price is under the ${escapeHtml(money(usedDeviceTotalCost(device)))} this device has cost."></label>
             </div>
             <div class="used-inspection-grid" style="margin-top:12px;">${usedDeviceInspectionFields(device.inspection || {}, 'detail', usedDeviceInspectionItemsForRecord(device))}</div>
             <div class="used-declaration-grid">
@@ -19151,8 +19316,206 @@
         ${device.status === 'sold' && device.sold_order_id ? `
           <div class="used-detail-actions"><button class="repair-action primary" type="button" data-used-view-invoice="${escapeHtml(device.sold_order_id)}"><i class="bi bi-eye"></i> View Invoice #${escapeHtml(device.sold_invoice_number)}</button></div>
         ` : ''}
+        ${editable ? `
+          <section class="used-form-section">
+            <h2>Refurbishment Cost</h2>
+            <div class="used-field-hint" style="margin-bottom:10px;">
+              Parts, bench time and anything sent out. Every margin figure uses the purchase price plus these.
+              Recording a part here does not move product stock.
+            </div>
+            <form id="usedDeviceCostForm" class="used-form-grid">
+              <label class="used-field">Type
+                <select name="kind"><option value="part">Part</option><option value="labour">Labour</option><option value="external">External service</option></select>
+              </label>
+              <label class="used-field">Amount *<input name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
+              <label class="used-field">Repair ticket<input name="repair_ticket_code" type="text" placeholder="Optional"></label>
+              <label class="used-field span-2">What was it? *<input name="description" type="text" maxlength="300" required placeholder="Example: replacement screen"></label>
+              <div class="used-field"><span style="visibility:hidden">Add</span>
+                <button class="repair-action primary" type="submit"><i class="bi bi-plus-lg"></i> Add Cost</button>
+              </div>
+            </form>
+            <div id="usedDeviceCostError" class="used-form-error" role="alert"></div>
+            <div id="usedDeviceCostList" class="used-cost-list"></div>
+          </section>
+        ` : ''}
+        <section class="used-form-section">
+          <h2>Website</h2>
+          <div id="usedDeviceWebsite" class="used-website-panel">Checking the website...</div>
+        </section>
+        <section class="used-form-section">
+          <h2>Evidence and Notes</h2>
+          <div id="usedDeviceEvidence"></div>
+        </section>
       `;
+      mountUsedDeviceEvidence(device);
+      loadUsedDeviceWebsiteStatus(device);
+      if (editable) loadUsedDeviceCosts(device);
       if (focusSell) setTimeout(() => els.usedDeviceDetailBody.querySelector('[name="buyer_name"]')?.focus(), 0);
+    }
+
+    const USED_DEVICE_WEBSITE_LABELS = {
+      not_published: 'Not on the website',
+      queued: 'Waiting to reach the website',
+      published: 'Live on the website',
+      withdrawn: 'Taken off the website',
+      failed: 'Could not reach the website'
+    };
+
+    async function usedDevicePublishRequest(payload) {
+      const response = await fetch(POS_USED_DEVICE_PUBLISH_ENDPOINT, {
+        method: 'POST',
+        headers: posOrderApiHeaders(),
+        body: JSON.stringify(payload)
+      });
+      return parsePosApiResponse(response, 'The website request could not be sent.');
+    }
+
+    async function loadUsedDeviceWebsiteStatus(device) {
+      const host = els.usedDeviceDetailBody.querySelector('#usedDeviceWebsite');
+      if (!host) return;
+      try {
+        const url = new URL(POS_USED_DEVICE_PUBLISH_ENDPOINT);
+        url.searchParams.set('store_code', repairTicketStoreCode());
+        url.searchParams.set('device_code', device.id);
+        const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+        renderUsedDeviceWebsite(await parsePosApiResponse(response, 'Website status is unavailable.'));
+      } catch (error) {
+        console.error(error);
+        host.innerHTML = `<div class="used-cost-meta">Website status is unavailable right now.</div>`;
+      }
+    }
+
+    function renderUsedDeviceWebsite(status) {
+      const host = els.usedDeviceDetailBody.querySelector('#usedDeviceWebsite');
+      if (!host) return;
+      const state = String(status.website_status || 'not_published');
+      const photos = Number(status.listing_photo_count || 0);
+      const canPublish = status.can_publish === true && photos > 0;
+      const pending = status.pending || null;
+      host.innerHTML = `
+        <div class="used-website-state ${escapeHtml(state)}">${escapeHtml(USED_DEVICE_WEBSITE_LABELS[state] || state)}</div>
+        <div class="used-cost-meta">
+          ${photos} listing photo${photos === 1 ? '' : 's'}.
+          ${status.website_slug ? `Page: ${escapeHtml(status.website_slug)}.` : ''}
+          ${!status.can_publish ? 'Only a device that is ready for sale can go on the website.' : ''}
+          ${status.can_publish && !photos ? 'Add a listing photo first.' : ''}
+        </div>
+        ${pending ? `<div class="used-cost-meta">Queued to ${escapeHtml(pending.action)}${Number(pending.attempts) > 1 ? ` · ${escapeHtml(String(pending.attempts))} attempts` : ''}${pending.last_error ? ` · ${escapeHtml(pending.last_error)}` : ''}</div>` : ''}
+        <div class="used-detail-actions">
+          <button class="repair-action primary" type="button" data-used-publish="publish" ${canPublish ? '' : 'disabled'}><i class="bi bi-globe"></i> Publish to Website</button>
+          <button class="repair-action" type="button" data-used-publish="withdraw" ${state === 'published' || state === 'queued' ? '' : 'disabled'}><i class="bi bi-eye-slash"></i> Take Down</button>
+        </div>
+      `;
+    }
+
+    async function submitUsedDevicePublish(action, button) {
+      const device = selectedUsedDevice();
+      if (!device) return;
+      const host = els.usedDeviceDetailBody.querySelector('#usedDeviceWebsite');
+      button.disabled = true;
+      try {
+        await usedDevicePublishRequest({
+          store_code: repairTicketStoreCode(),
+          device_code: device.id,
+          action
+        });
+        showToast(action === 'publish' ? 'Sent to the website.' : 'Taken off the website.');
+        await loadUsedDeviceWebsiteStatus(device);
+        await loadUsedDevices();
+      } catch (error) {
+        console.error(error);
+        if (host) host.insertAdjacentHTML('beforeend', `<div class="used-form-error">${escapeHtml(error.message || 'The website request failed.')}</div>`);
+        button.disabled = false;
+      }
+    }
+
+    function usedDeviceTotalCost(device) {
+      const total = Number(device && device.total_cost);
+      if (Number.isFinite(total) && total > 0) return total;
+      return numberValue(device && device.purchase_cost) + numberValue(device && device.refurb_cost);
+    }
+
+    function usedDeviceCostLabel(kind) {
+      return { part: 'Part', labour: 'Labour', external: 'External service' }[kind] || kind;
+    }
+
+    function renderUsedDeviceCostList() {
+      const host = els.usedDeviceDetailBody.querySelector('#usedDeviceCostList');
+      if (!host) return;
+      const costs = Array.isArray(state.usedDeviceCosts) ? state.usedDeviceCosts : [];
+      host.innerHTML = costs.length
+        ? costs.map(cost => `
+            <div class="used-cost-row">
+              <div>
+                <strong>${escapeHtml(cost.description || '')}</strong>
+                <div class="used-cost-meta">${escapeHtml(usedDeviceCostLabel(cost.kind))}${cost.repair_ticket_code ? ` · ${escapeHtml(cost.repair_ticket_code)}` : ''} · ${escapeHtml(cost.staff_name || '')}</div>
+              </div>
+              <strong>${money(cost.amount)}</strong>
+            </div>
+          `).join('')
+        : '<div class="used-cost-meta">Nothing spent on this device yet.</div>';
+    }
+
+    async function loadUsedDeviceCosts(device) {
+      state.usedDeviceCosts = [];
+      renderUsedDeviceCostList();
+      try {
+        const payload = await usedDeviceApiGet('costs', { device_code: device.id });
+        state.usedDeviceCosts = Array.isArray(payload.costs) ? payload.costs : [];
+      } catch (error) {
+        console.error(error);
+      }
+      renderUsedDeviceCostList();
+    }
+
+    async function submitUsedDeviceCost(form) {
+      const device = selectedUsedDevice();
+      if (!device) return;
+      const data = new FormData(form);
+      const error = form.parentElement.querySelector('#usedDeviceCostError');
+      const description = String(data.get('description') || '').trim();
+      const amount = Number(data.get('amount'));
+      if (!description || !Number.isFinite(amount) || amount <= 0) {
+        error.textContent = 'Enter what was spent and how much.';
+        return;
+      }
+      const submit = form.querySelector('button[type="submit"]');
+      error.textContent = '';
+      submit.disabled = true;
+      try {
+        await usedDeviceApiPost('add-cost', {
+          store_code: repairTicketStoreCode(),
+          staff_name: state.selectedStaffName,
+          device_code: device.id,
+          // A client-generated ID makes a retry after a timeout harmless.
+          id: crypto.randomUUID(),
+          kind: String(data.get('kind') || 'part'),
+          description,
+          amount,
+          repair_ticket_code: String(data.get('repair_ticket_code') || '').trim()
+        });
+        form.reset();
+        await loadUsedDeviceCosts(device);
+        await loadUsedDevices();
+        const refreshed = state.usedDevices.find(item => item.id === device.id);
+        if (refreshed) renderUsedDeviceDetail(refreshed);
+        showToast('Cost recorded against this device.');
+      } catch (requestError) {
+        console.error(requestError);
+        error.textContent = requestError.message || 'The cost could not be saved.';
+      } finally {
+        submit.disabled = false;
+      }
+    }
+
+    function mountUsedDeviceEvidence(device) {
+      const host = els.usedDeviceDetailBody.querySelector('#usedDeviceEvidence');
+      if (!host || !window.Techm8UsedDeviceEvidence) return;
+      window.Techm8UsedDeviceEvidence.mount(host, {
+        storeCode: repairTicketStoreCode(),
+        deviceCode: device.id,
+        getToken: () => window.Techm8StaffAuth.getToken()
+      });
     }
 
     function openUsedDeviceDetail(deviceId, focusSell = false) {
@@ -19201,7 +19564,9 @@
           activation_lock_removed: data.get('activation_lock_removed') === 'on',
           data_erased_confirmed: data.get('data_erased_confirmed') === 'on',
           inspection,
-          notes: String(data.get('notes') || '').trim()
+          notes: String(data.get('notes') || '').trim(),
+          change_note: String(data.get('change_note') || '').trim(),
+          below_cost_reason: String(data.get('below_cost_reason') || '').trim()
         });
         if (payload.device) {
           const index = state.usedDevices.findIndex(item => item.id === device.id);
@@ -19341,6 +19706,14 @@
     function updateCartItemPrice(productId, rawValue) {
       const item = state.cart.find(cartItem => String(cartItem.id) === String(productId));
       if (!item) return false;
+      // The database refuses a used-device line whose price differs from the
+      // saved sale price, and it refuses it while the order is being written.
+      // Blocking the edit here keeps that from surfacing as a failed checkout.
+      if (item.is_used_device) {
+        showToast('Change a used device price in Used Devices, not in the cart.');
+        renderCart();
+        return false;
+      }
       const nextPrice = Number(rawValue);
       if (!Number.isFinite(nextPrice) || nextPrice <= 0 || nextPrice > 1000000) {
         showToast('Enter a valid unit price between $0.01 and $1,000,000.00.');
@@ -19409,10 +19782,17 @@
                   <div class="cart-control-row">
                     <label class="cart-price-editor">
                       <span>Price</span>
-                      <span class="cart-price-input-wrap">
-                        <span>$</span>
-                        <input class="cart-price-input" type="number" min="0.01" max="1000000" step="0.01" value="${roundedMoneyValue(item.sale_price).toFixed(2)}" data-cart-price="${escapeHtml(item.id)}" aria-label="Unit price for ${escapeHtml(item.name)}">
-                      </span>
+                      ${item.is_used_device ? `
+                        <span class="cart-price-input-wrap locked" title="A used device sells at the price saved on the device record.">
+                          <span>$</span>
+                          <span class="cart-price-locked">${roundedMoneyValue(item.sale_price).toFixed(2)}</span>
+                        </span>
+                      ` : `
+                        <span class="cart-price-input-wrap">
+                          <span>$</span>
+                          <input class="cart-price-input" type="number" min="0.01" max="1000000" step="0.01" value="${roundedMoneyValue(item.sale_price).toFixed(2)}" data-cart-price="${escapeHtml(item.id)}" aria-label="Unit price for ${escapeHtml(item.name)}">
+                        </span>
+                      `}
                     </label>
                     ${item.is_used_device || item.is_repair ? `
                       <div class="qty-control unique"><span>1 unique item</span></div>
@@ -19425,6 +19805,7 @@
                     `}
                   </div>
                   ${overrideText ? `<div class="cart-price-override">${escapeHtml(overrideText)}</div>` : ''}
+                  ${item.is_used_device ? '<div class="cart-repair-hint"><i class="bi bi-lock"></i> A used device sells at the price saved on its record. Change it in Used Devices, where the change is logged against the device.</div>' : ''}
                   ${item.is_repair ? '<div class="cart-repair-hint"><i class="bi bi-info-circle"></i> Add every repair for this device to the card before payment. One added afterwards becomes a second invoice and a second card charge.</div>' : ''}
                   <button class="cart-note-trigger${hasNote ? ' has-note' : ''}" type="button" data-open-cart-note="${escapeHtml(item.id)}" title="${hasNote ? 'Note added — click to edit' : 'Add a note to this item'}">
                     <i class="bi bi-chat-left-text"></i>
@@ -23493,6 +23874,17 @@
         refreshUsedDeviceCategoryFields();
         return;
       }
+      // Say it the moment the result is chosen, not after the whole form is
+      // filled in, because the payout happens in the same step as the purchase.
+      if (event.target.name === 'clean_check_status') {
+        const buyError = usedDeviceBuyFormEl()?.querySelector('#usedDeviceBuyError');
+        if (buyError) {
+          buyError.textContent = event.target.value === 'Blocked'
+            ? 'This device failed the lost or stolen check. Do not pay the seller and do not take the device.'
+            : '';
+        }
+        return;
+      }
       if (event.target.id !== 'usedSellerIsOwner') return;
       const showOwner = event.target.value === 'false';
       els.usedDeviceContent.querySelectorAll('[data-used-owner-field]').forEach(field => {
@@ -23512,9 +23904,12 @@
     els.usedDeviceDetailBody.addEventListener('submit', event => {
       event.preventDefault();
       if (event.target.id === 'usedDeviceUpdateForm') updateUsedDevice(event.target);
+      if (event.target.id === 'usedDeviceCostForm') submitUsedDeviceCost(event.target);
       if (event.target.id === 'usedDeviceSellForm') addUsedDeviceToCart(event.target);
     });
     els.usedDeviceDetailBody.addEventListener('click', event => {
+      const publishButton = event.target.closest('[data-used-publish]');
+      if (publishButton) submitUsedDevicePublish(publishButton.dataset.usedPublish, publishButton);
       const invoiceButton = event.target.closest('[data-used-view-invoice]');
       if (!invoiceButton) return;
       closeUsedDeviceDetail();

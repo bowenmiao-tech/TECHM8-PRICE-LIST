@@ -196,7 +196,13 @@ Completed second-hand device flow:
 - Storage is required for every category except `Other`.
 - One device identifier is enough: staff choose IMEI or serial number, the same way repair intake does. A supplied IMEI must still be 15 digits, and IMEI or serial remains unique across the device inventory.
 - The inspection checklist follows `TECHM8_Buyback_Device_Inspection_Form.pdf` and switches with the category. Phone and Tablet share one 23-point list; Laptop, Watch, Game Console, and Other have their own. Checks stored against older records stay visible even when they are not in the current list.
+- The checklist itself lives in `pos_used_device_inspection_items`, one row per item per category. The POS renders those rows and the ready-for-sale gate requires all of them, so the screen and the gate cannot drift apart. The built-in lists in `pos.html` remain only as an offline fallback.
+- A device that fails the lost-or-stolen check cannot be bought at all. The old rule only kept it off the shelf, by which time the cash had already left the till.
 - Inspection, IMEI status/reference, activation-lock removal, and data-erasure checks gate `Ready for sale`. Every answer must be Pass or N/A.
+- A purchase cannot be saved without at least three intake photos, taken while the form is open and claimed by the acquisition in the same transaction that pays the seller. Every purchase starts in `Inspection`; reaching the shelf additionally needs at least one listing photo. Devices bought before this rule carry `evidence_required = false` and are unaffected.
+- Evidence and the running memo live in `pos_used_device_updates`, append-only, staged as intake / seller ID / refurbishment / listing. Seller identity images are kept in their own private bucket, are readable only through an admin session, and every read is recorded in `pos_used_device_id_photo_views`.
+- Refurbishment costs are recorded per device in `pos_used_device_costs`. Every margin figure -- the device payload, the POS stock summary, the admin overview -- uses purchase price plus refurbishment. Pricing a device below what it has cost is still possible but requires a recorded reason, which is what the ledger and the admin alert read. Recording a part here does not move product inventory; product stock lives in the separate website project.
+- Status and price changes carry their own `change_note` on the ledger instead of republishing the device memo, and `ready_at` records the first time a device reached the shelf so stock age survives a re-inspection or a refund.
 - Every acquisition must use the selected store's open shift. Cash and bank-transfer payouts are included in shift reconciliation as paid-out amounts.
 - Ready devices can be added to the normal cart as one unique item. The database locks the record during checkout and blocks duplicate sales.
 - Used-device sales use the existing store invoice sequence, split payments, receipt, Invoice History, and refund flow.
@@ -406,11 +412,27 @@ Tablet-case catalogue rollout:
 - Review workbook and draft import files are under `outputs/product-catalog-rebuild/`.
 - POS and public storefront code both understand product groups and colour variants. Keep online visibility off until the storefront change has been deployed, then activate approved groups and variants together. Inventory remains zero until manually adjusted per store or online.
 
+Second-hand devices on the public website:
+- Used devices are their own catalogue in the website project, not rows in `products`. A product is a repeatable SKU with a quantity per store; a used device is one physical thing whose stock is always one. Tables are `used_device_categories` and `used_device_listings`, with images in the public `used-device-listing-images` bucket.
+- Publishing runs through an outbox, because the two Supabase projects cannot share a transaction. The POS queues one intention per device in `pos_used_device_publish_queue`; `pos-used-device-publish` carries it over and only marks it complete once the website confirms. Each intention carries a `source_version`, so a slow retry cannot resurrect a sold device.
+- Going ready for sale publishes, a price change republishes, and selling, returning to the seller, disposal or a move back to inspection takes the listing down. Staff do not have to remember any of it; the POS button is there for a device that needs pushing immediately.
+- The listing text is generated from the inspection record by `pos_used_device_listing_payload`, which reads no IMEI, serial number, seller detail, purchase price or internal memo. The website additionally refuses any listing whose public text contains fifteen consecutive digits.
+- Condition sentences and the closing paragraph are rows in `pos_used_device_listing_copy` and can be edited without a migration.
+- The storefront contract is documented in `USED_DEVICE_WEBSITE_API.md`. The public site reads `get_used_device_listings` and `get_used_device_listing` with the publishable key; it never talks to the staff project.
+
+Admin oversight of the buyback business:
+- `admin.html` has a `Used Devices` view: payouts and stock per store, an exception list, POS-against-daily-report reconciliation, and the second-hand dealer register with a CSV export.
+- The exception list covers repeat sellers, a seller name matching active staff, blocked devices still in stock, purchase prices well above the model average, sales below cost, same-day flips, missing intake evidence, stale IMEI checks and aged stock.
+- The register carries seller identity and is admin-session only. It is never exposed to a staff session.
+
 Second-hand device follow-ups:
-- add Supabase Storage photo capture for seller ID and device-condition evidence
-- add a printable or signed acquisition agreement generated from the saved purchase record
+- add a printable or signed acquisition agreement generated from the saved purchase record, reusing the repair-card signature tables
 - integrate an approved IMEI/blacklist provider instead of storing only the manual AMTA result reference
 - add inter-store device transfer with immutable source/destination events
+- deduct refurbishment parts from product inventory. Costs are recorded against the device today, but product stock lives in the website project, so the deduction is a cross-project change; `pos_used_device_costs.repair_ticket_code` is the link to follow when it is built
+- schedule `pos-used-device-publish` and `purge_pos_used_device_intake_uploads` so a failed publish retries and abandoned intake photos are cleaned up without anyone watching
+- confirm the Queensland second-hand dealer holding-period requirement and, if there is one, gate `ready_for_sale` on days since purchase. Nothing enforces a holding period today
+- the browser image pipeline in `used-device-evidence.js` duplicates the one in `repair-ticket-updates.js`. Worth factoring out once a third caller needs it
 
 Optional later integrations:
 - payment terminal integrations

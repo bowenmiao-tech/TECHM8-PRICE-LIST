@@ -11,6 +11,8 @@
   <script src="./staff-auth.js?v=20260904.1"></script>
   <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
   <script src="./repair-ticket-updates.js?v=20260909.1"></script>
+  <link rel="stylesheet" href="./used-device-evidence.css?v=20260910.1">
+  <script src="./used-device-evidence.js?v=20260910.1"></script>
   <style>
     :root {
       --green: #07896f;
@@ -369,6 +371,10 @@
     tfoot td { border-bottom: 0; color: var(--ink); background: #f6f9f9; font-weight: 900; }
     .value-main { color: var(--ink); font-weight: 900; }
     .value-mis { color: #c75d06; font-weight: 850; }
+    .used-severity { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+    .used-severity.high { background: #fdeae7; color: #b22c24; }
+    .used-severity.medium { background: #fdf1e3; color: #a15316; }
+    .used-severity.low { background: #eef3f4; color: #55686f; }
     .value-refund { color: var(--red); }
     .store-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 3px; background: var(--store-color); }
 
@@ -572,6 +578,7 @@
           <h2 class="nav-heading">Overview</h2>
           <button class="nav-item active" type="button" data-route="sales" data-title="Four Store Sales"><i class="bi bi-grid-1x2-fill"></i><span>Sales Overview</span></button>
           <button class="nav-item" type="button" data-route="repairs" data-title="Repair Board"><i class="bi bi-tools"></i><span>Repair Board</span><span class="nav-count" id="repairNavCount" hidden>0</span></button>
+          <button class="nav-item" type="button" data-route="used-devices" data-title="Used Devices"><i class="bi bi-phone"></i><span>Used Devices</span><span class="nav-count" id="usedNavCount" hidden>0</span></button>
         </section>
         <section class="nav-section">
           <h2 class="nav-heading">Pricing</h2>
@@ -665,6 +672,101 @@
           </section>
         </section>
 
+        <section class="content-view overview-view" id="usedDeviceView" aria-labelledby="usedTitle">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">Second-hand trading</p>
+              <h1 id="usedTitle">Used Devices</h1>
+              <p class="page-subtitle">What was paid out, what is still on the shelf, and which purchases are worth a second look. The register carries seller identity details and is admin-only.</p>
+            </div>
+            <div class="updated-at" id="usedUpdatedAt">Waiting for data</div>
+          </div>
+
+          <section class="filters-card" aria-label="Used device filters">
+            <div class="preset-row" id="usedPresetRow">
+              <button class="preset-button" type="button" data-used-preset="today">Today</button>
+              <button class="preset-button" type="button" data-used-preset="last7">Last 7 Days</button>
+              <button class="preset-button active" type="button" data-used-preset="month">This Month</button>
+              <button class="preset-button" type="button" data-used-preset="lastMonth">Last Month</button>
+              <button class="preset-button" type="button" data-used-preset="year">This Year</button>
+            </div>
+            <div class="filter-fields">
+              <label class="date-field"><span>From</span><input id="usedDateFrom" type="date"></label>
+              <label class="date-field"><span>To</span><input id="usedDateTo" type="date"></label>
+              <div class="filter-spacer"></div>
+              <button class="refresh-button" id="usedRefreshButton" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+          </section>
+
+          <div class="error-panel" id="usedErrorPanel" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div><strong>Used device data could not be loaded</strong><span id="usedErrorMessage"></span></div>
+          </div>
+
+          <section class="summary-grid" id="usedSummaryGrid" aria-label="Buyback summary"></section>
+
+          <div class="section-bar">
+            <div><h2>Needs a Look</h2><p id="usedAlertLabel">Patterns worth checking across the last 90 days.</p></div>
+          </div>
+          <section class="table-card">
+            <div class="table-scroll">
+              <table class="responsive-table">
+                <thead><tr><th>Severity</th><th>Store</th><th>What happened</th><th>Device</th><th>When</th></tr></thead>
+                <tbody id="usedAlertBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="section-bar">
+            <div><h2>Stock and Payouts by Store</h2><p>Payouts are for the selected range. Stock is the position as it stands now.</p></div>
+          </div>
+          <section class="table-card">
+            <div class="table-scroll">
+              <table class="responsive-table">
+                <thead><tr><th>Store</th><th>Bought</th><th>Cash Out</th><th>Transfer Out</th><th>Sold</th><th>Margin</th><th>In Stock</th><th>Stock Cost</th><th>Over 90 Days</th><th>No Photos</th></tr></thead>
+                <tbody id="usedStoreBody"></tbody>
+                <tfoot id="usedStoreFoot"></tfoot>
+              </table>
+            </div>
+          </section>
+
+          <div class="section-bar">
+            <div><h2>POS Against the Daily Report</h2><p>Days where the buyback register and the hand-keyed daily report disagree.</p></div>
+          </div>
+          <section class="table-card">
+            <div class="table-scroll">
+              <table class="responsive-table">
+                <thead><tr><th>Date</th><th>Store</th><th>POS Count</th><th>Report Count</th><th>POS Amount</th><th>Report Amount</th><th>Difference</th></tr></thead>
+                <tbody id="usedReconciliationBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="section-bar">
+            <div><h2>Second-hand Dealer Register</h2><p id="usedRegisterLabel">One row per purchase, with the seller details recorded at the counter.</p></div>
+            <button class="refresh-button" id="usedExportButton" type="button"><i class="bi bi-download"></i> Download CSV</button>
+          </div>
+          <section class="table-card">
+            <div class="table-scroll">
+              <table class="responsive-table">
+                <thead><tr><th>Bought</th><th>Store</th><th>Seller</th><th>ID</th><th>Device</th><th>Identifier</th><th>Paid</th><th>Staff</th><th>Photos</th><th>Status</th></tr></thead>
+                <tbody id="usedRegisterBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <dialog class="repair-dialog" id="usedEvidenceDialog" aria-labelledby="usedEvidenceTitle">
+            <div class="repair-dialog-head">
+              <div><h2 id="usedEvidenceTitle">Device Evidence</h2><div class="ticket-device-sub" id="usedEvidenceSubtitle"></div></div>
+              <button class="repair-dialog-close" id="usedEvidenceClose" type="button" aria-label="Close device evidence">×</button>
+            </div>
+            <div class="repair-dialog-body">
+              <p class="page-subtitle">Seller identity images are visible here because this is an admin session. Every view of one is recorded against your account.</p>
+              <div id="usedEvidencePanel"></div>
+            </div>
+          </dialog>
+        </section>
+
         <section class="content-view overview-view repair-overview-view" id="repairView" aria-labelledby="repairTitle">
           <div class="repair-board-header">
             <label class="repair-store-picker"><span>Store</span><select id="repairStoreFilter" aria-label="Repair store" disabled><option value="">Loading stores…</option></select></label>
@@ -732,6 +834,27 @@
       const els = {
         overview: document.getElementById('overviewView'),
         repairs: document.getElementById('repairView'),
+        usedDevices: document.getElementById('usedDeviceView'),
+        usedDateFrom: document.getElementById('usedDateFrom'),
+        usedDateTo: document.getElementById('usedDateTo'),
+        usedRefresh: document.getElementById('usedRefreshButton'),
+        usedUpdatedAt: document.getElementById('usedUpdatedAt'),
+        usedSummary: document.getElementById('usedSummaryGrid'),
+        usedStoreBody: document.getElementById('usedStoreBody'),
+        usedStoreFoot: document.getElementById('usedStoreFoot'),
+        usedAlertBody: document.getElementById('usedAlertBody'),
+        usedAlertLabel: document.getElementById('usedAlertLabel'),
+        usedReconciliationBody: document.getElementById('usedReconciliationBody'),
+        usedRegisterBody: document.getElementById('usedRegisterBody'),
+        usedRegisterLabel: document.getElementById('usedRegisterLabel'),
+        usedExportButton: document.getElementById('usedExportButton'),
+        usedNavCount: document.getElementById('usedNavCount'),
+        usedError: document.getElementById('usedErrorPanel'),
+        usedErrorMessage: document.getElementById('usedErrorMessage'),
+        usedEvidenceDialog: document.getElementById('usedEvidenceDialog'),
+        usedEvidenceSubtitle: document.getElementById('usedEvidenceSubtitle'),
+        usedEvidencePanel: document.getElementById('usedEvidencePanel'),
+        usedEvidenceClose: document.getElementById('usedEvidenceClose'),
         tool: document.getElementById('toolView'),
         breadcrumb: document.getElementById('breadcrumbTitle'),
         dateFrom: document.getElementById('dateFrom'),
@@ -768,6 +891,7 @@
       let loading = false;
       let repairLoading = false;
       let repairsLoaded = false;
+      let usedDevicesLoaded = false;
       const REPAIR_STORE_KEY = 'techm8_admin_repair_store';
       let repairReport = { summary: {}, stores: [], tickets: [] };
 
@@ -895,6 +1019,184 @@
           hour: 'numeric',
           minute: '2-digit'
         }).format(date);
+      }
+
+      // Used devices: payouts, stock, exceptions, and the dealer register.
+      let usedLoading = false;
+      let usedRegisterRows = [];
+
+      function setUsedPreset(preset, shouldLoad = true) {
+        const [from, to] = presetRange(preset);
+        els.usedDateFrom.value = from;
+        els.usedDateTo.value = to;
+        document.querySelectorAll('[data-used-preset]').forEach(button => button.classList.toggle('active', button.dataset.usedPreset === preset));
+        if (shouldLoad) loadUsedDevices();
+      }
+
+      function renderUsedSummary(overview) {
+        const totals = overview.totals || {};
+        const flagged = number(totals.blocked_in_stock) + number(totals.missing_intake_evidence);
+        els.usedSummary.innerHTML = [
+          summaryCard('Paid to Sellers', money(totals.paid_out), `${number(totals.purchase_count)} purchases · ${money(totals.paid_out_cash)} in cash`, 'bi-cash-stack', 'orange'),
+          summaryCard('Sold', money(totals.sold_revenue), `${number(totals.sold_count)} devices · ${money(totals.realized_margin)} margin`, 'bi-graph-up-arrow'),
+          summaryCard('On the Shelf', money(totals.stock_cost), `${number(totals.in_stock)} devices at cost · ${money(totals.stock_retail)} marked up`, 'bi-box-seam', 'blue'),
+          summaryCard('Needs Attention', String(flagged + number(totals.aged_over_90)), `${number(totals.aged_over_90)} over 90 days · ${number(totals.pending_checks)} checks pending`, 'bi-exclamation-triangle', flagged ? 'red' : '')
+        ].join('');
+
+        els.usedStoreBody.innerHTML = (overview.stores || []).map(store => `<tr>
+          <td data-label="Store">${escapeHtml(store.store_name)}</td>
+          <td data-label="Bought">${number(store.purchase_count)}</td>
+          <td data-label="Cash Out">${money(store.paid_out_cash)}</td>
+          <td data-label="Transfer Out">${money(store.paid_out_transfer)}</td>
+          <td data-label="Sold">${number(store.sold_count)}</td>
+          <td data-label="Margin" class="${number(store.realized_margin) < 0 ? 'value-refund' : 'value-main'}">${money(store.realized_margin)}</td>
+          <td data-label="In Stock">${number(store.in_stock)}</td>
+          <td data-label="Stock Cost">${money(store.stock_cost)}</td>
+          <td data-label="Over 90 Days">${number(store.aged_over_90)}</td>
+          <td data-label="No Photos" class="${number(store.missing_intake_evidence) ? 'value-refund' : ''}">${number(store.missing_intake_evidence)}</td>
+        </tr>`).join('') || '<tr><td colspan="10" style="height:80px;text-align:center;color:#8a989e">No stores returned.</td></tr>';
+
+        const totalsRow = totals.purchase_count == null ? '' : `<tr>
+          <td data-label="Store">All Stores</td>
+          <td data-label="Bought">${number(totals.purchase_count)}</td>
+          <td data-label="Cash Out">${money(totals.paid_out_cash)}</td>
+          <td data-label="Transfer Out">${money(totals.paid_out_transfer)}</td>
+          <td data-label="Sold">${number(totals.sold_count)}</td>
+          <td data-label="Margin">${money(totals.realized_margin)}</td>
+          <td data-label="In Stock">${number(totals.in_stock)}</td>
+          <td data-label="Stock Cost">${money(totals.stock_cost)}</td>
+          <td data-label="Over 90 Days">${number(totals.aged_over_90)}</td>
+          <td data-label="No Photos">${number(totals.missing_intake_evidence)}</td>
+        </tr>`;
+        els.usedStoreFoot.innerHTML = totalsRow;
+      }
+
+      function renderUsedAlerts(report) {
+        const alerts = report.alerts || [];
+        const high = alerts.filter(alert => alert.severity === 'high').length;
+        els.usedAlertLabel.textContent = alerts.length
+          ? `${alerts.length} to review over the last ${number(report.lookback_days)} days${high ? ` · ${high} need attention first` : ''}`
+          : `Nothing unusual in the last ${number(report.lookback_days)} days.`;
+        els.usedNavCount.textContent = String(high);
+        els.usedNavCount.hidden = high === 0;
+        els.usedAlertBody.innerHTML = alerts.map(alert => `<tr>
+          <td data-label="Severity"><span class="used-severity ${escapeHtml(alert.severity)}">${escapeHtml(alert.severity)}</span></td>
+          <td data-label="Store">${escapeHtml(alert.store_code || '')}</td>
+          <td data-label="What happened">${escapeHtml(alert.message || '')}</td>
+          <td data-label="Device">${escapeHtml(alert.device_code || '')}</td>
+          <td data-label="When">${escapeHtml(formatDateTime(alert.at))}</td>
+        </tr>`).join('') || '<tr><td colspan="5" style="height:80px;text-align:center;color:#8a989e">Nothing to review.</td></tr>';
+      }
+
+      function renderUsedReconciliation(report) {
+        const rows = report.rows || [];
+        els.usedReconciliationBody.innerHTML = rows.map(row => `<tr>
+          <td data-label="Date">${escapeHtml(readableDate(row.business_date))}</td>
+          <td data-label="Store">${escapeHtml(row.store_name)}</td>
+          <td data-label="POS Count">${number(row.pos_count)}</td>
+          <td data-label="Report Count">${number(row.report_count)}</td>
+          <td data-label="POS Amount">${money(row.pos_amount)}</td>
+          <td data-label="Report Amount">${money(row.report_amount)}</td>
+          <td data-label="Difference" class="value-refund">${money(row.amount_difference)}</td>
+        </tr>`).join('') || '<tr><td colspan="7" style="height:80px;text-align:center;color:#8a989e">The POS register and the daily reports agree.</td></tr>';
+      }
+
+      function renderUsedRegister(report) {
+        usedRegisterRows = report.rows || [];
+        els.usedRegisterLabel.textContent = `${usedRegisterRows.length} purchase${usedRegisterRows.length === 1 ? '' : 's'} between ${readableDate(report.date_from)} and ${readableDate(report.date_to)}.`;
+        els.usedExportButton.disabled = usedRegisterRows.length === 0;
+        els.usedRegisterBody.innerHTML = usedRegisterRows.map(row => `<tr>
+          <td data-label="Bought">${escapeHtml(formatDateTime(row.acquired_at))}</td>
+          <td data-label="Store">${escapeHtml(row.store_name)}</td>
+          <td data-label="Seller">${escapeHtml(row.seller_name)}<br><span style="color:#8a989e">${escapeHtml(row.seller_phone)}</span></td>
+          <td data-label="ID">${escapeHtml(row.seller_id_type)}<br><span style="color:#8a989e">${escapeHtml(row.seller_id_reference)}</span></td>
+          <td data-label="Device">${escapeHtml([row.brand, row.model, row.storage].filter(Boolean).join(' '))}</td>
+          <td data-label="Identifier">${escapeHtml(row.imei || row.serial_number || '')}</td>
+          <td data-label="Paid">${money(row.payout_amount)}<br><span style="color:#8a989e">${escapeHtml(row.payout_method)}</span></td>
+          <td data-label="Staff">${escapeHtml(row.staff_name)}</td>
+          <td data-label="Photos" class="${number(row.intake_photo_count) ? '' : 'value-refund'}">
+            <button type="button" class="preset-button" data-used-evidence="${escapeHtml(row.device_code)}" data-used-store="${escapeHtml(row.store_code)}">
+              ${number(row.intake_photo_count)} intake${number(row.id_photo_count) ? ` · ${number(row.id_photo_count)} ID` : ''}
+            </button>
+          </td>
+          <td data-label="Status">${escapeHtml(row.status)}</td>
+        </tr>`).join('') || '<tr><td colspan="10" style="height:80px;text-align:center;color:#8a989e">No purchases in this range.</td></tr>';
+      }
+
+      function openUsedEvidence(deviceCode, storeCode) {
+        const row = usedRegisterRows.find(entry => entry.device_code === deviceCode);
+        els.usedEvidenceSubtitle.textContent = row
+          ? `${[row.brand, row.model, row.storage].filter(Boolean).join(' ')} · ${row.store_name} · bought ${formatDateTime(row.acquired_at)}`
+          : deviceCode;
+        els.usedEvidencePanel.innerHTML = '';
+        els.usedEvidenceDialog.showModal();
+        window.Techm8UsedDeviceEvidence.mount(els.usedEvidencePanel, {
+          storeCode,
+          deviceCode,
+          getToken: () => window.Techm8StaffAuth.getToken()
+        });
+      }
+
+      // The register is the record an auditor asks for, so the export carries
+      // every recorded field rather than the columns that fit on screen.
+      function exportUsedRegister() {
+        if (!usedRegisterRows.length) return;
+        const columns = Object.keys(usedRegisterRows[0]);
+        const cell = value => {
+          const text = value == null ? '' : String(value);
+          return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+        };
+        const csv = [columns.join(',')]
+          .concat(usedRegisterRows.map(row => columns.map(column => cell(row[column])).join(',')))
+          .join('\r\n');
+        const url = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `techm8-buyback-register-${els.usedDateFrom.value}-to-${els.usedDateTo.value}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      async function loadUsedDevices() {
+        if (usedLoading) return;
+        const from = els.usedDateFrom.value;
+        const to = els.usedDateTo.value;
+        if (!from || !to) return;
+        if (from > to) {
+          els.usedErrorMessage.textContent = 'The start date must be on or before the end date.';
+          els.usedError.classList.add('show');
+          return;
+        }
+        usedLoading = true;
+        els.usedRefresh.disabled = true;
+        els.usedRefresh.classList.add('loading');
+        els.usedError.classList.remove('show');
+        els.usedSummary.innerHTML = Array.from({ length: 4 }, () => summaryCard('Loading', '—', 'Updating used device data', 'bi-hourglass-split')).join('');
+        try {
+          const token = window.Techm8StaffAuth.getToken();
+          const [overview, alerts, reconciliation, register] = await Promise.all([
+            window.Techm8StaffAuth.callRpc('get_admin_used_device_overview', { session_token: token, date_from: from, date_to: to }),
+            window.Techm8StaffAuth.callRpc('get_admin_used_device_alerts', { session_token: token, lookback_days: 90 }),
+            window.Techm8StaffAuth.callRpc('get_admin_used_device_reconciliation', { session_token: token, date_from: from, date_to: to }),
+            window.Techm8StaffAuth.callRpc('get_admin_used_device_register', { session_token: token, payload: { date_from: from, date_to: to, limit: 2000 } })
+          ]);
+          renderUsedSummary(overview || {});
+          renderUsedAlerts(alerts || {});
+          renderUsedReconciliation(reconciliation || {});
+          renderUsedRegister(register || { date_from: from, date_to: to, rows: [] });
+          els.usedUpdatedAt.textContent = `Updated ${new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' }).format(new Date())}`;
+          usedDevicesLoaded = true;
+        } catch (error) {
+          els.usedErrorMessage.textContent = error.message || 'Please try again.';
+          els.usedError.classList.add('show');
+          els.usedUpdatedAt.textContent = 'Update failed';
+        } finally {
+          usedLoading = false;
+          els.usedRefresh.disabled = false;
+          els.usedRefresh.classList.remove('loading');
+        }
       }
       function repairDisplayName(ticket) {
         return ticket.display_label || ticket.title || ticket.ticket_code || 'Repair ticket';
@@ -1044,13 +1346,16 @@
         document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item === button));
         const isSales = button.dataset.route === 'sales';
         const isRepairs = button.dataset.route === 'repairs';
-        const isTool = !isSales && !isRepairs;
+        const isUsedDevices = button.dataset.route === 'used-devices';
+        const isTool = !isSales && !isRepairs && !isUsedDevices;
         els.overview.classList.toggle('active', isSales);
         els.repairs.classList.toggle('active', isRepairs);
+        els.usedDevices.classList.toggle('active', isUsedDevices);
         if (!isRepairs) els.repairDialog.close();
         els.tool.classList.toggle('active', isTool);
         els.breadcrumb.textContent = button.dataset.title || 'Admin Portal';
         if (isRepairs && !repairsLoaded) loadRepairs();
+        if (isUsedDevices && !usedDevicesLoaded) loadUsedDevices();
         if (isTool) {
           const src = button.dataset.src;
           els.toolTitle.textContent = button.dataset.title;
@@ -1066,6 +1371,17 @@
       }
 
       document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => setPreset(button.dataset.preset)));
+      document.querySelectorAll('[data-used-preset]').forEach(button => button.addEventListener('click', () => setUsedPreset(button.dataset.usedPreset)));
+      [els.usedDateFrom, els.usedDateTo].forEach(input => input.addEventListener('change', () => {
+        document.querySelectorAll('[data-used-preset]').forEach(button => button.classList.remove('active'));
+      }));
+      els.usedRefresh.addEventListener('click', loadUsedDevices);
+      els.usedExportButton.addEventListener('click', exportUsedRegister);
+      els.usedRegisterBody.addEventListener('click', event => {
+        const button = event.target.closest('[data-used-evidence]');
+        if (button) openUsedEvidence(button.dataset.usedEvidence, button.dataset.usedStore);
+      });
+      els.usedEvidenceClose.addEventListener('click', () => els.usedEvidenceDialog.close());
       document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => navigate(button)));
       [els.dateFrom, els.dateTo].forEach(input => input.addEventListener('change', setCustomDates));
       els.refresh.addEventListener('click', loadSales);
@@ -1199,6 +1515,7 @@
       window.addEventListener('hashchange', restoreRoute);
 
       setPreset('today', false);
+      setUsedPreset('month', false);
       window.Techm8StaffAuth.init({
         rootSelector: '[data-auth-protected]',
         title: 'Admin Login',
