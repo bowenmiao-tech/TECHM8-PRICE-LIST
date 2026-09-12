@@ -19395,6 +19395,13 @@
                 <select name="status"><option value="inspection" ${device.status === 'inspection' ? 'selected' : ''}>Inspection</option><option value="ready_for_sale" ${device.status === 'ready_for_sale' ? 'selected' : ''}>Ready for sale</option><option value="returned_to_seller">Returned to seller</option><option value="disposed">Disposed</option></select>
               </label>
               <label class="used-field">Sale price<input name="sale_price" type="number" min="0.01" step="0.01" value="${numberValue(device.sale_price).toFixed(2)}" required></label>
+              <label class="used-field">Condition
+                <select name="condition_grade">${['As New', 'Good', 'Fair', 'Poor', 'Faulty'].map(grade => `
+                  <option value="${escapeHtml(grade)}" ${device.condition_grade === grade ? 'selected' : ''}>${escapeHtml(grade)}</option>
+                `).join('')}</select>
+              </label>
+              <label class="used-field">Battery health %<input name="battery_health" type="number" min="0" max="100" inputmode="numeric" value="${device.battery_health == null ? '' : escapeHtml(String(device.battery_health))}"></label>
+              <label class="used-field">Colour<input name="color" type="text" value="${escapeHtml(device.color || '')}"></label>
               <label class="used-field">IMEI / lost-stolen check
                 <select name="clean_check_status"><option ${device.clean_check_status === 'Pending' ? 'selected' : ''}>Pending</option><option ${device.clean_check_status === 'Clean' ? 'selected' : ''}>Clean</option><option ${device.clean_check_status === 'Blocked' ? 'selected' : ''}>Blocked</option><option ${device.clean_check_status === 'Not Applicable' ? 'selected' : ''}>Not Applicable</option></select>
               </label>
@@ -19677,7 +19684,12 @@
           inspection,
           notes: String(data.get('notes') || '').trim(),
           change_note: String(data.get('change_note') || '').trim(),
-          below_cost_reason: String(data.get('below_cost_reason') || '').trim()
+          below_cost_reason: String(data.get('below_cost_reason') || '').trim(),
+          // These three are what the public listing tells the customer, so they
+          // stay correctable and each change is recorded against the device.
+          condition_grade: String(data.get('condition_grade') || '').trim(),
+          battery_health: String(data.get('battery_health') || '').trim(),
+          color: String(data.get('color') || '').trim()
         });
         if (payload.device) {
           const index = state.usedDevices.findIndex(item => item.id === device.id);

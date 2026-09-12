@@ -295,7 +295,13 @@ Apply these migrations after POS shared state:
 20260911000500_add_used_device_inspection_checklist.sql
 20260911001000_add_used_device_refurbishment_costs.sql
 20260911002500_add_used_device_publish_queue.sql
+20260912021500_allow_used_device_detail_corrections.sql
+20260912023000_import_fairfield_used_device_stock.sql
+20260912024500_admin_overview_uses_total_cost.sql
+20260912025000_schedule_used_device_publish_worker.sql
 ```
+
+All of the above are applied to `abkjbhmifswfexpjkval` as of 12 September 2026, along with `supabase/website-migrations/20260911002000_add_used_device_listings.sql` on `fwlronvmgqzkleofriis`. `supabase db push` cannot be used on this project: the remote history contains sixty-odd versions with no local file, from years of dashboard and API-applied changes, so the CLI refuses until that history is repaired. Migrations are applied individually and their recorded version is then set to match the filename.
 
 Deploy:
 
