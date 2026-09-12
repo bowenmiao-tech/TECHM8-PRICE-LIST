@@ -22738,13 +22738,29 @@
       setTimeout(() => printWindow.print(), 250);
     }
 
-    function openEmailReceiptModal() {
+    function receiptCustomerEmail(order, customers) {
+      const savedEmail = String(order.customer_email || '').trim();
+      if (savedEmail) return savedEmail;
+      const phone = canonicalCustomerPhone(order.customer_phone);
+      if (phone.length < 8) return '';
+      const emails = [...new Set(customers
+        .filter(customer => customerMatchesPhone(customer, phone))
+        .map(customer => String(customer.email || '').trim())
+        .filter(Boolean))];
+      return emails.length === 1 ? emails[0] : '';
+    }
+
+    async function openEmailReceiptModal() {
       const order = state.lastCompletedOrder;
       if (!order) return;
+      const requestId = (openEmailReceiptModal.requestId || 0) + 1;
+      openEmailReceiptModal.requestId = requestId;
       const profile = receiptProfileForOrder(order);
       const invoiceNumber = invoiceNumberText(order);
       els.emailReceiptForm.reset();
-      els.emailReceiptTo.value = order.customer_email || '';
+      els.emailReceiptTo.value = receiptCustomerEmail(order, [
+        ...state.customers, ...readLocalArray(POS_CUSTOMERS_KEY)
+      ]);
       els.emailReceiptSubject.value = invoiceNumber === 'Pending'
         ? `Tax Invoice Pending (${order.id}) from ${profile.name}`
         : `Tax Invoice #${invoiceNumber} from ${profile.name}`;
@@ -22755,9 +22771,27 @@
       els.emailReceiptModal.classList.add('show');
       els.emailReceiptModal.setAttribute('aria-hidden', 'false');
       setTimeout(() => els.emailReceiptTo.focus(), 0);
+      const phone = canonicalCustomerPhone(order.customer_phone);
+      if (!els.emailReceiptTo.value && phone.length >= 8 && state.selectedStaffName) {
+        let recipientEdited = false;
+        const markEdited = () => { recipientEdited = true; };
+        els.emailReceiptTo.addEventListener('input', markEdited);
+        try {
+          const payload = await getSharedState('customers', { q: phone.slice(-8), limit: 20 });
+          if (requestId === openEmailReceiptModal.requestId && !recipientEdited && state.lastCompletedOrder === order
+            && els.emailReceiptModal.classList.contains('show') && !els.emailReceiptTo.value) {
+            els.emailReceiptTo.value = receiptCustomerEmail(order, payload.customers || []);
+          }
+        } catch (error) {
+          console.error('Could not look up receipt customer email', error);
+        } finally {
+          els.emailReceiptTo.removeEventListener('input', markEdited);
+        }
+      }
     }
 
     function closeEmailReceiptModal() {
+      openEmailReceiptModal.requestId = (openEmailReceiptModal.requestId || 0) + 1;
       els.emailReceiptModal.classList.remove('show');
       els.emailReceiptModal.setAttribute('aria-hidden', 'true');
     }
@@ -23203,7 +23237,10 @@
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_address: usedDeviceItems.length ? usedDeviceItems[0].buyer_address : '',
-        customer_email: customer ? (customer.email || '') : '',
+        customer_email: receiptCustomerEmail({
+          customer_email: customer ? (customer.email || '') : '',
+          customer_phone: customerPhone
+        }, [...state.customers, ...readLocalArray(POS_CUSTOMERS_KEY)]),
         payment_method: paymentSummary,
         payments: normalizedPayments,
         total,
