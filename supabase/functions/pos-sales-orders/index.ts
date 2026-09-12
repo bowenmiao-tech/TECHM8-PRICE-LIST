@@ -204,10 +204,21 @@ Deno.serve(async (request) => {
       }
       const record = payload as JsonRecord;
       const storeCode = String(record.store_code || "").trim().toLowerCase();
-      if (!record.order_id || !storeCode || !record.staff_name || !record.shift_id) {
+      const isCorrection = (url.searchParams.get("mode") || "") === "correct-payment-method";
+      if (!record.order_id || !storeCode || !record.staff_name || (!record.shift_id && !isCorrection)) {
         return jsonResponse({ ok: false, message: "order_id, store_code, staff_name, and shift_id are required." }, 400);
       }
       await requireStoreAccess(sessionToken, storeCode);
+
+      // Relabelling how a sale was paid moves no money, so it needs neither a
+      // shift nor a payment list - only the line and a reason.
+      if ((url.searchParams.get("mode") || "") === "correct-payment-method") {
+        const result = await callRpc("correct_pos_payment_method", {
+          session_token: sessionToken,
+          payload: record,
+        });
+        return jsonResponse(result.body, result.status);
+      }
 
       const isBalance = (url.searchParams.get("mode") || "") === "balance-payment";
       if (isBalance && (!Array.isArray(record.payments) || record.payments.length === 0)) {

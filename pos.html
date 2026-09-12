@@ -3526,6 +3526,10 @@
 
     .receipt-complete-modal {
       width: min(560px, calc(100vw - 36px));
+      /* The receipt actions sit in their own band under the head, so only the
+         detail list scrolls and the buttons never fall below the fold. */
+      max-height: calc(var(--pos-viewport-height, 100vh) - 36px);
+      grid-template-rows: auto auto minmax(0, 1fr);
       gap: 0;
       padding: 0;
       overflow: hidden;
@@ -3542,15 +3546,21 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      padding: 18px 20px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--tm-line);
+    }
+
+    .receipt-complete-head h2 {
+      font-size: 19px;
+      font-weight: 950;
     }
 
     .receipt-complete-body {
       display: grid;
+      align-content: start;
       justify-items: center;
-      gap: 18px;
-      padding: 30px 24px 26px;
+      gap: 16px;
+      padding: 24px 20px 22px;
       text-align: center;
       overflow-y: auto;
     }
@@ -3565,43 +3575,46 @@
     }
 
     .receipt-success-icon {
-      width: 66px;
-      height: 66px;
+      width: 58px;
+      height: 58px;
       border-radius: 50%;
       display: grid;
       place-items: center;
       color: #fff;
-      background: var(--tm-green);
-      font-size: 32px;
-      box-shadow: 0 12px 28px rgba(7, 137, 111, 0.24);
+      background: linear-gradient(150deg, #10a383, var(--tm-green));
+      font-size: 28px;
+      box-shadow: 0 10px 22px rgba(7, 137, 111, 0.22), 0 0 0 8px rgba(7, 137, 111, 0.07);
     }
 
     .receipt-complete-summary {
       display: grid;
-      gap: 5px;
+      gap: 4px;
     }
 
     .receipt-complete-summary strong {
       color: var(--tm-ink);
-      font-size: 24px;
+      font-size: 28px;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
       font-weight: 950;
     }
 
     .receipt-complete-summary span {
       color: var(--tm-muted);
-      font-size: 14px;
-      font-weight: 750;
+      font-size: 13.5px;
+      font-weight: 800;
     }
 
+    /* Only shown while the order is still waiting on the database, so it reads
+       as a warning rather than a confirmation nobody needs. */
     .receipt-sync-note {
-      min-height: 20px;
-      color: #3c6b5e;
-      font-size: 13px;
+      padding: 8px 14px;
+      border: 1px solid #f2ddb2;
+      border-radius: 999px;
+      color: #96600b;
+      background: #fdf5e3;
+      font-size: 12.5px;
       font-weight: 850;
-    }
-
-    .receipt-sync-note.pending {
-      color: #b36a16;
     }
 
     .receipt-invoice-details {
@@ -3621,18 +3634,25 @@
       gap: 10px;
     }
 
+    /* Two or three fields only, so they share the row instead of leaving a
+       dead third column. */
+    .invoice-detail-grid.compact {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+
     .invoice-detail-field,
     .invoice-detail-payment,
     .invoice-detail-line,
     .invoice-repair-record {
       border: 1px solid var(--tm-line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: #fff;
     }
 
     .invoice-detail-field {
       min-width: 0;
-      padding: 10px 12px;
+      padding: 10px 13px;
+      background: #f8fafb;
     }
 
     .invoice-detail-field span,
@@ -3660,13 +3680,16 @@
 
     .invoice-detail-section-title {
       text-transform: uppercase;
+      letter-spacing: .06em;
+      font-size: 11px;
+      font-weight: 900;
     }
 
     .invoice-detail-line {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 12px;
-      padding: 12px;
+      padding: 13px;
     }
 
     .invoice-detail-line strong,
@@ -3694,7 +3717,7 @@
 
     .invoice-detail-payments {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 8px;
     }
 
@@ -3702,8 +3725,15 @@
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      padding: 10px 12px;
+      padding: 10px 13px;
+      background: #f8fafb;
       font-size: 13px;
+    }
+    .invoice-detail-payment-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: none;
     }
 
     .invoice-repair-record {
@@ -3761,37 +3791,56 @@
       }
     }
 
+    /* Sits directly under the head so both receipt actions are reachable
+       without scrolling past the invoice lines. */
     .receipt-action-grid {
-      width: 100%;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 10px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--tm-line);
+      background: #f7fafb;
     }
 
     .receipt-action-button {
-      min-height: 112px;
+      min-height: 48px;
       border: 1px solid var(--tm-line);
-      border-radius: 16px;
-      display: grid;
-      place-items: center;
-      align-content: center;
-      gap: 10px;
-      padding: 16px;
+      border-radius: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 14px;
       color: #203039;
       background: #fff;
-      font-size: 15px;
-      font-weight: 950;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.15;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+
+    .receipt-action-button span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .receipt-action-button i {
+      flex: none;
       color: var(--tm-green);
-      font-size: 31px;
+      font-size: 18px;
+    }
+
+    .receipt-action-button:active {
+      transform: translateY(1px);
     }
 
     .receipt-action-button.primary {
       border-color: var(--tm-green);
       color: #fff;
       background: var(--tm-green);
+      box-shadow: 0 6px 16px rgba(7, 137, 111, 0.22);
     }
 
     .receipt-action-button.primary i {
@@ -8836,24 +8885,24 @@
         <h2 id="receiptCompleteTitle">Payment Complete</h2>
         <button id="receiptCompleteCloseBtn" class="modal-close" type="button" aria-label="Close receipt options"><i class="bi bi-x-lg"></i></button>
       </div>
+      <div class="receipt-action-grid">
+        <button id="printThermalReceiptBtn" class="receipt-action-button primary" type="button">
+          <i class="bi bi-printer-fill"></i>
+          <span>Print Thermal Receipt</span>
+        </button>
+        <button id="emailThermalReceiptBtn" class="receipt-action-button" type="button">
+          <i class="bi bi-envelope-paper-fill"></i>
+          <span>Email Thermal Receipt</span>
+        </button>
+      </div>
       <div class="receipt-complete-body">
         <div class="receipt-success-icon"><i class="bi bi-check-lg"></i></div>
         <div class="receipt-complete-summary">
           <strong id="receiptCompleteTotal">$0.00 paid</strong>
           <span id="receiptCompleteMeta">Order completed</span>
         </div>
-        <div id="receiptSyncNote" class="receipt-sync-note">Order saved to POS.</div>
+        <div id="receiptSyncNote" class="receipt-sync-note" hidden></div>
         <div id="receiptInvoiceDetails" class="receipt-invoice-details" hidden></div>
-        <div class="receipt-action-grid">
-          <button id="printThermalReceiptBtn" class="receipt-action-button primary" type="button">
-            <i class="bi bi-printer-fill"></i>
-            <span>Print Thermal Receipt</span>
-          </button>
-          <button id="emailThermalReceiptBtn" class="receipt-action-button" type="button">
-            <i class="bi bi-envelope-paper-fill"></i>
-            <span>Email Thermal Receipt</span>
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -22574,7 +22623,9 @@
         const cached = state.invoiceOrders.find(row => row.id === order.id);
         if (cached) Object.assign(cached, payload.order);
         if (state.lastCompletedOrder?.id === order.id && els.receiptCompleteModal.classList.contains('show')) {
-          els.receiptInvoiceDetails.innerHTML = invoiceDetailsHtml(order);
+          const openModal = els.receiptCompleteModal.querySelector('.receipt-complete-modal');
+          const historyView = Boolean(openModal && openModal.classList.contains('invoice-history-view'));
+          els.receiptInvoiceDetails.innerHTML = invoiceDetailsHtml(order, { compact: !historyView });
         }
         showToast('Warranty claim saved with date and staff details.');
       } catch (error) {
@@ -22584,7 +22635,86 @@
       }
     }
 
-    function invoiceDetailsHtml(order) {
+    // compact: the receipt shown straight after checkout. Customer, store, date
+    // and the internal order reference are already known at the counter, so only
+    // the invoice history view lists them.
+    /**
+     * Imported history uses labels this POS never wrote, including combined ones
+     * like "Tyro, Cash". Those cannot be relabelled, so they get no button.
+     */
+    function correctablePaymentMethod(method) {
+      return POS_PAYMENT_METHODS.some(entry => entry.label === String(method || '').trim());
+    }
+
+    async function correctPaymentMethod(paymentNumber) {
+      const order = state.lastCompletedOrder;
+      if (!order || !paymentNumber) return;
+      const payment = (order.payments || []).find(entry => Number(entry.payment_number) === Number(paymentNumber));
+      if (!payment) return;
+
+      const choices = POS_PAYMENT_METHODS.filter(entry => entry.label !== payment.method);
+      const menu = choices.map((entry, index) => `${index + 1}. ${entry.label}`).join('\n');
+      const picked = window.prompt(
+        `This payment of ${money(numberValue(payment.amount))} is recorded as ${payment.method}.\n`
+        + `What was it actually paid by?\n\n${menu}\n\nType the number:`
+      );
+      if (picked === null) return;
+      const choice = choices[Number(String(picked).trim()) - 1];
+      if (!choice) {
+        showToast('Type the number next to the payment method.');
+        return;
+      }
+
+      const reason = window.prompt(`Why is this being changed from ${payment.method} to ${choice.label}?`);
+      if (reason === null) return;
+      if (!reason.trim()) {
+        showToast('A reason is required to correct a payment method.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${POS_SALES_ORDERS_ENDPOINT}?mode=correct-payment-method`, {
+          method: 'PUT',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify({
+            order_id: order.id,
+            store_code: storeById(state.storeId).dbCode,
+            staff_name: state.selectedStaffName,
+            payment_number: Number(paymentNumber),
+            to_method: choice.label,
+            reason: reason.trim()
+          })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false || !payload.order) {
+          throw new Error(payload.message || 'The payment method could not be corrected.');
+        }
+
+        // The takings figures just moved, so anything showing them is stale.
+        state.shiftPaymentTotals = null;
+        const index = state.invoiceOrders.findIndex(entry => entry.id === payload.order.id);
+        if (index >= 0) state.invoiceOrders[index] = payload.order;
+        const historyIndex = state.customerHistoryOrders
+          ? state.customerHistoryOrders.findIndex(entry => entry.id === payload.order.id)
+          : -1;
+        if (historyIndex >= 0) state.customerHistoryOrders[historyIndex] = payload.order;
+
+        openReceiptCompleteModal(payload.order, { history: true });
+        if (state.activeView === 'orders') {
+          loadPerformanceReport();
+          loadInvoiceHistory();
+        }
+        showToast(payload.shift_snapshot_patched
+          ? `Changed to ${choice.label}. That day's shift totals were corrected too.`
+          : `Changed to ${choice.label}.`);
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'The payment method could not be corrected.');
+      }
+    }
+
+    function invoiceDetailsHtml(order, options = {}) {
+      const compact = Boolean(options.compact);
       const items = Array.isArray(order.items) ? order.items : [];
       const payments = Array.isArray(order.payments) ? order.payments : [];
       const refunds = Array.isArray(order.refunds) ? order.refunds : [];
@@ -22594,7 +22724,11 @@
         staff_name: order.staff_name,
         taken_at: order.created_at
       }] : [];
-      const detailFields = [
+      const detailFields = (compact ? [
+        invoiceDetailField('Checkout staff', order.staff_name),
+        invoiceDetailField('Payment status', order.payment_status || order.refund_status),
+        orderBalanceDue(order) > 0 ? invoiceDetailField('Balance due', money(orderBalanceDue(order))) : ''
+      ] : [
         invoiceDetailField('Customer', order.customer_name || 'Walk-in Customer'),
         invoiceDetailField('Phone', order.customer_phone),
         invoiceDetailField('Email', order.customer_email),
@@ -22604,10 +22738,10 @@
         invoiceDetailField('Order reference', order.id),
         invoiceDetailField('Payment status', order.payment_status || order.refund_status),
         orderBalanceDue(order) > 0 ? invoiceDetailField('Balance due', money(orderBalanceDue(order))) : ''
-      ].join('');
+      ]).join('');
 
       return `
-        ${detailFields ? `<div class="invoice-detail-grid">${detailFields}</div>` : ''}
+        ${detailFields ? `<div class="invoice-detail-grid${compact ? ' compact' : ''}">${detailFields}</div>` : ''}
         <section class="invoice-detail-section">
           <div class="invoice-detail-section-title">Items</div>
           ${items.map(item => {
@@ -22635,7 +22769,7 @@
           <section class="invoice-detail-section">
             <div class="invoice-detail-section-title">Payments and refunds</div>
             <div class="invoice-detail-payments">
-              ${fallbackPayments.map(payment => `<div class="invoice-detail-payment"><span>${escapeHtml(payment.method || 'Payment')}${payment.staff_name ? ` · ${escapeHtml(payment.staff_name)}` : ''}</span><strong>${money(numberValue(payment.amount))}</strong></div>`).join('')}
+              ${fallbackPayments.map(payment => `<div class="invoice-detail-payment"><span>${escapeHtml(payment.method || 'Payment')}${payment.staff_name ? ` · ${escapeHtml(payment.staff_name)}` : ''}</span><span class="invoice-detail-payment-right"><strong>${money(numberValue(payment.amount))}</strong>${!compact && payment.payment_number && correctablePaymentMethod(payment.method) ? `<button class="icon-button" type="button" data-correct-payment="${Number(payment.payment_number)}" title="Correct the payment method"><i class="bi bi-pencil"></i></button>` : ''}</span></div>`).join('')}
               ${refunds.map(refund => `<div class="invoice-detail-payment"><span>Refund · ${escapeHtml(refund.method || '')}${refund.staff_name ? ` · ${escapeHtml(refund.staff_name)}` : ''}</span><strong>-${money(numberValue(refund.amount))}</strong></div>`).join('')}
             </div>
           </section>
@@ -22693,15 +22827,23 @@
       els.receiptCompleteMeta.textContent = isDeposit
         ? `${invoiceLabel} · ${money(balance)} balance due · ${profile.name}`
         : `${invoiceLabel} - ${profile.name}`;
-      els.receiptSyncNote.textContent = order.sync_pending || invoiceNumber === 'Pending'
+      const syncPending = Boolean(order.sync_pending || invoiceNumber === 'Pending');
+      els.receiptSyncNote.textContent = syncPending
         ? 'Saved locally. Database sync is pending and will retry automatically.'
-        : 'Order saved to the POS database.';
-      els.receiptSyncNote.classList.toggle('pending', Boolean(order.sync_pending || invoiceNumber === 'Pending'));
+        : '';
+      els.receiptSyncNote.hidden = !syncPending;
       const modal = els.receiptCompleteModal.querySelector('.receipt-complete-modal');
       if (modal) modal.classList.toggle('invoice-history-view', historyView);
       const showDetails = historyView || (order.items || []).some(item => item.warranty?.eligible);
+      if (!els.receiptInvoiceDetails.dataset.correctionBound) {
+        els.receiptInvoiceDetails.dataset.correctionBound = '1';
+        els.receiptInvoiceDetails.addEventListener('click', event => {
+          const button = event.target.closest('[data-correct-payment]');
+          if (button) correctPaymentMethod(Number(button.dataset.correctPayment));
+        });
+      }
       els.receiptInvoiceDetails.hidden = !showDetails;
-      els.receiptInvoiceDetails.innerHTML = showDetails ? invoiceDetailsHtml(order) : '';
+      els.receiptInvoiceDetails.innerHTML = showDetails ? invoiceDetailsHtml(order, { compact: !historyView }) : '';
       els.receiptCompleteModal.classList.add('show');
       els.receiptCompleteModal.setAttribute('aria-hidden', 'false');
     }
@@ -22815,8 +22957,8 @@
           if (!databaseSaved || invoiceNumberText(order) === 'Pending') {
             throw new Error('This order is waiting for database sync. Check the connection and try again.');
           }
-          els.receiptSyncNote.textContent = 'Order saved to the POS database.';
-          els.receiptSyncNote.classList.remove('pending');
+          els.receiptSyncNote.textContent = '';
+          els.receiptSyncNote.hidden = true;
           if (els.emailReceiptSubject.value.startsWith('Tax Invoice Pending')) {
             els.emailReceiptSubject.value = `Tax Invoice #${invoiceNumberText(order)} from ${receiptProfileForOrder(order).name}`;
           }
@@ -23064,11 +23206,28 @@
     }
 
     async function finalizeRepairCardsAfterPayment(order, ticketIds, repairCartItems) {
+      if (!order || orderBalanceDue(order) > 0) return;
       for (const ticketId of [...new Set((ticketIds || []).filter(Boolean))]) {
-        const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === ticketId));
+        let ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === ticketId));
         if (!ticket || ticket.active === false || ticket.closedAt) continue;
-        const choice = await confirmRepairCardCompletion(ticket, order, repairCartItems);
         try {
+          // Full payment signs off only the repairs included on this invoice.
+          const paidJobIds = new Set((repairCartItems || [])
+            .filter(item => item.ticket_id === ticketId)
+            .map(item => item.repair_job_id).filter(Boolean));
+          const jobsToComplete = (ticket.jobs || []).filter(job =>
+            paidJobIds.has(job.id) && job.invoiced
+            && ['approved', 'in_progress'].includes(job.status));
+          for (const job of jobsToComplete) {
+            const result = await repairJobRequest({
+              action: 'complete-job', ticket_code: ticketId, job_code: job.id
+            });
+            if (!result.ticket) throw new Error('Repair completion response is incomplete.');
+            ticket = normalizeRepairTicket(result.ticket);
+            const ticketIndex = state.repairTickets.findIndex(item => item.id === ticketId);
+            if (ticketIndex >= 0) state.repairTickets[ticketIndex] = ticket;
+          }
+          const choice = await confirmRepairCardCompletion(ticket, order, repairCartItems);
           const payload = await repairJobRequest({
             action: 'finalize',
             ticket_code: ticket.id,
