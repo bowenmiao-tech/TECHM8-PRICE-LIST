@@ -5549,10 +5549,6 @@
       font-weight: 700;
     }
 
-    .used-margin-loss {
-      color: var(--tm-red);
-    }
-
     .used-required-tag {
       display: inline-block;
       margin-left: 8px;
@@ -7156,9 +7152,6 @@
         grid-template-columns: minmax(190px, 1fr) 105px 105px auto;
       }
 
-      .used-device-row .used-device-cost {
-        display: none;
-      }
 
       .used-form-grid,
       .used-inspection-grid {
@@ -7466,7 +7459,6 @@
         padding: 10px;
       }
 
-      .used-device-row .used-device-cost,
       .used-device-row .used-device-condition {
         display: none;
       }
@@ -7656,7 +7648,6 @@
         grid-template-columns: minmax(0, 1fr) 82px 48px;
       }
 
-      .used-device-row .used-device-cost,
       .used-device-row .used-device-condition {
         display: none;
       }
@@ -18933,10 +18924,6 @@
                 <span>Condition</span>
                 <strong>${escapeHtml(device.condition_grade || '')}</strong>
               </div>
-              <div class="used-device-value used-device-cost">
-                <span>Cost</span>
-                <strong>${money(device.purchase_cost)}</strong>
-              </div>
               <div class="used-device-value">
                 <span>Sale price</span>
                 <strong>${money(device.sale_price)}</strong>
@@ -19378,10 +19365,7 @@
         <div class="used-detail-summary">
           <div><span>Status</span><strong>${escapeHtml(usedDeviceStatusLabel(device.status))}</strong></div>
           <div><span>Condition</span><strong>${escapeHtml(device.condition_grade || '')}</strong></div>
-          <div><span>Paid</span><strong>${money(device.purchase_cost)}</strong></div>
-          <div><span>Total cost</span><strong>${money(usedDeviceTotalCost(device))}</strong></div>
           <div><span>Sale price</span><strong>${money(device.sale_price)}</strong></div>
-          <div><span>Margin</span><strong class="${numberValue(device.sale_price) < usedDeviceTotalCost(device) ? 'used-margin-loss' : ''}">${money(numberValue(device.sale_price) - usedDeviceTotalCost(device))}</strong></div>
           <div><span>Seller</span><strong>${escapeHtml(seller.name || '')}</strong></div>
           <div><span>Seller phone</span><strong>${escapeHtml(seller.phone || '')}</strong></div>
           <div><span>ID viewed</span><strong>${escapeHtml([seller.id_type, seller.id_reference].filter(Boolean).join(' - '))}</strong></div>
@@ -19408,7 +19392,7 @@
               <label class="used-field span-2">Check reference<input name="clean_check_reference" type="text" value="${escapeHtml(device.clean_check_reference || '')}"></label>
               <label class="used-field">Notes<input name="notes" type="text" value="${escapeHtml(device.notes || '')}"></label>
               <label class="used-field span-2">Reason for this change<input name="change_note" type="text" maxlength="500" placeholder="Optional. Recorded against this change only, not on the device."></label>
-              <label class="used-field span-3">Reason for pricing below cost<input name="below_cost_reason" type="text" maxlength="500" placeholder="Required only when the new price is under the ${escapeHtml(money(usedDeviceTotalCost(device)))} this device has cost."></label>
+              <label class="used-field span-3">Reason for pricing below cost<input name="below_cost_reason" type="text" maxlength="500" placeholder="Only needed if the price you enter is under what this device has cost."></label>
             </div>
             <div class="used-inspection-grid" style="margin-top:12px;">${usedDeviceInspectionFields(device.inspection || {}, 'detail', usedDeviceInspectionItemsForRecord(device))}</div>
             <div class="used-declaration-grid">
@@ -19545,12 +19529,6 @@
         if (host) host.insertAdjacentHTML('beforeend', `<div class="used-form-error">${escapeHtml(error.message || 'The website request failed.')}</div>`);
         button.disabled = false;
       }
-    }
-
-    function usedDeviceTotalCost(device) {
-      const total = Number(device && device.total_cost);
-      if (Number.isFinite(total) && total > 0) return total;
-      return numberValue(device && device.purchase_cost) + numberValue(device && device.refurb_cost);
     }
 
     function usedDeviceCostLabel(kind) {
@@ -19736,7 +19714,6 @@
         sku: device.id,
         name: usedDeviceTitle(device),
         category: 'Used Devices',
-        cost_price: numberValue(device.purchase_cost),
         sale_price: numberValue(device.sale_price),
         barcode: device.imei || device.serial_number || '',
         image_url: '',
