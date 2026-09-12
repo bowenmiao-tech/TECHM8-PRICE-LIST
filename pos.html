@@ -5492,6 +5492,88 @@
       font-weight: 950;
     }
 
+    /* Cross-store view: which store holds it, and what they have written
+       about it, have to read at a glance or the list is no use at a counter. */
+    .used-store-chip {
+      cursor: pointer;
+      text-align: left;
+      border: 1px solid transparent;
+    }
+
+    .used-store-chip.active {
+      border-color: #0f6d5f;
+      box-shadow: 0 0 0 3px rgba(15, 109, 95, 0.12);
+    }
+
+    .used-store-chip-sub {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .used-store-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #eef2f4;
+      color: #36515a;
+      font-weight: 800;
+    }
+
+    .used-store-tag.here {
+      background: #d9f2e6;
+      color: #0f6d5f;
+    }
+
+    .used-network-note,
+    .used-transfer-route,
+    .used-transfer-done {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #5b6f78;
+      line-height: 1.45;
+    }
+
+    .used-network-note {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .used-network-transit {
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #a2620b;
+    }
+
+    .used-network-spacer {
+      width: 1px;
+    }
+
+    .used-sell-button.ghost {
+      background: transparent;
+      color: #9a3434;
+      border: 1px solid #e4c3c3;
+    }
+
+    .used-transfer-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      margin-left: 4px;
+      border-radius: 999px;
+      background: #c2410c;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
     .used-status {
       width: fit-content;
       max-width: 100%;
@@ -8681,6 +8763,8 @@
           </div>
           <div id="usedDeviceTabs" class="used-device-tabs" role="tablist" aria-label="Used device views">
             <button class="used-device-tab active" type="button" data-used-tab="inventory"><i class="bi bi-box-seam"></i> Inventory</button>
+            <button class="used-device-tab" type="button" data-used-tab="network"><i class="bi bi-shop"></i> All Stores</button>
+            <button class="used-device-tab" type="button" data-used-tab="transfers"><i class="bi bi-truck"></i> Transfers <span id="usedTransferBadge" class="used-transfer-badge" hidden>0</span></button>
             <button class="used-device-tab" type="button" data-used-tab="buy"><i class="bi bi-box-arrow-in-down"></i> Buy Device</button>
             <button class="used-device-tab" type="button" data-used-tab="transactions"><i class="bi bi-clock-history"></i> Transactions</button>
           </div>
@@ -8697,6 +8781,7 @@
               <div class="repair-subtitle">Only transfers sent from or to your store. Dispatch, then receive with photo evidence at the destination.</div>
             </div>
             <div class="transfer-head-actions">
+              <button id="deviceTransferBtn" class="repair-action" type="button" title="Second-hand devices move on their own transfer, because each one is a single tracked item"><i class="bi bi-phone"></i> Second-hand devices <span id="deviceTransferBadge" class="used-transfer-badge" hidden>0</span></button>
               <button id="newTransferBtn" class="repair-action primary" type="button"><i class="bi bi-plus-circle"></i> New Transfer</button>
               <button id="transferReloadBtn" class="repair-action" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
             </div>
@@ -9885,6 +9970,12 @@
       usedDevices: [],
       usedDeviceSummary: null,
       usedDeviceTransactions: [],
+      // Every store's second-hand stock, and this store's transfers in and out.
+      usedNetworkDevices: [],
+      usedNetworkStores: [],
+      usedNetworkStoreFilter: '',
+      usedTransfers: [],
+      usedTransferSummary: null,
       usedDeviceLoading: false,
       usedDeviceIntakeKey: '',
       usedDeviceIntakeCounts: null,
@@ -14352,10 +14443,17 @@
         });
       }
       if (view === 'orders') { loadPerformanceReport(); loadInvoiceHistory(); }
-      if (view === 'used-devices') loadUsedDevices();
+      if (view === 'used-devices') {
+        if (state.usedDeviceTab === 'network') loadUsedDeviceNetwork();
+        else if (state.usedDeviceTab === 'transfers') loadUsedDeviceTransfers();
+        else loadUsedDevices();
+      }
       if (view === 'transfers') {
         if (typeof localTransferTestMode !== 'undefined' && localTransferTestMode) renderTransfers();
         else syncCurrentShiftWithDatabase().then(() => loadTransfers({ silent: state.transferLoaded }));
+        // A device sent here does not appear in the stock-transfer list, so the
+        // count is surfaced on this page rather than left to be discovered.
+        loadUsedDeviceTransfers({ render: false }).then(refreshDeviceTransferBadge);
       }
     }
 
@@ -18933,6 +19031,195 @@
       }
     }
 
+    // Every store's stock. The endpoint hides seller identity and purchase
+    // cost, so what comes back here is only what another store is allowed to
+    // know: what the device is, what it costs the customer, and where it is.
+    async function loadUsedDeviceNetwork(options = {}) {
+      if (!state.selectedStaffName) return;
+      if (options.render !== false) {
+        state.usedDeviceLoading = true;
+        renderUsedDeviceView();
+      }
+      try {
+        const payload = await usedDeviceApiGet('network');
+        state.usedNetworkDevices = Array.isArray(payload.devices) ? payload.devices : [];
+        state.usedNetworkStores = Array.isArray(payload.stores) ? payload.stores : [];
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Other stores’ devices are unavailable.');
+      } finally {
+        if (options.render !== false) {
+          state.usedDeviceLoading = false;
+          renderUsedDeviceView();
+        }
+      }
+    }
+
+    async function loadUsedDeviceTransfers(options = {}) {
+      if (!state.selectedStaffName) return;
+      if (options.render !== false) {
+        state.usedDeviceLoading = true;
+        renderUsedDeviceView();
+      }
+      try {
+        const payload = await usedDeviceApiGet('transfers');
+        state.usedTransfers = Array.isArray(payload.transfers) ? payload.transfers : [];
+        state.usedTransferSummary = payload.summary || {};
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Device transfers are unavailable.');
+      } finally {
+        if (options.render !== false) {
+          state.usedDeviceLoading = false;
+          renderUsedDeviceView();
+        }
+      }
+    }
+
+    // The count of devices waiting to be accepted here. It sits on the tab so
+    // staff see an incoming device without going looking for it.
+    function refreshUsedTransferBadge() {
+      const badge = document.getElementById('usedTransferBadge');
+      if (!badge) return;
+      const waiting = Number((state.usedTransferSummary || {}).incoming_count || 0);
+      badge.textContent = String(waiting);
+      badge.hidden = waiting === 0;
+    }
+
+    // The same waiting count, shown on the Stock Transfer page. Second-hand
+    // devices cannot ride on a stock transfer line -- each is one tracked item
+    // with its own history -- so this points at where they actually live.
+    function refreshDeviceTransferBadge() {
+      const badge = document.getElementById('deviceTransferBadge');
+      if (!badge) return;
+      const waiting = Number((state.usedTransferSummary || {}).incoming_count || 0);
+      badge.textContent = String(waiting);
+      badge.hidden = waiting === 0;
+    }
+
+    function usedTransferStatusLabel(status) {
+      if (status === 'in_transit') return 'In transit';
+      if (status === 'received') return 'Received';
+      if (status === 'cancelled') return 'Cancelled';
+      return status || '';
+    }
+
+    function renderUsedDeviceNetwork() {
+      const filter = state.usedNetworkStoreFilter;
+      const devices = filter
+        ? state.usedNetworkDevices.filter(device => device.store_code === filter)
+        : state.usedNetworkDevices;
+      const myStore = repairTicketStoreCode();
+      return `
+        <section class="used-summary-grid" aria-label="Group second-hand stock by store">
+          ${state.usedNetworkStores.map(store => `
+            <button class="used-summary-item used-store-chip ${state.usedNetworkStoreFilter === store.store_code ? 'active' : ''}"
+              type="button" data-used-network-store="${escapeHtml(store.store_code)}">
+              <span>${escapeHtml(store.store_name)}${store.store_code === myStore ? ' (here)' : ''}</span>
+              <strong>${Number(store.ready_count || 0) + Number(store.inspection_count || 0)}</strong>
+              <span class="used-store-chip-sub">${Number(store.ready_count || 0)} ready &middot; ${Number(store.inspection_count || 0)} on bench</span>
+            </button>
+          `).join('')}
+        </section>
+        <div class="used-device-toolbar">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input id="usedDeviceSearch" class="search-input" type="search" value="${escapeHtml(state.usedDeviceSearch)}" placeholder="Device / IMEI / serial / store">
+          </div>
+          ${filter ? `<button class="used-status-filter active" type="button" data-used-network-store=""><i class="bi bi-x-lg"></i> All stores</button>` : ''}
+        </div>
+        <div class="used-device-list">
+          ${devices.map(device => {
+            const here = device.store_code === myStore;
+            const transfer = device.transfer;
+            return `
+            <article class="used-device-row used-network-row" data-used-network-device="${escapeHtml(device.id)}" tabindex="0">
+              <div class="used-device-main">
+                <strong>${escapeHtml(usedDeviceTitle(device))}</strong>
+                <div class="used-device-meta">
+                  <span class="used-store-tag ${here ? 'here' : ''}"><i class="bi bi-geo-alt"></i> ${escapeHtml(device.store_name || '')}</span>
+                  <span>${escapeHtml(usedDeviceIdentifier(device))}</span>
+                </div>
+                ${device.notes ? `<div class="used-network-note">${escapeHtml(device.notes)}</div>` : ''}
+                ${transfer ? `<div class="used-network-transit"><i class="bi bi-truck"></i> In transit to ${escapeHtml(transfer.to_store_name || '')}, sent by ${escapeHtml(transfer.sent_by || '')}</div>` : ''}
+              </div>
+              <div class="used-device-value used-device-condition">
+                <span>Condition</span>
+                <strong>${escapeHtml(device.condition_grade || '')}</strong>
+                ${device.battery_health ? `<span>Battery ${Number(device.battery_health)}%</span>` : ''}
+              </div>
+              <div class="used-device-value">
+                <span>Sale price</span>
+                <strong>${money(device.sale_price)}</strong>
+                <span class="used-status ${escapeHtml(device.status)}">${escapeHtml(usedDeviceStatusLabel(device.status))}</span>
+              </div>
+              ${here && !transfer ? `
+                <button class="used-sell-button" type="button" data-used-send="${escapeHtml(device.id)}" title="Send this device to another store">
+                  <i class="bi bi-truck"></i> Send
+                </button>` : '<div class="used-network-spacer"></div>'}
+            </article>
+          `;}).join('') || `
+            <div class="empty-state"><div><div class="cart-empty-icon"><i class="bi bi-shop"></i></div><strong>No devices found in any store</strong></div></div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderUsedDeviceTransfers() {
+      const myStore = repairTicketStoreCode();
+      const summary = state.usedTransferSummary || {};
+      return `
+        <section class="used-summary-grid" aria-label="Device transfer summary">
+          <div class="used-summary-item"><span>Waiting for you</span><strong>${Number(summary.incoming_count || 0)}</strong></div>
+          <div class="used-summary-item"><span>Sent, not yet received</span><strong>${Number(summary.outgoing_count || 0)}</strong></div>
+        </section>
+        <div class="used-device-list">
+          ${state.usedTransfers.map(transfer => {
+            const incoming = transfer.to_store_code === myStore;
+            const waiting = transfer.status === 'in_transit';
+            const snapshot = transfer.device_snapshot || {};
+            const title = [snapshot.brand, snapshot.model, snapshot.storage, snapshot.color]
+              .filter(Boolean).join(' ');
+            return `
+            <article class="used-device-row used-transfer-row">
+              <div class="used-device-main">
+                <strong>${escapeHtml(title || transfer.device_code)}</strong>
+                <div class="used-device-meta">
+                  <span>${escapeHtml(transfer.transfer_code)}</span>
+                  <span>${escapeHtml(snapshot.imei || snapshot.serial_number || '')}</span>
+                </div>
+                <div class="used-transfer-route">
+                  ${escapeHtml(transfer.from_store_name || '')}
+                  <i class="bi bi-arrow-right"></i>
+                  ${escapeHtml(transfer.to_store_name || '')}
+                  &middot; sent by ${escapeHtml(transfer.sent_by || '')} ${escapeHtml(formatDateTime(transfer.sent_at))}
+                </div>
+                ${transfer.sent_note ? `<div class="used-network-note">${escapeHtml(transfer.sent_note)}</div>` : ''}
+                ${transfer.status === 'received' ? `<div class="used-transfer-done">Received by ${escapeHtml(transfer.received_by || '')} ${escapeHtml(formatDateTime(transfer.received_at))}${transfer.received_note ? ` &middot; ${escapeHtml(transfer.received_note)}` : ''}</div>` : ''}
+                ${transfer.status === 'cancelled' ? `<div class="used-transfer-done">Cancelled by ${escapeHtml(transfer.cancelled_by || '')} &middot; ${escapeHtml(transfer.cancel_reason || '')}</div>` : ''}
+              </div>
+              <div class="used-device-value">
+                <span>Condition sent</span>
+                <strong>${escapeHtml(snapshot.condition_grade || '')}</strong>
+                <span class="used-status ${waiting ? 'inspection' : 'ready_for_sale'}">${escapeHtml(usedTransferStatusLabel(transfer.status))}</span>
+              </div>
+              ${waiting && incoming ? `
+                <button class="used-sell-button" type="button" data-used-receive="${escapeHtml(transfer.transfer_code)}">
+                  <i class="bi bi-box-arrow-in-down"></i> Receive
+                </button>` : ''}
+              ${waiting && !incoming ? `
+                <button class="used-sell-button ghost" type="button" data-used-cancel-transfer="${escapeHtml(transfer.transfer_code)}">
+                  <i class="bi bi-x-circle"></i> Cancel
+                </button>` : ''}
+              ${waiting ? '' : '<div class="used-network-spacer"></div>'}
+            </article>
+          `;}).join('') || `
+            <div class="empty-state"><div><div class="cart-empty-icon"><i class="bi bi-truck"></i></div><strong>No device transfers yet</strong></div></div>
+          `}
+        </div>
+      `;
+    }
+
     function renderUsedDeviceInventory() {
       const summary = state.usedDeviceSummary || {};
       const devices = state.usedDevices;
@@ -19132,6 +19419,8 @@
       `;
     }
 
+    let usedDeviceSearchHadFocus = false;
+
     function renderUsedDeviceView() {
       if (!els.usedDeviceContent) return;
       const store = storeById(state.storeId);
@@ -19151,9 +19440,25 @@
         mountUsedDeviceIntakeEvidence();
       } else if (state.usedDeviceTab === 'transactions') {
         els.usedDeviceContent.innerHTML = renderUsedDeviceTransactions();
+      } else if (state.usedDeviceTab === 'network') {
+        els.usedDeviceContent.innerHTML = renderUsedDeviceNetwork();
+      } else if (state.usedDeviceTab === 'transfers') {
+        els.usedDeviceContent.innerHTML = renderUsedDeviceTransfers();
       } else {
         els.usedDeviceContent.innerHTML = renderUsedDeviceInventory();
       }
+      refreshUsedTransferBadge();
+      restoreUsedDeviceSearchFocus();
+    }
+
+    // Each search keystroke re-renders the whole panel, which throws the caret
+    // out of the box being typed in. Put it back, at the end of the text.
+    function restoreUsedDeviceSearchFocus() {
+      if (!usedDeviceSearchHadFocus) return;
+      const input = els.usedDeviceContent.querySelector('#usedDeviceSearch, #usedDeviceTransactionSearch');
+      if (!input || document.activeElement === input) return;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
     }
 
     // One intake key per purchase form. Photos are uploaded against it while the
@@ -19191,10 +19496,13 @@
     }
 
     function setUsedDeviceTab(tab) {
-      state.usedDeviceTab = ['inventory', 'buy', 'transactions'].includes(tab) ? tab : 'inventory';
+      state.usedDeviceTab = ['inventory', 'network', 'transfers', 'buy', 'transactions'].includes(tab) ? tab : 'inventory';
       state.usedDeviceSearch = '';
+      usedDeviceSearchHadFocus = false;
       renderUsedDeviceView();
       if (state.usedDeviceTab === 'inventory') loadUsedDevices();
+      if (state.usedDeviceTab === 'network') loadUsedDeviceNetwork();
+      if (state.usedDeviceTab === 'transfers') loadUsedDeviceTransfers();
       if (state.usedDeviceTab === 'transactions') loadUsedDeviceTransactions();
       if (state.usedDeviceTab === 'buy' && !state.dashboardQuote.loaded) {
         // The brand/model picker reads the repair price list.
@@ -19202,6 +19510,94 @@
           const search = els.usedDeviceContent.querySelector('#usedDeviceModelSearch');
           if (search && search.value.trim()) renderUsedDeviceModelResults(search.value);
         }).catch(() => {});
+      }
+    }
+
+    // Sending asks which store and why. The device does not leave this store's
+    // books until the other end accepts it, so this is a dispatch, not a
+    // handover, and the wording says so.
+    async function sendUsedDeviceToStore(deviceCode) {
+      const device = state.usedNetworkDevices.find(item => item.id === deviceCode)
+        || state.usedDevices.find(item => item.id === deviceCode);
+      if (!device) return;
+      const myStore = repairTicketStoreCode();
+      const options = (state.usedNetworkStores || []).filter(store => store.store_code !== myStore);
+      if (!options.length) {
+        showToast('No other store is available to send to.');
+        return;
+      }
+      const prompt = options.map((store, index) => `${index + 1}. ${store.store_name}`).join('\n');
+      const chosen = window.prompt(
+        `Send ${usedDeviceTitle(device)} to which store?\n\n${prompt}\n\nType the number.`, '1');
+      if (chosen === null) return;
+      const target = options[Number(chosen.trim()) - 1];
+      if (!target) {
+        showToast('That was not one of the stores listed.');
+        return;
+      }
+      const note = window.prompt(
+        `Sending ${usedDeviceTitle(device)} to ${target.store_name}.\n\n`
+        + 'Anything the receiving store should know? (optional)', '');
+      if (note === null) return;
+      try {
+        await usedDeviceApiPost('transfer-send', {
+          store_code: myStore,
+          device_code: deviceCode,
+          to_store_code: target.store_code,
+          note: note.trim()
+        });
+        showToast(`Sent to ${target.store_name}. It stays on your books until they receive it.`);
+        await Promise.all([loadUsedDeviceNetwork({render: false}), loadUsedDeviceTransfers({render: false})]);
+        renderUsedDeviceView();
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'The device could not be sent.');
+      }
+    }
+
+    async function receiveUsedDeviceTransfer(transferCode) {
+      const transfer = state.usedTransfers.find(item => item.transfer_code === transferCode);
+      if (!transfer) return;
+      const snapshot = transfer.device_snapshot || {};
+      const note = window.prompt(
+        `Receiving ${[snapshot.brand, snapshot.model, snapshot.storage].filter(Boolean).join(' ')}\n`
+        + `from ${transfer.from_store_name}.\n\n`
+        + `It was sent as: ${snapshot.condition_grade || 'no grade'}`
+        + `${snapshot.battery_health ? `, battery ${snapshot.battery_health}%` : ''}.\n\n`
+        + 'Check it against that now. Note anything different (optional):', '');
+      if (note === null) return;
+      try {
+        await usedDeviceApiPost('transfer-receive', {
+          store_code: repairTicketStoreCode(),
+          transfer_code: transferCode,
+          note: note.trim()
+        });
+        showToast('Received. It is on your bench - confirm the condition before selling it.');
+        await Promise.all([loadUsedDeviceTransfers({render: false}), loadUsedDevices()]);
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'The transfer could not be received.');
+      }
+    }
+
+    async function cancelUsedDeviceTransfer(transferCode) {
+      const reason = window.prompt('Why is this transfer being cancelled?', '');
+      if (reason === null) return;
+      if (!reason.trim()) {
+        showToast('A reason is required to cancel a transfer.');
+        return;
+      }
+      try {
+        await usedDeviceApiPost('transfer-cancel', {
+          store_code: repairTicketStoreCode(),
+          transfer_code: transferCode,
+          reason: reason.trim()
+        });
+        showToast('Transfer cancelled. The device stays with you.');
+        await loadUsedDeviceTransfers();
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'The transfer could not be cancelled.');
       }
     }
 
@@ -23930,6 +24326,10 @@
     els.internalToolRefreshBtn.addEventListener('click', refreshInternalTool);
     els.internalToolFrame.addEventListener('load', () => els.internalToolFrameWrap.classList.add('is-loaded'));
     els.newTransferBtn.addEventListener('click', openNewTransfer);
+    document.getElementById('deviceTransferBtn')?.addEventListener('click', () => {
+      setActiveView('used-devices');
+      setUsedDeviceTab('transfers');
+    });
     els.transferReloadBtn.addEventListener('click', () => loadTransfers());
     els.transferStatusTabs.addEventListener('click', event => {
       const button = event.target.closest('[data-transfer-status]');
@@ -24108,6 +24508,8 @@
     els.newUsedDeviceBtn.addEventListener('click', () => setUsedDeviceTab('buy'));
     els.usedDeviceReloadBtn.addEventListener('click', () => {
       if (state.usedDeviceTab === 'transactions') loadUsedDeviceTransactions();
+      else if (state.usedDeviceTab === 'network') loadUsedDeviceNetwork();
+      else if (state.usedDeviceTab === 'transfers') loadUsedDeviceTransfers();
       else if (state.usedDeviceTab === 'buy') renderUsedDeviceView();
       else loadUsedDevices();
     });
@@ -24129,6 +24531,40 @@
       const openResults = els.usedDeviceContent.querySelector('#usedDeviceModelResults');
       if (openResults && !openResults.hidden && !event.target.closest('#usedDeviceModelSearch')) {
         openResults.hidden = true;
+      }
+      const networkStore = event.target.closest('[data-used-network-store]');
+      if (networkStore) {
+        state.usedNetworkStoreFilter = networkStore.dataset.usedNetworkStore;
+        renderUsedDeviceView();
+        return;
+      }
+      const sendButton = event.target.closest('[data-used-send]');
+      if (sendButton) {
+        event.stopPropagation();
+        sendUsedDeviceToStore(sendButton.dataset.usedSend);
+        return;
+      }
+      const receiveButton = event.target.closest('[data-used-receive]');
+      if (receiveButton) {
+        event.stopPropagation();
+        receiveUsedDeviceTransfer(receiveButton.dataset.usedReceive);
+        return;
+      }
+      const cancelTransferButton = event.target.closest('[data-used-cancel-transfer]');
+      if (cancelTransferButton) {
+        event.stopPropagation();
+        cancelUsedDeviceTransfer(cancelTransferButton.dataset.usedCancelTransfer);
+        return;
+      }
+      // A device held by another store opens nothing: there is no detail view
+      // this store is entitled to. Tapping the row is a no-op by design.
+      const networkRow = event.target.closest('[data-used-network-device]');
+      if (networkRow) {
+        const code = networkRow.dataset.usedNetworkDevice;
+        const mine = state.usedNetworkDevices.find(item => item.id === code);
+        if (mine && mine.store_code === repairTicketStoreCode()) openUsedDeviceDetail(code);
+        else showToast('That device is held by another store. Ask them to send it over.');
+        return;
       }
       const statusButton = event.target.closest('[data-used-status]');
       const sellButton = event.target.closest('[data-used-sell]');
@@ -24164,9 +24600,12 @@
       }
       if (!['usedDeviceSearch', 'usedDeviceTransactionSearch'].includes(event.target.id)) return;
       state.usedDeviceSearch = event.target.value;
+      usedDeviceSearchHadFocus = true;
       clearTimeout(loadUsedDevices.searchTimer);
       loadUsedDevices.searchTimer = setTimeout(() => {
         if (state.usedDeviceTab === 'transactions') loadUsedDeviceTransactions();
+        else if (state.usedDeviceTab === 'network') loadUsedDeviceNetwork();
+        else if (state.usedDeviceTab === 'transfers') loadUsedDeviceTransfers();
         else loadUsedDevices();
       }, 300);
     });

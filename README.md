@@ -213,6 +213,11 @@ Completed second-hand device flow:
 - Every acquisition must use the selected store's open shift. Cash and bank-transfer payouts are included in shift reconciliation as paid-out amounts.
 - Ready devices can be added to the normal cart as one unique item. The database locks the record during checkout and blocks duplicate sales.
 - Used-device sales use the existing store invoice sequence, split payments, receipt, Invoice History, and refund flow.
+- Every store can see every other store's second-hand stock, in `Used Devices` > `All Stores`, including devices still being inspected -- the question "is one anywhere in the group" has to be answerable before a device is tested. The network read is `search_pos_used_device_network`, and it deliberately drops seller identity and purchase cost: seller details are another store's customer's private data, and cost is already admin-only. The default view is stock physically in a store; sold and written-off devices only appear when a status is asked for.
+- Devices move between stores on their own transfer, not on a stock transfer. A stock transfer moves counted product lines (model, variant, quantity); a used device is one serialised item with its own history, so it cannot ride on a quantity line. The Stock Transfer page links across to it rather than pretending to handle it.
+- Ownership moves on receipt, never on dispatch. Between the two the device is in transit: the sender cannot sell it, publish it or send it again, and the destination does not own it yet. `pos_used_devices.store_id` is still immutable except through this one path -- `guard_pos_used_device_store_change` only allows the change when a transfer to that store was received in the same transaction.
+- Each transfer freezes a `device_snapshot` at dispatch, so editing the device afterwards cannot rewrite what the transfer says was handed over. The receiving screen shows the sent condition next to the current one. Both ends write `transfer_out` / `transfer_in` to the same ledger the buyback and the sale use.
+- Only the sending store can send or cancel; only the destination can receive. Cancelling requires a reason. A received device lands in `Inspection`, not on the shelf, so the receiving store confirms condition before selling something it has not looked at.
 - A fully refunded device returns to `Inspection` before it can be sold again.
 
 Completed invoice flow:
@@ -435,7 +440,6 @@ Admin oversight of the buyback business:
 Second-hand device follow-ups:
 - add a printable or signed acquisition agreement generated from the saved purchase record, reusing the repair-card signature tables
 - integrate an approved IMEI/blacklist provider instead of storing only the manual AMTA result reference
-- add inter-store device transfer with immutable source/destination events
 - deduct refurbishment parts from product inventory. Costs are recorded against the device today, but product stock lives in the website project, so the deduction is a cross-project change; `pos_used_device_costs.repair_ticket_code` is the link to follow when it is built
 - schedule `pos-used-device-publish` and `purge_pos_used_device_intake_uploads` so a failed publish retries and abandoned intake photos are cleaned up without anyone watching
 - confirm the Queensland second-hand dealer holding-period requirement and, if there is one, gate `ready_for_sale` on days since purchase. Nothing enforces a holding period today

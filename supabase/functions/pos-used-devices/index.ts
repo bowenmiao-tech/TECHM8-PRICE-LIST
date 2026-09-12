@@ -89,6 +89,28 @@ Deno.serve(async (request) => {
         });
       }
 
+      // Every store's second-hand stock, not just this one. The RPC still
+      // authorises the caller against their own store above; what it widens is
+      // the read, and it drops seller identity and cost on the way out.
+      if (resource === "network") {
+        return await rpcResponse(request, "search_pos_used_device_network", {
+          session_token: sessionToken,
+          actor_store_code: storeCode,
+          search_query: url.searchParams.get("q") || "",
+          target_status: url.searchParams.get("status") || "",
+          result_limit: limit,
+        });
+      }
+
+      if (resource === "transfers") {
+        return await rpcResponse(request, "get_pos_used_device_transfers", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          target_status: url.searchParams.get("status") || "",
+          result_limit: limit,
+        });
+      }
+
       if (resource === "costs") {
         const deviceCode = url.searchParams.get("device_code") || "";
         if (!deviceCode) return jsonResponse({ ok: false, message: "device_code is required." }, 400);
@@ -156,6 +178,27 @@ Deno.serve(async (request) => {
             amount: data.amount,
             repair_ticket_code: data.repair_ticket_code,
           },
+        });
+      }
+      // Store-to-store device movement. store_code is rewritten to the store
+      // the session actually proved access to, so a caller cannot claim to be
+      // sending from, or receiving at, somewhere they do not work.
+      if (action === "transfer-send") {
+        return await rpcResponse(request, "send_pos_used_device_transfer", {
+          session_token: sessionToken,
+          payload: safeData,
+        });
+      }
+      if (action === "transfer-receive") {
+        return await rpcResponse(request, "receive_pos_used_device_transfer", {
+          session_token: sessionToken,
+          payload: safeData,
+        });
+      }
+      if (action === "transfer-cancel") {
+        return await rpcResponse(request, "cancel_pos_used_device_transfer", {
+          session_token: sessionToken,
+          payload: safeData,
         });
       }
       return jsonResponse({ ok: false, message: "Unknown used-device action." }, 400);
