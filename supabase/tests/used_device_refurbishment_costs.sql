@@ -3,6 +3,7 @@
 begin;
 do $test$
 declare
+  admin_token text := extensions.gen_random_uuid()::text;
   token text := extensions.gen_random_uuid()::text;
   staff_id_value bigint;
   staff_name_value text;
@@ -23,7 +24,7 @@ begin
     into staff_id_value, staff_name_value, store_id_value, store_code_value
     from public.staff_directory staff
     join public.store_locations store on store.id = staff.default_store_id
-    where staff.active and store.active and store.store_code <> 'warehouse'
+    where staff.active and lower(staff.email) <> 'techm8contact@gmail.com' and store.active and store.store_code <> 'warehouse'
     limit 1;
 
   insert into public.staff_sessions(staff_id, session_hash, token_digest, expires_at)
@@ -46,10 +47,17 @@ begin
     'condition_grade', 'Good', 'clean_check_status', 'Pending', 'purchase_cost', '300',
     'sale_price', '500', 'payout_method', 'Cash'));
   device_code_value := result#>>'{device,device_code}';
-  assert (result#>>'{device,total_cost}')::numeric = 300, 'A new device should cost only its purchase price';
+  assert not (result->'device' ?| array['purchase_cost','refurb_cost','total_cost']), 'Staff payload leaks costs';
+  result := public.update_pos_used_device(token,jsonb_build_object('store_code',store_code_value,'device_code',device_code_value,
+    'staff_name',(select display_name from public.staff_directory where active and id<>staff_id_value limit 1),'notes','Actor test'));
+  assert (select updated_by=staff_name_value from public.pos_used_devices where device_code=device_code_value), 'Operation attributed to another employee';
+  insert into public.admin_sessions(admin_user_id,session_hash,expires_at)
+    select id,extensions.crypt(admin_token,extensions.gen_salt('bf')),now()+interval '5 minutes' from public.admin_users where active limit 1;
 
-  perform public.add_pos_used_device_cost(token, store_code_value, device_code_value, jsonb_build_object(
+
+  result := public.add_pos_used_device_cost(token, store_code_value, device_code_value, jsonb_build_object(
     'id', cost_id::text, 'kind', 'part', 'description', 'Replacement screen', 'amount', '120'));
+  assert not (result ? 'refurb_cost'), 'Adding a cost leaks cumulative costs';
   perform public.add_pos_used_device_cost(token, store_code_value, device_code_value, jsonb_build_object(
     'id', extensions.gen_random_uuid()::text, 'kind', 'labour', 'description', 'Bench time', 'amount', '40'));
 
@@ -57,6 +65,8 @@ begin
   perform public.add_pos_used_device_cost(token, store_code_value, device_code_value, jsonb_build_object(
     'id', cost_id::text, 'kind', 'part', 'description', 'Replacement screen', 'amount', '120'));
   costs := public.get_pos_used_device_costs(token, store_code_value, device_code_value);
+  assert costs->>'can_view_costs'='false' and jsonb_array_length(costs->'costs')=0 and not (costs ? 'refurb_cost'), 'Staff can read cost history';
+  costs := public.get_pos_used_device_costs(admin_token, store_code_value, device_code_value);
   assert jsonb_array_length(costs->'costs') = 2, 'A repeated cost ID was recorded twice';
   assert (costs->>'refurb_cost')::numeric = 160, 'Refurbishment cost did not add up';
 
@@ -69,13 +79,13 @@ begin
   exception when others then refused := true; refusal := sqlerrm;
   end;
   assert refused, 'A below-cost price was accepted without a reason';
-  assert refusal like '%below the 460.00%', format('Unexpected refusal: %s', refusal);
+  assert refusal like '%below what this device has cost%', format('Unexpected refusal: %s', refusal);
 
   result := public.update_pos_used_device(token, jsonb_build_object(
     'store_code', store_code_value, 'staff_name', staff_name_value, 'device_code', device_code_value,
     'sale_price', '420', 'below_cost_reason', 'Screen still has a mark, clearing it'));
-  assert (result#>>'{device,total_cost}')::numeric = 460, 'Total cost did not include the repairs';
-  assert (result#>>'{device,refurb_cost}')::numeric = 160, 'Refurbishment cost was not reported';
+  assert (select purchase_cost + public.pos_used_device_refurb_cost(id)=460 from public.pos_used_devices where device_code=device_code_value), 'Incorrect total cost';
+  assert not (result->'device' ? 'refurb_cost'), 'Updated device leaks cost';
 
   select ledger.transaction_payload into ledger
     from public.pos_used_device_transactions ledger
@@ -90,6 +100,11 @@ begin
     'store_code', store_code_value, 'staff_name', staff_name_value, 'device_code', device_code_value,
     'notes', 'Waiting on a back cover'));
 
+  refused := false;
+  begin
+    perform public.update_pos_used_device('invalid',jsonb_build_object('store_code',store_code_value,'device_code',device_code_value,'staff_name',staff_name_value));
+  exception when others then refused:=true; end;
+  assert refused, 'Invalid session accepted';
   raise notice 'used_device_refurbishment_costs: all checks passed';
 end;
 $test$;

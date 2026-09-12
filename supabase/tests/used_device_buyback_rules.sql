@@ -3,6 +3,8 @@
 begin;
 do $test$
 declare
+  intake_key_value uuid := extensions.gen_random_uuid();
+  full_answers jsonb;
   token text := extensions.gen_random_uuid()::text;
   staff_id_value bigint;
   staff_name_value text;
@@ -36,7 +38,11 @@ begin
   insert into public.pos_store_shifts(shift_code, store_id, business_date, status, opened_by, current_staff_name, last_staff_name)
     values (shift_code_value, store_id_value, current_date, 'open', staff_name_value, staff_name_value, staff_name_value);
 
+  insert into public.pos_used_device_intake_uploads(id,store_id,intake_key,stage,storage_path,author)
+  select extensions.gen_random_uuid(),store_id_value,intake_key_value,'intake',store_id_value||'/'||intake_key_value||'/'||extensions.gen_random_uuid()||'.jpg',staff_name_value from generate_series(1,3);
+  select jsonb_object_agg(item_key,'pass') into full_answers from public.pos_used_device_inspection_items where category='Phone' and active;
   base_payload := jsonb_build_object(
+    'intake_key', intake_key_value,
     'store_code', store_code_value,
     'staff_name', staff_name_value,
     'shift_id', shift_code_value,
@@ -66,6 +72,8 @@ begin
   result := public.create_pos_used_device_acquisition(token, base_payload);
   assert (result->>'ok')::boolean;
   device_code_value := result#>>'{device,device_code}';
+  insert into public.pos_used_device_updates(id,device_id,kind,stage,storage_path,author)
+  select extensions.gen_random_uuid(),id,'photo','listing',store_id_value||'/'||id||'/'||extensions.gen_random_uuid()||'.jpg',staff_name_value from public.pos_used_devices where device_code=device_code_value;
   assert (select acquisition_statement = ''
           from public.pos_used_device_acquisitions acquisition
           join public.pos_used_devices device on device.acquisition_id = acquisition.id
@@ -134,10 +142,7 @@ begin
     'clean_check_reference', 'AMTA-TEST',
     'activation_lock_removed', 'true',
     'data_erased_confirmed', 'true',
-    'inspection', jsonb_build_object(
-      'power', 'pass', 'touch', 'pass', 'display_lcd', 'pass', 'back_glass', 'pass',
-      'housing', 'pass', 'power_button', 'pass', 'volume_buttons', 'pass', 'vibrate', 'pass'
-    )
+    'inspection', full_answers
   ));
   select ready_at into first_ready from public.pos_used_devices where device_code = device_code_value;
   assert first_ready is not null, 'Ready timestamp was not recorded';

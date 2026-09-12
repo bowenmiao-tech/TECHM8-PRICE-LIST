@@ -49,6 +49,7 @@ const { chromium } = require('playwright');
           Phone: [{ key: 'power', label: 'Server-driven power check' }, { key: 'touch', label: 'Server-driven touch check' }]
         } } });
       }
+      if (url.includes('resource=costs')) return route.fulfill({json:{ok:true,costs:[],can_view_costs:false,writable:true}});
       if (url.includes('/pos-used-devices')) {
         return route.fulfill({ json: { ok: true, devices: [], summary: {}, transactions: [] } });
       }
@@ -63,8 +64,8 @@ const { chromium } = require('playwright');
     });
 
     // A used-device line shows its price but cannot be edited in the cart: the
-    // database refuses a line whose price differs from the device record, and
-    // it refuses it while the invoice is being written.
+    // counter uses the approved device price. Server-side price checks run
+    // while the invoice is being written.
     await page.evaluate(() => {
       state.cart = [{
         id: 'used-USED-TEST', sku: 'USED-TEST', name: 'Apple iPhone 13', category: 'Used Devices',
@@ -120,6 +121,11 @@ const { chromium } = require('playwright');
     });
     assert.match(labels, /Server-driven power check/, 'The POS ignored the checklist from the database');
 
+    await page.evaluate(async () => {
+      els.usedDeviceDetailBody.innerHTML = '<div id="usedDeviceCostList"></div>';
+      await loadUsedDeviceCosts({id:'USED-TEST'});
+    });
+    assert.match(await page.locator('#usedDeviceCostList').innerText(), /administrators only/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
     console.log('PASS: cart price lock, intake photo gate, blocked refusal, server checklist, evidence panel.');
   } finally {

@@ -19558,6 +19558,11 @@
       try {
         const payload = await usedDeviceApiGet('costs', { device_code: device.id });
         state.usedDeviceCosts = Array.isArray(payload.costs) ? payload.costs : [];
+        if (payload.can_view_costs === false) {
+          const host = els.usedDeviceDetailBody.querySelector('#usedDeviceCostList');
+          if (host) host.textContent = 'You can record costs here. Cost history is visible to administrators only.';
+          return;
+        }
       } catch (error) {
         console.error(error);
       }

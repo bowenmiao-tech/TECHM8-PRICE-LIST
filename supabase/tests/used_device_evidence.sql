@@ -3,6 +3,7 @@
 begin;
 do $test$
 declare
+  full_answers jsonb;
   token text := extensions.gen_random_uuid()::text;
   staff_id_value bigint;
   staff_name_value text;
@@ -103,6 +104,8 @@ begin
   end;
   assert refused, 'Intake photos were reused by a second purchase';
 
+  select jsonb_object_agg(item_key,'pass') into full_answers from public.pos_used_device_inspection_items where category='Phone' and active;
+
   -- 5. Ready for sale needs a listing photo.
   refused := false;
   begin
@@ -110,8 +113,7 @@ begin
       'store_code', store_code_value, 'staff_name', staff_name_value, 'device_code', device_code_value,
       'status', 'ready_for_sale', 'clean_check_status', 'Clean', 'clean_check_reference', 'AMTA-TEST',
       'activation_lock_removed', 'true', 'data_erased_confirmed', 'true',
-      'inspection', jsonb_build_object('power','pass','touch','pass','display_lcd','pass','back_glass','pass',
-        'housing','pass','power_button','pass','volume_buttons','pass','vibrate','pass')));
+      'inspection', full_answers));
   exception when others then refused := true; refusal := sqlerrm;
   end;
   assert refused, 'A device reached the shelf without a listing photo';
@@ -125,8 +127,7 @@ begin
     'store_code', store_code_value, 'staff_name', staff_name_value, 'device_code', device_code_value,
     'status', 'ready_for_sale', 'clean_check_status', 'Clean', 'clean_check_reference', 'AMTA-TEST',
     'activation_lock_removed', 'true', 'data_erased_confirmed', 'true',
-    'inspection', jsonb_build_object('power','pass','touch','pass','display_lcd','pass','back_glass','pass',
-      'housing','pass','power_button','pass','volume_buttons','pass','vibrate','pass')));
+    'inspection', full_answers));
   assert (select status = 'ready_for_sale' from public.pos_used_devices where device_code = device_code_value),
     'A photographed device could not be marked ready';
 
