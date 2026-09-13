@@ -35,8 +35,13 @@ begin
       now() + interval '5 minutes'
     );
 
-  insert into public.pos_store_shifts(shift_code, store_id, business_date, status, opened_by, current_staff_name, last_staff_name)
-    values (shift_code_value, store_id_value, current_date, 'open', staff_name_value, staff_name_value, staff_name_value);
+  select shift_code into shift_code_value from public.pos_store_shifts
+    where store_id = store_id_value and status = 'open' limit 1;
+  if shift_code_value is null then
+    shift_code_value := 'TEST-SHIFT-' || extensions.gen_random_uuid()::text;
+    insert into public.pos_store_shifts(shift_code, store_id, business_date, status, opened_by, current_staff_name, last_staff_name)
+      values (shift_code_value, store_id_value, current_date, 'open', staff_name_value, staff_name_value, staff_name_value);
+  end if;
 
   insert into public.pos_used_device_intake_uploads(id,store_id,intake_key,stage,storage_path,author)
   select extensions.gen_random_uuid(),store_id_value,intake_key_value,'intake',store_id_value||'/'||intake_key_value||'/'||extensions.gen_random_uuid()||'.jpg',staff_name_value from generate_series(1,3);

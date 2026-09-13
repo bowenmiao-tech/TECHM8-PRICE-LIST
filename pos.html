@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
   <script src="./repair-ticket-updates.js?v=20260912.1"></script>
   <link rel="stylesheet" href="./used-device-evidence.css?v=20260910.1">
-  <script src="./used-device-evidence.js?v=20260910.1"></script>
+  <script src="./used-device-evidence.js?v=20260913.1"></script>
   <script src="./vendor/sortable.min.js"></script>
   <style>
     :root {
@@ -5811,7 +5811,7 @@
 
     .used-inspection-item {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 96px;
+      grid-template-columns: minmax(0, 1fr);
       gap: 8px;
       align-items: center;
       padding: 9px;
@@ -5823,16 +5823,14 @@
       font-weight: 850;
     }
 
-    .used-inspection-item select {
-      width: 100%;
-      height: 36px;
-      border: 1px solid var(--tm-line);
-      border-radius: 6px;
-      padding: 0 7px;
-      background: #fff;
-      font-size: 11px;
-      font-weight: 900;
-    }
+    .used-inspection-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+    .used-inspection-choice { position: relative; cursor: pointer; }
+    .used-inspection-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .used-inspection-choice span { display: block; padding: 9px 10px; border: 1px solid var(--tm-line); border-radius: 6px; background: white; }
+    .used-inspection-choice input:checked + span { background: #e2e8ed; border-color: #73828d; }
+    .used-inspection-choice input[value="pass"]:checked + span { background: #dcfce7; border-color: #15803d; color: #166534; }
+    .used-inspection-choice input[value="fail"]:checked + span { background: #fee2e2; border-color: #b91c1c; color: #991b1b; }
+    .used-inspection-choice input:focus-visible + span { outline: 2px solid #1674bb; outline-offset: 2px; }
 
     .used-declaration-grid {
       display: grid;
@@ -10042,7 +10040,7 @@
     const POS_USED_DEVICES_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-used-devices';
     const POS_USED_DEVICE_PUBLISH_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-used-device-publish';
     // Matches the floor enforced by create_pos_used_device_acquisition.
-    const USED_DEVICE_REQUIRED_INTAKE_PHOTOS = 3;
+    const USED_DEVICE_REQUIRED_INTAKE_PHOTOS = 1;
     const POS_STOCK_TRANSFERS_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/pos-stock-transfers';
     const POS_RECEIPT_EMAIL_ENDPOINT = 'https://fwlronvmgqzkleofriis.supabase.co/functions/v1/send-pos-receipt-email';
     const INTERNAL_TOOLS = {
@@ -18927,26 +18925,27 @@
       return 'No identifier';
     }
 
+    // Same direct Pass / Fail / N/A interaction as the repair inspection template.
     function usedDeviceInspectionFields(inspection = {}, prefix = 'buy', items = null) {
       return (items || usedDeviceInspectionItemsFor('Phone')).map(item => {
         const value = String(inspection[item.key] || 'not_tested');
-        return `
-          <label class="used-inspection-item">
-            <span>${escapeHtml(item.label)}</span>
-            <select data-used-inspection="${escapeHtml(item.key)}" data-used-inspection-prefix="${escapeHtml(prefix)}">
-              <option value="not_tested" ${value === 'not_tested' ? 'selected' : ''}>Not tested</option>
-              <option value="pass" ${value === 'pass' ? 'selected' : ''}>Pass</option>
-              <option value="fail" ${value === 'fail' ? 'selected' : ''}>Fail</option>
-              <option value="na" ${value === 'na' ? 'selected' : ''}>N/A</option>
-            </select>
-          </label>
-        `;
+        return `<div class="used-inspection-item" role="group" aria-label="${escapeHtml(item.label)}">
+          <span>${escapeHtml(item.label)}</span>
+          <div class="used-inspection-actions">
+            ${[['pass', 'Pass'], ['fail', 'Fail'], ['na', 'N/A'], ['not_tested', 'Not tested']].map(([status, label]) => `
+              <label class="used-inspection-choice">
+                <input type="radio" name="inspection-${escapeHtml(prefix)}-${escapeHtml(item.key)}" value="${status}"
+                  data-used-inspection="${escapeHtml(item.key)}" data-used-inspection-prefix="${escapeHtml(prefix)}" ${value === status ? 'checked' : ''}>
+                <span>${label}</span>
+              </label>`).join('')}
+          </div>
+        </div>`;
       }).join('');
     }
 
     function collectUsedDeviceInspection(root, prefix) {
-      return Array.from(root.querySelectorAll(`[data-used-inspection-prefix="${prefix}"]`)).reduce((results, select) => {
-        results[select.dataset.usedInspection] = select.value;
+      return Array.from(root.querySelectorAll(`[data-used-inspection-prefix="${prefix}"]:checked`)).reduce((results, input) => {
+        results[input.dataset.usedInspection] = input.value;
         return results;
       }, {});
     }
@@ -19345,15 +19344,15 @@
 
           <section class="used-form-section">
             <h2>Inspection</h2>
-            <div class="used-field-hint" id="usedDeviceInspectionHint" style="margin-bottom:8px;">Checklist follows the selected category. Phone and Tablet share one list.</div>
+            <div class="used-field-hint" id="usedDeviceInspectionHint" style="margin-bottom:8px;">Tap Pass, Fail or N/A, just like the repair inspection form. Untested items can be completed after intake.</div>
             <div class="used-inspection-grid" id="usedDeviceInspectionGrid">${usedDeviceInspectionFields({}, 'buy', usedDeviceInspectionItemsFor('Phone'))}</div>
           </section>
 
           <section class="used-form-section">
-            <h2>Photo Evidence <span class="used-required-tag" id="usedDeviceIntakeTag">${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} photos required</span></h2>
+            <h2>Photo Evidence <span class="used-required-tag" id="usedDeviceIntakeTag">At least 1 photo required</span></h2>
             <div class="used-field-hint" style="margin-bottom:8px;">
-              Take these while the seller is still here. The purchase cannot be saved without at least
-              ${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} intake photos, and they stay attached to this device.
+              Take at least one device photo while the seller is still here.
+              All uploaded photos stay attached to this device.
             </div>
             <div id="usedDeviceIntakeEvidence"></div>
           </section>
@@ -19436,8 +19435,10 @@
         return;
       }
       if (state.usedDeviceTab === 'buy') {
-        els.usedDeviceContent.innerHTML = renderUsedDeviceBuyForm();
-        mountUsedDeviceIntakeEvidence();
+        if (!usedDeviceBuyFormEl()) {
+          els.usedDeviceContent.innerHTML = renderUsedDeviceBuyForm();
+          mountUsedDeviceIntakeEvidence();
+        }
       } else if (state.usedDeviceTab === 'transactions') {
         els.usedDeviceContent.innerHTML = renderUsedDeviceTransactions();
       } else if (state.usedDeviceTab === 'network') {
@@ -19670,7 +19671,7 @@
       if (!form) return;
       const category = String((form.querySelector('#usedDeviceCategory') || {}).value || 'Phone');
       const grid = form.querySelector('#usedDeviceInspectionGrid');
-      if (grid) grid.innerHTML = usedDeviceInspectionFields({}, 'buy', usedDeviceInspectionItemsFor(category));
+      if (grid) grid.innerHTML = usedDeviceInspectionFields(collectUsedDeviceInspection(form, 'buy'), 'buy', usedDeviceInspectionItemsFor(category));
       const storage = form.querySelector('[name="storage"]');
       if (storage) storage.required = category !== 'Other';
     }
@@ -19699,7 +19700,7 @@
       const inspection = collectUsedDeviceInspection(form, 'buy');
       const category = String(data.get('category') || '');
       if (usedDeviceIntakePhotoCount() < USED_DEVICE_REQUIRED_INTAKE_PHOTOS) {
-        error.textContent = `Take at least ${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} intake photos before paying the seller: front, back, and the screen showing the IMEI or serial.`;
+        error.textContent = `Take at least ${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} intake photo before paying the seller. You can add more photos if needed.`;
         return;
       }
       const imeiDigits = String(data.get('imei') || '').replace(/\D/g, '');

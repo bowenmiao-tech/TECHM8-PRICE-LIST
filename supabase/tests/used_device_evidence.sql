@@ -35,8 +35,13 @@ begin
       now() + interval '5 minutes'
     );
 
-  insert into public.pos_store_shifts(shift_code, store_id, business_date, status, opened_by, current_staff_name, last_staff_name)
-    values (shift_code_value, store_id_value, current_date, 'open', staff_name_value, staff_name_value, staff_name_value);
+  select shift_code into shift_code_value from public.pos_store_shifts
+    where store_id = store_id_value and status = 'open' limit 1;
+  if shift_code_value is null then
+    shift_code_value := 'TEST-SHIFT-' || extensions.gen_random_uuid()::text;
+    insert into public.pos_store_shifts(shift_code, store_id, business_date, status, opened_by, current_staff_name, last_staff_name)
+      values (shift_code_value, store_id_value, current_date, 'open', staff_name_value, staff_name_value, staff_name_value);
+  end if;
 
   base_payload := jsonb_build_object(
     'store_code', store_code_value, 'staff_name', staff_name_value, 'shift_id', shift_code_value,
@@ -62,17 +67,17 @@ begin
   insert into public.pos_used_device_intake_uploads(id, store_id, intake_key, stage, storage_path, author)
   select extensions.gen_random_uuid(), store_id_value, intake_key_value, 'intake',
          store_id_value || '/' || intake_key_value || '/' || extensions.gen_random_uuid() || '.jpg', staff_name_value
-  from generate_series(1, 2);
+  from generate_series(1, 0);
 
   refused := false;
   begin
     perform public.create_pos_used_device_acquisition(token, base_payload || jsonb_build_object('intake_key', intake_key_value::text));
   exception when others then refused := true; refusal := sqlerrm;
   end;
-  assert refused, 'A purchase with two photos was saved';
-  assert refusal like '%three intake photos%', format('Unexpected refusal: %s', refusal);
+  assert refused, 'A purchase with zero photos was saved';
+  assert refusal like '%one intake photo%', format('Unexpected refusal: %s', refusal);
 
-  -- 3. The third photo lets the purchase through, and the photos become this
+  -- 3. The first photo lets the purchase through, and the photos become this
   --    device's intake evidence.
   insert into public.pos_used_device_intake_uploads(id, store_id, intake_key, stage, storage_path, author)
   values (extensions.gen_random_uuid(), store_id_value, intake_key_value, 'intake',
@@ -82,7 +87,7 @@ begin
   device_code_value := result#>>'{device,device_code}';
   select id into device_id_value from public.pos_used_devices where device_code = device_code_value;
   assert result#>>'{device,status}' = 'inspection', 'A purchase did not start in inspection';
-  assert (select count(*) = 3 from public.pos_used_device_updates
+  assert (select count(*) = 1 from public.pos_used_device_updates
           where device_id = device_id_value and kind = 'photo' and stage = 'intake'),
     'Intake photos were not attached to the device';
   assert (select count(*) = 0 from public.pos_used_device_intake_uploads

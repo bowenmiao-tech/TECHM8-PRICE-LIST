@@ -89,15 +89,15 @@ const { chromium } = require('playwright');
       'A purchase no longer starts in inspection');
 
     const tooFew = await page.evaluate(async () => {
-      state.usedDeviceIntakeCounts = { intake: 2 };
+      state.usedDeviceIntakeCounts = { intake: 0 };
       await submitUsedDevicePurchase(usedDeviceBuyFormEl());
       return usedDeviceBuyFormEl().querySelector('#usedDeviceBuyError').textContent;
     });
-    assert.match(tooFew, /at least 3 intake photos/i, `Unexpected refusal: ${tooFew}`);
+    assert.match(tooFew, /at least 1 intake photo/i, `Unexpected refusal: ${tooFew}`);
 
     // A blocked handset is refused outright, not merely kept off the shelf.
     const blocked = await page.evaluate(async () => {
-      state.usedDeviceIntakeCounts = { intake: 3 };
+      state.usedDeviceIntakeCounts = { intake: 1 };
       const form = usedDeviceBuyFormEl();
       form.querySelector('[name="imei"]').value = '356938035643809';
       form.querySelector('[name="storage"]').value = '128GB';
@@ -121,13 +121,41 @@ const { chromium } = require('playwright');
     });
     assert.match(labels, /Server-driven power check/, 'The POS ignored the checklist from the database');
 
+    // Exercise the real form submit event, one photo, and the acquisition request.
+    await page.evaluate(() => {
+      const form = usedDeviceBuyFormEl();
+      for (const [name, value] of Object.entries({seller_name:'Test Seller', seller_phone:'0400000000', seller_address:'1 Test Street', seller_id_type:'Passport', seller_id_reference:'TEST', purchase_cost:'300', sale_price:'500', clean_check_status:'Pending'})) form.elements[name].value = value;
+      form.querySelectorAll('input[type="checkbox"][required]').forEach(input => input.checked = true);
+      syncCurrentShiftWithDatabase = async () => ({id:'SHIFT-TEST', status:'open'});
+      window.savedAcquisition = null;
+      usedDeviceApiPost = async (action, payload) => { window.savedAcquisition = {action, payload}; return {ok:true}; };
+    });
+    await page.locator('[data-used-inspection="power"][value="pass"]').check();
+    await page.locator('[data-used-inspection="touch"][value="fail"]').check();
+    const preserved = await page.evaluate(() => {
+      renderUsedDeviceView();
+      refreshUsedDeviceCategoryFields();
+      return {seller: usedDeviceBuyFormEl().elements.seller_name.value, inspection: collectUsedDeviceInspection(usedDeviceBuyFormEl(), 'buy')};
+    });
+    assert.equal(preserved.seller, 'Test Seller');
+    assert.deepEqual(preserved.inspection, {power:'pass', touch:'fail'});
+    assert.equal(await page.locator('#usedDeviceInspectionGrid select').count(), 0);
+    await page.locator('#usedDeviceBuySubmit').click();
+    await page.waitForFunction(() => window.savedAcquisition !== null);
+    const saved = await page.evaluate(() => window.savedAcquisition);
+    assert.equal(saved.action, 'acquire');
+    assert.deepEqual(saved.payload.inspection, {power:'pass', touch:'fail'});
+    assert.equal(saved.payload.status, 'inspection');
+    assert.ok(saved.payload.intake_key);
+    await page.waitForFunction(() => state.usedDeviceTab === 'inventory');
+
     await page.evaluate(async () => {
       els.usedDeviceDetailBody.innerHTML = '<div id="usedDeviceCostList"></div>';
       await loadUsedDeviceCosts({id:'USED-TEST'});
     });
     assert.match(await page.locator('#usedDeviceCostList').innerText(), /administrators only/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: cart price lock, intake photo gate, blocked refusal, server checklist, evidence panel.');
+    console.log('PASS: one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();

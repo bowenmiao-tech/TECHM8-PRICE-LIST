@@ -14,13 +14,13 @@
   // uncertain response cannot create a second copy.
 
   const STAGES = [
-    {key: 'intake', label: 'Intake evidence', hint: 'What was handed over: front, back, and the screen showing the IMEI or serial.'},
+    {key: 'intake', label: 'Intake evidence', hint: 'At least one device photo. Add front, back or identifier photos as needed.'},
     {key: 'refurb', label: 'Refurbishment', hint: 'Work needed and work done. Photos before and after.'},
     {key: 'listing', label: 'Listing photos', hint: 'The photos the device is sold and advertised with.'},
     {key: 'seller_id', label: 'Seller ID', hint: 'Identity document. Visible to admin only, and every view is logged.'}
   ];
   const INTAKE_STAGES = ['intake', 'seller_id'];
-  const REQUIRED_INTAKE_PHOTOS = 3;
+  const REQUIRED_INTAKE_PHOTOS = 1;
 
   const mounts = new Set();
   const escape = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
