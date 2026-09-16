@@ -22520,6 +22520,21 @@
       els.refundSubmitBtn.disabled = total <= 0;
     }
 
+    function syncRefundAmountToQuantity(row) {
+      if (!row) return;
+      const amountInput = row.querySelector('[data-refund-amount]');
+      const quantityInput = row.querySelector('[data-refund-quantity]');
+      if (!amountInput || !quantityInput) return;
+      const requestedQuantity = Math.floor(Math.max(0, Number(quantityInput.value || 0)));
+      const maximumQuantity = Math.floor(Math.max(0, Number(row.dataset.refundMaxQuantity || 0)));
+      const quantity = Math.min(requestedQuantity, maximumQuantity);
+      quantityInput.value = String(quantity);
+      if (quantity <= 0) return;
+      const unitAmount = roundedMoneyValue(row.dataset.refundUnitAmount || 0);
+      const maximumAmount = roundedMoneyValue(row.dataset.refundMaxAmount || 0);
+      amountInput.value = Math.min(maximumAmount, roundedMoneyValue(unitAmount * quantity)).toFixed(2);
+    }
+
     function renderRefundLines() {
       const order = state.refundOrder;
       const lines = order && Array.isArray(order.items)
@@ -22527,21 +22542,30 @@
         : [];
       els.refundLines.innerHTML = lines.map(item => {
         const refundable = roundedMoneyValue(item.refundable_amount ?? item.line_total ?? 0);
-        const refundableQuantity = Math.max(0, Number(item.refundable_quantity ?? item.qty ?? 0));
+        const originalQuantity = Math.max(0, Math.floor(Number(item.qty ?? 0)));
+        const refundableQuantity = Math.max(0, Math.floor(Number(item.refundable_quantity ?? originalQuantity)));
         const canReturnStock = refundableQuantity > 0
           && (item.line_type === 'product' || item.line_type === 'retail' || item.line_type === 'used_device')
           && (item.line_type === 'used_device' || /^\d+$/.test(String(item.product_id || '')));
+        const unitAmount = originalQuantity > 0
+          ? roundedMoneyValue(Number(item.line_total ?? 0) / originalQuantity)
+          : roundedMoneyValue(item.unit_price ?? item.sale_price ?? refundable);
+        const initialQuantity = canReturnStock ? 1 : 0;
+        const initialAmount = canReturnStock ? Math.min(refundable, unitAmount) : refundable;
+        const availableText = canReturnStock
+          ? `${refundableQuantity} to return · ${money(refundable)} available`
+          : `${money(refundable)} available`;
         return `
-          <label class="refund-line" data-refund-line="${Number(item.line_id)}">
-            <input type="checkbox" data-refund-check checked>
+          <label class="refund-line" data-refund-line="${Number(item.line_id)}" data-refund-unit-amount="${unitAmount.toFixed(2)}" data-refund-max-amount="${refundable.toFixed(2)}" data-refund-max-quantity="${refundableQuantity}">
+            <input type="checkbox" data-refund-check>
             <span>
               <span class="refund-line-name">${escapeHtml(item.name || 'Sale item')}</span>
-              <span class="refund-line-meta">${escapeHtml(item.ticket_id ? `Ticket ${item.ticket_id}` : item.sku || (item.line_type === 'repair' ? 'Repair' : 'Product'))} · Available ${money(refundable)}</span>
+              <span class="refund-line-meta">${escapeHtml(item.ticket_id ? `Ticket ${item.ticket_id}` : item.sku || (item.line_type === 'repair' ? 'Repair' : 'Product'))} · ${escapeHtml(availableText)}</span>
             </span>
             <span class="refund-line-controls">
-              <label>Refund $<input type="number" min="0.01" max="${refundable.toFixed(2)}" step="0.01" value="${refundable.toFixed(2)}" data-refund-amount aria-label="Refund amount for ${escapeHtml(item.name || 'item')}"></label>
+              <label>Refund amount $<input type="number" min="0.01" max="${refundable.toFixed(2)}" step="0.01" value="${initialAmount.toFixed(2)}" data-refund-amount aria-label="Refund amount for ${escapeHtml(item.name || 'item')}" disabled></label>
               ${canReturnStock
-                ? `<label>Returned qty<input type="number" min="0" max="${refundableQuantity}" step="1" value="${refundableQuantity}" data-refund-quantity aria-label="Returned quantity for ${escapeHtml(item.name || 'item')}"></label>`
+                ? `<label>Return to stock<input type="number" min="0" max="${refundableQuantity}" step="1" value="${initialQuantity}" data-refund-quantity aria-label="Returned quantity for ${escapeHtml(item.name || 'item')}" disabled></label>`
                 : '<input type="hidden" value="0" data-refund-quantity>'}
             </span>
           </label>
@@ -22556,7 +22580,7 @@
         state.refundOrder = await invoiceOrderById(orderId);
         els.refundInvoiceMeta.textContent = `Invoice #${invoiceNumberText(state.refundOrder)} · ${money(state.refundOrder.total)}`;
         els.refundReason.value = '';
-        els.refundMethod.value = 'Cash';
+        els.refundMethod.value = 'Card';
         els.refundError.textContent = '';
         renderRefundLines();
         closeTicketDetailModal();
@@ -25384,6 +25408,7 @@
         if (amount) amount.disabled = !event.target.checked;
         if (quantity) quantity.disabled = !event.target.checked;
       }
+      if (event.target.matches('[data-refund-quantity]')) syncRefundAmountToQuantity(row);
       updateRefundTotal();
     });
     els.refundForm.addEventListener('submit', event => {

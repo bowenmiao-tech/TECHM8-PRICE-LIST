@@ -5293,6 +5293,46 @@ create table if not exists public.pos_sales_refund_lines (
   constraint pos_sales_refund_lines_refund_line_unique unique (refund_id, sales_order_line_id)
 );
 
+alter table public.pos_sales_refund_lines
+  add column if not exists returned_quantity integer not null default 0;
+alter table public.pos_sales_refund_lines
+  drop constraint if exists pos_sales_refund_lines_returned_quantity_check;
+alter table public.pos_sales_refund_lines
+  add constraint pos_sales_refund_lines_returned_quantity_check check (returned_quantity >= 0);
+
+create or replace function public.enforce_pos_refund_line_return_amount()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  sales_line public.pos_sales_order_lines%rowtype;
+  maximum_amount numeric(12,2);
+begin
+  select * into sales_line
+  from public.pos_sales_order_lines line
+  where line.id = new.sales_order_line_id;
+  if not found then raise exception 'Refund sale line was not found'; end if;
+  if new.returned_quantity > 0 and sales_line.line_type in ('product', 'retail', 'used_device') then
+    maximum_amount := round((sales_line.line_total / nullif(sales_line.quantity, 0)) * new.returned_quantity, 2);
+    if new.amount > maximum_amount then
+      raise exception 'Refund amount cannot exceed % for % returned item(s)', maximum_amount, new.returned_quantity;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists enforce_pos_refund_line_return_amount_trigger on public.pos_sales_refund_lines;
+create trigger enforce_pos_refund_line_return_amount_trigger
+before insert or update of amount, returned_quantity, sales_order_line_id
+on public.pos_sales_refund_lines
+for each row execute function public.enforce_pos_refund_line_return_amount();
+
+revoke all on function public.enforce_pos_refund_line_return_amount() from public, anon, authenticated;
+grant execute on function public.enforce_pos_refund_line_return_amount() to service_role;
+
 create index if not exists pos_sales_refund_lines_order_line_idx
 on public.pos_sales_refund_lines (sales_order_line_id);
 
