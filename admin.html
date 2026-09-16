@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-admin-build" content="2026-09-10-repair-comments-photos">
+  <meta name="techm8-admin-build" content="2026-09-16-sales-drilldown">
   <title>TECHM8 Admin Portal</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -377,6 +377,121 @@
     .used-severity.low { background: #eef3f4; color: #55686f; }
     .value-refund { color: var(--red); }
     .store-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 3px; background: var(--store-color); }
+    .store-card[data-sales-store] { cursor: pointer; transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+    .store-card[data-sales-store]:hover { border-color: #b7d8cf; box-shadow: 0 10px 28px rgba(32,52,61,.09); transform: translateY(-1px); }
+    .store-card[data-sales-store]:focus-visible { outline: 3px solid #5bbca6; outline-offset: 3px; }
+    .sales-drilldown-button {
+      display: inline;
+      padding: 0;
+      border: 0;
+      color: inherit;
+      background: transparent;
+      font-weight: inherit;
+      text-align: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: transparent;
+      text-underline-offset: 3px;
+    }
+    .sales-drilldown-button:hover, .sales-drilldown-button:focus-visible { color: var(--green-dark); text-decoration-color: currentColor; }
+    .store-total .sales-drilldown-button { font-size: inherit; letter-spacing: inherit; }
+    .store-metric .sales-drilldown-button { display: block; margin-top: 3px; font-size: 11px; }
+
+    .sales-drilldown-shell { position: fixed; inset: 0; z-index: 90; visibility: hidden; pointer-events: none; }
+    .sales-drilldown-shell.show { visibility: visible; pointer-events: auto; }
+    .sales-drilldown-backdrop { position: absolute; inset: 0; border: 0; background: rgba(10,24,31,.46); opacity: 0; transition: opacity .2s ease; }
+    .sales-drilldown-shell.show .sales-drilldown-backdrop { opacity: 1; }
+    .sales-drilldown-panel {
+      position: absolute;
+      inset: 0 0 0 auto;
+      width: min(1080px, 78vw);
+      display: flex;
+      flex-direction: column;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: -20px 0 48px rgba(15,31,39,.20);
+      transform: translateX(100%);
+      transition: transform .22s ease;
+    }
+    .sales-drilldown-shell.show .sales-drilldown-panel { transform: translateX(0); }
+    .sales-drilldown-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .sales-drilldown-head h2 { margin: 0; font-size: 21px; }
+    .sales-drilldown-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .sales-drilldown-close { width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; font-size: 18px; }
+    .sales-drilldown-close:hover { border-color: var(--green); color: var(--green-dark); }
+    .sales-drilldown-tools { padding: 14px 20px; border-bottom: 1px solid #edf1f3; background: #fbfcfc; }
+    .sales-drilldown-search { position: relative; }
+    .sales-drilldown-search i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #87959b; }
+    .sales-drilldown-search input { width: 100%; height: 42px; padding: 0 14px 0 39px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--ink); background: #fff; outline: none; font-size: 12px; }
+    .sales-drilldown-search input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7,137,111,.11); }
+    .sales-drilldown-summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); border-bottom: 1px solid var(--line); }
+    .sales-drilldown-stat { min-width: 0; padding: 14px 20px; border-right: 1px solid #edf1f3; }
+    .sales-drilldown-stat:last-child { border-right: 0; }
+    .sales-drilldown-stat span { display: block; color: #7d8d94; font-size: 9px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
+    .sales-drilldown-stat strong { display: block; margin-top: 5px; font-size: 19px; }
+    .sales-drilldown-stat.refund strong { color: var(--red); }
+    .sales-drilldown-scroll { flex: 1; min-height: 0; overflow: auto; }
+    .sales-drilldown-table { min-width: 920px; }
+    .sales-drilldown-table th, .sales-drilldown-table td { height: auto; min-height: 48px; padding-top: 11px; padding-bottom: 11px; vertical-align: top; }
+    .sales-drilldown-table tbody tr[data-sales-event] { cursor: pointer; }
+    .sales-event-badge { display: inline-flex; align-items: center; min-width: 54px; justify-content: center; padding: 4px 7px; border-radius: 999px; color: #076d5b; background: #e5f5f0; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+    .sales-event-badge.refund { color: #a33a31; background: #fff0ee; }
+    .sales-person { display: block; color: var(--ink); font-weight: 850; }
+    .sales-subline { display: block; margin-top: 3px; color: #7f8e95; font-size: 9px; white-space: normal; }
+    .sales-event-amount { font-size: 12px; font-weight: 900; }
+    .sales-event-amount.negative { color: var(--red); }
+    .sales-event-detail td { padding: 0; background: #f8fafb; }
+    .sales-event-detail[hidden] { display: none; }
+    .sales-event-items { display: grid; gap: 8px; padding: 13px 18px 15px 86px; }
+    .sales-event-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px; padding: 10px 12px; border: 1px solid #e1e8eb; border-radius: 8px; background: #fff; white-space: normal; }
+    .sales-event-item strong { display: block; font-size: 11px; }
+    .sales-event-item small { display: block; margin-top: 4px; color: #788991; font-size: 9px; line-height: 1.45; }
+    .sales-event-item-amount { font-weight: 900; }
+    .sales-event-reason { padding: 0 18px 13px 86px; color: #9b4a28; font-size: 10px; font-weight: 750; white-space: normal; }
+    .sales-drilldown-empty { padding: 70px 24px; color: #71828a; text-align: center; font-size: 12px; }
+    .sales-drilldown-error { display: none; margin: 12px 20px; padding: 11px 13px; border: 1px solid #f0cbc7; border-radius: 8px; color: #96362e; background: #fff4f2; font-size: 11px; }
+    .sales-drilldown-error.show { display: block; }
+    .sales-drilldown-footer { display: flex; justify-content: center; padding: 12px 20px; border-top: 1px solid var(--line); background: #fff; }
+    .sales-drilldown-more { min-width: 140px; height: 38px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--green-dark); background: #fff; cursor: pointer; font-size: 10px; font-weight: 900; }
+    .sales-drilldown-more:hover { border-color: var(--green); }
+    .sales-drilldown-more:disabled { cursor: wait; opacity: .6; }
+    body.sales-drilldown-open { overflow: hidden; }
+
+    @media (max-width: 860px) {
+      .sales-drilldown-panel { width: 100%; }
+      .sales-drilldown-summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .sales-drilldown-stat:nth-child(2) { border-right: 0; }
+      .sales-drilldown-stat:nth-child(-n+2) { border-bottom: 1px solid #edf1f3; }
+    }
+    @media (max-width: 640px) {
+      .sales-drilldown-head { padding: 14px; }
+      .sales-drilldown-head h2 { font-size: 18px; }
+      .sales-drilldown-tools { padding: 10px 14px; }
+      .sales-drilldown-stat { padding: 11px 14px; }
+      .sales-drilldown-stat strong { font-size: 16px; }
+      .sales-drilldown-table { min-width: 0; width: 100%; }
+      .sales-drilldown-table thead { display: none; }
+      .sales-drilldown-table tr[data-sales-event] {
+        display: grid;
+        grid-template-columns: minmax(0,1fr) auto;
+        gap: 5px 12px;
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      .sales-drilldown-table tr[data-sales-event] td { height: auto; min-height: 0; padding: 0; border: 0; }
+      .sales-drilldown-table tr[data-sales-event] td:nth-child(1) { grid-column: 1; grid-row: 1; }
+      .sales-drilldown-table tr[data-sales-event] td:nth-child(8) { grid-column: 2; grid-row: 1; text-align: right; }
+      .sales-drilldown-table tr[data-sales-event] td:nth-child(2) { grid-column: 1; grid-row: 2; }
+      .sales-drilldown-table tr[data-sales-event] td:nth-child(3) { grid-column: 2; grid-row: 2; text-align: right; }
+      .sales-drilldown-table tr[data-sales-event] td:nth-child(4) { grid-column: 1; grid-row: 3; }
+      .sales-drilldown-table tr[data-sales-event] td:nth-child(5) { grid-column: 2; grid-row: 3; text-align: right; }
+      .sales-drilldown-table tr[data-sales-event] td:nth-child(6) { grid-column: 1 / -1; grid-row: 4; padding-top: 4px; }
+      .sales-drilldown-table tr[data-sales-event] td:nth-child(7) { grid-column: 1 / -1; grid-row: 5; color: var(--muted); }
+      .sales-event-detail td { display: block; }
+      .sales-event-items { padding: 10px 14px; }
+      .sales-event-item { grid-template-columns: minmax(0,1fr) auto; }
+      .sales-event-reason { padding: 0 14px 12px; }
+    }
 
 
     /* Match the employee Repair Board, keeping its scroll inside the workspace. */
@@ -813,6 +928,29 @@
     </div>
   </div>
 
+  <div class="sales-drilldown-shell" id="salesDrilldown" aria-hidden="true">
+    <button class="sales-drilldown-backdrop" id="salesDrilldownBackdrop" type="button" aria-label="Close transaction details"></button>
+    <aside class="sales-drilldown-panel" role="dialog" aria-modal="true" aria-labelledby="salesDrilldownTitle">
+      <div class="sales-drilldown-head">
+        <div><h2 id="salesDrilldownTitle">Sales transactions</h2><p id="salesDrilldownSubtitle"></p></div>
+        <button class="sales-drilldown-close" id="salesDrilldownClose" type="button" aria-label="Close transaction details"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sales-drilldown-tools">
+        <label class="sales-drilldown-search"><i class="bi bi-search"></i><input id="salesDrilldownSearch" type="search" placeholder="Invoice / customer / phone / ticket / product" autocomplete="off"></label>
+      </div>
+      <div class="sales-drilldown-summary" id="salesDrilldownSummary"></div>
+      <div class="sales-drilldown-error" id="salesDrilldownError" role="alert"></div>
+      <div class="sales-drilldown-scroll" id="salesDrilldownScroll">
+        <table class="sales-drilldown-table">
+          <thead><tr><th>Type</th><th>Invoice</th><th>Date & time</th><th>Customer</th><th>Staff</th><th>Items</th><th>Payment</th><th>Amount</th></tr></thead>
+          <tbody id="salesDrilldownBody"></tbody>
+        </table>
+        <div class="sales-drilldown-empty" id="salesDrilldownEmpty" hidden>No matching transactions.</div>
+      </div>
+      <div class="sales-drilldown-footer"><button class="sales-drilldown-more" id="salesDrilldownMore" type="button" hidden>Load more</button></div>
+    </aside>
+  </div>
+
   <script>
     (() => {
       const STORE_META = {
@@ -823,6 +961,14 @@
         brassall: { name: 'Brassall', color: '#b4588b' }
       };
       const SALES_STORE_ORDER = ['parkridge', 'fairfield', 'northlakes', 'toowong'];
+      const SALES_CATEGORY_META = {
+        all: { label: 'All transactions' },
+        repair: { label: 'Repairs' },
+        mis: { label: 'MIS / Devices' },
+        product: { label: 'Products' },
+        other: { label: 'Other' },
+        mixed: { label: 'Mixed' }
+      };
       const REPAIR_STATUS = {
         need_to_order: { label: 'Need to order', tone: 'ordering' },
         waiting_shipping: { label: 'Waiting shipping', tone: 'shipping' },
@@ -868,6 +1014,18 @@
         tableFoot: document.getElementById('salesTableFoot'),
         error: document.getElementById('errorPanel'),
         errorMessage: document.getElementById('errorMessage'),
+        salesDrilldown: document.getElementById('salesDrilldown'),
+        salesDrilldownBackdrop: document.getElementById('salesDrilldownBackdrop'),
+        salesDrilldownClose: document.getElementById('salesDrilldownClose'),
+        salesDrilldownTitle: document.getElementById('salesDrilldownTitle'),
+        salesDrilldownSubtitle: document.getElementById('salesDrilldownSubtitle'),
+        salesDrilldownSearch: document.getElementById('salesDrilldownSearch'),
+        salesDrilldownSummary: document.getElementById('salesDrilldownSummary'),
+        salesDrilldownBody: document.getElementById('salesDrilldownBody'),
+        salesDrilldownEmpty: document.getElementById('salesDrilldownEmpty'),
+        salesDrilldownError: document.getElementById('salesDrilldownError'),
+        salesDrilldownScroll: document.getElementById('salesDrilldownScroll'),
+        salesDrilldownMore: document.getElementById('salesDrilldownMore'),
         repairRefresh: document.getElementById('repairRefreshButton'),
         repairUpdatedAt: document.getElementById('repairUpdatedAt'),
         repairSearch: document.getElementById('repairSearch'),
@@ -892,6 +1050,9 @@
       let repairLoading = false;
       let repairsLoaded = false;
       let usedDevicesLoaded = false;
+      let salesDrilldownRequest = 0;
+      let salesDrilldownSearchTimer = null;
+      const salesDrilldownState = { open: false, loading: false, storeCode: '', category: 'all', query: '', rows: [], hasMore: false, summary: {} };
       const REPAIR_STORE_KEY = 'techm8_admin_repair_store';
       let repairReport = { summary: {}, stores: [], tickets: [] };
 
@@ -953,6 +1114,9 @@
         return SALES_STORE_ORDER.map(code => ({ store_code: code, ...STORE_META[code], ...(byCode.get(code) || {}) }));
       }
       function mixWidth(value, total) { if (number(value) <= 0 || total <= 0) return 0; return Math.max(2, number(value) / total * 100); }
+      function salesValueButton(value, storeCode, category, extraClass = '') {
+        return `<button class="sales-drilldown-button ${extraClass}" type="button" data-sales-drilldown data-sales-store-code="${escapeHtml(storeCode || '')}" data-sales-category="${escapeHtml(category)}">${escapeHtml(value)}</button>`;
+      }
       function renderSales(report) {
         const totals = report.totals || {};
         const stores = normalizedStores(report.stores);
@@ -970,11 +1134,11 @@
 
         els.stores.innerHTML = stores.map(store => {
           const positiveMix = ['repairs', 'mis', 'products', 'other'].reduce((sum, key) => sum + Math.max(0, number(store[key])), 0);
-          return `<article class="store-card" style="--store-color:${escapeHtml(store.color)}"><div class="store-card-head"><div class="store-name">${escapeHtml(store.name)}</div><div class="store-rank"><i class="bi bi-bar-chart-fill"></i> #${rankByCode.get(store.store_code)}</div></div><div class="store-total">${money(store.net_sales)}</div><div class="store-total-label">Net sales</div><div class="mix-bar" aria-label="Sales category mix"><span class="mix-repair" style="width:${mixWidth(store.repairs, positiveMix)}%"></span><span class="mix-mis" style="width:${mixWidth(store.mis, positiveMix)}%"></span><span class="mix-product" style="width:${mixWidth(store.products, positiveMix)}%"></span><span class="mix-other" style="width:${mixWidth(store.other, positiveMix)}%"></span></div><div class="store-metrics"><div class="store-metric"><span>Repairs</span><strong>${money(store.repairs)}</strong></div><div class="store-metric"><span>MIS / Devices</span><strong>${money(store.mis)}</strong></div><div class="store-metric"><span>Products</span><strong>${money(store.products)}</strong></div><div class="store-metric"><span>${number(store.invoice_count)} invoices</span><strong>${money(store.average_sale)} avg.</strong></div></div></article>`;
+          return `<article class="store-card" style="--store-color:${escapeHtml(store.color)}" data-sales-store="${escapeHtml(store.store_code)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(store.name)} transactions"><div class="store-card-head"><div class="store-name">${escapeHtml(store.name)}</div><div class="store-rank"><i class="bi bi-bar-chart-fill"></i> #${rankByCode.get(store.store_code)}</div></div><div class="store-total">${salesValueButton(money(store.net_sales), store.store_code, 'all')}</div><div class="store-total-label">Net sales</div><div class="mix-bar" aria-label="Sales category mix"><span class="mix-repair" style="width:${mixWidth(store.repairs, positiveMix)}%"></span><span class="mix-mis" style="width:${mixWidth(store.mis, positiveMix)}%"></span><span class="mix-product" style="width:${mixWidth(store.products, positiveMix)}%"></span><span class="mix-other" style="width:${mixWidth(store.other, positiveMix)}%"></span></div><div class="store-metrics"><div class="store-metric"><span>Repairs</span>${salesValueButton(money(store.repairs), store.store_code, 'repair')}</div><div class="store-metric"><span>MIS / Devices</span>${salesValueButton(money(store.mis), store.store_code, 'mis')}</div><div class="store-metric"><span>Products</span>${salesValueButton(money(store.products), store.store_code, 'product')}</div><div class="store-metric"><span>${number(store.invoice_count)} invoices</span><strong>${money(store.average_sale)} avg.</strong></div></div></article>`;
         }).join('');
 
-        els.tableBody.innerHTML = stores.map(store => `<tr><td data-label="Store"><span class="store-dot" style="--store-color:${escapeHtml(store.color)}"></span>${escapeHtml(store.name)}</td><td data-label="Repairs">${money(store.repairs)}</td><td data-label="MIS / Devices" class="value-mis">${money(store.mis)}</td><td data-label="Products">${money(store.products)}</td><td data-label="Other">${money(store.other)}</td><td data-label="Total Sales" class="value-main">${money(store.net_sales)}</td><td data-label="Payments">${money(store.payments_received)}</td><td data-label="Refunds" class="${number(store.refunds) ? 'value-refund' : ''}">${money(store.refunds)}</td><td data-label="Invoices">${number(store.invoice_count)}</td></tr>`).join('');
-        els.tableFoot.innerHTML = `<tr><td data-label="Store">All Stores</td><td data-label="Repairs">${money(totals.repairs)}</td><td data-label="MIS / Devices" class="value-mis">${money(totals.mis)}</td><td data-label="Products">${money(totals.products)}</td><td data-label="Other">${money(totals.other)}</td><td data-label="Total Sales">${money(totals.net_sales)}</td><td data-label="Payments">${money(totals.payments_received)}</td><td data-label="Refunds">${money(totals.refunds)}</td><td data-label="Invoices">${invoiceCount}</td></tr>`;
+        els.tableBody.innerHTML = stores.map(store => `<tr><td data-label="Store"><span class="store-dot" style="--store-color:${escapeHtml(store.color)}"></span>${salesValueButton(store.name, store.store_code, 'all')}</td><td data-label="Repairs">${salesValueButton(money(store.repairs), store.store_code, 'repair')}</td><td data-label="MIS / Devices" class="value-mis">${salesValueButton(money(store.mis), store.store_code, 'mis')}</td><td data-label="Products">${salesValueButton(money(store.products), store.store_code, 'product')}</td><td data-label="Other">${salesValueButton(money(store.other), store.store_code, 'other')}</td><td data-label="Total Sales" class="value-main">${salesValueButton(money(store.net_sales), store.store_code, 'all')}</td><td data-label="Payments">${money(store.payments_received)}</td><td data-label="Refunds" class="${number(store.refunds) ? 'value-refund' : ''}">${money(store.refunds)}</td><td data-label="Invoices">${number(store.invoice_count)}</td></tr>`).join('');
+        els.tableFoot.innerHTML = `<tr><td data-label="Store">${salesValueButton('All Stores', '', 'all')}</td><td data-label="Repairs">${salesValueButton(money(totals.repairs), '', 'repair')}</td><td data-label="MIS / Devices" class="value-mis">${salesValueButton(money(totals.mis), '', 'mis')}</td><td data-label="Products">${salesValueButton(money(totals.products), '', 'product')}</td><td data-label="Other">${salesValueButton(money(totals.other), '', 'other')}</td><td data-label="Total Sales">${salesValueButton(money(totals.net_sales), '', 'all')}</td><td data-label="Payments">${money(totals.payments_received)}</td><td data-label="Refunds">${money(totals.refunds)}</td><td data-label="Invoices">${invoiceCount}</td></tr>`;
         els.rangeLabel.textContent = rangeText(report.date_from || els.dateFrom.value, report.date_to || els.dateTo.value);
         els.updatedAt.textContent = `Updated ${new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' }).format(new Date())}`;
       }
@@ -1019,6 +1183,130 @@
           hour: 'numeric',
           minute: '2-digit'
         }).format(date);
+      }
+
+      function salesCategoryLabel(category) {
+        return (SALES_CATEGORY_META[category] || SALES_CATEGORY_META.all).label;
+      }
+
+      function closeSalesDrilldown() {
+        salesDrilldownState.open = false;
+        salesDrilldownRequest += 1;
+        els.salesDrilldown.classList.remove('show');
+        els.salesDrilldown.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('sales-drilldown-open');
+      }
+
+      function salesDrilldownItems(row) {
+        return Array.isArray(row.items) ? row.items : [];
+      }
+
+      function renderSalesDrilldownRows() {
+        const rows = salesDrilldownState.rows;
+        els.salesDrilldownEmpty.hidden = rows.length > 0;
+        els.salesDrilldownBody.innerHTML = rows.map((row, index) => {
+          const items = salesDrilldownItems(row);
+          const isRefund = row.event_type === 'refund';
+          const itemNames = items.slice(0, 2).map(item => item.name || 'Sale item').join(', ');
+          const extraItems = Math.max(0, items.length - 2);
+          const detailId = `sales-event-detail-${index}`;
+          const itemRows = items.map(item => {
+            const quantityText = number(item.quantity) > 0 ? `${number(item.quantity)} × ${money(item.unit_price)}` : 'Amount adjustment';
+            const details = [item.sku, item.ticket_code, salesCategoryLabel(item.category), quantityText, item.note].filter(Boolean).join(' · ');
+            return `<div class="sales-event-item"><div><strong>${escapeHtml(item.name || 'Sale item')}</strong><small>${escapeHtml(details)}</small></div><div class="sales-event-item-amount ${number(item.amount) < 0 ? 'value-refund' : ''}">${money(item.amount)}</div></div>`;
+          }).join('');
+          return `<tr data-sales-event="${escapeHtml(row.event_key)}" tabindex="0" aria-expanded="false" aria-controls="${detailId}"><td><span class="sales-event-badge ${isRefund ? 'refund' : ''}">${isRefund ? 'Refund' : 'Sale'}</span></td><td><span class="sales-person">#${escapeHtml(row.invoice_number)}</span><span class="sales-subline">${escapeHtml(row.store_name || '')}${row.ticket_codes ? ` · ${escapeHtml(row.ticket_codes)}` : ''}</span></td><td>${escapeHtml(formatDateTime(row.transaction_at))}</td><td><span class="sales-person">${escapeHtml(row.customer_name || 'Walk-in Customer')}</span><span class="sales-subline">${escapeHtml(row.customer_phone || row.customer_email || '')}</span></td><td>${escapeHtml(row.staff_name || '—')}</td><td><span class="sales-person">${escapeHtml(itemNames || 'Sale item')}</span>${extraItems ? `<span class="sales-subline">+${extraItems} more</span>` : ''}</td><td><span class="sales-person">${escapeHtml(row.payment_method || '—')}</span><span class="sales-subline">${escapeHtml(row.payment_status || '')}</span></td><td><span class="sales-event-amount ${number(row.amount) < 0 ? 'negative' : ''}">${money(row.amount)}</span></td></tr><tr class="sales-event-detail" id="${detailId}" hidden><td colspan="8"><div class="sales-event-items">${itemRows}</div>${row.reason ? `<div class="sales-event-reason">Refund reason: ${escapeHtml(row.reason)}</div>` : ''}</td></tr>`;
+        }).join('');
+      }
+
+      function renderSalesDrilldownSummary() {
+        const summary = salesDrilldownState.summary || {};
+        els.salesDrilldownSummary.innerHTML = [
+          ['Sales', money(summary.sales)],
+          ['Refunds', money(summary.refunds), 'refund'],
+          ['Net', money(summary.net)],
+          ['Transactions', String(number(summary.transaction_count))]
+        ].map(([label, value, tone]) => `<div class="sales-drilldown-stat ${tone || ''}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
+      }
+
+      async function loadSalesDrilldown(reset = true) {
+        if (!salesDrilldownState.open || (salesDrilldownState.loading && !reset)) return;
+        const requestId = ++salesDrilldownRequest;
+        const offset = reset ? 0 : salesDrilldownState.rows.length;
+        salesDrilldownState.loading = true;
+        els.salesDrilldownError.classList.remove('show');
+        els.salesDrilldownMore.disabled = true;
+        if (reset) {
+          els.salesDrilldownBody.innerHTML = '<tr><td colspan="8" style="height:120px;text-align:center;color:#7d8d94">Loading transactions…</td></tr>';
+          els.salesDrilldownEmpty.hidden = true;
+          els.salesDrilldownScroll.scrollTop = 0;
+        }
+        try {
+          const report = await window.Techm8StaffAuth.callRpc('get_admin_sales_drilldown', {
+            session_token: window.Techm8StaffAuth.getToken(),
+            date_from: els.dateFrom.value,
+            date_to: els.dateTo.value,
+            target_store_code: salesDrilldownState.storeCode || null,
+            target_category: salesDrilldownState.category,
+            search_query: salesDrilldownState.query,
+            page_limit: 50,
+            page_offset: offset
+          });
+          if (requestId !== salesDrilldownRequest || !salesDrilldownState.open) return;
+          const incoming = Array.isArray(report.rows) ? report.rows : [];
+          salesDrilldownState.rows = reset ? incoming : salesDrilldownState.rows.concat(incoming);
+          salesDrilldownState.summary = report.summary || {};
+          salesDrilldownState.hasMore = Boolean(report.has_more);
+          els.salesDrilldownTitle.textContent = `${report.store_name || 'All Stores'} · ${salesCategoryLabel(report.category || salesDrilldownState.category)}`;
+          els.salesDrilldownSubtitle.textContent = `${rangeText(report.date_from || els.dateFrom.value, report.date_to || els.dateTo.value)} · Net of refunds`;
+          renderSalesDrilldownSummary();
+          renderSalesDrilldownRows();
+          els.salesDrilldownMore.hidden = !salesDrilldownState.hasMore;
+        } catch (error) {
+          if (requestId !== salesDrilldownRequest) return;
+          if (reset) salesDrilldownState.rows = [];
+          renderSalesDrilldownRows();
+          els.salesDrilldownError.textContent = error.message || 'Transactions could not be loaded.';
+          els.salesDrilldownError.classList.add('show');
+          els.salesDrilldownMore.hidden = true;
+        } finally {
+          if (requestId === salesDrilldownRequest) {
+            salesDrilldownState.loading = false;
+            els.salesDrilldownMore.disabled = false;
+          }
+        }
+      }
+
+      function openSalesDrilldown(storeCode = '', category = 'all') {
+        salesDrilldownState.open = true;
+        salesDrilldownState.storeCode = String(storeCode || '').toLowerCase();
+        salesDrilldownState.category = SALES_CATEGORY_META[category] ? category : 'all';
+        salesDrilldownState.query = '';
+        salesDrilldownState.rows = [];
+        salesDrilldownState.summary = {};
+        els.salesDrilldownSearch.value = '';
+        els.salesDrilldownTitle.textContent = `${salesDrilldownState.storeCode ? (STORE_META[salesDrilldownState.storeCode] || {}).name : 'All Stores'} · ${salesCategoryLabel(salesDrilldownState.category)}`;
+        els.salesDrilldownSubtitle.textContent = rangeText(els.dateFrom.value, els.dateTo.value);
+        els.salesDrilldown.classList.add('show');
+        els.salesDrilldown.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('sales-drilldown-open');
+        loadSalesDrilldown(true);
+        setTimeout(() => els.salesDrilldownSearch.focus(), 0);
+      }
+
+      function handleSalesDrilldownTrigger(event) {
+        const button = event.target.closest('[data-sales-drilldown]');
+        if (button) {
+          event.stopPropagation();
+          openSalesDrilldown(button.dataset.salesStoreCode || '', button.dataset.salesCategory || 'all');
+          return true;
+        }
+        const card = event.target.closest('[data-sales-store]');
+        if (card) {
+          openSalesDrilldown(card.dataset.salesStore || '', 'all');
+          return true;
+        }
+        return false;
       }
 
       // Used devices: payouts, stock, exceptions, and the dealer register.
@@ -1371,6 +1659,39 @@
       }
 
       document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => setPreset(button.dataset.preset)));
+      [els.stores, els.tableBody, els.tableFoot].forEach(container => container.addEventListener('click', handleSalesDrilldownTrigger));
+      els.stores.addEventListener('keydown', event => {
+        if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-sales-store]')) {
+          event.preventDefault();
+          openSalesDrilldown(event.target.dataset.salesStore || '', 'all');
+        }
+      });
+      els.salesDrilldownClose.addEventListener('click', closeSalesDrilldown);
+      els.salesDrilldownBackdrop.addEventListener('click', closeSalesDrilldown);
+      els.salesDrilldownMore.addEventListener('click', () => loadSalesDrilldown(false));
+      els.salesDrilldownSearch.addEventListener('input', () => {
+        clearTimeout(salesDrilldownSearchTimer);
+        salesDrilldownSearchTimer = setTimeout(() => {
+          salesDrilldownState.query = els.salesDrilldownSearch.value.trim();
+          loadSalesDrilldown(true);
+        }, 320);
+      });
+      els.salesDrilldownBody.addEventListener('click', event => {
+        const row = event.target.closest('[data-sales-event]');
+        if (!row) return;
+        const details = row.nextElementSibling;
+        const open = row.getAttribute('aria-expanded') === 'true';
+        row.setAttribute('aria-expanded', String(!open));
+        if (details) details.hidden = open;
+      });
+      els.salesDrilldownBody.addEventListener('keydown', event => {
+        if ((event.key !== 'Enter' && event.key !== ' ') || !event.target.matches('[data-sales-event]')) return;
+        event.preventDefault();
+        event.target.click();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && salesDrilldownState.open) closeSalesDrilldown();
+      });
       document.querySelectorAll('[data-used-preset]').forEach(button => button.addEventListener('click', () => setUsedPreset(button.dataset.usedPreset)));
       [els.usedDateFrom, els.usedDateTo].forEach(input => input.addEventListener('change', () => {
         document.querySelectorAll('[data-used-preset]').forEach(button => button.classList.remove('active'));
