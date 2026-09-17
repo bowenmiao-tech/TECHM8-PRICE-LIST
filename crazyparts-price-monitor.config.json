@@ -4,6 +4,7 @@
   "expectedMemberTier": "Diamond",
   "gstRate": 0.1,
   "labourCharge": 110,
+  "tabletLabourCharge": 150,
   "roundingIncrement": 5,
   "pageSize": 36,
   "pageDelayMs": 7000,

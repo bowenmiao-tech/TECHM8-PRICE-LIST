@@ -274,7 +274,7 @@
         <div class="hero-top">
           <div>
             <h1>Auto Price List</h1>
-            <p>Track the Crazy Parts price update for Samsung A Series and ten additional phone brands.</p>
+            <p>Track the Crazy Parts price update for Samsung A Series, Samsung Tab A/Tab S, and ten additional phone brands.</p>
           </div>
           <a class="back-link" href="./admin.html">Back to Admin Portal</a>
         </div>
@@ -381,6 +381,10 @@
       return labels[status] || String(status || 'Scheduled').replace(/_/g, ' ');
     }
 
+    function brandDisplayName(row) {
+      return row.family === 'A Series' ? 'Samsung A Series + Tab A / Tab S' : row.brand;
+    }
+
     async function loadProgress() {
       const headline = document.getElementById('progressHeadline');
       const detail = document.getElementById('progressDetail');
@@ -420,10 +424,10 @@
           : 0;
 
         if (active) {
-          headline.textContent = active.brand + ' is updating: ' + Math.round(Number(active.progress_percent || 0)) + '%';
+          headline.textContent = brandDisplayName(active) + ' is updating: ' + Math.round(Number(active.progress_percent || 0)) + '%';
           detail.textContent = active.message || 'The model pages are being checked now.';
         } else if (issue) {
-          headline.textContent = issue.brand + ' needs attention';
+          headline.textContent = brandDisplayName(issue) + ' needs attention';
           detail.textContent = issue.message || 'The last update did not finish.';
         } else {
           headline.textContent = completedRows.length + ' of ' + rows.length + ' brands updated this month';
@@ -435,6 +439,7 @@
         document.getElementById('refreshTime').textContent = 'Last checked: ' + formatTime(new Date(), 'Just now');
 
         grid.innerHTML = rows.map(row => {
+          const displayBrand = brandDisplayName(row);
           const latestRequest = latestRequests.get(row.family);
           const requestActive = latestRequest && (latestRequest.status === 'queued' || latestRequest.status === 'running');
           const completedThisMonth = brisbaneMonthKey(row.last_success_at) === currentMonth;
@@ -465,7 +470,7 @@
           return `<article class="brand-card">
             <div class="brand-head">
               <div>
-                <div class="brand-name">${escapeHtml(row.brand)}</div>
+                <div class="brand-name">${escapeHtml(displayBrand)}</div>
                 <div class="brand-day">Monthly on day ${escapeHtml(row.schedule_day)} at 5:00 AM</div>
               </div>
               <span class="status-pill ${escapeHtml(displayStatus)}">${escapeHtml(statusLabel(displayStatus))}</span>

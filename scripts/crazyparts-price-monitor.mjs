@@ -600,10 +600,11 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
 
   for (const sheet of [prices, source, exceptions, settings]) sheet.showGridLines = false;
 
-  settings.getRange('A1:B8').values = safeWorkbookRows([
+  settings.getRange('A1:B9').values = safeWorkbookRows([
     ['Setting', 'Value'],
     ['GST rate', config.gstRate],
-    ['Labour charge', config.labourCharge],
+    ['Phone labour charge', config.labourCharge],
+    ['Samsung tablet labour charge', config.tabletLabourCharge],
     ['Round up increment', config.roundingIncrement],
     ['Member tier', config.expectedMemberTier],
     ['Captured at', capturedDisplay],
@@ -612,10 +613,10 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
   ]);
   settings.getRange('A1:B1').format = { fill: '#123B5D', font: { bold: true, color: '#FFFFFF' } };
   settings.getRange('B2').format.numberFormat = '0%';
-  settings.getRange('B3:B4').format.numberFormat = '"$"#,##0.00';
-  setWidths(settings, 8, [24, 72]);
+  settings.getRange('B3:B5').format.numberFormat = '"$"#,##0.00';
+  setWidths(settings, 9, [30, 72]);
   settings.freezePanes.freezeRows(1);
-  const settingsTable = settings.tables.add('A1:B8', true, 'SettingsTable');
+  const settingsTable = settings.tables.add('A1:B9', true, 'SettingsTable');
   settingsTable.style = 'TableStyleMedium2';
 
   const priceHeaders = [
@@ -630,7 +631,7 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     rowHeight: 30,
   };
   prices.getRange('A2:L2').merge();
-  prices.getRange('A2').values = [[`Formula: round up to nearest $${config.roundingIncrement} after part price + GST + $${config.labourCharge} labour. Cameras use the lowest and highest eligible camera modules.`]];
+  prices.getRange('A2').values = [[`Formula: round up to nearest $${config.roundingIncrement} after part price + GST + $${config.labourCharge} phone labour or $${config.tabletLabourCharge} Samsung tablet labour. Cameras use the lowest and highest eligible camera modules.`]];
   prices.getRange('A2:L2').format = { fill: '#EAF2F8', font: { color: '#234E6F' }, wrapText: true, rowHeight: 34 };
   prices.getRange('A4:L4').merge();
   prices.getRange('A4').values = [[
@@ -648,9 +649,10 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     ]));
     const priceEndRow = priceStartRow + values.length - 1;
     prices.getRange(`A${priceStartRow}:L${priceEndRow}`).values = values;
-    prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+'Settings'!$B$3)/'Settings'!$B$4,0)*'Settings'!$B$4`]];
+    const labourFormula = `IF(OR($B${priceStartRow}="Tab A Series",$B${priceStartRow}="Tab S Series"),'Settings'!$B$4,'Settings'!$B$3)`;
+    prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$5,0)*'Settings'!$B$5`]];
     prices.getRange(`G${priceStartRow}:G${priceEndRow}`).fillDown();
-    prices.getRange(`H${priceStartRow}`).formulas = [[`=ROUNDUP((F${priceStartRow}*(1+'Settings'!$B$2)+'Settings'!$B$3)/'Settings'!$B$4,0)*'Settings'!$B$4`]];
+    prices.getRange(`H${priceStartRow}`).formulas = [[`=ROUNDUP((F${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$5,0)*'Settings'!$B$5`]];
     prices.getRange(`H${priceStartRow}:H${priceEndRow}`).fillDown();
     prices.getRange(`E${priceStartRow}:F${priceEndRow}`).format.numberFormat = '"$"#,##0.00';
     prices.getRange(`G${priceStartRow}:H${priceEndRow}`).format.numberFormat = '"$"#,##0';

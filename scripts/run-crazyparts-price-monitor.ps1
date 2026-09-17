@@ -48,6 +48,10 @@ if ($SupportedBrands) {
     $familyValues += $supportedFamilies
 }
 
+if (@($familyValues | Where-Object { $_ -eq 'A Series' }).Count -gt 0) {
+    $familyValues += @('Tab A Series', 'Tab S Series')
+}
+
 foreach ($familyValue in @($familyValues | Select-Object -Unique)) {
     if (-not [string]::IsNullOrWhiteSpace($familyValue)) {
         $nodeArgs += @('--family', $familyValue)

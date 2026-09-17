@@ -12,7 +12,9 @@ const backupDir = path.join(outputDir, 'supabase-backups');
 const minimumReplacementCoveragePercent = 70;
 
 const familyConfig = new Map([
-  ['a series', { dbBrand: 'Samsung A Series', displayBrand: 'Samsung', statusFamily: 'A Series', mode: 'samsung' }],
+  ['a series', { dbBrand: 'Samsung A Series', displayBrand: 'Samsung', statusFamily: 'A Series', mode: 'samsung', labourCharge: 110 }],
+  ['tab a series', { dbBrand: 'Samsung Tab A Series', displayBrand: 'Samsung Tab', statusFamily: 'A Series', mode: 'replace', labourCharge: 150 }],
+  ['tab s series', { dbBrand: 'Samsung Tab S Series', displayBrand: 'Samsung Tab', statusFamily: 'A Series', mode: 'replace', labourCharge: 150 }],
   ['oppo', { dbBrand: 'OPPO', displayBrand: 'OPPO', statusFamily: 'Oppo', mode: 'replace' }],
   ['huawei', { dbBrand: 'HUAWEI', displayBrand: 'Huawei', statusFamily: 'Huawei', mode: 'replace' }],
   ['xiaomi', { dbBrand: 'XIAOMI', displayBrand: 'Xiaomi', statusFamily: 'Xiaomi', mode: 'replace' }],
@@ -34,8 +36,8 @@ function parseArgs(argv) {
   };
 }
 
-function priceForPart(partPrice) {
-  return Math.ceil(((Number(partPrice) * 1.10) + 110) / 5) * 5;
+function priceForPart(partPrice, labourCharge = 110) {
+  return Math.ceil(((Number(partPrice) * 1.10) + labourCharge) / 5) * 5;
 }
 
 function cleanModel(value) {
@@ -300,6 +302,7 @@ function makeReplacementPlan(rawData, siteRows, configs) {
       brand: config.dbBrand,
       model,
       repairType: row.repairType,
+      labourCharge: config.labourCharge,
       sources: [],
     });
     groups.get(key).sources.push(row);
@@ -308,8 +311,14 @@ function makeReplacementPlan(rawData, siteRows, configs) {
   const siteMap = new Map(siteRows.map((row) => [`${row.brand}|${row.model}|${row.issue}`, row]));
   const updates = [];
   for (const group of groups.values()) {
-    const minimum = priceForPart(Math.min(...group.sources.map((source) => source.minPartPrice)));
-    const maximum = priceForPart(Math.max(...group.sources.map((source) => source.maxPartPrice)));
+    const minimum = priceForPart(
+      Math.min(...group.sources.map((source) => source.minPartPrice)),
+      group.labourCharge,
+    );
+    const maximum = priceForPart(
+      Math.max(...group.sources.map((source) => source.maxPartPrice)),
+      group.labourCharge,
+    );
     const newPrice = minimum === maximum ? String(minimum) : `${minimum} - ${maximum}`;
     for (const issue of issuesForRepairType(group.repairType)) {
       const existing = siteMap.get(`${group.brand}|${group.model}|${issue}`);
@@ -437,7 +446,7 @@ async function main() {
   const rawData = JSON.parse(await fs.readFile(historyPath, 'utf8'));
   const configs = configsInHistory(rawData);
   if (!configs.length) throw new Error('The selected history does not contain a supported model family.');
-  activeStatusFamilies = configs.map((config) => config.statusFamily);
+  activeStatusFamilies = [...new Set(configs.map((config) => config.statusFamily))];
   const affectedBrands = [...new Set(configs.map((config) => config.dbBrand))];
   const config = await supabaseConfig();
   const beforeRows = await readSiteRows(config, affectedBrands);
@@ -452,17 +461,20 @@ async function main() {
   const replacementPlan = replacementConfigs.length
     ? makeReplacementPlan(rawData, beforeRows, replacementConfigs)
     : null;
+  const allUpdates = [...(samsungPlan?.updates || []), ...(replacementPlan?.updates || [])];
   const plan = {
-    updates: [...(samsungPlan?.updates || []), ...(replacementPlan?.updates || [])],
+    updates: allUpdates,
     unmatched: samsungPlan?.unmatched || [],
     obsoleteModels: samsungPlan?.obsoleteModels || [],
     replaceBrands: replacementPlan?.replaceBrands || [],
     supplierModels: (samsungPlan?.supplierModels || 0) + (replacementPlan?.supplierModels || 0),
-    statusRows: configs.map((config) => {
-      const brandUpdates = [...(samsungPlan?.updates || []), ...(replacementPlan?.updates || [])]
-        .filter((row) => row.brand === config.dbBrand);
+    statusRows: [...new Set(configs.map((config) => config.statusFamily))].map((statusFamily) => {
+      const statusBrands = new Set(configs
+        .filter((config) => config.statusFamily === statusFamily)
+        .map((config) => config.dbBrand));
+      const brandUpdates = allUpdates.filter((row) => statusBrands.has(row.brand));
       return {
-        family: config.statusFamily,
+        family: statusFamily,
         total_models: Number(rawData.modelsSelected || rawData.modelsProcessed || 0),
         processed_models: Number(rawData.modelsProcessed || 0),
         eligible_models: new Set(brandUpdates.map((row) => row.model)).size,
