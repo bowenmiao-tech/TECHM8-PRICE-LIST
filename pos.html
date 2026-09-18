@@ -4853,6 +4853,33 @@
 
     .repair-input,
     .repair-select,
+    .repair-quick-reasons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 6px 0 2px;
+    }
+    .repair-quick-chip {
+      border: 1px solid var(--tm-line);
+      background: var(--tm-soft);
+      color: var(--tm-ink);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .repair-quick-chip:hover {
+      border-color: var(--tm-green);
+      background: rgba(7, 137, 111, .1);
+      color: var(--tm-green-dark);
+    }
+    .repair-quick-chip.is-active {
+      border-color: var(--tm-green);
+      background: var(--tm-green);
+      color: #fff;
+    }
+
     .repair-textarea {
       width: 100%;
       border: 1px solid var(--tm-line);
@@ -13187,6 +13214,37 @@
       return state.repair.deviceIdType || 'imei';
     }
 
+    // These read as alternatives, not a list to stack up: a customer either
+    // forgot the passcode or refused to give it, never both. So the chips pick
+    // one reason, the same way the buttons above them do.
+    const REPAIR_QUICK_REASONS = {
+      repairDeviceIdUnavailable: {
+        stateKey: 'deviceIdUnavailable',
+        phrases: ['Device will not power on']
+      },
+      repairPasswordNoneReason: {
+        stateKey: 'passwordNoneReason',
+        phrases: ['Customer forgot the passcode', 'Customer declined to provide it']
+      },
+      repairCannotTestReason: {
+        stateKey: 'cannotTestReason',
+        phrases: ['Device will not power on', 'No touch response']
+      }
+    };
+
+    function repairQuickReasonsHtml(targetId) {
+      const config = REPAIR_QUICK_REASONS[targetId];
+      if (!config || !config.phrases.length) return '';
+      const current = String(state.repair[config.stateKey] || '').trim();
+      return `
+        <div class="repair-quick-reasons">
+          ${config.phrases.map(phrase => `
+            <button class="repair-quick-chip ${current === phrase ? 'is-active' : ''}" type="button" aria-pressed="${current === phrase}" data-quick-reason="${escapeHtml(targetId)}" data-quick-text="${escapeHtml(phrase)}">${escapeHtml(phrase)}</button>
+          `).join('')}
+        </div>
+      `;
+    }
+
     function repairDeviceIdFieldHtml() {
       const deviceIdType = normalizedRepairDeviceIdType();
       if (deviceIdType === 'sn') {
@@ -13202,6 +13260,7 @@
         return `
           <label class="repair-field">
             Why it is unavailable
+            ${repairQuickReasonsHtml('repairDeviceIdUnavailable')}
             <textarea class="repair-textarea" id="repairDeviceIdUnavailable" placeholder="Example: unit cannot boot, label missing, or housing too damaged to read">${escapeHtml(state.repair.deviceIdUnavailable)}</textarea>
             <div id="repairDeviceIdUnavailableError" class="repair-error">Please explain why the device ID is unavailable.</div>
           </label>
@@ -17376,6 +17435,7 @@
           </div>
           <label class="repair-field ${state.repair.passwordType !== 'none' ? 'repair-hidden' : ''}" id="repairPasswordNoneBox">
             Reason
+            ${repairQuickReasonsHtml('repairPasswordNoneReason')}
             <textarea class="repair-textarea" id="repairPasswordNoneReason" placeholder="Example: customer does not know the passcode, device cannot power on, or no unlock required">${escapeHtml(state.repair.passwordNoneReason)}</textarea>
             <div id="repairPasswordNoneReasonError" class="repair-error">Please enter a reason when the password is not provided.</div>
           </label>
@@ -17406,6 +17466,7 @@
             </div>
             <label class="repair-field ${state.repair.testable !== 'no' ? 'repair-hidden' : ''}" id="repairCannotTestBox">
               Why testing is not possible
+              ${repairQuickReasonsHtml('repairCannotTestReason')}
               <textarea class="repair-textarea" id="repairCannotTestReason" placeholder="Example: no display, device will not power on, or customer did not provide the passcode">${escapeHtml(state.repair.cannotTestReason)}</textarea>
               <div id="repairCannotTestReasonError" class="repair-error">Please enter a reason when testing cannot be completed.</div>
             </label>
@@ -24834,6 +24895,27 @@
     });
 
     els.repairWorkspace.addEventListener('click', event => {
+      const quickReason = event.target.closest('[data-quick-reason]');
+      if (quickReason) {
+        const targetId = quickReason.dataset.quickReason;
+        const field = document.getElementById(targetId);
+        const phrase = quickReason.dataset.quickText || '';
+        if (field && phrase) {
+          // Picking one reason replaces the other; tapping the chosen one again
+          // clears it, so a mis-tap does not have to be deleted by hand.
+          const wasChosen = String(field.value || '').trim() === phrase;
+          field.value = wasChosen ? '' : phrase;
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+          const row = quickReason.parentElement;
+          if (row) row.querySelectorAll('[data-quick-reason]').forEach(chip => {
+            const active = !wasChosen && chip === quickReason;
+            chip.classList.toggle('is-active', active);
+            chip.setAttribute('aria-pressed', String(active));
+          });
+          field.focus();
+        }
+        return;
+      }
       const newMemo = event.target.closest('[data-new-memo]');
       if (newMemo) { openNewMemo(newMemo.dataset.newMemo); return; }
       const ticketCartButton = event.target.closest('[data-ticket-cart]');

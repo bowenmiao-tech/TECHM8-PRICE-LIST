@@ -125,7 +125,7 @@ function classifyProduct(name) {
   const batteryTerms = /\bbattery\b|\b\d{3,5}\s?mah\b.*\beb-[a-z0-9-]+/i;
   if (batteryTerms.test(value) && !batteryExcluded.test(value)) return 'battery';
 
-  const portTerms = /(charging port|charge port|charger port|dock connector|charging connector|usb[- ]?[c]?(?: port| connector)|\bcport\b)/i;
+  const portTerms = /(charging port|charge port|charger port|charging board|charge board|dock connector|charging connector|usb[- ]?[c]?(?: port| connector)|\bcport\b)/i;
   const portExcluded = /(tester|test cable|wall charger|car charger|charging adapter)/i;
   if (portTerms.test(value) && !portExcluded.test(value)) return 'charging_port';
 
@@ -137,8 +137,8 @@ function classifyProduct(name) {
 }
 
 function productMatchesModel(productName, modelHeading, model) {
-  const modelContext = `${model?.brand || ''} ${model?.family || ''}`;
-  if (!/\bsamsung\b|\ba series\b/i.test(modelContext)) return true;
+  const family = String(model?.family || '').trim().toLowerCase();
+  if (family !== 'a series') return true;
 
   const title = String(productName || '');
   const heading = String(modelHeading || '');
@@ -975,6 +975,19 @@ async function main() {
     modelsSelected: selectedModels.length,
     modelsProcessed: scrapedModels.length,
     modelCatalog: selectedModels.map(({ brand, family, name, href }) => ({ brand, family, name, href })),
+    productCatalog: scrapedModels
+      .flatMap((model) => model.products.map((product) => ({
+        family: model.family,
+        model: model.heading || model.name,
+        modelUrl: model.href,
+        category: product.category ? categoryLabel(product.category) : '',
+        name: product.name,
+        price: product.price,
+        sydStock: product.sydStock,
+        melStock: product.melStock,
+        available: product.available,
+        url: product.url,
+      }))),
     repairRows: summary.repairRows,
     sourceRows: summary.sourceRows,
     exceptions: summary.exceptions,
