@@ -2209,7 +2209,7 @@
     /* Defined before .special-modal, so the shared class would otherwise win on
        source order. The compound selector keeps this width. */
     .special-modal.customer-history-modal {
-      width: min(920px, calc(100vw - 28px));
+      width: min(1180px, calc(100vw - 28px));
       max-height: calc(var(--pos-viewport-height, 100vh) - 28px);
       overflow: hidden;
       padding: 0;
@@ -2228,10 +2228,50 @@
 
     .customer-history-summary {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 14px;
     }
+
+    /* Sales on the left, buybacks on the right: one customer, both sides of
+       the counter. */
+    .customer-history-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+
+    .customer-history-column { min-width: 0; }
+
+    .customer-history-column-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0 0 9px;
+      color: var(--tm-muted);
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    /* Each column is half as wide as the old single list, so every row uses
+       the stacked layout the narrow screens already used. */
+    .customer-history-columns .customer-history-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      row-gap: 8px;
+    }
+
+    .customer-history-columns .customer-history-invoice,
+    .customer-history-columns .customer-history-main,
+    .customer-history-columns .customer-history-actions {
+      grid-column: 1 / -1;
+    }
+
+    .customer-history-columns .customer-history-status { grid-column: 1; }
+    .customer-history-columns .customer-history-total { grid-column: 2; text-align: right; }
+    .customer-history-payout { font-size: 13px; font-weight: 850; color: var(--tm-muted); }
 
     .customer-history-stat {
       display: grid;
@@ -2351,8 +2391,14 @@
       font-weight: 800;
     }
 
+    @media (max-width: 1100px) {
+      .customer-history-columns { grid-template-columns: minmax(0, 1fr); }
+      .customer-history-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
     @media (max-width: 900px) {
-      .customer-history-summary { grid-template-columns: 1fr; }
+      /* Four tiles stacked one per line pushes the lists off the screen. */
+      .customer-history-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .customer-history-row { grid-template-columns: minmax(0, 1fr) auto; }
       .customer-history-invoice { grid-column: 1 / -1; }
       .customer-history-main { grid-column: 1 / -1; }
@@ -5728,6 +5774,9 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 11px;
+      /* A cell that carries a hint under its input must not stretch the
+         controls beside it. */
+      align-items: start;
     }
 
     .used-field {
@@ -5829,6 +5878,33 @@
     }
 
     .used-field-hint { color: #7b8c92; font-size: 11px; font-weight: 700; }
+
+    /* Battery health is a number out of a hundred; a full-width box invites a
+       sentence. */
+    .used-field.used-field-narrow input { max-width: 150px; }
+
+    /* The identifier keeps its own row: which kind, then the number. */
+    .used-id-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+    }
+
+    .used-id-input { min-width: 0; }
+
+    .used-payout-details {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px dashed var(--tm-line);
+      border-radius: 8px;
+      background: #f8fafb;
+    }
+
+    .used-payout-fields { margin-top: 10px; }
+
+    /* A grid ignores the hidden attribute unless it is said out loud. */
+    .used-form-grid[hidden] { display: none; }
 
     .used-inspection-grid {
       display: grid;
@@ -7314,6 +7390,12 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      /* Two columns: the model search still shares the first row with the
+         category instead of taking the whole width. */
+      .used-field.used-model-search.span-2 {
+        grid-column: span 1;
+      }
+
       .used-field.span-3 {
         grid-column: 1 / -1;
       }
@@ -7606,6 +7688,11 @@
 
       .used-form-grid,
       .used-inspection-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      /* Too narrow to keep the chips beside the number. */
+      .used-id-row {
         grid-template-columns: minmax(0, 1fr);
       }
 
@@ -9197,7 +9284,16 @@
       </div>
       <div class="customer-history-body">
         <div id="customerHistorySummary" class="customer-history-summary"></div>
-        <div id="customerHistoryList" class="customer-history-list"></div>
+        <div class="customer-history-columns">
+          <section class="customer-history-column">
+            <h3 class="customer-history-column-title"><i class="bi bi-bag-check"></i> Sales</h3>
+            <div id="customerHistoryList" class="customer-history-list"></div>
+          </section>
+          <section class="customer-history-column">
+            <h3 class="customer-history-column-title"><i class="bi bi-phone"></i> Buybacks</h3>
+            <div id="customerHistoryBuybackList" class="customer-history-list"></div>
+          </section>
+        </div>
       </div>
     </div>
   </div>
@@ -9925,6 +10021,7 @@
       customers: [],
       selectedCustomerId: '',
       customerHistoryOrders: [],
+      customerHistoryBuybacks: [],
       repairCard: { snapshot: null, hasInk: false, saving: false, mode: 'create', ticketCode: '', reason: '' },
       repairCardTerms: '',
       ticketCardSignatures: {},
@@ -10282,6 +10379,7 @@
       customerHistorySubtitle: document.getElementById('customerHistorySubtitle'),
       customerHistorySummary: document.getElementById('customerHistorySummary'),
       customerHistoryList: document.getElementById('customerHistoryList'),
+      customerHistoryBuybackList: document.getElementById('customerHistoryBuybackList'),
       specialProductBtn: document.getElementById('specialProductBtn'),
       specialProductModal: document.getElementById('specialProductModal'),
       specialProductForm: document.getElementById('specialProductForm'),
@@ -10447,35 +10545,34 @@
       'Liquid Damage Indicators'
     ];
 
-    // Buyback inspection follows TECHM8_Buyback_Device_Inspection_Form.pdf, so the
-    // POS record and the signed paper register cover the same checks. The seller's
-    // activation-lock and data-erase declarations stay in Compliance instead of
-    // being duplicated here. Tablets deliberately share the phone checklist.
+    // Buyback inspection follows the paper TECHM8 inspection list item for item,
+    // so the POS record and the signed sheet cover the same checks, plus wireless
+    // charging and the camera button. The seller's activation-lock and data-erase
+    // declarations stay in Compliance instead of being duplicated here. Tablets
+    // deliberately share the phone checklist.
     const usedDeviceInspectionProfiles = {
       phone: [
-        { key: 'power', label: 'Power and boot' },
         { key: 'touch', label: 'Touch working' },
-        { key: 'display_lcd', label: 'LCD / display working' },
-        { key: 'back_glass', label: 'Back glass intact' },
-        { key: 'housing', label: 'Housing and frame intact' },
+        { key: 'display_lcd', label: 'LCD working' },
+        { key: 'vibrate', label: 'Vibrate switch working (iPhone)' },
         { key: 'power_button', label: 'Power button working' },
         { key: 'volume_buttons', label: 'Volume buttons working' },
-        { key: 'vibrate', label: 'Vibrate switch / haptics' },
-        { key: 'fingerprint', label: 'Fingerprint scanner' },
+        { key: 'fingerprint', label: 'Fingerprint scanner working' },
         { key: 'face_id', label: 'Face ID working' },
         { key: 'charging_port', label: 'Charging port working' },
         { key: 'ear_speaker', label: 'Ear speaker working' },
-        { key: 'loudspeaker', label: 'Loudspeaker working' },
-        { key: 'mic', label: 'Microphone working' },
         { key: 'proximity', label: 'Proximity sensor working' },
+        { key: 'loudspeaker', label: 'Loudspeaker working' },
+        { key: 'mic', label: 'Mic working' },
         { key: 'rear_camera', label: 'Rear camera working' },
         { key: 'front_camera', label: 'Front camera working' },
-        { key: 'flash', label: 'Torch / flash working' },
+        { key: 'flash', label: 'Flash working' },
         { key: 'sim_reader', label: 'SIM card reader working' },
-        { key: 'wifi', label: 'Wi-Fi working' },
         { key: 'bluetooth', label: 'Bluetooth working' },
-        { key: 'battery', label: 'Battery charging and health' },
-        { key: 'liquid', label: 'Liquid damage indicators' }
+        { key: 'wifi', label: 'Wi-Fi working' },
+        { key: 'back_glass', label: 'Back glass intact' },
+        { key: 'wireless_charging', label: 'Wireless charging working' },
+        { key: 'camera_button', label: 'Camera button working' }
       ],
       laptop: [
         { key: 'power', label: 'Power and boot' },
@@ -10538,8 +10635,13 @@
       ]
     };
 
-    // Records saved before the per-category checklists still need readable labels.
+    // Records saved before the per-category checklists still need readable labels,
+    // including the four checks the paper list does not carry.
     const usedDeviceLegacyInspectionLabels = {
+      power: 'Power and boot',
+      housing: 'Housing and frame intact',
+      battery: 'Battery charging and health',
+      liquid: 'Liquid damage indicators',
       display_touch: 'Display and touch',
       buttons: 'Buttons and switches',
       cameras: 'Front and rear cameras',
@@ -15059,28 +15161,80 @@
       return '<span class="customer-history-tag paid">Paid</span>';
     }
 
-    function renderCustomerHistory(orders, loading) {
-      if (loading) {
+    // One customer, both sides of the counter: what they bought on the left,
+    // what the shop bought from them on the right.
+    function renderCustomerHistorySummary() {
+      const orders = Array.isArray(state.customerHistoryOrders) ? state.customerHistoryOrders : [];
+      const buybacks = Array.isArray(state.customerHistoryBuybacks) ? state.customerHistoryBuybacks : [];
+      if (!orders.length && !buybacks.length) {
         els.customerHistorySummary.innerHTML = '';
-        els.customerHistoryList.innerHTML = '<div class="customer-history-empty">Loading purchase history...</div>';
         return;
       }
-      if (!orders.length) {
-        els.customerHistorySummary.innerHTML = '';
-        els.customerHistoryList.innerHTML = `
-          <div class="customer-history-empty">
-            No purchases recorded for this customer at ${escapeHtml(storeById(state.storeId).name)}.
-          </div>`;
-        return;
-      }
-
       const spent = orders.reduce((sum, order) => sum + numberValue(order.total), 0);
       const owing = orders.reduce((sum, order) => sum + orderBalanceDue(order), 0);
       els.customerHistorySummary.innerHTML = `
         <div class="customer-history-stat"><span>Purchases</span><strong>${orders.length}</strong></div>
         <div class="customer-history-stat"><span>Total spent</span><strong>${money(spent)}</strong></div>
         <div class="customer-history-stat"><span>Balance owing</span><strong>${money(owing)}</strong></div>
+        <div class="customer-history-stat"><span>Buybacks</span><strong>${buybacks.length}</strong></div>
       `;
+    }
+
+    function customerBuybackTitle(buyback) {
+      const devices = Array.isArray(buyback.devices) ? buyback.devices : [];
+      if (!devices.length) return 'Device purchased';
+      return devices
+        .map(device => [device.brand, device.model, device.storage].filter(Boolean).join(' '))
+        .filter(Boolean)
+        .join(', ');
+    }
+
+    function renderCustomerHistoryBuybacks(buybacks, loading) {
+      if (!els.customerHistoryBuybackList) return;
+      if (loading) {
+        els.customerHistoryBuybackList.innerHTML = '<div class="customer-history-empty">Loading buyback history...</div>';
+        return;
+      }
+      if (!buybacks.length) {
+        els.customerHistoryBuybackList.innerHTML = `
+          <div class="customer-history-empty">
+            No devices bought from this customer at ${escapeHtml(storeById(state.storeId).name)}.
+          </div>`;
+        return;
+      }
+      els.customerHistoryBuybackList.innerHTML = buybacks.map(buyback => {
+        const devices = Array.isArray(buyback.devices) ? buyback.devices : [];
+        const status = devices.length ? usedDeviceStatusLabel(devices[0].status) : '';
+        return `
+          <article class="customer-history-row">
+            <span class="customer-history-invoice">#${escapeHtml(String(buyback.buyback_number || ''))}</span>
+            <span class="customer-history-main">
+              <span class="customer-history-items">${escapeHtml(customerBuybackTitle(buyback))}</span>
+              <span class="customer-history-meta">${escapeHtml(formatDateTime(buyback.acquired_at))} &middot; ${devices.length} device${devices.length === 1 ? '' : 's'} &middot; ${escapeHtml(buyback.acquired_by || '')}</span>
+            </span>
+            <span class="customer-history-status">
+              ${status ? `<span class="customer-history-tag paid">${escapeHtml(status)}</span>` : ''}
+            </span>
+            <span class="customer-history-total customer-history-payout">${escapeHtml(buyback.payout_method || '')}</span>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderCustomerHistory(orders, loading) {
+      if (loading) {
+        els.customerHistorySummary.innerHTML = '';
+        els.customerHistoryList.innerHTML = '<div class="customer-history-empty">Loading purchase history...</div>';
+        return;
+      }
+      renderCustomerHistorySummary();
+      if (!orders.length) {
+        els.customerHistoryList.innerHTML = `
+          <div class="customer-history-empty">
+            No purchases recorded for this customer at ${escapeHtml(storeById(state.storeId).name)}.
+          </div>`;
+        return;
+      }
 
       els.customerHistoryList.innerHTML = orders.map(order => {
         const items = Array.isArray(order.items) ? order.items : [];
@@ -15128,9 +15282,20 @@
       els.customerHistorySubtitle.textContent = [phone, storeById(state.storeId).name].filter(Boolean).join(' · ');
       els.customerHistoryModal.classList.add('show');
       els.customerHistoryModal.setAttribute('aria-hidden', 'false');
+      state.customerHistoryOrders = [];
+      state.customerHistoryBuybacks = [];
       renderCustomerHistory([], true);
+      renderCustomerHistoryBuybacks([], true);
 
       const query = phone || name;
+      // Both sides are asked for at once; neither failing hides the other.
+      await Promise.all([
+        loadCustomerHistorySales(query, phone, name),
+        loadCustomerHistoryBuybacks(customer, query)
+      ]);
+    }
+
+    async function loadCustomerHistorySales(query, phone, name) {
       try {
         const url = new URL(POS_SALES_ORDERS_ENDPOINT);
         url.searchParams.set('store_code', repairTicketStoreCode());
@@ -15152,8 +15317,26 @@
       } catch (error) {
         console.error(error);
         state.customerHistoryOrders = [];
-        els.customerHistorySummary.innerHTML = '';
+        renderCustomerHistorySummary();
         els.customerHistoryList.innerHTML = `<div class="customer-history-empty">${escapeHtml(error.message || 'Purchase history unavailable.')}</div>`;
+      }
+    }
+
+    async function loadCustomerHistoryBuybacks(customer, query) {
+      try {
+        const payload = await getSharedState('customer-buybacks', {
+          customer_code: String((customer && customer.id) || ''),
+          q: query,
+          limit: 100
+        });
+        state.customerHistoryBuybacks = Array.isArray(payload.buybacks) ? payload.buybacks : [];
+        renderCustomerHistorySummary();
+        renderCustomerHistoryBuybacks(state.customerHistoryBuybacks, false);
+      } catch (error) {
+        console.error(error);
+        state.customerHistoryBuybacks = [];
+        renderCustomerHistorySummary();
+        els.customerHistoryBuybackList.innerHTML = `<div class="customer-history-empty">${escapeHtml(error.message || 'Buyback history unavailable.')}</div>`;
       }
     }
 
@@ -18961,6 +19144,12 @@
       })[status] || String(status || 'Unknown');
     }
 
+    // A device is bought without a price and gets one before it is listed, so
+    // zero means "nobody has priced it yet", not "free".
+    function usedDeviceSalePriceText(device) {
+      return numberValue(device && device.sale_price) > 0 ? money(device.sale_price) : 'Not priced';
+    }
+
     function usedDeviceTransactionLabel(type) {
       return ({
         acquisition: 'Device purchased',
@@ -19210,7 +19399,7 @@
               </div>
               <div class="used-device-value">
                 <span>Sale price</span>
-                <strong>${money(device.sale_price)}</strong>
+                <strong>${usedDeviceSalePriceText(device)}</strong>
                 <span class="used-status ${escapeHtml(device.status)}">${escapeHtml(usedDeviceStatusLabel(device.status))}</span>
               </div>
               ${here && !transfer ? `
@@ -19322,7 +19511,7 @@
               </div>
               <div class="used-device-value">
                 <span>Sale price</span>
-                <strong>${money(device.sale_price)}</strong>
+                <strong>${usedDeviceSalePriceText(device)}</strong>
                 <span class="used-status ${escapeHtml(device.status)}">${escapeHtml(usedDeviceStatusLabel(device.status))}</span>
               </div>
               <button class="used-sell-button" type="button" data-used-sell="${escapeHtml(device.id)}" title="Sell this device" ${device.status === 'ready_for_sale' ? '' : 'disabled'}>
@@ -19340,7 +19529,58 @@
       return `
         <form id="usedDeviceBuyForm" class="used-form">
           <section class="used-form-section">
+            <h2>Device</h2>
+            <div class="used-form-grid">
+              <label class="used-field">Category *
+                <select id="usedDeviceCategory" name="category" required><option>Phone</option><option>Tablet</option><option>Laptop</option><option>Watch</option><option>Game Console</option><option>Other</option></select>
+              </label>
+              <div class="used-field used-model-search span-2">Find brand and model *
+                <input id="usedDeviceModelSearch" type="search" autocomplete="off" placeholder="Search the repair price list, e.g. 12pm, iphone 13, s24u">
+                <div id="usedDeviceModelResults" class="used-model-results" hidden></div>
+                <div class="used-field-hint">Picked from the repair price list. <button id="usedDeviceModelManual" class="used-id-chip" type="button">Not listed? Type it manually</button></div>
+              </div>
+              <label class="used-field">Brand *<input id="usedDeviceBrandInput" name="brand" type="text" placeholder="Choose from the search above" required readonly></label>
+              <label class="used-field">Model *<input id="usedDeviceModelInput" name="model" type="text" placeholder="Choose from the search above" required readonly></label>
+              <label class="used-field">Colour<input name="color" type="text" placeholder="Optional"></label>
+              <label class="used-field">Storage *<input name="storage" type="text" list="usedDeviceStorageOptions" placeholder="Example: 256GB" required></label>
+              <label class="used-field used-field-narrow">Battery health %
+                <input name="battery_health" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="Numbers only">
+              </label>
+              <div class="used-field span-3">Device ID *
+                <div class="used-id-row">
+                  <div class="used-id-chips" id="usedDeviceIdChips">
+                    <button class="used-id-chip active" type="button" data-used-id-type="imei">IMEI</button>
+                    <button class="used-id-chip" type="button" data-used-id-type="serial">Serial number</button>
+                  </div>
+                  <div class="used-id-input" id="usedDeviceImeiField">
+                    <input name="imei" type="text" inputmode="numeric" maxlength="20" placeholder="Scan or type the 15-digit IMEI" required>
+                  </div>
+                  <div class="used-id-input" id="usedDeviceSerialField" hidden>
+                    <input name="serial_number" type="text" placeholder="Type the serial number">
+                  </div>
+                </div>
+                <div class="used-field-hint">Either an IMEI or a serial number is enough.</div>
+              </div>
+            </div>
+            <datalist id="usedDeviceStorageOptions">
+              ${['32GB', '64GB', '128GB', '256GB', '512GB', '1TB', '2TB'].map(size => `<option value="${size}"></option>`).join('')}
+            </datalist>
+          </section>
+
+          <section class="used-form-section">
+            <h2>Inspection</h2>
+            <div class="used-field-hint" id="usedDeviceInspectionHint" style="margin-bottom:8px;">Tap Pass, Fail or N/A, just like the repair inspection form. Untested items can be completed after intake.</div>
+            <div class="used-inspection-grid" id="usedDeviceInspectionGrid">${usedDeviceInspectionFields({}, 'buy', usedDeviceInspectionItemsFor('Phone'))}</div>
+            <div class="used-form-grid" style="margin-top:12px;">
+              <label class="used-field span-3">Notes
+                <textarea name="notes" placeholder="Optional. Anything the checklist does not cover: marks, missing parts, what came in the box."></textarea>
+              </label>
+            </div>
+          </section>
+
+          <section class="used-form-section">
             <h2>Seller</h2>
+            <div class="used-field-hint" style="margin-bottom:10px;">Saved to the customer list, so this person's purchases and buybacks sit together.</div>
             <div class="used-form-grid">
               <label class="used-field">Full name *<input name="seller_name" type="text" autocomplete="name" required></label>
               <label class="used-field">Phone *<input name="seller_phone" type="tel" autocomplete="tel" required></label>
@@ -19368,48 +19608,6 @@
           </section>
 
           <section class="used-form-section">
-            <h2>Device</h2>
-            <div class="used-form-grid">
-              <label class="used-field">Category *
-                <select id="usedDeviceCategory" name="category" required><option>Phone</option><option>Tablet</option><option>Laptop</option><option>Watch</option><option>Game Console</option><option>Other</option></select>
-              </label>
-              <label class="used-field span-2">Storage *<input name="storage" type="text" placeholder="Example: 256GB" required></label>
-              <div class="used-field used-model-search">Find brand and model *
-                <input id="usedDeviceModelSearch" type="search" autocomplete="off" placeholder="Search the repair price list, e.g. 12pm, iphone 13, s24u">
-                <div id="usedDeviceModelResults" class="used-model-results" hidden></div>
-                <div class="used-field-hint">Picked from the repair price list. <button id="usedDeviceModelManual" class="used-id-chip" type="button">Not listed? Type it manually</button></div>
-              </div>
-              <label class="used-field">Brand *<input id="usedDeviceBrandInput" name="brand" type="text" placeholder="Choose from the search above" required readonly></label>
-              <label class="used-field">Model *<input id="usedDeviceModelInput" name="model" type="text" placeholder="Choose from the search above" required readonly></label>
-              <label class="used-field">Color<input name="color" type="text"></label>
-              <div class="used-field span-2">Device ID *
-                <div class="used-id-chips" id="usedDeviceIdChips">
-                  <button class="used-id-chip active" type="button" data-used-id-type="imei">IMEI</button>
-                  <button class="used-id-chip" type="button" data-used-id-type="serial">Serial number</button>
-                </div>
-                <label class="used-field" id="usedDeviceImeiField">
-                  <input name="imei" type="text" inputmode="numeric" maxlength="20" placeholder="Scan or type the 15-digit IMEI" required>
-                </label>
-                <label class="used-field" id="usedDeviceSerialField" hidden>
-                  <input name="serial_number" type="text" placeholder="Type the serial number">
-                </label>
-                <div class="used-field-hint">Either an IMEI or a serial number is enough.</div>
-              </div>
-              <label class="used-field">Condition *
-                <select name="condition_grade" required><option>As New</option><option>Good</option><option>Fair</option><option>Poor</option><option>Faulty</option></select>
-              </label>
-              <label class="used-field">Battery health %<input name="battery_health" type="number" min="0" max="100" inputmode="numeric"></label>
-              <label class="used-field span-2">Notes<textarea name="notes"></textarea></label>
-            </div>
-          </section>
-
-          <section class="used-form-section">
-            <h2>Inspection</h2>
-            <div class="used-field-hint" id="usedDeviceInspectionHint" style="margin-bottom:8px;">Tap Pass, Fail or N/A, just like the repair inspection form. Untested items can be completed after intake.</div>
-            <div class="used-inspection-grid" id="usedDeviceInspectionGrid">${usedDeviceInspectionFields({}, 'buy', usedDeviceInspectionItemsFor('Phone'))}</div>
-          </section>
-
-          <section class="used-form-section">
             <h2>Photo Evidence <span class="used-required-tag" id="usedDeviceIntakeTag">At least 1 photo required</span></h2>
             <div class="used-field-hint" style="margin-bottom:8px;">
               Take at least one device photo while the seller is still here.
@@ -19424,13 +19622,28 @@
               <label class="used-field">IMEI / lost-stolen check *
                 <select name="clean_check_status" required><option value="Pending">Pending</option><option value="Clean">Clean</option><option value="Blocked">Blocked</option><option value="Not Applicable">Not Applicable</option></select>
               </label>
-              <label class="used-field">Check reference<input name="clean_check_reference" type="text"></label>
-              <label class="used-field">Inventory status
-                <input name="status" type="text" value="Inspection" readonly title="Every purchase starts in inspection. Mark it ready once it is cleaned up and photographed for sale.">
-              </label>
               <label class="used-field">Purchase price *<input name="purchase_cost" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
-              <label class="used-field">Sale price *<input name="sale_price" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
-              <label class="used-field">Payout method *<select name="payout_method" required><option>Cash</option><option>Bank Transfer</option></select></label>
+              <label class="used-field">Payout method *
+                <select id="usedDevicePayoutMethod" name="payout_method" required><option>Cash</option><option>Bank Transfer</option></select>
+              </label>
+            </div>
+            <div class="used-payout-details" id="usedDevicePayoutDetails" hidden>
+              <div class="used-field-hint" style="margin-bottom:8px;">Where the transfer was sent. Kept with the purchase record.</div>
+              <div class="used-id-chips" id="usedDevicePayoutChips">
+                <button class="used-id-chip active" type="button" data-used-payout-type="PayID">PayID</button>
+                <button class="used-id-chip" type="button" data-used-payout-type="Bank Account">Bank account</button>
+              </div>
+              <input type="hidden" name="payout_reference_type" value="PayID">
+              <div class="used-form-grid used-payout-fields" data-used-payout-field="PayID">
+                <label class="used-field span-2">PayID — mobile number or email *
+                  <input name="payout_payid" type="text" autocomplete="off" placeholder="0400 000 000 or name@example.com">
+                </label>
+              </div>
+              <div class="used-form-grid used-payout-fields" data-used-payout-field="Bank Account" hidden>
+                <label class="used-field">BSB *<input name="payout_bsb" type="text" inputmode="numeric" maxlength="7" autocomplete="off" placeholder="123456"></label>
+                <label class="used-field">Account number *<input name="payout_account_number" type="text" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="12345678"></label>
+                <label class="used-field">Account name *<input name="payout_account_name" type="text" autocomplete="off" placeholder="Name on the account"></label>
+              </div>
             </div>
             <div class="used-declaration-grid">
               <label class="used-check"><input name="activation_lock_removed" type="checkbox" required><span>Apple, Google, Samsung, PIN, and other activation locks are removed.</span></label>
@@ -19727,6 +19940,59 @@
       });
     }
 
+    // Cash needs nothing recorded. A transfer has to say where the money went,
+    // and the two ways of saying that need different fields.
+    function refreshUsedDevicePayoutFields() {
+      const form = usedDeviceBuyFormEl();
+      if (!form) return;
+      const panel = form.querySelector('#usedDevicePayoutDetails');
+      if (panel) panel.hidden = String((form.elements.payout_method || {}).value || '') !== 'Bank Transfer';
+    }
+
+    function setUsedDevicePayoutType(type) {
+      const form = usedDeviceBuyFormEl();
+      if (!form) return;
+      const wanted = type === 'Bank Account' ? 'Bank Account' : 'PayID';
+      form.querySelectorAll('[data-used-payout-type]').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.usedPayoutType === wanted);
+      });
+      const reference = form.elements.payout_reference_type;
+      if (reference) reference.value = wanted;
+      form.querySelectorAll('[data-used-payout-field]').forEach(group => {
+        group.hidden = group.dataset.usedPayoutField !== wanted;
+      });
+    }
+
+    function usedDevicePayoutDetails(form) {
+      const read = name => String((form.elements[name] || {}).value || '').trim();
+      const details = {
+        method: read('payout_method'),
+        reference_type: '',
+        payid: '',
+        bsb: '',
+        account_number: '',
+        account_name: '',
+        error: ''
+      };
+      if (details.method !== 'Bank Transfer') return details;
+      details.reference_type = read('payout_reference_type') === 'Bank Account' ? 'Bank Account' : 'PayID';
+      if (details.reference_type === 'PayID') {
+        details.payid = read('payout_payid');
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.payid);
+        if (!isEmail && details.payid.replace(/\D/g, '').length < 8) {
+          details.error = 'A PayID is the mobile number or the email address the transfer was sent to.';
+        }
+        return details;
+      }
+      details.bsb = read('payout_bsb').replace(/\D/g, '');
+      details.account_number = read('payout_account_number').replace(/\D/g, '');
+      details.account_name = read('payout_account_name');
+      if (details.bsb.length !== 6) details.error = 'A BSB contains six digits.';
+      else if (details.account_number.length < 5) details.error = 'Enter the account number the transfer was sent to.';
+      else if (!details.account_name) details.error = 'Enter the account name the transfer was sent to.';
+      return details;
+    }
+
     function refreshUsedDeviceCategoryFields() {
       const form = usedDeviceBuyFormEl();
       if (!form) return;
@@ -19786,12 +20052,13 @@
         error.textContent = 'This device failed the lost or stolen check. Do not pay the seller and do not take the device. The purchase cannot be saved.';
         return;
       }
-      if (data.get('clean_check_status') === 'Clean' && !String(data.get('clean_check_reference') || '').trim()) {
-        error.textContent = 'Enter the AMTA check reference or result note for a clean IMEI.';
-        return;
-      }
       if (data.get('seller_is_owner') === 'false' && (!String(data.get('owner_name') || '').trim() || !String(data.get('owner_address') || '').trim())) {
         error.textContent = 'Owner name and address are required when the seller is not the owner.';
+        return;
+      }
+      const payout = usedDevicePayoutDetails(form);
+      if (payout.error) {
+        error.textContent = payout.error;
         return;
       }
 
@@ -19803,7 +20070,7 @@
         if (!activeShift || activeShift.status !== 'open') {
           throw new Error('Open the store shift before buying a used device.');
         }
-        await usedDeviceApiPost('acquire', {
+        const saved = await usedDeviceApiPost('acquire', {
           store_code: repairTicketStoreCode(),
           staff_name: state.selectedStaffName,
           shift_id: activeShift.id,
@@ -19827,16 +20094,23 @@
           color: String(data.get('color') || '').trim(),
           imei: String(data.get('imei') || '').trim(),
           serial_number: String(data.get('serial_number') || '').trim(),
-          condition_grade: String(data.get('condition_grade') || ''),
+          // Grading happens at listing time, once the device has been cleaned up.
+          // A failed check at the counter is the one thing worth recording now.
+          condition_grade: Object.values(inspection).includes('fail') ? 'Faulty' : 'Good',
           battery_health: String(data.get('battery_health') || ''),
           inspection,
           clean_check_status: String(data.get('clean_check_status') || ''),
-          clean_check_reference: String(data.get('clean_check_reference') || '').trim(),
           activation_lock_removed: data.get('activation_lock_removed') === 'on',
           data_erased_confirmed: data.get('data_erased_confirmed') === 'on',
           purchase_cost: Number(data.get('purchase_cost')),
-          sale_price: Number(data.get('sale_price')),
-          payout_method: String(data.get('payout_method') || ''),
+          // Priced when it is listed, not while the seller is waiting.
+          sale_price: 0,
+          payout_method: payout.method,
+          payout_reference_type: payout.reference_type,
+          payout_payid: payout.payid,
+          payout_bsb: payout.bsb,
+          payout_account_number: payout.account_number,
+          payout_account_name: payout.account_name,
           status: 'inspection',
           intake_key: state.usedDeviceIntakeKey,
           notes: String(data.get('notes') || '').trim()
@@ -19848,7 +20122,8 @@
         state.usedDeviceTab = 'inventory';
         state.usedDeviceSearch = '';
         await loadUsedDevices();
-        showToast('Purchase saved with its intake photos. The device is in inspection until it is photographed for sale.');
+        const buybackNumber = saved && saved.device && saved.device.acquisition && saved.device.acquisition.buyback_number;
+        showToast(`${buybackNumber ? `Buyback #${buybackNumber} saved` : 'Purchase saved'} with its intake photos. The device stays in inspection until it is priced and photographed for sale.`);
       } catch (requestError) {
         console.error(requestError);
         error.textContent = requestError.message || 'Device purchase could not be saved.';
@@ -19870,9 +20145,12 @@
       els.usedDeviceDetailSubtitle.textContent = `${device.id} - ${usedDeviceIdentifier(device)}`;
       els.usedDeviceDetailBody.innerHTML = `
         <div class="used-detail-summary">
+          ${(device.acquisition || {}).buyback_number ? `
+            <div><span>Buyback</span><strong>#${escapeHtml(String(device.acquisition.buyback_number))}</strong></div>
+          ` : ''}
           <div><span>Status</span><strong>${escapeHtml(usedDeviceStatusLabel(device.status))}</strong></div>
           <div><span>Condition</span><strong>${escapeHtml(device.condition_grade || '')}</strong></div>
-          <div><span>Sale price</span><strong>${money(device.sale_price)}</strong></div>
+          <div><span>Sale price</span><strong>${usedDeviceSalePriceText(device)}</strong></div>
           <div><span>Seller</span><strong>${escapeHtml(seller.name || '')}</strong></div>
           <div><span>Seller phone</span><strong>${escapeHtml(seller.phone || '')}</strong></div>
           <div><span>ID viewed</span><strong>${escapeHtml([seller.id_type, seller.id_reference].filter(Boolean).join(' - '))}</strong></div>
@@ -19885,7 +20163,10 @@
               <label class="used-field">Status
                 <select name="status"><option value="inspection" ${device.status === 'inspection' ? 'selected' : ''}>Inspection</option><option value="ready_for_sale" ${device.status === 'ready_for_sale' ? 'selected' : ''}>Ready for sale</option><option value="returned_to_seller">Returned to seller</option><option value="disposed">Disposed</option></select>
               </label>
-              <label class="used-field">Sale price<input name="sale_price" type="number" min="0.01" step="0.01" value="${numberValue(device.sale_price).toFixed(2)}" required></label>
+              <label class="used-field">Sale price
+                <input name="sale_price" type="number" min="0" step="0.01" value="${numberValue(device.sale_price).toFixed(2)}" required
+                  title="A device bought today has no price yet. Set one before marking it ready for sale.">
+              </label>
               <label class="used-field">Condition
                 <select name="condition_grade">${['As New', 'Good', 'Fair', 'Poor', 'Faulty'].map(grade => `
                   <option value="${escapeHtml(grade)}" ${device.condition_grade === grade ? 'selected' : ''}>${escapeHtml(grade)}</option>
@@ -20153,8 +20434,8 @@
         error.textContent = 'Every inspection item must be Pass or N/A before the device can be ready for sale.';
         return;
       }
-      if (data.get('clean_check_status') === 'Clean' && !String(data.get('clean_check_reference') || '').trim()) {
-        error.textContent = 'Enter the AMTA check reference or result note for a clean IMEI.';
+      if (status === 'ready_for_sale' && !(Number(data.get('sale_price')) > 0)) {
+        error.textContent = 'Set a sale price before this device is ready for sale.';
         return;
       }
       const submit = form.querySelector('button[type="submit"]');
@@ -24610,6 +24891,11 @@
         setUsedDeviceIdType(idChip.dataset.usedIdType);
         return;
       }
+      const payoutChip = event.target.closest('[data-used-payout-type]');
+      if (payoutChip) {
+        setUsedDevicePayoutType(payoutChip.dataset.usedPayoutType);
+        return;
+      }
       if (event.target.closest('#usedDeviceModelManual')) {
         enableUsedDeviceManualModel(event.target.closest('#usedDeviceModelManual'));
         return;
@@ -24698,6 +24984,10 @@
     els.usedDeviceContent.addEventListener('change', event => {
       if (event.target.id === 'usedDeviceCategory') {
         refreshUsedDeviceCategoryFields();
+        return;
+      }
+      if (event.target.id === 'usedDevicePayoutMethod') {
+        refreshUsedDevicePayoutFields();
         return;
       }
       // Say it the moment the result is chosen, not after the whole form is

@@ -93,6 +93,17 @@ Deno.serve(async (request) => {
           result_limit: Math.min(Math.max(Number(url.searchParams.get("limit") || 500), 1), 500),
         });
       }
+      // The other half of a customer's history: what this store has bought from
+      // them. Carries no payout amount, like every other cost figure.
+      if (resource === "customer-buybacks") {
+        return await rpcResponse(request, "get_pos_customer_buybacks", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          customer_code: url.searchParams.get("customer_code") || "",
+          search_query: url.searchParams.get("q") || "",
+          result_limit: Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 200),
+        });
+      }
       if (resource === "holds") {
         return await rpcResponse(request, "get_pos_held_carts", {
           session_token: sessionToken,

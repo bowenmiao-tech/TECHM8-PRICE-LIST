@@ -85,8 +85,23 @@ const { chromium } = require('playwright');
     await page.waitForSelector('#usedDeviceBuyForm');
     assert.equal(await page.locator('#usedDeviceIntakeEvidence .ude-tabs').count(), 1,
       'The intake evidence panel did not mount on the buy form');
-    assert.equal(await page.locator('[name="status"]').inputValue(), 'Inspection',
-      'A purchase no longer starts in inspection');
+
+    // Condition, sale price, the check reference and the inventory status all
+    // belong to the listing step, not to the counter.
+    for (const gone of ['condition_grade', 'sale_price', 'clean_check_reference', 'status']) {
+      assert.equal(await page.locator(`#usedDeviceBuyForm [name="${gone}"]`).count(), 0,
+        `${gone} is still on the intake form`);
+    }
+
+    // The device is identified first: category, then the model search, then
+    // storage and battery, then the identifier.
+    const deviceFieldOrder = await page.evaluate(() => Array.from(
+      document.querySelectorAll('#usedDeviceBuyForm .used-form-section:first-of-type [name], #usedDeviceBuyForm .used-form-section:first-of-type #usedDeviceModelSearch')
+    ).map(node => node.name || node.id));
+    assert.deepEqual(deviceFieldOrder.slice(0, 4), ['category', 'usedDeviceModelSearch', 'brand', 'model'],
+      `Unexpected device field order: ${deviceFieldOrder.join(', ')}`);
+    assert.deepEqual(deviceFieldOrder.slice(-3), ['battery_health', 'imei', 'serial_number'],
+      `Unexpected device field order: ${deviceFieldOrder.join(', ')}`);
 
     const tooFew = await page.evaluate(async () => {
       state.usedDeviceIntakeCounts = { intake: 0 };
@@ -109,6 +124,46 @@ const { chromium } = require('playwright');
     });
     assert.match(blocked, /lost or stolen/i, `Unexpected refusal: ${blocked}`);
 
+    // Cash records nothing. A transfer has to say where the money went, and the
+    // two ways of saying that ask for different things.
+    const payout = await page.evaluate(() => {
+      const form = usedDeviceBuyFormEl();
+      const panel = form.querySelector('#usedDevicePayoutDetails');
+      const hiddenForCash = panel.hidden;
+      form.elements.payout_method.value = 'Bank Transfer';
+      form.elements.payout_method.dispatchEvent(new Event('change', { bubbles: true }));
+      const openForTransfer = !panel.hidden;
+      const missing = usedDevicePayoutDetails(form).error;
+      form.querySelector('[data-used-payout-type="Bank Account"]').click();
+      const bankShown = !form.querySelector('[data-used-payout-field="Bank Account"]').hidden
+        && form.querySelector('[data-used-payout-field="PayID"]').hidden;
+      form.elements.payout_bsb.value = '12345';
+      const shortBsb = usedDevicePayoutDetails(form).error;
+      form.elements.payout_bsb.value = '123-456';
+      form.elements.payout_account_number.value = '12345678';
+      form.elements.payout_account_name.value = 'Test Seller';
+      const bank = usedDevicePayoutDetails(form);
+      form.querySelector('[data-used-payout-type="PayID"]').click();
+      form.elements.payout_payid.value = 'seller@example.com';
+      const payid = usedDevicePayoutDetails(form);
+      form.elements.payout_method.value = 'Cash';
+      form.elements.payout_method.dispatchEvent(new Event('change', { bubbles: true }));
+      return { hiddenForCash, openForTransfer, missing, bankShown, shortBsb, bank, payid, closedAgain: panel.hidden };
+    });
+    assert.ok(payout.hiddenForCash, 'The payout destination panel was open for a cash payout');
+    assert.ok(payout.openForTransfer, 'A bank transfer did not ask where the money went');
+    assert.match(payout.missing, /PayID/i, `Unexpected payout refusal: ${payout.missing}`);
+    assert.ok(payout.bankShown, 'The bank account fields did not replace the PayID field');
+    assert.match(payout.shortBsb, /six digits/i, `Unexpected BSB refusal: ${payout.shortBsb}`);
+    assert.deepEqual(payout.bank, {
+      method: 'Bank Transfer', reference_type: 'Bank Account', payid: '',
+      bsb: '123456', account_number: '12345678', account_name: 'Test Seller', error: ''
+    });
+    assert.equal(payout.payid.reference_type, 'PayID');
+    assert.equal(payout.payid.payid, 'seller@example.com');
+    assert.equal(payout.payid.error, '', `A valid PayID was refused: ${payout.payid.error}`);
+    assert.ok(payout.closedAgain, 'The payout destination panel stayed open after switching back to cash');
+
     // The checklist the screen draws is the one the database enforces.
     const labels = await page.evaluate(() => {
       state.usedDeviceChecklists = { Phone: [
@@ -124,7 +179,7 @@ const { chromium } = require('playwright');
     // Exercise the real form submit event, one photo, and the acquisition request.
     await page.evaluate(() => {
       const form = usedDeviceBuyFormEl();
-      for (const [name, value] of Object.entries({seller_name:'Test Seller', seller_phone:'0400000000', seller_address:'1 Test Street', seller_id_type:'Passport', seller_id_reference:'TEST', purchase_cost:'300', sale_price:'500', clean_check_status:'Pending'})) form.elements[name].value = value;
+      for (const [name, value] of Object.entries({seller_name:'Test Seller', seller_phone:'0400000000', seller_address:'1 Test Street', seller_id_type:'Passport', seller_id_reference:'TEST', purchase_cost:'300', clean_check_status:'Pending'})) form.elements[name].value = value;
       form.querySelectorAll('input[type="checkbox"][required]').forEach(input => input.checked = true);
       syncCurrentShiftWithDatabase = async () => ({id:'SHIFT-TEST', status:'open'});
       window.savedAcquisition = null;
@@ -147,6 +202,12 @@ const { chromium } = require('playwright');
     assert.deepEqual(saved.payload.inspection, {power:'pass', touch:'fail'});
     assert.equal(saved.payload.status, 'inspection');
     assert.ok(saved.payload.intake_key);
+    // A device arrives unpriced, and a failed check grades it faulty until
+    // someone says otherwise.
+    assert.equal(saved.payload.sale_price, 0, 'A purchase carried a sale price');
+    assert.equal(saved.payload.condition_grade, 'Faulty', 'A failed check did not grade the device');
+    assert.equal(saved.payload.payout_method, 'Cash');
+    assert.equal(saved.payload.payout_reference_type, '', 'Cash recorded a payout destination');
     await page.waitForFunction(() => state.usedDeviceTab === 'inventory');
 
     await page.evaluate(async () => {
@@ -155,7 +216,7 @@ const { chromium } = require('playwright');
     });
     assert.match(await page.locator('#usedDeviceCostList').innerText(), /administrators only/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
+    console.log('PASS: device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();
