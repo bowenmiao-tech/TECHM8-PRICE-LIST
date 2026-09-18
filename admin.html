@@ -372,6 +372,64 @@
     .value-main { color: var(--ink); font-weight: 900; }
     .value-mis { color: #c75d06; font-weight: 850; }
     .used-severity { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+
+    /* Second-hand stock: two lists, one decision. */
+    .used-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #e7edef; color: #4a5d66; font-size: 10px; font-weight: 900; }
+    .preset-button.active .used-tab-count { background: rgba(255,255,255,.24); color: #fff; }
+    .used-closed-tab { color: #7d8b92; }
+    .used-search-field { flex: 1 1 260px; min-width: 200px; }
+    .used-search-field input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 9px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; }
+    .used-device-row { cursor: pointer; }
+    .used-device-row:hover { background: #f6fafa; }
+    .used-device-title { color: var(--ink); font-weight: 900; }
+    .used-device-sub { display: block; margin-top: 3px; color: #7f8e95; font-size: 10px; font-weight: 700; }
+    .used-state { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 900; white-space: nowrap; }
+    .used-state.live { color: #076d5b; background: #e4f5ef; }
+    .used-state.ready { color: #2f5f96; background: #e7f0fb; }
+    .used-state.inspection { color: #9a5a11; background: #fbeedb; }
+    .used-state.blocked { color: #96362e; background: #fdeae7; }
+    .used-state.sold { color: #4a5d66; background: #eef2f4; }
+    .used-price-cell { font-weight: 900; white-space: nowrap; }
+    .used-price-cell.unpriced { color: var(--red); }
+
+    .used-audit { margin-top: 26px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .used-audit > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; padding: 14px 16px; cursor: pointer; font-size: 13px; font-weight: 900; }
+    .used-audit[open] > summary { border-bottom: 1px solid var(--line); }
+    .used-audit-hint { color: #8a989e; font-size: 10px; font-weight: 700; }
+    .used-audit > *:not(summary) { margin-left: 16px; margin-right: 16px; }
+    .used-audit > .section-bar:first-of-type { margin-top: 14px; }
+
+    .repair-dialog.used-device-dialog { width: min(960px, calc(100% - 24px)); }
+    .used-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 4px 0 18px; }
+    .used-detail-item { min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfd; }
+    .used-detail-item span { display: block; color: #7f8e95; font-size: 9px; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; }
+    .used-detail-item strong { display: block; margin-top: 5px; font-size: 13px; font-weight: 900; overflow-wrap: anywhere; }
+    .used-detail-block { margin: 18px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .used-detail-block h3 { margin: 0 0 10px; font-size: 13px; font-weight: 950; }
+    .used-listing-card { border-color: #bfe0d7; background: #f5fbf9; }
+    .used-listing-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+    .used-price-field { display: grid; gap: 6px; min-width: 190px; color: #4a5d66; font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .used-price-field input { height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; color: var(--ink); font: inherit; font-size: 18px; font-weight: 900; }
+    .used-margin-hint { color: #5d6e76; font-size: 11px; font-weight: 800; }
+    .used-listing-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .used-primary-button { min-height: 44px; padding: 0 18px; border: 0; border-radius: 10px; background: var(--green); color: #fff; font: inherit; font-size: 12px; font-weight: 900; cursor: pointer; }
+    .used-primary-button:disabled { background: #b9c8cd; cursor: not-allowed; }
+    .used-secondary-button { min-height: 44px; padding: 0 16px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; font-weight: 900; cursor: pointer; }
+    .used-secondary-button:disabled { color: #97a5ab; cursor: not-allowed; }
+    .used-blockers { margin: 12px 0 0; padding: 12px 14px; border: 1px solid #f0cbc7; border-radius: 10px; background: #fff5f3; color: #8f3830; font-size: 11.5px; font-weight: 800; }
+    .used-blockers ul { margin: 6px 0 0; padding-left: 18px; }
+    .used-listing-status { margin-top: 10px; font-size: 11.5px; font-weight: 800; }
+    .used-listing-status[data-error="true"] { color: #b22c24; }
+    .used-check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+    .used-check { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfd; font-size: 11.5px; font-weight: 800; }
+    .used-check-answer { padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .used-check-answer.pass { color: #166534; background: #dcfce7; }
+    .used-check-answer.fail { color: #991b1b; background: #fee2e2; }
+    .used-check-answer.na { color: #4a5d66; background: #e8edef; }
+    .used-check-answer.none { color: #9a5a11; background: #fbeedb; }
+    .used-line-list { display: grid; gap: 8px; }
+    .used-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 11.5px; font-weight: 800; }
+    .used-line span { color: #7f8e95; font-weight: 700; }
     .used-severity.high { background: #fdeae7; color: #b22c24; }
     .used-severity.medium { background: #fdf1e3; color: #a15316; }
     .used-severity.low { background: #eef3f4; color: #55686f; }
@@ -821,6 +879,34 @@
           <section class="summary-grid" id="usedSummaryGrid" aria-label="Buyback summary"></section>
 
           <div class="section-bar">
+            <div><h2>Devices</h2><p id="usedStockLabel">Everything the shops have bought, in the store it is sitting in. Open one to price it and put it online.</p></div>
+          </div>
+          <section class="filters-card" aria-label="Device list">
+            <div class="preset-row" id="usedStockTabs" role="tablist">
+              <button class="preset-button active" type="button" role="tab" aria-selected="true" data-used-group="for_sale">For Sale <span class="used-tab-count" id="usedCountForSale">0</span></button>
+              <button class="preset-button" type="button" role="tab" aria-selected="false" data-used-group="sold">Sold <span class="used-tab-count" id="usedCountSold">0</span></button>
+              <button class="preset-button used-closed-tab" type="button" role="tab" aria-selected="false" data-used-group="closed" id="usedClosedTab" hidden>Returned or written off <span class="used-tab-count" id="usedCountClosed">0</span></button>
+            </div>
+            <div class="filter-fields">
+              <label class="date-field"><span>Store</span><select id="usedStockStore"><option value="">All stores</option></select></label>
+              <label class="date-field used-search-field"><span>Search</span><input id="usedStockSearch" type="search" placeholder="Model, IMEI, serial, seller or buyback number" autocomplete="off"></label>
+              <div class="filter-spacer"></div>
+              <button class="refresh-button" id="usedStockRefresh" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+          </section>
+          <section class="table-card">
+            <div class="table-scroll">
+              <table class="responsive-table">
+                <thead id="usedStockHead"></thead>
+                <tbody id="usedStockBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <details class="used-audit" id="usedAuditSection">
+            <summary><span>Compliance and audit</span><span class="used-audit-hint">Exceptions, stock by store, daily-report reconciliation and the dealer register</span></summary>
+
+          <div class="section-bar">
             <div><h2>Needs a Look</h2><p id="usedAlertLabel">Patterns worth checking across the last 90 days.</p></div>
           </div>
           <section class="table-card">
@@ -869,6 +955,18 @@
               </table>
             </div>
           </section>
+          </details>
+
+          <dialog class="repair-dialog used-device-dialog" id="usedDeviceDialog" aria-labelledby="usedDeviceDialogTitle">
+            <div class="repair-dialog-head">
+              <div>
+                <h2 id="usedDeviceDialogTitle">Device</h2>
+                <div class="ticket-device-sub" id="usedDeviceDialogSubtitle"></div>
+              </div>
+              <button class="repair-dialog-close" id="usedDeviceDialogClose" type="button" aria-label="Close device">×</button>
+            </div>
+            <div class="repair-dialog-body" id="usedDeviceDialogBody"></div>
+          </dialog>
 
           <dialog class="repair-dialog" id="usedEvidenceDialog" aria-labelledby="usedEvidenceTitle">
             <div class="repair-dialog-head">
@@ -1001,6 +1099,22 @@
         usedEvidenceSubtitle: document.getElementById('usedEvidenceSubtitle'),
         usedEvidencePanel: document.getElementById('usedEvidencePanel'),
         usedEvidenceClose: document.getElementById('usedEvidenceClose'),
+        usedStockTabs: document.getElementById('usedStockTabs'),
+        usedStockLabel: document.getElementById('usedStockLabel'),
+        usedStockStore: document.getElementById('usedStockStore'),
+        usedStockSearch: document.getElementById('usedStockSearch'),
+        usedStockRefresh: document.getElementById('usedStockRefresh'),
+        usedStockHead: document.getElementById('usedStockHead'),
+        usedStockBody: document.getElementById('usedStockBody'),
+        usedClosedTab: document.getElementById('usedClosedTab'),
+        usedCountForSale: document.getElementById('usedCountForSale'),
+        usedCountSold: document.getElementById('usedCountSold'),
+        usedCountClosed: document.getElementById('usedCountClosed'),
+        usedDeviceDialog: document.getElementById('usedDeviceDialog'),
+        usedDeviceDialogTitle: document.getElementById('usedDeviceDialogTitle'),
+        usedDeviceDialogSubtitle: document.getElementById('usedDeviceDialogSubtitle'),
+        usedDeviceDialogBody: document.getElementById('usedDeviceDialogBody'),
+        usedDeviceDialogClose: document.getElementById('usedDeviceDialogClose'),
         tool: document.getElementById('toolView'),
         breadcrumb: document.getElementById('breadcrumbTitle'),
         dateFrom: document.getElementById('dateFrom'),
@@ -1447,6 +1561,390 @@
         URL.revokeObjectURL(url);
       }
 
+      // The two lists the owner actually works from: what is for sale, and what
+      // has sold. Everything else on this page is the audit trail behind them.
+      const usedStock = { group: 'for_sale', store: '', q: '', devices: [], counts: {}, stores: [], loading: false, detail: null };
+
+      function usedDeviceName(device) {
+        return [device.brand, device.model, device.storage, device.color].filter(Boolean).join(' ') || device.device_code;
+      }
+
+      function usedDeviceIdentifier(device) {
+        return device.imei || device.serial_number || '';
+      }
+
+      function usedStateChip(device) {
+        if (device.status === 'sold') return '<span class="used-state sold">Sold</span>';
+        if (device.status === 'returned_to_seller') return '<span class="used-state sold">Returned to seller</span>';
+        if (device.status === 'disposed') return '<span class="used-state sold">Written off</span>';
+        if (device.status === 'ready_for_sale') {
+          if (device.website_status === 'published') return '<span class="used-state live">Live on the site</span>';
+          if (device.website_status === 'queued') return '<span class="used-state ready">Going online…</span>';
+          if (device.website_status === 'failed') return '<span class="used-state blocked">Website push failed</span>';
+          return '<span class="used-state ready">Approved</span>';
+        }
+        const blockers = Array.isArray(device.blockers) ? device.blockers : [];
+        if (blockers.length) return `<span class="used-state blocked">${number(blockers.length)} to finish</span>`;
+        if (number(device.sale_price) <= 0) return '<span class="used-state inspection">Needs a price</span>';
+        return '<span class="used-state inspection">Ready to approve</span>';
+      }
+
+      function usedPriceCell(device) {
+        const priced = number(device.sale_price) > 0;
+        return `<span class="used-price-cell ${priced ? '' : 'unpriced'}">${priced ? money(device.sale_price) : 'Not priced'}</span>`;
+      }
+
+      function renderUsedStock() {
+        const group = usedStock.group;
+        const devices = usedStock.devices;
+        els.usedCountForSale.textContent = number(usedStock.counts.for_sale);
+        els.usedCountSold.textContent = number(usedStock.counts.sold);
+        els.usedCountClosed.textContent = number(usedStock.counts.closed);
+        els.usedClosedTab.hidden = number(usedStock.counts.closed) === 0;
+
+        const columns = group === 'sold'
+          ? ['Store', 'Device', 'Identifier', 'Sold', 'Invoice', 'Sold For', 'Margin']
+          : group === 'closed'
+            ? ['Store', 'Device', 'Identifier', 'Bought', 'Cost', 'What happened', '']
+            : ['Store', 'Device', 'Identifier', 'Bought', 'Cost', 'Listed At', 'State'];
+        els.usedStockHead.innerHTML = `<tr>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
+
+        els.usedStockLabel.textContent = group === 'sold'
+          ? `${number(usedStock.counts.sold)} sold. Margin is what was paid for the device plus refurbishment.`
+          : group === 'closed'
+            ? 'Devices that went back to the seller or were written off.'
+            : `${number(usedStock.counts.for_sale)} in stock · ${number(usedStock.counts.live)} live on the website · ${number(usedStock.counts.unpriced)} still unpriced. Open one to price it and put it online.`;
+
+        els.usedStockBody.innerHTML = devices.map(device => {
+          const identity = usedDeviceIdentifier(device);
+          const cells = group === 'sold'
+            ? [
+              escapeHtml(device.store_name || ''),
+              `<span class="used-device-title">${escapeHtml(usedDeviceName(device))}</span><span class="used-device-sub">${escapeHtml(device.condition_grade || '')}${device.battery_health ? ` · battery ${number(device.battery_health)}%` : ''}</span>`,
+              escapeHtml(identity),
+              escapeHtml(formatDateTime(device.sold_at)),
+              device.sold_invoice_number ? `#${escapeHtml(String(device.sold_invoice_number))}` : '',
+              money(device.sold_amount),
+              `<span class="${number(device.margin) < 0 ? 'value-refund' : 'value-main'}">${money(device.margin)}</span>`
+            ]
+            : group === 'closed'
+              ? [
+                escapeHtml(device.store_name || ''),
+                `<span class="used-device-title">${escapeHtml(usedDeviceName(device))}</span><span class="used-device-sub">Buyback #${escapeHtml(String(device.buyback_number || ''))}</span>`,
+                escapeHtml(identity),
+                escapeHtml(formatDateTime(device.acquired_at)),
+                money(device.total_cost),
+                usedStateChip(device),
+                ''
+              ]
+              : [
+                escapeHtml(device.store_name || ''),
+                `<span class="used-device-title">${escapeHtml(usedDeviceName(device))}</span><span class="used-device-sub">Buyback #${escapeHtml(String(device.buyback_number || ''))} · ${number(device.days_held)} days · ${escapeHtml(device.condition_grade || '')}${device.battery_health ? ` · battery ${number(device.battery_health)}%` : ''}</span>`,
+                escapeHtml(identity),
+                escapeHtml(formatDateTime(device.acquired_at)),
+                money(device.total_cost),
+                usedPriceCell(device),
+                usedStateChip(device)
+              ];
+          return `<tr class="used-device-row" tabindex="0" data-used-device="${escapeHtml(device.device_code)}">${
+            cells.map((cell, index) => `<td data-label="${escapeHtml(columns[index])}">${cell}</td>`).join('')
+          }</tr>`;
+        }).join('') || `<tr><td colspan="${columns.length}" style="height:80px;text-align:center;color:#8a989e">No devices here.</td></tr>`;
+      }
+
+      function updateUsedStoreOptions() {
+        const selected = usedStock.store;
+        els.usedStockStore.innerHTML = ['<option value="">All stores</option>']
+          .concat((usedStock.stores || []).map(store =>
+            `<option value="${escapeHtml(store.store_code)}">${escapeHtml(store.store_name)} (${number(store.count)})</option>`))
+          .join('');
+        els.usedStockStore.value = (usedStock.stores || []).some(store => store.store_code === selected) ? selected : '';
+        usedStock.store = els.usedStockStore.value;
+      }
+
+      async function loadUsedStock() {
+        if (usedStock.loading) return;
+        usedStock.loading = true;
+        els.usedStockRefresh.disabled = true;
+        els.usedStockBody.innerHTML = '<tr><td colspan="7" style="height:80px;text-align:center;color:#8a989e">Loading devices…</td></tr>';
+        try {
+          const report = await window.Techm8StaffAuth.callRpc('get_admin_used_device_stock', {
+            session_token: window.Techm8StaffAuth.getToken(),
+            payload: { group: usedStock.group, store_code: usedStock.store, q: usedStock.q, limit: 500 }
+          });
+          usedStock.devices = Array.isArray(report.devices) ? report.devices : [];
+          usedStock.counts = report.counts || {};
+          usedStock.stores = Array.isArray(report.stores) ? report.stores : [];
+          updateUsedStoreOptions();
+          renderUsedStock();
+        } catch (error) {
+          els.usedStockBody.innerHTML = `<tr><td colspan="7" style="height:80px;text-align:center;color:#b22c24">${escapeHtml(error.message || 'Devices could not be loaded.')}</td></tr>`;
+        } finally {
+          usedStock.loading = false;
+          els.usedStockRefresh.disabled = false;
+        }
+      }
+
+      function setUsedStockGroup(group) {
+        if (usedStock.group === group) return;
+        usedStock.group = group;
+        document.querySelectorAll('[data-used-group]').forEach(button => {
+          const active = button.dataset.usedGroup === group;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-selected', String(active));
+        });
+        loadUsedStock();
+      }
+
+      function usedCheckAnswerClass(answer) {
+        return ['pass', 'fail', 'na'].includes(answer) ? answer : 'none';
+      }
+
+      function usedCheckAnswerLabel(answer) {
+        return ({ pass: 'Pass', fail: 'Fail', na: 'N/A' })[answer] || 'Not tested';
+      }
+
+      function renderUsedDeviceDetail(detail) {
+        const device = detail.device || {};
+        const seller = detail.seller || {};
+        const photos = detail.photos || {};
+        const blockers = Array.isArray(device.blockers) ? device.blockers : [];
+        const inStock = ['inspection', 'ready_for_sale'].includes(device.status);
+        const priced = number(device.sale_price) > 0;
+
+        els.usedDeviceDialogTitle.textContent = usedDeviceName(device);
+        els.usedDeviceDialogSubtitle.textContent = [
+          device.store_name,
+          device.device_code,
+          usedDeviceIdentifier(device) ? `IMEI/serial ${usedDeviceIdentifier(device)}` : '',
+          seller.buyback_number ? `buyback #${seller.buyback_number}` : ''
+        ].filter(Boolean).join(' · ');
+
+        const fact = (label, value) => `<div class="used-detail-item"><span>${escapeHtml(label)}</span><strong>${value || '—'}</strong></div>`;
+
+        els.usedDeviceDialogBody.innerHTML = `
+          <div class="used-detail-grid">
+            ${fact('State', usedStateChip(device))}
+            ${fact('Listed at', priced ? money(device.sale_price) : 'Not priced')}
+            ${fact('Cost to date', money(device.total_cost))}
+            ${fact('Days held', number(device.days_held))}
+            ${fact('Bought', escapeHtml(formatDateTime(device.acquired_at)))}
+            ${device.status === 'sold' ? fact('Sold for', money(device.sold_amount)) : ''}
+          </div>
+
+          ${inStock ? `
+            <section class="used-detail-block used-listing-card">
+              <h3>Price it and put it online</h3>
+              <div class="used-listing-row">
+                <label class="used-price-field">Sale price
+                  <input id="usedListingPrice" type="number" min="0" step="1" inputmode="decimal" value="${priced ? number(device.sale_price) : ''}" placeholder="0">
+                </label>
+                <div>
+                  <div class="used-margin-hint" id="usedListingMargin">&nbsp;</div>
+                  <div class="used-margin-hint">Paid ${money(device.purchase_cost)}${number(device.refurb_cost) > 0 ? ` plus ${money(device.refurb_cost)} of work` : ''} · total ${money(device.total_cost)}</div>
+                </div>
+                <div class="used-listing-actions">
+                  <button class="used-secondary-button" id="usedListingSave" type="button">Save price only</button>
+                  <button class="used-primary-button" id="usedListingPublish" type="button" ${blockers.length ? 'disabled' : ''}>
+                    ${device.status === 'ready_for_sale' ? 'Update the listing' : 'Confirm and put it online'}
+                  </button>
+                </div>
+              </div>
+              ${blockers.length ? `
+                <div class="used-blockers">
+                  <strong>Not ready for the website yet</strong>
+                  <ul>${blockers.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+                </div>
+              ` : ''}
+              <div class="used-listing-status" id="usedListingStatus"></div>
+            </section>
+          ` : ''}
+
+          <section class="used-detail-block">
+            <h3>The device</h3>
+            <div class="used-detail-grid">
+              ${fact('Store', escapeHtml(device.store_name || ''))}
+              ${fact('Category', escapeHtml(device.category || ''))}
+              ${fact('Brand', escapeHtml(device.brand || ''))}
+              ${fact('Model', escapeHtml(device.model || ''))}
+              ${fact('Storage', escapeHtml(device.storage || ''))}
+              ${fact('Colour', escapeHtml(device.color || ''))}
+              ${fact('Condition', escapeHtml(device.condition_grade || ''))}
+              ${fact('Battery health', device.battery_health == null ? '' : `${number(device.battery_health)}%`)}
+              ${fact('IMEI', escapeHtml(device.imei || ''))}
+              ${fact('Serial number', escapeHtml(device.serial_number || ''))}
+              ${fact('Lost or stolen check', escapeHtml([device.clean_check_status, device.clean_check_reference].filter(Boolean).join(' · ')))}
+              ${fact('Locks and data', `${device.activation_lock_removed ? 'Locks removed' : 'Locks not confirmed'} · ${device.data_erased_confirmed ? 'data erased' : 'data not confirmed'}`)}
+              ${fact('Website', escapeHtml([device.website_status, device.website_slug].filter(Boolean).join(' · ')))}
+              ${fact('Photos', `${number(photos.intake)} intake · ${number(photos.listing)} listing${number(photos.refurb) ? ` · ${number(photos.refurb)} refurb` : ''}`)}
+            </div>
+            ${device.notes ? `<p class="page-subtitle">Memo: ${escapeHtml(device.notes)}</p>` : ''}
+          </section>
+
+          <section class="used-detail-block">
+            <h3>Inspection</h3>
+            <div class="used-check-grid">
+              ${(detail.inspection || []).map(item => `
+                <div class="used-check">
+                  <span>${escapeHtml(item.label || item.key)}</span>
+                  <span class="used-check-answer ${usedCheckAnswerClass(item.answer)}">${usedCheckAnswerLabel(item.answer)}</span>
+                </div>
+              `).join('') || '<p class="page-subtitle">No checks recorded.</p>'}
+            </div>
+          </section>
+
+          <section class="used-detail-block">
+            <h3>Seller and payout</h3>
+            <div class="used-detail-grid">
+              ${fact('Buyback number', seller.buyback_number ? `#${escapeHtml(String(seller.buyback_number))}` : '')}
+              ${fact('Seller', escapeHtml(seller.name || ''))}
+              ${fact('Phone', escapeHtml(seller.phone || ''))}
+              ${fact('Email', escapeHtml(seller.email || ''))}
+              ${fact('ID sighted', escapeHtml([seller.id_type, seller.id_reference].filter(Boolean).join(' · ')))}
+              ${fact('Paid', `${money(seller.payout_amount)} · ${escapeHtml(seller.payout_method || '')}`)}
+              ${seller.payout_reference_type === 'PayID' ? fact('PayID', escapeHtml(seller.payout_payid || '')) : ''}
+              ${seller.payout_reference_type === 'Bank Account' ? fact('Bank account', escapeHtml(`${seller.payout_bsb} · ${seller.payout_account_number} · ${seller.payout_account_name}`)) : ''}
+              ${seller.is_owner === false ? fact('Owner', escapeHtml([seller.owner_name, seller.owner_address].filter(Boolean).join(' · '))) : ''}
+            </div>
+            ${seller.address ? `<p class="page-subtitle">${escapeHtml(seller.address)}</p>` : ''}
+            ${seller.acquisition_statement ? `<p class="page-subtitle">How they got it: ${escapeHtml(seller.acquisition_statement)}</p>` : ''}
+          </section>
+
+          ${(detail.costs || []).length ? `
+            <section class="used-detail-block">
+              <h3>Refurbishment</h3>
+              <div class="used-line-list">
+                ${detail.costs.map(cost => `
+                  <div class="used-line">
+                    <div>${escapeHtml(cost.description)}<span> · ${escapeHtml(cost.kind)}${cost.repair_ticket_code ? ` · ${escapeHtml(cost.repair_ticket_code)}` : ''}</span></div>
+                    <div>${money(cost.amount)}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </section>
+          ` : ''}
+
+          <section class="used-detail-block">
+            <h3>History</h3>
+            <div class="used-line-list">
+              ${(detail.ledger || []).map(entry => `
+                <div class="used-line">
+                  <div>${escapeHtml(entry.notes || entry.type)}<span> · ${escapeHtml(entry.staff_name || '')} · ${escapeHtml(formatDateTime(entry.created_at))}</span></div>
+                  <div>${number(entry.amount) > 0 ? money(entry.amount) : ''}</div>
+                </div>
+              `).join('') || '<p class="page-subtitle">Nothing recorded yet.</p>'}
+            </div>
+          </section>
+
+          <section class="used-detail-block">
+            <h3>Photos and notes</h3>
+            <p class="page-subtitle">Seller identity images are visible here because this is an admin session. Every view of one is recorded against your account.</p>
+            <div id="usedDeviceDialogEvidence"></div>
+          </section>
+        `;
+
+        const panel = document.getElementById('usedDeviceDialogEvidence');
+        if (panel) {
+          window.Techm8UsedDeviceEvidence.mount(panel, {
+            storeCode: device.store_code,
+            deviceCode: device.device_code,
+            getToken: () => window.Techm8StaffAuth.getToken()
+          });
+        }
+        updateUsedListingMargin();
+      }
+
+      function updateUsedListingMargin() {
+        const input = document.getElementById('usedListingPrice');
+        const hint = document.getElementById('usedListingMargin');
+        if (!input || !hint || !usedStock.detail) return;
+        const cost = number((usedStock.detail.device || {}).total_cost);
+        const price = Number(input.value);
+        if (!Number.isFinite(price) || price <= 0) {
+          hint.textContent = 'Enter what this device is listed at.';
+          return;
+        }
+        const margin = price - cost;
+        hint.textContent = `${margin >= 0 ? 'Margin' : 'Loss'} ${money(Math.abs(margin))}${cost > 0 ? ` · ${Math.round((margin / cost) * 100)}% on cost` : ''}`;
+      }
+
+      async function openUsedDeviceDetail(deviceCode) {
+        els.usedDeviceDialogTitle.textContent = 'Device';
+        els.usedDeviceDialogSubtitle.textContent = deviceCode;
+        els.usedDeviceDialogBody.innerHTML = '<p class="page-subtitle">Loading the device…</p>';
+        if (!els.usedDeviceDialog.open) els.usedDeviceDialog.showModal();
+        try {
+          const detail = await window.Techm8StaffAuth.callRpc('get_admin_used_device_detail', {
+            session_token: window.Techm8StaffAuth.getToken(),
+            target_device_code: deviceCode
+          });
+          usedStock.detail = detail;
+          renderUsedDeviceDetail(detail);
+        } catch (error) {
+          els.usedDeviceDialogBody.innerHTML = `<div class="used-blockers">${escapeHtml(error.message || 'This device could not be loaded.')}</div>`;
+        }
+      }
+
+      // Approving a device queues the website push; this carries it over now so
+      // the owner sees the result instead of waiting for the next drain.
+      async function pushUsedDeviceLive(storeCode, deviceCode) {
+        const config = window.TECHM8_SUPABASE || {};
+        const response = await fetch(`${config.url}/functions/v1/pos-used-device-publish`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: config.anonKey || '',
+            'x-staff-session': window.Techm8StaffAuth.getToken()
+          },
+          body: JSON.stringify({ store_code: storeCode, device_code: deviceCode, action: 'publish' })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.ok === false) throw new Error(data.message || 'The website push did not go through.');
+      }
+
+      async function submitUsedListing(publish) {
+        const detail = usedStock.detail;
+        if (!detail) return;
+        const device = detail.device || {};
+        const input = document.getElementById('usedListingPrice');
+        const status = document.getElementById('usedListingStatus');
+        const buttons = [document.getElementById('usedListingSave'), document.getElementById('usedListingPublish')];
+        const price = Number(input.value);
+        status.dataset.error = 'false';
+        if (!Number.isFinite(price) || price < 0) {
+          status.dataset.error = 'true';
+          status.textContent = 'Enter the price this device is listed at.';
+          return;
+        }
+        if (publish && price <= 0) {
+          status.dataset.error = 'true';
+          status.textContent = 'A device cannot go online at zero.';
+          return;
+        }
+        buttons.forEach(button => { if (button) button.disabled = true; });
+        status.textContent = publish ? 'Approving and sending it to the website…' : 'Saving the price…';
+        try {
+          await window.Techm8StaffAuth.callRpc('set_admin_used_device_listing', {
+            session_token: window.Techm8StaffAuth.getToken(),
+            payload: { device_code: device.device_code, sale_price: price, publish }
+          });
+          if (publish) {
+            try {
+              await pushUsedDeviceLive(device.store_code, device.device_code);
+            } catch (pushError) {
+              status.dataset.error = 'true';
+              status.textContent = `Approved and queued, but the website push failed: ${pushError.message}. It will retry on its own.`;
+            }
+          }
+          await loadUsedStock();
+          await openUsedDeviceDetail(device.device_code);
+        } catch (error) {
+          status.dataset.error = 'true';
+          status.textContent = error.message || 'That could not be saved.';
+          buttons.forEach(button => { if (button) button.disabled = false; });
+        }
+      }
+
       async function loadUsedDevices() {
         if (usedLoading) return;
         const from = els.usedDateFrom.value;
@@ -1474,6 +1972,8 @@
           renderUsedAlerts(alerts || {});
           renderUsedReconciliation(reconciliation || {});
           renderUsedRegister(register || { date_from: from, date_to: to, rows: [] });
+          // Stock is the position as it stands now, so it ignores the date range.
+          loadUsedStock();
           els.usedUpdatedAt.textContent = `Updated ${new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', hour: 'numeric', minute: '2-digit' }).format(new Date())}`;
           usedDevicesLoaded = true;
         } catch (error) {
@@ -1703,6 +2203,42 @@
         if (button) openUsedEvidence(button.dataset.usedEvidence, button.dataset.usedStore);
       });
       els.usedEvidenceClose.addEventListener('click', () => els.usedEvidenceDialog.close());
+      els.usedStockTabs.addEventListener('click', event => {
+        const button = event.target.closest('[data-used-group]');
+        if (button) setUsedStockGroup(button.dataset.usedGroup);
+      });
+      els.usedStockStore.addEventListener('change', () => {
+        usedStock.store = els.usedStockStore.value;
+        loadUsedStock();
+      });
+      let usedStockSearchTimer = 0;
+      els.usedStockSearch.addEventListener('input', () => {
+        clearTimeout(usedStockSearchTimer);
+        usedStockSearchTimer = setTimeout(() => {
+          usedStock.q = els.usedStockSearch.value.trim();
+          loadUsedStock();
+        }, 300);
+      });
+      els.usedStockRefresh.addEventListener('click', loadUsedStock);
+      els.usedStockBody.addEventListener('click', event => {
+        const row = event.target.closest('[data-used-device]');
+        if (row) openUsedDeviceDetail(row.dataset.usedDevice);
+      });
+      els.usedStockBody.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const row = event.target.closest('[data-used-device]');
+        if (!row) return;
+        event.preventDefault();
+        openUsedDeviceDetail(row.dataset.usedDevice);
+      });
+      els.usedDeviceDialogClose.addEventListener('click', () => els.usedDeviceDialog.close());
+      els.usedDeviceDialogBody.addEventListener('click', event => {
+        if (event.target.closest('#usedListingPublish')) submitUsedListing(true);
+        else if (event.target.closest('#usedListingSave')) submitUsedListing(false);
+      });
+      els.usedDeviceDialogBody.addEventListener('input', event => {
+        if (event.target.id === 'usedListingPrice') updateUsedListingMargin();
+      });
       document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => navigate(button)));
       [els.dateFrom, els.dateTo].forEach(input => input.addEventListener('change', setCustomDates));
       els.refresh.addEventListener('click', loadSales);
