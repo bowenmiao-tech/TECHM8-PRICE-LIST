@@ -246,6 +246,15 @@ Deno.serve(async (request) => {
       if (!storeCode) return jsonResponse({ ok: false, message: "store_code is required." }, 400);
       await requireStoreAccess(sessionToken, storeCode);
 
+      if (mode === "store-credit-balance") {
+        const result = await callRpc("get_pos_store_credit_balance", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          target_customer_code: url.searchParams.get("customer_code") || "",
+        });
+        return jsonResponse(result.body, result.status);
+      }
+
       if (mode === "report") {
         const result = await callRpc("get_pos_sales_report", {
           session_token: sessionToken,

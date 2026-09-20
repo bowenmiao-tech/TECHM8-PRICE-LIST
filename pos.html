@@ -6874,6 +6874,20 @@
       font-weight: 950;
     }
 
+    .refund-credit-fields { display: grid; gap: 9px; padding: 12px; border: 1px solid var(--tm-line); border-radius: 8px; background: #f7fbfa; }
+    .refund-credit-fields[hidden] { display: none; }
+    .refund-credit-fields > label { display: grid; gap: 5px; font-size: 11px; font-weight: 850; }
+    .refund-credit-fields input { min-height: 40px; padding: 0 11px; border: 1px solid var(--tm-line-strong); border-radius: 7px; background: #fff; }
+    .refund-credit-results { display: grid; gap: 5px; max-height: 170px; overflow: auto; }
+    .refund-credit-results button { display: flex; justify-content: space-between; gap: 10px; min-height: 38px; padding: 8px 10px; border: 1px solid var(--tm-line); border-radius: 7px; background: #fff; text-align: left; cursor: pointer; }
+    .refund-credit-results button:hover { border-color: var(--tm-green); }
+    .refund-credit-selected { padding: 9px 10px; border: 1px solid var(--tm-green); border-radius: 7px; color: var(--tm-green-dark); background: #eaf8f3; font-size: 11px; font-weight: 850; }
+    .refund-credit-create { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; gap: 7px; }
+    .refund-credit-create button { min-height: 40px; padding: 0 10px; border: 1px solid var(--tm-green); border-radius: 7px; color: var(--tm-green-dark); background: #fff; font-weight: 850; cursor: pointer; }
+    .payment-credit-info { padding: 8px 0 3px; color: var(--tm-green-dark); font-size: 12px; font-weight: 850; }
+    .payment-credit-info[hidden] { display: none; }
+    @media (max-width: 620px) { .refund-credit-create { grid-template-columns: 1fr 1fr; } .refund-credit-create button { grid-column: 1 / -1; } }
+
     .ticket-detail-modal {
       width: min(1080px, calc(100vw - 28px));
       max-height: calc(var(--pos-viewport-height, 100vh) - 28px);
@@ -9061,6 +9075,7 @@
               <strong id="paymentRemainingLarge">$0.00</strong>
             </div>
             <input id="paymentAmountInput" class="payment-amount-input" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off" placeholder="0.00">
+            <div id="paymentCreditInfo" class="payment-credit-info" role="status" hidden></div>
             <div id="paymentChangePreview" class="payment-change-preview" role="status" aria-live="polite" hidden></div>
             <div id="paymentQuickGrid" class="payment-quick-grid"></div>
             <div class="payment-action-row">
@@ -9518,8 +9533,19 @@
             <option value="Afterpay">Afterpay</option>
             <option value="CNYpay">CNYpay</option>
             <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Store Credit">Store Credit</option>
           </select>
         </label>
+        <div id="refundCreditFields" class="refund-credit-fields span-2" hidden>
+          <label>Credit customer *<input id="refundCreditSearch" type="search" autocomplete="off" placeholder="Search name or phone"></label>
+          <div id="refundCreditSelected" class="refund-credit-selected" hidden></div>
+          <div id="refundCreditResults" class="refund-credit-results"></div>
+          <div class="refund-credit-create">
+            <input id="refundCreditName" type="text" placeholder="Customer name" aria-label="New credit customer name">
+            <input id="refundCreditPhone" type="tel" placeholder="Mobile number" aria-label="New credit customer mobile number">
+            <button id="refundCreditCreate" type="button">Create customer</button>
+          </div>
+        </div>
         <label class="span-2">
           Reason *
           <textarea id="refundReason" class="repair-textarea" placeholder="Reason for refund" required></textarea>
@@ -10324,6 +10350,7 @@
       paymentCurrentMethod: document.getElementById('paymentCurrentMethod'),
       paymentRemainingLarge: document.getElementById('paymentRemainingLarge'),
       paymentAmountInput: document.getElementById('paymentAmountInput'),
+      paymentCreditInfo: document.getElementById('paymentCreditInfo'),
       paymentChangePreview: document.getElementById('paymentChangePreview'),
       paymentQuickGrid: document.getElementById('paymentQuickGrid'),
       paymentConfirmBtn: document.getElementById('paymentConfirmBtn'),
@@ -10450,6 +10477,13 @@
       refundLines: document.getElementById('refundLines'),
       refundTotal: document.getElementById('refundTotal'),
       refundMethod: document.getElementById('refundMethod'),
+      refundCreditFields: document.getElementById('refundCreditFields'),
+      refundCreditSearch: document.getElementById('refundCreditSearch'),
+      refundCreditResults: document.getElementById('refundCreditResults'),
+      refundCreditSelected: document.getElementById('refundCreditSelected'),
+      refundCreditName: document.getElementById('refundCreditName'),
+      refundCreditPhone: document.getElementById('refundCreditPhone'),
+      refundCreditCreate: document.getElementById('refundCreditCreate'),
       refundReason: document.getElementById('refundReason'),
       refundError: document.getElementById('refundError'),
       refundSubmitBtn: document.getElementById('refundSubmitBtn'),
@@ -10779,8 +10813,10 @@
       { key: 'card', label: 'Card' },
       { key: 'afterpay', label: 'Afterpay' },
       { key: 'cnyPay', label: 'CNYpay' },
-      { key: 'bankTransfer', label: 'Bank Transfer' }
+      { key: 'bankTransfer', label: 'Bank Transfer' },
+      { key: 'storeCredit', label: 'Store Credit' }
     ];
+    const POS_TENDER_METHODS = POS_PAYMENT_METHODS.filter(method => method.key !== 'storeCredit');
 
     const posStores = [
       { id: 'park-ridge', code: 'PR', dbCode: 'parkridge', name: 'TechM8 Park Ridge' },
@@ -11986,6 +12022,7 @@
       if (normalized === 'afterpay') return 'afterpay';
       if (['cnypay', 'cnypayment', 'cny'].includes(normalized)) return 'cnyPay';
       if (['bank', 'banktransfer', 'transfer'].includes(normalized)) return 'bankTransfer';
+      if (normalized === 'storecredit') return 'storeCredit';
       return 'card';
     }
 
@@ -12028,7 +12065,7 @@
 
     function currentShiftPaymentTotals() {
       const activeShift = readActiveShift();
-      const totals = POS_PAYMENT_METHODS.reduce((acc, method) => {
+      const totals = POS_TENDER_METHODS.reduce((acc, method) => {
         acc[method.key] = 0;
         return acc;
       }, {});
@@ -12778,7 +12815,7 @@
       els.endShiftTodayCash.textContent = money(todayCash);
       els.endShiftActualCash.textContent = money(todayCash);
 
-      POS_PAYMENT_METHODS.forEach(method => {
+      POS_TENDER_METHODS.forEach(method => {
         const expected = roundedMoneyValue(system[method.key] || 0);
         const actualValue = endShiftActualValue(method.key);
         actual[method.key] = actualValue;
@@ -12838,7 +12875,7 @@
 
     async function saveEndShift() {
       const comparison = updateEndShiftComparison();
-      const missing = POS_PAYMENT_METHODS
+      const missing = POS_TENDER_METHODS
         .filter(method => method.key !== 'cash' && comparison.actual[method.key] === null)
         .map(method => method.label);
       if (missing.length) {
@@ -12855,7 +12892,7 @@
       els.endShiftForm.querySelectorAll('[data-end-cash-value]').forEach(input => {
         cashCounts[input.dataset.endCashValue] = Math.max(0, Number(input.value || 0));
       });
-      const differences = POS_PAYMENT_METHODS.reduce((acc, method) => {
+      const differences = POS_TENDER_METHODS.reduce((acc, method) => {
         acc[method.key] = roundedMoneyValue(comparison.actual[method.key] - comparison.system[method.key]);
         return acc;
       }, {});
@@ -21990,8 +22027,79 @@
 
     function setPaymentAmountToRemaining() {
       const remaining = paymentRemaining();
-      state.paymentSession.amount = remaining > 0 ? remaining.toFixed(2) : '';
+      const available = state.paymentSession.method === 'Store Credit'
+        ? Math.min(remaining, paymentCreditAvailable()) : remaining;
+      state.paymentSession.amount = available > 0 ? available.toFixed(2) : '';
       if (els.paymentAmountInput) els.paymentAmountInput.value = state.paymentSession.amount;
+    }
+
+    function paymentCreditAvailable() {
+      const allocated = state.paymentSession.payments
+        .filter(payment => paymentMethodLabel(payment.method) === 'Store Credit')
+        .reduce((sum, payment) => sum + numberValue(payment.amount), 0);
+      return Math.max(0, roundedMoneyValue(numberValue(state.paymentSession.creditBalance) - allocated));
+    }
+
+    function paymentCreditCustomerMatchesOrder(customer, order) {
+      const phone = String(order && order.customer_phone || '').trim();
+      if (phone) return customerMatchesPhone(customer, phone);
+      const name = String(order && order.customer_name || '').trim().toLowerCase();
+      return !name || name === 'walk-in customer' || customerSearchName(customer).toLowerCase() === name;
+    }
+
+    async function loadStoreCreditForPayment() {
+      const session = state.paymentSession;
+      session.creditLoading = true;
+      session.creditError = '';
+      renderPaymentModal();
+      try {
+        let customer = null;
+        if (session.balanceOrderId) {
+          const order = session.balanceOrder;
+          const selected = selectedCustomerRecord();
+          if (selected && paymentCreditCustomerMatchesOrder(selected, order)) customer = selected;
+          if (!customer && order && order.customer_code) {
+            const result = await getSharedState('customers', { q: order.customer_code, limit: 50 });
+            customer = (result.customers || []).find(item => String(item.id) === String(order.customer_code)) || null;
+          }
+          if (!customer && order) {
+            const query = order.customer_phone || (order.customer_name !== 'Walk-in Customer' ? order.customer_name : '');
+            if (query) {
+              const result = await getSharedState('customers', { q: query, limit: 50 });
+              const matches = (result.customers || []).filter(item => paymentCreditCustomerMatchesOrder(item, order));
+              if (matches.length === 1) customer = matches[0];
+              else if (matches.length > 1) throw new Error('Multiple customer accounts match this invoice. Select the correct customer in POS first.');
+            }
+          }
+        } else {
+          customer = selectedCustomerRecord();
+        }
+        if (!customer || !customer.id) throw new Error('Select a customer account in POS before using Store Credit.');
+        if (session.balanceOrderId && !paymentCreditCustomerMatchesOrder(customer, session.balanceOrder)) {
+          throw new Error('The selected customer does not match this invoice.');
+        }
+        const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+        url.searchParams.set('mode', 'store-credit-balance');
+        url.searchParams.set('store_code', repairTicketStoreCode());
+        url.searchParams.set('customer_code', customer.id);
+        const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+        const result = await parsePosApiResponse(response, 'Store Credit balance could not be loaded.');
+        if (state.paymentSession !== session) return;
+        session.creditCustomerCode = result.customer_code;
+        session.creditCustomerName = result.customer_name;
+        session.creditBalance = numberValue(result.balance);
+        if (paymentCreditAvailable() <= 0) session.creditError = 'This customer has no Store Credit available.';
+      } catch (error) {
+        if (state.paymentSession !== session) return;
+        session.creditError = error.message || 'Store Credit balance could not be loaded.';
+      } finally {
+        if (state.paymentSession === session) {
+          session.creditLoading = false;
+          setPaymentAmountToRemaining();
+          renderPaymentModal();
+          if (session.creditError) els.paymentError.textContent = session.creditError;
+        }
+      }
     }
 
     function paymentMethodLabel(method) {
@@ -22021,8 +22129,10 @@
     function renderPaymentQuickAmounts() {
       if (!els.paymentQuickGrid) return;
       const remaining = paymentRemaining();
+      const credit = state.paymentSession.method === 'Store Credit';
+      const maximum = credit ? Math.min(remaining, paymentCreditAvailable()) : remaining;
       const quickAmounts = [
-        { label: `${money(remaining)} Remaining`, value: remaining },
+        { label: credit ? `${money(maximum)} Available` : `${money(remaining)} Remaining`, value: maximum },
         { label: '$100.00', value: 100 },
         { label: '$50.00', value: 50 },
         { label: '$20.00', value: 20 },
@@ -22033,7 +22143,7 @@
         { label: '$0.10', value: 0.1 }
       ];
       els.paymentQuickGrid.innerHTML = quickAmounts.map(item => `
-        <button type="button" data-payment-quick="${item.value.toFixed(2)}"${item.value <= 0 ? ' disabled' : ''}>${item.label}</button>
+        <button type="button" data-payment-quick="${item.value.toFixed(2)}"${item.value <= 0 || (credit && item.value > maximum) ? ' disabled' : ''}>${item.label}</button>
       `).join('');
     }
 
@@ -22098,9 +22208,17 @@
       if (els.paymentCurrentMethod) els.paymentCurrentMethod.textContent = state.paymentSession.method;
       if (els.paymentRemainingLarge) els.paymentRemainingLarge.textContent = money(remaining);
       if (els.paymentAmountInput && document.activeElement !== els.paymentAmountInput) {
-        els.paymentAmountInput.value = state.paymentSession.amount || (remaining > 0 ? remaining.toFixed(2) : '');
+        els.paymentAmountInput.value = state.paymentSession.amount
+          || (state.paymentSession.method === 'Store Credit' ? '' : (remaining > 0 ? remaining.toFixed(2) : ''));
       }
       if (els.paymentError) els.paymentError.textContent = '';
+      if (els.paymentCreditInfo) {
+        const session = state.paymentSession;
+        els.paymentCreditInfo.hidden = session.method !== 'Store Credit';
+        els.paymentCreditInfo.textContent = session.creditLoading
+          ? 'Checking Store Credit balance...'
+          : session.creditError || `${session.creditCustomerName || 'Customer'}: ${money(paymentCreditAvailable())} available`;
+      }
       renderDepositAction(remaining);
       renderPaymentMethods();
       renderPaymentQuickAmounts();
@@ -22149,8 +22267,15 @@
 
     function selectPaymentMethod(method) {
       state.paymentSession.method = paymentMethodLabel(method);
+      if (state.paymentSession.method === 'Store Credit') {
+        state.paymentSession.creditCustomerCode = '';
+        state.paymentSession.creditCustomerName = '';
+        state.paymentSession.creditBalance = 0;
+        state.paymentSession.creditError = '';
+      }
       setPaymentAmountToRemaining();
       renderPaymentModal();
+      if (state.paymentSession.method === 'Store Credit') loadStoreCreditForPayment();
       setTimeout(() => {
         els.paymentAmountInput.focus();
         els.paymentAmountInput.select();
@@ -22159,7 +22284,13 @@
 
     function confirmPaymentAmount(useFullAmount = false) {
       const remaining = paymentRemaining();
-      const amount = useFullAmount ? remaining : roundedMoneyValue(els.paymentAmountInput.value);
+      const isCredit = state.paymentSession.method === 'Store Credit';
+      const creditAvailable = isCredit ? paymentCreditAvailable() : 0;
+      if (isCredit && (!state.paymentSession.creditCustomerCode || state.paymentSession.creditLoading || state.paymentSession.creditError)) {
+        els.paymentError.textContent = state.paymentSession.creditError || 'Store Credit balance is still being checked.';
+        return;
+      }
+      const amount = useFullAmount ? Math.min(remaining, isCredit ? creditAvailable : remaining) : roundedMoneyValue(els.paymentAmountInput.value);
       if (remaining <= 0) return;
       if (!Number.isFinite(amount) || amount <= 0) {
         els.paymentError.textContent = 'Enter an amount above $0.';
@@ -22167,6 +22298,10 @@
       }
       if (amount > remaining && state.paymentSession.method !== 'Cash') {
         els.paymentError.textContent = `Amount cannot exceed ${money(remaining)}.`;
+        return;
+      }
+      if (isCredit && amount > creditAvailable) {
+        els.paymentError.textContent = `Only ${money(creditAvailable)} Store Credit is available.`;
         return;
       }
 
@@ -22664,8 +22799,11 @@
       }).join('');
 
       const payments = Array.isArray(report.payment_totals) ? report.payment_totals : [];
+      const tenderPayments = payments.filter(row => String(row.method || '').toLowerCase() !== 'store credit');
+      const creditIssued = Number(totals.store_credit_issued || 0);
+      const creditRedeemed = Number(totals.store_credit_redeemed || 0);
       els.perfPayments.innerHTML = `
-        ${payments.map(row => `
+        ${tenderPayments.map(row => `
           <div class="perf-payment">
             <div class="perf-payment-name">${escapeHtml(row.method || 'Unknown')}</div>
             <div class="perf-payment-value">${money(row.net || 0)}</div>
@@ -22678,6 +22816,11 @@
           <div class="perf-payment-value">${money(totals.net || 0)}</div>
           <div class="perf-payment-sub">${orderCount} invoice${orderCount === 1 ? '' : 's'}</div>
         </div>
+        ${(creditIssued || creditRedeemed) ? `<div class="perf-payment">
+          <div class="perf-payment-name">Store Credit (not cash)</div>
+          <div class="perf-payment-value">${money(creditIssued)} issued</div>
+          <div class="perf-payment-sub">${money(creditRedeemed)} redeemed · excluded from net takings</div>
+        </div>` : ''}
       `;
 
       // Old exchange invoices whose lines cancel out cannot be split across the
@@ -22697,7 +22840,7 @@
       const totals = report.totals || {};
       const shiftSummary = report.shift_summary || {};
       const payments = Array.isArray(report.payment_totals) ? report.payment_totals : [];
-      const rows = payments.map(row => {
+      const rows = payments.filter(row => String(row.method || '').toLowerCase() !== 'store credit').map(row => {
         const method = escapeHtml(row.method || 'Unknown');
         const refunded = Math.abs(Number(row.refunded || 0));
         return `
@@ -22732,6 +22875,11 @@
           <div class="row refund"><span>Refunds</span><span>${money(-refundedTotal)}</span></div>
           <div class="row net-total"><span>NET TAKINGS</span><span>${money(totals.net || 0)}</span></div>
         </div>
+        ${(Number(totals.store_credit_issued || 0) || Number(totals.store_credit_redeemed || 0)) ? `
+          <div class="row"><span>Store Credit issued</span><span>${money(totals.store_credit_issued || 0)}</span></div>
+          <div class="row"><span>Store Credit redeemed</span><span>${money(totals.store_credit_redeemed || 0)}</span></div>
+          <div class="note">Store Credit is not a cash or card movement.</div>
+        ` : ''}
         <div class="row"><span>Returned items</span><span>${Number(totals.returned_units || 0)}</span></div>
         <div class="row"><span>Cash variance</span><span>${shiftSummary.cash_difference_recorded ? money(shiftSummary.cash_difference || 0) : 'Not counted'}</span></div>
         ${shiftSummary.cash_difference_recorded ? '<div class="note">Cash variance is an end-shift drawer check and is not deducted from net takings.</div>' : ''}
@@ -22929,6 +23077,112 @@
       updateRefundTotal();
     }
 
+    let refundCreditCustomer = null;
+    let refundCreditMatches = [];
+    let refundCreditSearchTimer = null;
+    let refundCreditSearchRequest = 0;
+
+    function refundCreditCustomerMatchesOrder(customer) {
+      const order = state.refundOrder || {};
+      const phone = String(order.customer_phone || '').trim();
+      if (phone) return customerMatchesPhone(customer, phone);
+      const name = String(order.customer_name || '').trim().toLowerCase();
+      return !name || name === 'walk-in customer' || customerSearchName(customer).toLowerCase() === name;
+    }
+
+    function renderRefundCreditCustomers() {
+      const selected = refundCreditCustomer;
+      els.refundCreditSelected.hidden = !selected;
+      els.refundCreditSelected.textContent = selected
+        ? `${customerSearchName(selected)} · ${customerSearchPhone(selected)}`
+        : '';
+      els.refundCreditResults.innerHTML = selected ? '' : refundCreditMatches.map(customer => `
+        <button type="button" data-refund-credit-customer="${escapeHtml(String(customer.id || ''))}">
+          <strong>${escapeHtml(customerSearchName(customer))}</strong>
+          <span>${escapeHtml(customerSearchPhone(customer))}</span>
+        </button>
+      `).join('');
+      els.refundCreditCreate.hidden = Boolean(selected);
+      els.refundCreditName.hidden = Boolean(selected);
+      els.refundCreditPhone.hidden = Boolean(selected);
+    }
+
+    async function searchRefundCreditCustomers() {
+      const query = els.refundCreditSearch.value.trim();
+      const requestId = ++refundCreditSearchRequest;
+      refundCreditCustomer = null;
+      refundCreditMatches = [];
+      renderRefundCreditCustomers();
+      if (query.length < 2) return;
+      try {
+        const payload = await getSharedState('customers', { q: query, limit: 50 });
+        if (requestId !== refundCreditSearchRequest || !state.refundOrder) return;
+        refundCreditMatches = (Array.isArray(payload.customers) ? payload.customers : [])
+          .filter(refundCreditCustomerMatchesOrder);
+        if (refundCreditMatches.length === 1 && String(state.refundOrder.customer_phone || '').trim()) {
+          refundCreditCustomer = refundCreditMatches[0];
+        }
+        renderRefundCreditCustomers();
+      } catch (error) {
+        if (requestId === refundCreditSearchRequest) els.refundError.textContent = error.message || 'Customer search failed.';
+      }
+    }
+
+    function updateRefundCreditMethod() {
+      const credit = els.refundMethod.value === 'Store Credit';
+      els.refundCreditFields.hidden = !credit;
+      els.refundSubmitBtn.textContent = credit ? 'Issue Store Credit' : 'Confirm Refund';
+      if (credit && !refundCreditCustomer) searchRefundCreditCustomers();
+    }
+
+    async function createRefundCreditCustomer() {
+      const name = els.refundCreditName.value.trim();
+      const phone = els.refundCreditPhone.value.trim();
+      const order = state.refundOrder;
+      if (!order || !name || canonicalCustomerPhone(phone).length < 8) {
+        els.refundError.textContent = 'Enter a customer name and mobile number first.';
+        return;
+      }
+      if (order.customer_phone && canonicalCustomerPhone(phone) !== canonicalCustomerPhone(order.customer_phone)) {
+        els.refundError.textContent = 'Customer phone must match the original invoice.';
+        return;
+      }
+      if (!order.customer_phone && order.customer_name && order.customer_name.toLowerCase() !== 'walk-in customer'
+        && name.toLowerCase() !== order.customer_name.trim().toLowerCase()) {
+        els.refundError.textContent = 'Customer name must match the original invoice.';
+        return;
+      }
+      els.refundCreditCreate.disabled = true;
+      els.refundError.textContent = '';
+      try {
+        const lookup = await getSharedState('customers', { q: phone, limit: 50 });
+        const existing = (Array.isArray(lookup.customers) ? lookup.customers : [])
+          .find(customer => customerMatchesPhone(customer, phone) && refundCreditCustomerMatchesOrder(customer));
+        if (existing) {
+          refundCreditCustomer = existing;
+        } else {
+          const [firstName, ...lastName] = name.split(/\s+/);
+          const saved = await postSharedState('customer', 'save', {
+            store_code: repairTicketStoreCode(),
+            staff_name: state.selectedStaffName,
+            first_name: firstName,
+            last_name: lastName.join(' '),
+            phone
+          });
+          refundCreditCustomer = saved.customer;
+        }
+        if (!refundCreditCustomer || !refundCreditCustomer.id) throw new Error('Customer account was not saved.');
+        refundCreditSearchRequest += 1;
+        refundCreditMatches = [];
+        els.refundCreditSearch.value = customerSearchPhone(refundCreditCustomer);
+        renderRefundCreditCustomers();
+      } catch (error) {
+        els.refundError.textContent = error.message || 'Customer account could not be saved.';
+      } finally {
+        els.refundCreditCreate.disabled = false;
+      }
+    }
+
     async function openRefundModalById(orderId) {
       if (!orderId) return;
       try {
@@ -22937,6 +23191,13 @@
         els.refundReason.value = '';
         els.refundMethod.value = 'Card';
         els.refundError.textContent = '';
+        refundCreditCustomer = null;
+        refundCreditMatches = [];
+        els.refundCreditSearch.value = state.refundOrder.customer_phone || (state.refundOrder.customer_name === 'Walk-in Customer' ? '' : state.refundOrder.customer_name || '');
+        els.refundCreditName.value = state.refundOrder.customer_name === 'Walk-in Customer' ? '' : state.refundOrder.customer_name || '';
+        els.refundCreditPhone.value = state.refundOrder.customer_phone || '';
+        renderRefundCreditCustomers();
+        updateRefundCreditMethod();
         renderRefundLines();
         closeTicketDetailModal();
         els.refundModal.classList.add('show');
@@ -22948,6 +23209,8 @@
     }
 
     function closeRefundModal() {
+      refundCreditSearchRequest += 1;
+      clearTimeout(refundCreditSearchTimer);
       els.refundModal.classList.remove('show');
       els.refundModal.setAttribute('aria-hidden', 'true');
       state.refundOrder = null;
@@ -22967,6 +23230,15 @@
         els.refundReason.focus();
         return;
       }
+      const isStoreCredit = els.refundMethod.value === 'Store Credit';
+      if (isStoreCredit && (!refundCreditCustomer || !refundCreditCustomer.id)) {
+        els.refundError.textContent = 'Select or create the customer account that will receive Store Credit.';
+        els.refundCreditSearch.focus();
+        return;
+      }
+      if (isStoreCredit && !window.confirm(
+        `Issue ${money(lines.reduce((sum, line) => sum + line.amount, 0))} Store Credit to ${customerSearchName(refundCreditCustomer)}? No cash or card refund will be made.`
+      )) return;
       els.refundError.textContent = '';
       els.refundSubmitBtn.disabled = true;
       try {
@@ -22980,6 +23252,7 @@
             shift_id: state.activeShiftId || (readActiveShift() && readActiveShift().id) || '',
             business_date: brisbaneDateIso(),
             refund_method: els.refundMethod.value,
+            customer_code: isStoreCredit ? refundCreditCustomer.id : undefined,
             reason,
             lines
           })
@@ -22993,7 +23266,9 @@
         closeRefundModal();
         renderInvoiceHistory();
         loadProducts({ force: true });
-        showToast(`Refund ${payload.refund_id} recorded.`);
+        showToast(isStoreCredit
+          ? `${money(lines.reduce((sum, line) => sum + line.amount, 0))} Store Credit issued to ${customerSearchName(refundCreditCustomer)}.`
+          : `Refund ${payload.refund_id} recorded.`);
       } catch (error) {
         console.error(error);
         els.refundError.textContent = error.message || 'Refund failed.';
@@ -23419,7 +23694,7 @@
      * like "Tyro, Cash". Those cannot be relabelled, so they get no button.
      */
     function correctablePaymentMethod(method) {
-      return POS_PAYMENT_METHODS.some(entry => entry.label === String(method || '').trim());
+      return POS_TENDER_METHODS.some(entry => entry.label === String(method || '').trim());
     }
 
     async function correctPaymentMethod(paymentNumber) {
@@ -23428,7 +23703,7 @@
       const payment = (order.payments || []).find(entry => Number(entry.payment_number) === Number(paymentNumber));
       if (!payment) return;
 
-      const choices = POS_PAYMENT_METHODS.filter(entry => entry.label !== payment.method);
+      const choices = POS_TENDER_METHODS.filter(entry => entry.label !== payment.method);
       const menu = choices.map((entry, index) => `${index + 1}. ${entry.label}`).join('\n');
       const picked = window.prompt(
         `This payment of ${money(numberValue(payment.amount))} is recorded as ${payment.method}.\n`
@@ -24063,6 +24338,12 @@
         return;
       }
       const paymentSummary = summarizePayments(normalizedPayments);
+      const usesStoreCredit = normalizedPayments.some(payment => payment.method === 'Store Credit');
+      const creditCustomerCode = state.paymentSession.creditCustomerCode || '';
+      if (usesStoreCredit && !creditCustomerCode) {
+        showToast('Select a customer account before using Store Credit.');
+        return;
+      }
       const activeShift = await resolveCheckoutShift();
       if (!activeShift || activeShift.status !== 'open' || activeShift.date !== brisbaneDateIso() || !state.openingConfirmed) {
         showToast('Start today\'s shift before checkout.');
@@ -24171,6 +24452,7 @@
         shift_started_at: activeShift && activeShift.startedAt,
         customer_name: customerName,
         customer_phone: customerPhone,
+        customer_code: usesStoreCredit ? creditCustomerCode : (customer && customer.id || ''),
         customer_address: usedDeviceItems.length ? usedDeviceItems[0].buyer_address : '',
         customer_email: receiptCustomerEmail({
           customer_email: customer ? (customer.email || '') : '',
@@ -24308,7 +24590,8 @@
         balanceTotal: balance,
         balanceOrderTotal: numberValue(order.total),
         balanceAlreadyPaid: numberValue(order.amount_paid),
-        balanceInvoiceNumber: invoiceNumberText(order)
+        balanceInvoiceNumber: invoiceNumberText(order),
+        balanceOrder: order
       };
       setPaymentAmountToRemaining();
       els.paymentModal.classList.add('show');
@@ -24331,6 +24614,12 @@
         .map(payment => ({ method: paymentMethodLabel(payment.method), amount: roundedMoneyValue(payment.amount) }))
         .filter(payment => payment.amount > 0);
       if (!normalizedPayments.length) return;
+      const usesStoreCredit = normalizedPayments.some(payment => payment.method === 'Store Credit');
+      const creditCustomerCode = state.paymentSession.creditCustomerCode || '';
+      if (usesStoreCredit && !creditCustomerCode) {
+        showToast('Select a customer account before using Store Credit.');
+        return;
+      }
       try {
         const response = await fetch(`${POS_SALES_ORDERS_ENDPOINT}?mode=balance-payment`, {
           method: 'PUT',
@@ -24341,6 +24630,7 @@
             staff_name: state.selectedStaffName,
             shift_id: activeShift && activeShift.id,
             business_date: brisbaneDateIso(),
+            customer_code: usesStoreCredit ? creditCustomerCode : undefined,
             payments: normalizedPayments
           })
         });
@@ -25782,6 +26072,18 @@
     });
     els.refundCloseBtn.addEventListener('click', closeRefundModal);
     els.refundCancelBtn.addEventListener('click', closeRefundModal);
+    els.refundMethod.addEventListener('change', updateRefundCreditMethod);
+    els.refundCreditSearch.addEventListener('input', () => {
+      clearTimeout(refundCreditSearchTimer);
+      refundCreditSearchTimer = setTimeout(searchRefundCreditCustomers, 250);
+    });
+    els.refundCreditResults.addEventListener('click', event => {
+      const button = event.target.closest('[data-refund-credit-customer]');
+      if (!button) return;
+      refundCreditCustomer = refundCreditMatches.find(customer => String(customer.id) === button.dataset.refundCreditCustomer) || null;
+      renderRefundCreditCustomers();
+    });
+    els.refundCreditCreate.addEventListener('click', createRefundCreditCustomer);
     els.refundModal.addEventListener('click', event => {
       if (event.target === els.refundModal) closeRefundModal();
     });
