@@ -210,13 +210,40 @@ const { chromium } = require('playwright');
     assert.equal(saved.payload.payout_reference_type, '', 'Cash recorded a payout destination');
     await page.waitForFunction(() => state.usedDeviceTab === 'inventory');
 
+    // The device detail shows what it was bought as but cannot edit it, and
+    // the pre-sale test is where sellability is decided.
+    const detail = await page.evaluate(async () => {
+      const device = {
+        id: 'USED-DETAIL', device_code: 'USED-DETAIL', category: 'Phone', brand: 'Apple', model: 'iPhone 13',
+        status: 'inspection', condition_grade: 'Good', intake_condition_grade: 'Faulty', battery_health: 90,
+        intake_battery_health: 78, sale_price: 0, inspection: {touch: 'fail'}, seller: {}, acquisition: {buyback_number: 7}
+      };
+      state.usedDevices = [device];
+      window.savedUpdate = null;
+      usedDeviceApiPost = async (action, payload) => { window.savedUpdate = {action, payload}; return {ok: true}; };
+      openUsedDeviceDetail('USED-DETAIL');
+      const form = els.usedDeviceDetailBody.querySelector('#usedDeviceUpdateForm');
+      await updateUsedDevice(form);
+      return {
+        editableChecks: els.usedDeviceDetailBody.querySelectorAll('[data-used-inspection-prefix="detail"]').length,
+        testHost: Boolean(els.usedDeviceDetailBody.querySelector('#usedDeviceSaleTest')),
+        summary: els.usedDeviceDetailBody.querySelector('.used-detail-summary').innerText,
+        sentInspection: window.savedUpdate && Object.prototype.hasOwnProperty.call(window.savedUpdate.payload, 'inspection')
+      };
+    });
+    assert.equal(detail.editableChecks, 0, 'The purchase inspection could still be edited from the device detail');
+    assert.ok(detail.testHost, 'The pre-sale test was not mounted on the device detail');
+    assert.match(detail.summary, /Faulty/, 'What the device was bought as was not shown');
+    assert.equal(detail.sentInspection, false, 'A device save still sent an inspection');
+    await page.evaluate(() => closeUsedDeviceDetail());
+
     await page.evaluate(async () => {
       els.usedDeviceDetailBody.innerHTML = '<div id="usedDeviceCostList"></div>';
       await loadUsedDeviceCosts({id:'USED-TEST'});
     });
     assert.match(await page.locator('#usedDeviceCostList').innerText(), /administrators only/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
+    console.log('PASS: locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();

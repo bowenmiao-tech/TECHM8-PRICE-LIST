@@ -138,6 +138,10 @@ begin
 
   -- 4. `ready_at` is the first time the device reached the shelf and survives a
   --    return to inspection.
+  -- Sellability comes from a pre-sale test, never from the purchase inspection.
+  perform public.record_pos_used_device_sale_test(token, store_code_value, device_code_value,
+    jsonb_build_object('answers', (select jsonb_object_agg(item_key, 'pass')
+      from public.pos_used_device_inspection_items where category = 'Phone' and active)));
   perform public.update_pos_used_device(token, jsonb_build_object(
     'store_code', store_code_value,
     'staff_name', staff_name_value,
@@ -146,8 +150,7 @@ begin
     'clean_check_status', 'Clean',
     'clean_check_reference', 'AMTA-TEST',
     'activation_lock_removed', 'true',
-    'data_erased_confirmed', 'true',
-    'inspection', full_answers
+    'data_erased_confirmed', 'true'
   ));
   select ready_at into first_ready from public.pos_used_devices where device_code = device_code_value;
   assert first_ready is not null, 'Ready timestamp was not recorded';

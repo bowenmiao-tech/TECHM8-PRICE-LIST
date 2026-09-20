@@ -13,6 +13,8 @@
   <script src="./repair-ticket-updates.js?v=20260912.1"></script>
   <link rel="stylesheet" href="./used-device-evidence.css?v=20260910.1">
   <script src="./used-device-evidence.js?v=20260913.1"></script>
+  <link rel="stylesheet" href="./used-device-sale-test.css?v=20260920.1">
+  <script src="./used-device-sale-test.js?v=20260920.1"></script>
   <script src="./vendor/sortable.min.js"></script>
   <style>
     :root {
@@ -19200,12 +19202,6 @@
       }, {});
     }
 
-    function inspectionReadyForSale(inspection, items = null) {
-      const list = items || usedDeviceInspectionItemsFor('Phone');
-      const values = list.map(item => inspection[item.key]);
-      return values.length > 0 && values.every(value => value === 'pass' || value === 'na');
-    }
-
     async function usedDeviceApiGet(resource = 'devices', extraParams = {}) {
       const url = new URL(POS_USED_DEVICES_ENDPOINT);
       url.searchParams.set('resource', resource);
@@ -20149,7 +20145,8 @@
             <div><span>Buyback</span><strong>#${escapeHtml(String(device.acquisition.buyback_number))}</strong></div>
           ` : ''}
           <div><span>Status</span><strong>${escapeHtml(usedDeviceStatusLabel(device.status))}</strong></div>
-          <div><span>Condition</span><strong>${escapeHtml(device.condition_grade || '')}</strong></div>
+          <div><span>Condition now</span><strong>${escapeHtml(device.condition_grade || '')}</strong></div>
+          <div><span>Bought as</span><strong>${escapeHtml([device.intake_condition_grade, device.intake_battery_health == null ? '' : `battery ${device.intake_battery_health}%`].filter(Boolean).join(' · '))}</strong></div>
           <div><span>Sale price</span><strong>${usedDeviceSalePriceText(device)}</strong></div>
           <div><span>Seller</span><strong>${escapeHtml(seller.name || '')}</strong></div>
           <div><span>Seller phone</span><strong>${escapeHtml(seller.phone || '')}</strong></div>
@@ -20158,7 +20155,8 @@
         </div>
         ${editable ? `
           <form id="usedDeviceUpdateForm" class="used-form-section">
-            <h2>Inventory and Inspection</h2>
+            <h2>Inventory</h2>
+            <div class="used-field-hint" style="margin-bottom:10px;">Condition and battery here are what a buyer gets now. What it was bought as is locked, and whether it can be sold comes from the pre-sale test below.</div>
             <div class="used-form-grid">
               <label class="used-field">Status
                 <select name="status"><option value="inspection" ${device.status === 'inspection' ? 'selected' : ''}>Inspection</option><option value="ready_for_sale" ${device.status === 'ready_for_sale' ? 'selected' : ''}>Ready for sale</option><option value="returned_to_seller">Returned to seller</option><option value="disposed">Disposed</option></select>
@@ -20167,12 +20165,12 @@
                 <input name="sale_price" type="number" min="0" step="0.01" value="${numberValue(device.sale_price).toFixed(2)}" required
                   title="A device bought today has no price yet. Set one before marking it ready for sale.">
               </label>
-              <label class="used-field">Condition
+              <label class="used-field">Condition now
                 <select name="condition_grade">${['As New', 'Good', 'Fair', 'Poor', 'Faulty'].map(grade => `
                   <option value="${escapeHtml(grade)}" ${device.condition_grade === grade ? 'selected' : ''}>${escapeHtml(grade)}</option>
                 `).join('')}</select>
               </label>
-              <label class="used-field">Battery health %<input name="battery_health" type="number" min="0" max="100" inputmode="numeric" value="${device.battery_health == null ? '' : escapeHtml(String(device.battery_health))}"></label>
+              <label class="used-field">Battery health now %<input name="battery_health" type="number" min="0" max="100" inputmode="numeric" value="${device.battery_health == null ? '' : escapeHtml(String(device.battery_health))}"></label>
               <label class="used-field">Colour<input name="color" type="text" value="${escapeHtml(device.color || '')}"></label>
               <label class="used-field">IMEI / lost-stolen check
                 <select name="clean_check_status"><option ${device.clean_check_status === 'Pending' ? 'selected' : ''}>Pending</option><option ${device.clean_check_status === 'Clean' ? 'selected' : ''}>Clean</option><option ${device.clean_check_status === 'Blocked' ? 'selected' : ''}>Blocked</option><option ${device.clean_check_status === 'Not Applicable' ? 'selected' : ''}>Not Applicable</option></select>
@@ -20182,7 +20180,6 @@
               <label class="used-field span-2">Reason for this change<input name="change_note" type="text" maxlength="500" placeholder="Optional. Recorded against this change only, not on the device."></label>
               <label class="used-field span-3">Reason for pricing below cost<input name="below_cost_reason" type="text" maxlength="500" placeholder="Only needed if the price you enter is under what this device has cost."></label>
             </div>
-            <div class="used-inspection-grid" style="margin-top:12px;">${usedDeviceInspectionFields(device.inspection || {}, 'detail', usedDeviceInspectionItemsForRecord(device))}</div>
             <div class="used-declaration-grid">
               <label class="used-check"><input name="activation_lock_removed" type="checkbox" ${device.activation_lock_removed ? 'checked' : ''}><span>Activation and account locks removed</span></label>
               <label class="used-check"><input name="data_erased_confirmed" type="checkbox" ${device.data_erased_confirmed ? 'checked' : ''}><span>Customer data erased</span></label>
@@ -20191,6 +20188,13 @@
             <div class="used-detail-actions"><button class="repair-action primary" type="submit"><i class="bi bi-check2"></i> Save Device</button></div>
           </form>
         ` : ''}
+        <section class="used-form-section">
+          <h2>Pre-sale Test</h2>
+          <div class="used-field-hint" style="margin-bottom:10px;">
+            Test the device again once it is cleaned up or repaired. Every run is kept, and the latest one decides whether it can be sold.
+          </div>
+          <div id="usedDeviceSaleTest"></div>
+        </section>
         ${device.status === 'ready_for_sale' ? `
           <form id="usedDeviceSellForm" class="used-form-section">
             <h2>Sell Device</h2>
@@ -20238,6 +20242,7 @@
         </section>
       `;
       mountUsedDeviceEvidence(device);
+      mountUsedDeviceSaleTest(device);
       loadUsedDeviceWebsiteStatus(device);
       if (editable) loadUsedDeviceCosts(device);
       if (focusSell) setTimeout(() => els.usedDeviceDetailBody.querySelector('[name="buyer_name"]')?.focus(), 0);
@@ -20397,6 +20402,21 @@
       }
     }
 
+    // What it was bought as (locked) and the pre-sale test runs, shared with the
+    // admin portal so both see exactly the same record.
+    function mountUsedDeviceSaleTest(device) {
+      const host = els.usedDeviceDetailBody.querySelector('#usedDeviceSaleTest');
+      if (!host || !window.Techm8UsedDeviceSaleTest) return;
+      window.Techm8UsedDeviceSaleTest.mount(host, {
+        storeCode: repairTicketStoreCode(),
+        deviceCode: device.id,
+        getToken: () => window.Techm8StaffAuth.getToken(),
+        // A failed retest can take a listed device off sale, so the list and
+        // this modal's status must follow.
+        onChange: () => loadUsedDevices()
+      });
+    }
+
     function mountUsedDeviceEvidence(device) {
       const host = els.usedDeviceDetailBody.querySelector('#usedDeviceEvidence');
       if (!host || !window.Techm8UsedDeviceEvidence) return;
@@ -20426,14 +20446,8 @@
       const device = selectedUsedDevice();
       if (!device) return;
       const data = new FormData(form);
-      const inspection = collectUsedDeviceInspection(form, 'detail');
       const status = String(data.get('status') || device.status);
       const error = form.querySelector('#usedDeviceUpdateError');
-      if (status === 'ready_for_sale'
-        && !inspectionReadyForSale(inspection, usedDeviceInspectionItemsForRecord(device))) {
-        error.textContent = 'Every inspection item must be Pass or N/A before the device can be ready for sale.';
-        return;
-      }
       if (status === 'ready_for_sale' && !(Number(data.get('sale_price')) > 0)) {
         error.textContent = 'Set a sale price before this device is ready for sale.';
         return;
@@ -20452,7 +20466,6 @@
           clean_check_reference: String(data.get('clean_check_reference') || '').trim(),
           activation_lock_removed: data.get('activation_lock_removed') === 'on',
           data_erased_confirmed: data.get('data_erased_confirmed') === 'on',
-          inspection,
           notes: String(data.get('notes') || '').trim(),
           change_note: String(data.get('change_note') || '').trim(),
           below_cost_reason: String(data.get('below_cost_reason') || '').trim(),

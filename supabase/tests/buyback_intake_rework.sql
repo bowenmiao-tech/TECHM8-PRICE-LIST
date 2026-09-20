@@ -177,7 +177,11 @@ begin
           where device.device_code = second_device_code),
     'The PayID payout did not store cleanly';
 
-  -- 5. A device cannot reach the shelf unpriced.
+  -- 5. A device cannot reach the shelf unpriced, even once it has passed.
+  -- Sellability comes from a pre-sale test, never from the purchase inspection.
+  perform public.record_pos_used_device_sale_test(token, store_code_value, device_code_value,
+    jsonb_build_object('answers', (select jsonb_object_agg(item_key, 'pass')
+      from public.pos_used_device_inspection_items where category = 'Phone' and active)));
   refused := false;
   begin
     perform public.update_pos_used_device(token, jsonb_build_object(
@@ -187,13 +191,11 @@ begin
       'status', 'ready_for_sale',
       'clean_check_status', 'Clean',
       'activation_lock_removed', 'true',
-      'data_erased_confirmed', 'true',
-      'inspection', (select jsonb_object_agg(item_key, 'pass')
-                     from public.pos_used_device_inspection_items where category = 'Phone' and active)
+      'data_erased_confirmed', 'true'
     ));
   exception when others then refused := true; refusal := sqlerrm;
   end;
-  assert refused, 'An unpriced device reached the shelf';
+  assert refused and refusal like '%sale price%', format('An unpriced device reached the shelf: %s', refusal);
 
   -- Pricing it during inspection is allowed and does not need a status change.
   perform public.update_pos_used_device(token, jsonb_build_object(

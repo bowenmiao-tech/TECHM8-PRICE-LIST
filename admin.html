@@ -13,6 +13,8 @@
   <script src="./repair-ticket-updates.js?v=20260909.1"></script>
   <link rel="stylesheet" href="./used-device-evidence.css?v=20260910.1">
   <script src="./used-device-evidence.js?v=20260910.1"></script>
+  <link rel="stylesheet" href="./used-device-sale-test.css?v=20260920.1">
+  <script src="./used-device-sale-test.js?v=20260920.1"></script>
   <style>
     :root {
       --green: #07896f;
@@ -255,7 +257,8 @@
     .filter-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding-top: 12px; border-top: 1px solid #edf1f3; }
     .date-field { display: grid; gap: 6px; }
     .date-field span { color: #798991; font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
-    .date-field input {
+    .date-field input,
+    .date-field select {
       width: 162px;
       height: 38px;
       padding: 0 11px;
@@ -267,7 +270,8 @@
       font-size: 11px;
       font-weight: 750;
     }
-    .date-field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7,137,111,.11); }
+    .date-field input:focus,
+    .date-field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7,137,111,.11); }
     .filter-spacer { flex: 1; }
     .refresh-button {
       height: 38px;
@@ -377,7 +381,8 @@
     .used-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #e7edef; color: #4a5d66; font-size: 10px; font-weight: 900; }
     .preset-button.active .used-tab-count { background: rgba(255,255,255,.24); color: #fff; }
     .used-closed-tab { color: #7d8b92; }
-    .used-search-field { flex: 1 1 260px; min-width: 200px; }
+    .used-search-field { flex: 1 1 260px; min-width: min(200px, 100%); }
+    .date-field select { font: inherit; font-size: 11px; font-weight: 750; }
     .used-search-field input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 9px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; }
     .used-device-row { cursor: pointer; }
     .used-device-row:hover { background: #f6fafa; }
@@ -430,6 +435,12 @@
     .used-line-list { display: grid; gap: 8px; }
     .used-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 11.5px; font-weight: 800; }
     .used-line span { color: #7f8e95; font-weight: 700; }
+    .used-detail-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+    .used-tab-dot { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--red); vertical-align: middle; }
+    .used-locked-block { background: #f7f9fa; }
+    .used-locked-block h3 { display: flex; align-items: center; gap: 7px; }
+    .used-locked-tag { margin-left: auto; padding: 3px 9px; border-radius: 999px; background: #e8edef; color: #4a5d66; font-size: 10px; font-weight: 900; }
+    .used-blocker-action { min-height: 36px; margin-top: 10px; }
     .used-severity.high { background: #fdeae7; color: #b22c24; }
     .used-severity.medium { background: #fdf1e3; color: #a15316; }
     .used-severity.low { background: #eef3f4; color: #55686f; }
@@ -694,7 +705,7 @@
       .summary-grid, .store-grid { grid-template-columns: 1fr; }
       .filter-fields { align-items: stretch; flex-wrap: wrap; }
       .date-field { flex: 1 1 140px; }
-      .date-field input { width: 100%; }
+      .date-field input, .date-field select { width: 100%; }
       .filter-spacer { display: none; }
       .refresh-button { flex: 1 1 100%; }
       .section-bar { align-items: flex-start; flex-direction: column; }
@@ -1639,7 +1650,7 @@
               ]
               : [
                 escapeHtml(device.store_name || ''),
-                `<span class="used-device-title">${escapeHtml(usedDeviceName(device))}</span><span class="used-device-sub">Buyback #${escapeHtml(String(device.buyback_number || ''))} · ${number(device.days_held)} days · ${escapeHtml(device.condition_grade || '')}${device.battery_health ? ` · battery ${number(device.battery_health)}%` : ''}</span>`,
+                `<span class="used-device-title">${escapeHtml(usedDeviceName(device))}</span><span class="used-device-sub">Buyback #${escapeHtml(String(device.buyback_number || ''))} · ${number(device.days_held)} day${number(device.days_held) === 1 ? '' : 's'} · ${escapeHtml(device.condition_grade || '')}${device.battery_health ? ` · battery ${number(device.battery_health)}%` : ''}</span>`,
                 escapeHtml(identity),
                 escapeHtml(formatDateTime(device.acquired_at)),
                 money(device.total_cost),
@@ -1647,7 +1658,9 @@
                 usedStateChip(device)
               ];
           return `<tr class="used-device-row" tabindex="0" data-used-device="${escapeHtml(device.device_code)}">${
-            cells.map((cell, index) => `<td data-label="${escapeHtml(columns[index])}">${cell}</td>`).join('')
+            // One wrapper per cell: on a narrow screen each cell becomes a
+            // label-and-value grid, and a second child would fall into the label.
+            cells.map((cell, index) => `<td data-label="${escapeHtml(columns[index])}"><div>${cell}</div></td>`).join('')
           }</tr>`;
         }).join('') || `<tr><td colspan="${columns.length}" style="height:80px;text-align:center;color:#8a989e">No devices here.</td></tr>`;
       }
@@ -1704,13 +1717,35 @@
         return ({ pass: 'Pass', fail: 'Fail', na: 'N/A' })[answer] || 'Not tested';
       }
 
-      function renderUsedDeviceDetail(detail) {
+      // One device, four pages: pricing it, testing it before sale, what it was
+      // bought as (locked), and everything that has happened to it since.
+      const USED_DETAIL_TABS = [
+        ['listing', 'Price and listing'],
+        ['test', 'Pre-sale test'],
+        ['purchase', 'At purchase'],
+        ['history', 'History and photos']
+      ];
+
+      function setUsedDetailTab(tab) {
+        usedStock.detailTab = tab;
+        els.usedDeviceDialogBody.querySelectorAll('.used-detail-tabs [data-used-detail-tab]').forEach(button => {
+          const active = button.dataset.usedDetailTab === tab;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-selected', String(active));
+        });
+        els.usedDeviceDialogBody.querySelectorAll('[data-used-detail-panel]').forEach(panel => {
+          panel.hidden = panel.dataset.usedDetailPanel !== tab;
+        });
+      }
+
+      function renderUsedDeviceDetail(detail, keepTestPanel = null) {
         const device = detail.device || {};
         const seller = detail.seller || {};
         const photos = detail.photos || {};
         const blockers = Array.isArray(device.blockers) ? device.blockers : [];
         const inStock = ['inspection', 'ready_for_sale'].includes(device.status);
         const priced = number(device.sale_price) > 0;
+        const needsTest = blockers.some(item => /pre-sale test/i.test(item));
 
         els.usedDeviceDialogTitle.textContent = usedDeviceName(device);
         els.usedDeviceDialogSubtitle.textContent = [
@@ -1721,137 +1756,191 @@
         ].filter(Boolean).join(' · ');
 
         const fact = (label, value) => `<div class="used-detail-item"><span>${escapeHtml(label)}</span><strong>${value || '—'}</strong></div>`;
+        const tab = USED_DETAIL_TABS.some(([key]) => key === usedStock.detailTab) ? usedStock.detailTab : 'listing';
 
         els.usedDeviceDialogBody.innerHTML = `
-          <div class="used-detail-grid">
-            ${fact('State', usedStateChip(device))}
-            ${fact('Listed at', priced ? money(device.sale_price) : 'Not priced')}
-            ${fact('Cost to date', money(device.total_cost))}
-            ${fact('Days held', number(device.days_held))}
-            ${fact('Bought', escapeHtml(formatDateTime(device.acquired_at)))}
-            ${device.status === 'sold' ? fact('Sold for', money(device.sold_amount)) : ''}
+          <div class="used-detail-tabs" role="tablist">
+            ${USED_DETAIL_TABS.map(([key, label]) => `
+              <button type="button" role="tab" class="preset-button" data-used-detail-tab="${key}">${label}${
+                key === 'test' && needsTest && inStock ? ' <span class="used-tab-dot" aria-label="needed"></span>' : ''
+              }</button>
+            `).join('')}
           </div>
 
-          ${inStock ? `
-            <section class="used-detail-block used-listing-card">
-              <h3>Price it and put it online</h3>
-              <div class="used-listing-row">
-                <label class="used-price-field">Sale price
-                  <input id="usedListingPrice" type="number" min="0" step="1" inputmode="decimal" value="${priced ? number(device.sale_price) : ''}" placeholder="0">
-                </label>
-                <div>
-                  <div class="used-margin-hint" id="usedListingMargin">&nbsp;</div>
-                  <div class="used-margin-hint">Paid ${money(device.purchase_cost)}${number(device.refurb_cost) > 0 ? ` plus ${money(device.refurb_cost)} of work` : ''} · total ${money(device.total_cost)}</div>
-                </div>
-                <div class="used-listing-actions">
-                  <button class="used-secondary-button" id="usedListingSave" type="button">Save price only</button>
-                  <button class="used-primary-button" id="usedListingPublish" type="button" ${blockers.length ? 'disabled' : ''}>
-                    ${device.status === 'ready_for_sale' ? 'Update the listing' : 'Confirm and put it online'}
-                  </button>
-                </div>
-              </div>
-              ${blockers.length ? `
-                <div class="used-blockers">
-                  <strong>Not ready for the website yet</strong>
-                  <ul>${blockers.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
-                </div>
-              ` : ''}
-              <div class="used-listing-status" id="usedListingStatus"></div>
-            </section>
-          ` : ''}
-
-          <section class="used-detail-block">
-            <h3>The device</h3>
+          <div data-used-detail-panel="listing">
             <div class="used-detail-grid">
-              ${fact('Store', escapeHtml(device.store_name || ''))}
-              ${fact('Category', escapeHtml(device.category || ''))}
-              ${fact('Brand', escapeHtml(device.brand || ''))}
-              ${fact('Model', escapeHtml(device.model || ''))}
-              ${fact('Storage', escapeHtml(device.storage || ''))}
-              ${fact('Colour', escapeHtml(device.color || ''))}
-              ${fact('Condition', escapeHtml(device.condition_grade || ''))}
-              ${fact('Battery health', device.battery_health == null ? '' : `${number(device.battery_health)}%`)}
-              ${fact('IMEI', escapeHtml(device.imei || ''))}
-              ${fact('Serial number', escapeHtml(device.serial_number || ''))}
-              ${fact('Lost or stolen check', escapeHtml([device.clean_check_status, device.clean_check_reference].filter(Boolean).join(' · ')))}
-              ${fact('Locks and data', `${device.activation_lock_removed ? 'Locks removed' : 'Locks not confirmed'} · ${device.data_erased_confirmed ? 'data erased' : 'data not confirmed'}`)}
-              ${fact('Website', escapeHtml([device.website_status, device.website_slug].filter(Boolean).join(' · ')))}
-              ${fact('Photos', `${number(photos.intake)} intake · ${number(photos.listing)} listing${number(photos.refurb) ? ` · ${number(photos.refurb)} refurb` : ''}`)}
+              ${fact('State', usedStateChip(device))}
+              ${fact('Listed at', priced ? money(device.sale_price) : 'Not priced')}
+              ${fact('Cost to date', money(device.total_cost))}
+              ${fact('Days held', number(device.days_held))}
+              ${fact('Condition now', escapeHtml(device.condition_grade || ''))}
+              ${fact('Battery now', device.battery_health == null ? '' : `${number(device.battery_health)}%`)}
+              ${device.status === 'sold' ? fact('Sold for', money(device.sold_amount)) : ''}
+              ${device.status === 'sold' && device.sold_invoice_number ? fact('Invoice', `#${escapeHtml(String(device.sold_invoice_number))}`) : ''}
             </div>
-            ${device.notes ? `<p class="page-subtitle">Memo: ${escapeHtml(device.notes)}</p>` : ''}
-          </section>
-
-          <section class="used-detail-block">
-            <h3>Inspection</h3>
-            <div class="used-check-grid">
-              ${(detail.inspection || []).map(item => `
-                <div class="used-check">
-                  <span>${escapeHtml(item.label || item.key)}</span>
-                  <span class="used-check-answer ${usedCheckAnswerClass(item.answer)}">${usedCheckAnswerLabel(item.answer)}</span>
-                </div>
-              `).join('') || '<p class="page-subtitle">No checks recorded.</p>'}
-            </div>
-          </section>
-
-          <section class="used-detail-block">
-            <h3>Seller and payout</h3>
-            <div class="used-detail-grid">
-              ${fact('Buyback number', seller.buyback_number ? `#${escapeHtml(String(seller.buyback_number))}` : '')}
-              ${fact('Seller', escapeHtml(seller.name || ''))}
-              ${fact('Phone', escapeHtml(seller.phone || ''))}
-              ${fact('Email', escapeHtml(seller.email || ''))}
-              ${fact('ID sighted', escapeHtml([seller.id_type, seller.id_reference].filter(Boolean).join(' · ')))}
-              ${fact('Paid', `${money(seller.payout_amount)} · ${escapeHtml(seller.payout_method || '')}`)}
-              ${seller.payout_reference_type === 'PayID' ? fact('PayID', escapeHtml(seller.payout_payid || '')) : ''}
-              ${seller.payout_reference_type === 'Bank Account' ? fact('Bank account', escapeHtml(`${seller.payout_bsb} · ${seller.payout_account_number} · ${seller.payout_account_name}`)) : ''}
-              ${seller.is_owner === false ? fact('Owner', escapeHtml([seller.owner_name, seller.owner_address].filter(Boolean).join(' · '))) : ''}
-            </div>
-            ${seller.address ? `<p class="page-subtitle">${escapeHtml(seller.address)}</p>` : ''}
-            ${seller.acquisition_statement ? `<p class="page-subtitle">How they got it: ${escapeHtml(seller.acquisition_statement)}</p>` : ''}
-          </section>
-
-          ${(detail.costs || []).length ? `
-            <section class="used-detail-block">
-              <h3>Refurbishment</h3>
-              <div class="used-line-list">
-                ${detail.costs.map(cost => `
-                  <div class="used-line">
-                    <div>${escapeHtml(cost.description)}<span> · ${escapeHtml(cost.kind)}${cost.repair_ticket_code ? ` · ${escapeHtml(cost.repair_ticket_code)}` : ''}</span></div>
-                    <div>${money(cost.amount)}</div>
+            ${inStock ? `
+              <section class="used-detail-block used-listing-card">
+                <h3>Price it and put it online</h3>
+                <div class="used-listing-row">
+                  <label class="used-price-field">Sale price
+                    <input id="usedListingPrice" type="number" min="0" step="1" inputmode="decimal" value="${priced ? number(device.sale_price) : ''}" placeholder="0">
+                  </label>
+                  <div>
+                    <div class="used-margin-hint" id="usedListingMargin">&nbsp;</div>
+                    <div class="used-margin-hint">Paid ${money(device.purchase_cost)}${number(device.refurb_cost) > 0 ? ` plus ${money(device.refurb_cost)} of work` : ''} · total ${money(device.total_cost)}</div>
                   </div>
-                `).join('')}
+                  <div class="used-listing-actions">
+                    <button class="used-secondary-button" id="usedListingSave" type="button">Save price only</button>
+                    <button class="used-primary-button" id="usedListingPublish" type="button" ${blockers.length ? 'disabled' : ''}>
+                      ${device.status === 'ready_for_sale' ? 'Update the listing' : 'Confirm and put it online'}
+                    </button>
+                  </div>
+                </div>
+                ${blockers.length ? `
+                  <div class="used-blockers">
+                    <strong>Not ready for the website yet</strong>
+                    <ul>${blockers.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+                    ${needsTest ? '<button type="button" class="used-secondary-button used-blocker-action" data-used-detail-tab="test">Open the pre-sale test</button>' : ''}
+                  </div>
+                ` : ''}
+                <div class="used-listing-status" id="usedListingStatus"></div>
+              </section>
+            ` : ''}
+          </div>
+
+          <div data-used-detail-panel="test" hidden>
+            <p class="page-subtitle">Test the device again once it has been cleaned up or repaired. This never changes what it was bought as; the latest run decides whether it can go on sale.</p>
+            <div id="usedDeviceDialogSaleTest"></div>
+          </div>
+
+          <div data-used-detail-panel="purchase" hidden>
+            <section class="used-detail-block used-locked-block">
+              <h3><i class="bi bi-lock-fill"></i> Inspection when it was bought <span class="used-locked-tag">Locked</span></h3>
+              <p class="page-subtitle">Recorded at the counter by ${escapeHtml(device.acquired_by || 'staff')} on ${escapeHtml(formatDateTime(device.acquired_at))}. Nobody can change this record.</p>
+              <div class="used-detail-grid">
+                ${fact('Condition when bought', escapeHtml(device.intake_condition_grade || ''))}
+                ${fact('Battery when bought', device.intake_battery_health == null ? '' : `${number(device.intake_battery_health)}%`)}
+              </div>
+              <div class="used-check-grid">
+                ${(detail.inspection || []).map(item => `
+                  <div class="used-check">
+                    <span>${escapeHtml(item.label || item.key)}</span>
+                    <span class="used-check-answer ${usedCheckAnswerClass(item.answer)}">${usedCheckAnswerLabel(item.answer)}</span>
+                  </div>
+                `).join('') || '<p class="page-subtitle">No checks recorded.</p>'}
               </div>
             </section>
-          ` : ''}
 
-          <section class="used-detail-block">
-            <h3>History</h3>
-            <div class="used-line-list">
-              ${(detail.ledger || []).map(entry => `
-                <div class="used-line">
-                  <div>${escapeHtml(entry.notes || entry.type)}<span> · ${escapeHtml(entry.staff_name || '')} · ${escapeHtml(formatDateTime(entry.created_at))}</span></div>
-                  <div>${number(entry.amount) > 0 ? money(entry.amount) : ''}</div>
+            <section class="used-detail-block">
+              <h3>The device</h3>
+              <div class="used-detail-grid">
+                ${fact('Store', escapeHtml(device.store_name || ''))}
+                ${fact('Category', escapeHtml(device.category || ''))}
+                ${fact('Brand', escapeHtml(device.brand || ''))}
+                ${fact('Model', escapeHtml(device.model || ''))}
+                ${fact('Storage', escapeHtml(device.storage || ''))}
+                ${fact('Colour', escapeHtml(device.color || ''))}
+                ${fact('IMEI', escapeHtml(device.imei || ''))}
+                ${fact('Serial number', escapeHtml(device.serial_number || ''))}
+                ${fact('Lost or stolen check', escapeHtml([device.clean_check_status, device.clean_check_reference].filter(Boolean).join(' · ')))}
+                ${fact('Locks and data', `${device.activation_lock_removed ? 'Locks removed' : 'Locks not confirmed'} · ${device.data_erased_confirmed ? 'data erased' : 'data not confirmed'}`)}
+              </div>
+            </section>
+
+            <section class="used-detail-block">
+              <h3>Seller and payout</h3>
+              <div class="used-detail-grid">
+                ${fact('Buyback number', seller.buyback_number ? `#${escapeHtml(String(seller.buyback_number))}` : '')}
+                ${fact('Seller', escapeHtml(seller.name || ''))}
+                ${fact('Phone', escapeHtml(seller.phone || ''))}
+                ${fact('Email', escapeHtml(seller.email || ''))}
+                ${fact('ID sighted', escapeHtml([seller.id_type, seller.id_reference].filter(Boolean).join(' · ')))}
+                ${fact('Paid', `${money(seller.payout_amount)} · ${escapeHtml(seller.payout_method || '')}`)}
+                ${seller.payout_reference_type === 'PayID' ? fact('PayID', escapeHtml(seller.payout_payid || '')) : ''}
+                ${seller.payout_reference_type === 'Bank Account' ? fact('Bank account', escapeHtml(`${seller.payout_bsb} · ${seller.payout_account_number} · ${seller.payout_account_name}`)) : ''}
+                ${seller.is_owner === false ? fact('Owner', escapeHtml([seller.owner_name, seller.owner_address].filter(Boolean).join(' · '))) : ''}
+              </div>
+              ${seller.address ? `<p class="page-subtitle">${escapeHtml(seller.address)}</p>` : ''}
+              ${seller.acquisition_statement ? `<p class="page-subtitle">How they got it: ${escapeHtml(seller.acquisition_statement)}</p>` : ''}
+            </section>
+          </div>
+
+          <div data-used-detail-panel="history" hidden>
+            ${(detail.costs || []).length ? `
+              <section class="used-detail-block">
+                <h3>Refurbishment</h3>
+                <div class="used-line-list">
+                  ${detail.costs.map(cost => `
+                    <div class="used-line">
+                      <div>${escapeHtml(cost.description)}<span> · ${escapeHtml(cost.kind)}${cost.repair_ticket_code ? ` · ${escapeHtml(cost.repair_ticket_code)}` : ''}</span></div>
+                      <div>${money(cost.amount)}</div>
+                    </div>
+                  `).join('')}
                 </div>
-              `).join('') || '<p class="page-subtitle">Nothing recorded yet.</p>'}
-            </div>
-          </section>
-
-          <section class="used-detail-block">
-            <h3>Photos and notes</h3>
-            <p class="page-subtitle">Seller identity images are visible here because this is an admin session. Every view of one is recorded against your account.</p>
-            <div id="usedDeviceDialogEvidence"></div>
-          </section>
+              </section>
+            ` : ''}
+            <section class="used-detail-block">
+              <h3>History</h3>
+              <div class="used-line-list">
+                ${(detail.ledger || []).map(entry => `
+                  <div class="used-line">
+                    <div>${escapeHtml(entry.notes || entry.type)}<span> · ${escapeHtml(entry.staff_name || '')} · ${escapeHtml(formatDateTime(entry.created_at))}</span></div>
+                    <div>${number(entry.amount) > 0 ? money(entry.amount) : ''}</div>
+                  </div>
+                `).join('') || '<p class="page-subtitle">Nothing recorded yet.</p>'}
+              </div>
+            </section>
+            <section class="used-detail-block">
+              <h3>Photos and notes</h3>
+              <p class="page-subtitle">${number(photos.intake)} intake · ${number(photos.listing)} listing${number(photos.refurb) ? ` · ${number(photos.refurb)} refurbishment` : ''}. Seller identity images are visible here because this is an admin session; every view of one is recorded against your account.</p>
+              <div id="usedDeviceDialogEvidence"></div>
+            </section>
+          </div>
         `;
 
-        const panel = document.getElementById('usedDeviceDialogEvidence');
-        if (panel) {
-          window.Techm8UsedDeviceEvidence.mount(panel, {
+        const testPanel = document.getElementById('usedDeviceDialogSaleTest');
+        if (testPanel && keepTestPanel) {
+          testPanel.replaceWith(keepTestPanel);
+        } else if (testPanel && window.Techm8UsedDeviceSaleTest) {
+          window.Techm8UsedDeviceSaleTest.mount(testPanel, {
+            storeCode: device.store_code,
+            deviceCode: device.device_code,
+            getToken: () => window.Techm8StaffAuth.getToken(),
+            showIntake: false,
+            // A new run changes what stands between the device and the website.
+            onChange: () => refreshUsedDeviceAfterTest(device.device_code)
+          });
+        }
+        const evidencePanel = document.getElementById('usedDeviceDialogEvidence');
+        if (evidencePanel && window.Techm8UsedDeviceEvidence) {
+          window.Techm8UsedDeviceEvidence.mount(evidencePanel, {
             storeCode: device.store_code,
             deviceCode: device.device_code,
             getToken: () => window.Techm8StaffAuth.getToken()
           });
         }
+        setUsedDetailTab(tab);
         updateUsedListingMargin();
+      }
+
+      // After a test run the listing page's blockers and the list's state are
+      // stale. Refresh them, but keep the test panel the user is looking at,
+      // with its own result message, exactly as it is.
+      async function refreshUsedDeviceAfterTest(deviceCode) {
+        loadUsedStock();
+        try {
+          const detail = await window.Techm8StaffAuth.callRpc('get_admin_used_device_detail', {
+            session_token: window.Techm8StaffAuth.getToken(),
+            target_device_code: deviceCode
+          });
+          if (!els.usedDeviceDialog.open) return;
+          const keep = els.usedDeviceDialogBody.querySelector('#usedDeviceDialogSaleTest');
+          if (keep) keep.remove();
+          usedStock.detail = detail;
+          renderUsedDeviceDetail(detail, keep);
+        } catch (error) {
+          console.error(error);
+        }
       }
 
       function updateUsedListingMargin() {
@@ -1868,7 +1957,10 @@
         hint.textContent = `${margin >= 0 ? 'Margin' : 'Loss'} ${money(Math.abs(margin))}${cost > 0 ? ` · ${Math.round((margin / cost) * 100)}% on cost` : ''}`;
       }
 
-      async function openUsedDeviceDetail(deviceCode) {
+      async function openUsedDeviceDetail(deviceCode, keepTab = false) {
+        if (!keepTab || !usedStock.detail || (usedStock.detail.device || {}).device_code !== deviceCode) {
+          usedStock.detailTab = 'listing';
+        }
         els.usedDeviceDialogTitle.textContent = 'Device';
         els.usedDeviceDialogSubtitle.textContent = deviceCode;
         els.usedDeviceDialogBody.innerHTML = '<p class="page-subtitle">Loading the device…</p>';
@@ -1937,7 +2029,7 @@
             }
           }
           await loadUsedStock();
-          await openUsedDeviceDetail(device.device_code);
+          await openUsedDeviceDetail(device.device_code, true);
         } catch (error) {
           status.dataset.error = 'true';
           status.textContent = error.message || 'That could not be saved.';
@@ -2233,6 +2325,11 @@
       });
       els.usedDeviceDialogClose.addEventListener('click', () => els.usedDeviceDialog.close());
       els.usedDeviceDialogBody.addEventListener('click', event => {
+        const tabButton = event.target.closest('[data-used-detail-tab]');
+        if (tabButton) {
+          setUsedDetailTab(tabButton.dataset.usedDetailTab);
+          return;
+        }
         if (event.target.closest('#usedListingPublish')) submitUsedListing(true);
         else if (event.target.closest('#usedListingSave')) submitUsedListing(false);
       });

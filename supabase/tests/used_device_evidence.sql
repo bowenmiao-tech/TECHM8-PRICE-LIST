@@ -111,14 +111,18 @@ begin
 
   select jsonb_object_agg(item_key,'pass') into full_answers from public.pos_used_device_inspection_items where category='Phone' and active;
 
+  -- Sellability comes from a pre-sale test, never from the purchase inspection.
+  perform public.record_pos_used_device_sale_test(token, store_code_value, device_code_value,
+    jsonb_build_object('answers', (select jsonb_object_agg(item_key, 'pass')
+      from public.pos_used_device_inspection_items where category = 'Phone' and active)));
+
   -- 5. Ready for sale needs a listing photo.
   refused := false;
   begin
     perform public.update_pos_used_device(token, jsonb_build_object(
       'store_code', store_code_value, 'staff_name', staff_name_value, 'device_code', device_code_value,
       'status', 'ready_for_sale', 'clean_check_status', 'Clean', 'clean_check_reference', 'AMTA-TEST',
-      'activation_lock_removed', 'true', 'data_erased_confirmed', 'true',
-      'inspection', full_answers));
+      'activation_lock_removed', 'true', 'data_erased_confirmed', 'true'));
   exception when others then refused := true; refusal := sqlerrm;
   end;
   assert refused, 'A device reached the shelf without a listing photo';
@@ -131,8 +135,7 @@ begin
   perform public.update_pos_used_device(token, jsonb_build_object(
     'store_code', store_code_value, 'staff_name', staff_name_value, 'device_code', device_code_value,
     'status', 'ready_for_sale', 'clean_check_status', 'Clean', 'clean_check_reference', 'AMTA-TEST',
-    'activation_lock_removed', 'true', 'data_erased_confirmed', 'true',
-    'inspection', full_answers));
+    'activation_lock_removed', 'true', 'data_erased_confirmed', 'true'));
   assert (select status = 'ready_for_sale' from public.pos_used_devices where device_code = device_code_value),
     'A photographed device could not be marked ready';
 

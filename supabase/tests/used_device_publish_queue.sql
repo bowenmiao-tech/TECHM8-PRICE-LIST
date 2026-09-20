@@ -29,8 +29,14 @@ begin
   insert into public.staff_sessions(staff_id, session_hash, token_digest, expires_at)
     values (staff_id_value, extensions.crypt(token, extensions.gen_salt('bf')),
             encode(extensions.digest(token, 'sha256'), 'hex'), now() + interval '5 minutes');
-  insert into public.pos_store_shifts(shift_code, store_id, business_date, status, opened_by, current_staff_name, last_staff_name)
-    values (shift_code_value, store_id_value, current_date, 'open', staff_name_value, staff_name_value, staff_name_value);
+  -- Reuse the store's open shift: only one may be open at a time.
+  select shift_code into shift_code_value from public.pos_store_shifts
+    where store_id = store_id_value and status = 'open' limit 1;
+  if shift_code_value is null then
+    shift_code_value := 'TEST-SHIFT-' || extensions.gen_random_uuid()::text;
+    insert into public.pos_store_shifts(shift_code, store_id, business_date, status, opened_by, current_staff_name, last_staff_name)
+      values (shift_code_value, store_id_value, current_date, 'open', staff_name_value, staff_name_value, staff_name_value);
+  end if;
   insert into public.pos_used_device_intake_uploads(id, store_id, intake_key, stage, storage_path, author)
   select extensions.gen_random_uuid(), store_id_value, intake_key_value, 'intake',
          store_id_value || '/' || intake_key_value || '/' || extensions.gen_random_uuid() || '.jpg', staff_name_value
@@ -56,10 +62,14 @@ begin
   select jsonb_object_agg(item_key, 'pass') into answers
   from public.pos_used_device_inspection_items where category = 'Phone' and active;
 
+  -- Sellability comes from a pre-sale test, never from the purchase inspection.
+  perform public.record_pos_used_device_sale_test(token, store_code_value, device_code_value,
+    jsonb_build_object('answers', (select jsonb_object_agg(item_key, 'pass')
+      from public.pos_used_device_inspection_items where category = 'Phone' and active)));
   perform public.update_pos_used_device(token, jsonb_build_object(
     'store_code', store_code_value, 'staff_name', staff_name_value, 'device_code', device_code_value,
     'status', 'ready_for_sale', 'clean_check_status', 'Clean', 'clean_check_reference', 'AMTA-TEST',
-    'activation_lock_removed', 'true', 'data_erased_confirmed', 'true', 'inspection', answers));
+    'activation_lock_removed', 'true', 'data_erased_confirmed', 'true'));
 
   assert (select website_status = 'queued' from public.pos_used_devices where id = device_id_value),
     'Going ready did not queue a publish';
@@ -85,6 +95,9 @@ begin
   assert jsonb_array_length(item#>'{listing,images}') = 1, 'The listing photo was not carried';
   assert (item#>>'{listing,description}') like '%Good condition%', 'The description was not generated';
   assert jsonb_array_length(item#>'{listing,highlights}') >= 4, 'The highlights were not generated';
+  -- The public page says what the pre-sale test found.
+  assert (item#>'{listing,highlights}')::text like '%21 of 21 inspection checks passed%',
+    format('The listing did not read the pre-sale test: %s', item#>'{listing,highlights}');
 
   -- Nothing identifying may leave the building.
   listing_text := (item->'listing')::text;
