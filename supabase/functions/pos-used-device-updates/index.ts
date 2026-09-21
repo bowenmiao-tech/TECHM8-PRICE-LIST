@@ -49,6 +49,13 @@ function jpegBytes(dataUrl: string) {
   }
   return bytes;
 }
+// Best effort: the database row is already gone, and a file nothing points at
+// harms nobody, so a failed delete is logged rather than reported.
+async function removeObject(bucket: string, path: string) {
+  const {url, headers} = config();
+  const response = await fetch(`${url}/storage/v1/object/${bucket}/${path}`, {method: 'DELETE', headers});
+  if (!response.ok) console.error(`Could not delete ${bucket}/${path}: ${response.status}`);
+}
 async function upload(bucket: string, path: string, bytes: Uint8Array) {
   const {url, headers} = config();
   const response = await fetch(`${url}/storage/v1/object/${bucket}/${path}`, {
@@ -104,6 +111,26 @@ Deno.serve(async request => {
     }
 
     if (!uuid.test(String(input.id))) throw new Error('Invalid update ID.');
+
+    // A photo taken by mistake. On the buy form it is still a draft and is
+    // deleted outright; on a device it leaves every view but stays on record.
+    if (input.action === 'remove') {
+      if (intakeKey) {
+        if (!uuid.test(intakeKey)) throw new Error('Invalid intake ID.');
+        const removed = await rpc('remove_pos_used_device_intake_upload', {
+          session_token: token, target_store_code: storeCode,
+          target_intake_key: intakeKey, target_upload_id: input.id,
+        });
+        await removeObject(bucketFor(removed.stage), String(removed.storage_path));
+        return reply({ok: true, id: removed.id, stage: removed.stage});
+      }
+      if (!deviceCode) throw new Error('Device is required.');
+      return reply(await rpc('remove_pos_used_device_photo', {
+        session_token: token, target_store_code: storeCode,
+        target_device_code: deviceCode, target_update_id: input.id,
+      }));
+    }
+
     const stage = String(input.stage || 'refurb');
     if (!['intake', 'seller_id', 'refurb', 'listing'].includes(stage)) throw new Error('Invalid evidence stage.');
 

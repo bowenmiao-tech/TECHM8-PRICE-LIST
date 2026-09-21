@@ -151,6 +151,36 @@
     }
   }
 
+  // A photo taken by mistake. On the buy form it is still a draft and is
+  // deleted; on a saved device it leaves every view but stays on record, and
+  // the server refuses anything that would break a rule (the last intake
+  // photo of a purchase, the last listing photo of a device on sale).
+  async function removePhoto(instance, id) {
+    const state = instance.state;
+    if (state.busy || !state.writable) return;
+    const intake = Boolean(instance.options.intakeKey);
+    const question = intake
+      ? 'Delete this photo? It has not been saved with a purchase yet.'
+      : 'Remove this photo? It will disappear from the POS, the admin portal and the website. The removal is kept on the device history.';
+    if (!window.confirm(question)) return;
+    state.busy = true;
+    state.error = false;
+    state.message = 'Removing photo...';
+    notify(instance);
+    try {
+      await request(instance.options, {action: 'remove', id});
+      state.busy = false;
+      await load(instance);
+      if (!state.error) state.message = intake ? 'Photo deleted.' : 'Photo removed.';
+    } catch (error) {
+      state.error = true;
+      state.message = error.message;
+    } finally {
+      state.busy = false;
+      notify(instance);
+    }
+  }
+
   async function saveComment(instance) {
     const state = instance.state;
     const body = state.draft.trim();
@@ -250,9 +280,14 @@
       const meta = entry => `<div class="ude-meta"><strong>${escape(entry.author)}</strong><time>${escape(date(entry.created_at))}</time></div>`;
       const photos = entries.filter(entry => entry.kind === 'photo' && entry.stage === state.activeStage);
       const notes = entries.filter(entry => entry.kind === 'comment');
+      // Staff never see a saved seller ID photo, so only the admin can remove one.
+      const removable = entry => !readonly && (intakeMode || entry.stage !== 'seller_id' || state.isAdmin);
       root.querySelector('.ude-gallery').innerHTML = photos.map(entry => {
         const url = /^https?:\/\//.test(entry.image_url || '') ? entry.image_url : '';
-        return `<figure class="ude-photo"><a href="${escape(url)}" target="_blank" rel="noopener noreferrer" title="Open photo"><img src="${escape(url)}" alt="${escape(entry.file_name || 'Device photo')}" loading="lazy"></a>${meta(entry)}</figure>`;
+        const remove = removable(entry)
+          ? `<button type="button" class="ude-remove" data-remove="${escape(entry.id)}" title="Remove photo" aria-label="Remove this photo"${state.busy ? ' disabled' : ''}>${icon('trash3')}</button>`
+          : '';
+        return `<figure class="ude-photo"><a href="${escape(url)}" target="_blank" rel="noopener noreferrer" title="Open photo"><img src="${escape(url)}" alt="${escape(entry.file_name || 'Device photo')}" loading="lazy"></a>${remove}${meta(entry)}</figure>`;
       }).join('') || (state.loaded ? `<p class="ude-empty">No ${escape(active.label.toLowerCase())} yet.</p>` : '');
       const list = root.querySelector('.ude-list');
       if (list) {
@@ -279,6 +314,8 @@
         notify(instance);
         return;
       }
+      const removeButton = event.target.closest('[data-remove]');
+      if (removeButton) return removePhoto(instance, removeButton.dataset.remove);
       const action = event.target.closest('[data-action]')?.dataset.action;
       if (!action || state.busy) return;
       if (action === 'refresh') return load(instance);

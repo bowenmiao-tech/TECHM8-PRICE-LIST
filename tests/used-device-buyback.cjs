@@ -26,15 +26,23 @@ const { chromium } = require('playwright');
     page.on('pageerror', error => errors.push(error.message));
 
     const uploads = [];
+    const removals = [];
     await page.route('https://**/*', async route => {
       const url = route.request().url();
       if (url.includes('/pos-used-device-updates')) {
         if (route.request().method() === 'POST') {
-          uploads.push(route.request().postDataJSON());
+          const body = route.request().postDataJSON();
+          if (body.action === 'remove') {
+            removals.push(body);
+            const index = uploads.findIndex(entry => entry.id === body.id);
+            if (index >= 0) uploads.splice(index, 1);
+            return route.fulfill({ json: { ok: true, id: body.id } });
+          }
+          uploads.push(body);
           return route.fulfill({ json: { ok: true, id: 'stub' } });
         }
         return route.fulfill({ json: { ok: true, uploads: uploads.map((entry, index) => ({
-          id: `stub-${index}`, stage: entry.stage, image_url: 'https://example.test/photo.jpg',
+          id: entry.id || `stub-${index}`, stage: entry.stage, image_url: 'https://example.test/photo.jpg',
           author: 'Tester', created_at: new Date().toISOString()
         })) } });
       }
@@ -85,6 +93,19 @@ const { chromium } = require('playwright');
     await page.waitForSelector('#usedDeviceBuyForm');
     assert.equal(await page.locator('#usedDeviceIntakeEvidence .ude-tabs').count(), 1,
       'The intake evidence panel did not mount on the buy form');
+
+    // A photo taken by mistake on the buy form can be deleted before the
+    // purchase is saved.
+    uploads.push({ id: 'draft-photo-1', stage: 'intake' });
+    await page.locator('#usedDeviceIntakeEvidence [data-action="refresh"]').click();
+    await page.locator('#usedDeviceIntakeEvidence .ude-remove').waitFor();
+    await page.evaluate(() => { window.confirm = () => true; });
+    await page.locator('#usedDeviceIntakeEvidence .ude-remove').click();
+    await page.waitForFunction(() => /Photo deleted/.test(document.querySelector('#usedDeviceIntakeEvidence .ude-status').textContent));
+    assert.equal(removals.length, 1, 'Deleting a draft photo sent nothing');
+    assert.equal(removals[0].id, 'draft-photo-1');
+    assert.ok(removals[0].intake_key, 'A draft photo was removed without its intake key');
+    assert.equal(await page.locator('#usedDeviceIntakeEvidence .ude-photo').count(), 0, 'The deleted photo is still shown');
 
     // Condition, sale price, the check reference and the inventory status all
     // belong to the listing step, not to the counter.
@@ -243,7 +264,7 @@ const { chromium } = require('playwright');
     });
     assert.match(await page.locator('#usedDeviceCostList').innerText(), /administrators only/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
+    console.log('PASS: draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();

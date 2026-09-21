@@ -112,6 +112,8 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
   try {
     for (const [label, width, height] of SIZES) {
       const page = await browser.newPage({viewport: {width, height}});
+      const devicePhotos = [{id: 'photo-listing-1', stage: 'listing'}, {id: 'photo-listing-2', stage: 'listing'}, {id: 'photo-id-1', stage: 'seller_id'}];
+      const photoRemovals = [];
       const pageErrors = [];
       page.on('pageerror', error => pageErrors.push(error.message));
       await page.route('**/staff-auth.js*', route => route.fulfill({contentType: 'application/javascript', body: staffAuthStub}));
@@ -147,7 +149,18 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
         const url = route.request().url();
         if (url.includes('/rest/v1/rpc/')) return route.fallback();
         if (url.includes('/pos-used-device-publish')) return route.fulfill({json: {ok: true, results: [{ok: true}]}});
-        if (url.includes('/pos-used-device-updates')) return route.fulfill({json: {ok: true, uploads: []}});
+        if (url.includes('/pos-used-device-updates')) {
+          if (route.request().method() === 'POST') {
+            const body = route.request().postDataJSON();
+            photoRemovals.push(body);
+            const index = devicePhotos.findIndex(entry => entry.id === body.id);
+            if (index >= 0) devicePhotos.splice(index, 1);
+            return route.fulfill({json: {ok: true, id: body.id}});
+          }
+          return route.fulfill({json: {ok: true, writable: true, is_admin: true, updates: devicePhotos.map(entry => ({
+            ...entry, kind: 'photo', image_url: 'https://example.test/photo.jpg', author: 'Bowen', created_at: '2026-09-21T01:20:54Z'
+          }))}});
+        }
         return route.abort();
       });
 
@@ -188,6 +201,23 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
       assert.equal(await page.locator('[data-used-detail-panel="purchase"] input, [data-used-detail-panel="purchase"] select').count(), 0,
         'The purchase inspection offered something to edit');
       if (shots) await page.screenshot({path: path.join(shots, `admin-purchase-${label}.png`)});
+
+      // Photos taken by mistake can be removed from every tab, seller ID included.
+      await page.locator('.used-detail-tabs [data-used-detail-tab="history"]').click();
+      await page.locator('#usedDeviceDialogEvidence [data-stage="listing"]').click();
+      await page.waitForFunction(() => document.querySelectorAll('#usedDeviceDialogEvidence .ude-remove').length === 2);
+      if (shots) await page.locator('#usedDeviceDialogEvidence').screenshot({path: path.join(shots, `admin-photos-${label}.png`)});
+      await page.locator('#usedDeviceDialogEvidence [data-stage="seller_id"]').click();
+      await page.locator('#usedDeviceDialogEvidence .ude-remove').waitFor();
+      await page.evaluate(() => { window.confirm = () => true; });
+      await page.locator('#usedDeviceDialogEvidence .ude-remove').click();
+      await page.waitForFunction(() => /Photo removed/.test(document.querySelector('#usedDeviceDialogEvidence .ude-status').textContent));
+      assert.equal(photoRemovals.length, 1, 'Removing a photo sent nothing');
+      assert.equal(photoRemovals[0].action, 'remove');
+      assert.equal(photoRemovals[0].id, 'photo-id-1');
+      assert.equal(photoRemovals[0].device_code, 'USED-UNTESTED');
+      assert.equal(photoRemovals[0].store_code, 'parkridge', 'The removal was sent for the wrong store');
+      assert.equal(await page.locator('#usedDeviceDialogEvidence .ude-photo').count(), 0, 'The removed ID photo is still shown');
 
       // The pre-sale test: an incomplete run is refused, a complete one saved.
       await page.locator('[data-used-detail-panel="listing"] [data-used-detail-tab="test"]').count();
@@ -237,7 +267,7 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
       assert.deepEqual(pageErrors, [], `${label} page errors: ${pageErrors.join(', ')}`);
       await page.close();
     }
-    console.log('PASS: for-sale and sold lists with stores; four-page device detail; locked purchase record; incomplete test refused; complete test recorded without touching the purchase record; priced approval and website push; desktop, iPad and phone.');
+    console.log('PASS: for-sale and sold lists with stores; four-page device detail; photo removal including seller ID; locked purchase record; incomplete test refused; complete test recorded without touching the purchase record; priced approval and website push; desktop, iPad and phone.');
   } finally {
     await browser.close();
     server.close();
