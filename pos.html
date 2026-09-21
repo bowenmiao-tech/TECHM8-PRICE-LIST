@@ -5693,6 +5693,51 @@
       cursor: not-allowed;
     }
 
+    .used-sale-customer {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-height: 54px;
+      padding: 11px 0;
+      border-top: 1px solid var(--tm-line);
+      border-bottom: 1px solid var(--tm-line);
+    }
+
+    .used-sale-customer > i {
+      flex: 0 0 auto;
+      color: var(--tm-green);
+      font-size: 24px;
+    }
+
+    .used-sale-customer.missing > i { color: var(--tm-red); }
+
+    .used-sale-customer-copy {
+      flex: 1 1 190px;
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .used-sale-customer-copy strong,
+    .used-sale-customer-copy span {
+      overflow-wrap: anywhere;
+    }
+
+    .used-sale-customer-copy strong { font-size: 13px; }
+    .used-sale-customer-copy span { color: var(--tm-muted); font-size: 11px; font-weight: 750; }
+
+    .used-sale-customer-select {
+      flex: 0 0 auto;
+      min-height: 38px;
+      margin-left: auto;
+      padding: 0 11px;
+      border: 1px solid var(--tm-line-strong);
+      border-radius: 7px;
+      color: var(--tm-ink);
+      background: #fff;
+      font-weight: 900;
+    }
+
     .used-form {
       display: grid;
       gap: 14px;
@@ -15870,6 +15915,21 @@
       return String(customer.phone || customer.phone_number || customer.alert_number || '').trim();
     }
 
+    function customerPostalAddress(customer) {
+      if (!customer) return '';
+      const locality = [
+        customer.suburb || customer.city || '',
+        customer.state || '',
+        customer.postcode || customer.postal_code || ''
+      ].map(value => String(value || '').trim()).filter(Boolean).join(' ');
+      return [
+        customer.address || customer.address1 || customer.address_line_1 || '',
+        customer.address2 || customer.address_line_2 || '',
+        locality,
+        customer.country || ''
+      ].map(value => String(value || '').trim()).filter(Boolean).join(', ');
+    }
+
     function validRepairCustomerPhone(value) {
       const digits = String(value || '').replace(/\D/g, '');
       return digits.length >= 8 && digits.length <= 12;
@@ -20185,6 +20245,15 @@
       if (!device) return;
       const editable = !['sold', 'returned_to_seller', 'disposed'].includes(device.status);
       const seller = device.seller || {};
+      const saleCustomerRecord = selectedCustomerRecord();
+      const saleCustomerName = customerSearchName(saleCustomerRecord);
+      const saleCustomerPhone = repairCustomerPhone(saleCustomerRecord);
+      const saleCustomerReady = Boolean(
+        saleCustomerRecord
+        && saleCustomerName
+        && saleCustomerName.toLowerCase() !== 'walk-in customer'
+        && validRepairCustomerPhone(saleCustomerPhone)
+      );
       els.usedDeviceDetailTitle.textContent = usedDeviceTitle(device);
       els.usedDeviceDetailSubtitle.textContent = `${device.id} - ${usedDeviceIdentifier(device)}`;
       els.usedDeviceDetailBody.innerHTML = `
@@ -20246,10 +20315,13 @@
         ${device.status === 'ready_for_sale' ? `
           <form id="usedDeviceSellForm" class="used-form-section">
             <h2>Sell Device</h2>
-            <div class="used-form-grid">
-              <label class="used-field">Buyer name *<input name="buyer_name" type="text" value="${escapeHtml(els.customerInput.value.trim())}" required></label>
-              <label class="used-field">Buyer phone *<input name="buyer_phone" type="tel" required></label>
-              <label class="used-field span-3">Buyer address *<textarea name="buyer_address" required></textarea></label>
+            <div class="used-sale-customer ${saleCustomerReady ? '' : 'missing'}">
+              <i class="bi ${saleCustomerReady ? 'bi-person-check-fill' : 'bi-person-exclamation'}" aria-hidden="true"></i>
+              <div class="used-sale-customer-copy">
+                <strong>${escapeHtml(saleCustomerReady ? saleCustomerName : 'Select the customer in Checkout first')}</strong>
+                <span>${escapeHtml(saleCustomerReady ? saleCustomerPhone : 'Search or add the customer in the right-hand customer field, just like a repair.')}</span>
+              </div>
+              ${saleCustomerReady ? '' : `<button class="used-sale-customer-select" type="button" data-used-select-customer><i class="bi bi-person-plus"></i> Select customer</button>`}
             </div>
             <div id="usedDeviceSellError" class="used-form-error" role="alert"></div>
             <div class="used-detail-actions"><button class="used-sell-button" type="submit"><i class="bi bi-cart-plus"></i> Add to Checkout</button></div>
@@ -20293,7 +20365,7 @@
       mountUsedDeviceSaleTest(device);
       loadUsedDeviceWebsiteStatus(device);
       if (editable) loadUsedDeviceCosts(device);
-      if (focusSell) setTimeout(() => els.usedDeviceDetailBody.querySelector('[name="buyer_name"]')?.focus(), 0);
+      if (focusSell) setTimeout(() => els.usedDeviceDetailBody.querySelector('#usedDeviceSellForm button')?.focus(), 0);
     }
 
     const USED_DEVICE_WEBSITE_LABELS = {
@@ -20541,23 +20613,23 @@
     function addUsedDeviceToCart(form) {
       const device = selectedUsedDevice();
       if (!device || device.status !== 'ready_for_sale') return;
-      const data = new FormData(form);
-      const buyerName = String(data.get('buyer_name') || '').trim();
-      const buyerPhone = String(data.get('buyer_phone') || '').trim();
-      const buyerAddress = String(data.get('buyer_address') || '').trim();
       const error = form.querySelector('#usedDeviceSellError');
-      if (!buyerName || !buyerPhone || !buyerAddress) {
-        error.textContent = 'Buyer name, phone, and address are required.';
+      const buyer = selectedRepairCustomer({ notify: false, focus: false });
+      if (!buyer) {
+        error.textContent = 'Select or add the customer in the Checkout customer field first. A valid phone number is required; address is optional.';
         return;
       }
+      const buyerRecord = selectedCustomerRecord();
+      const buyerAddress = customerPostalAddress(buyerRecord);
       if (state.cart.some(item => item.used_device_id === device.id)) {
         error.textContent = 'This device is already in the cart.';
         return;
       }
       const existingUsedItem = state.cart.find(item => item.is_used_device);
       if (existingUsedItem && (
-        existingUsedItem.buyer_name.toLowerCase() !== buyerName.toLowerCase()
-        || existingUsedItem.buyer_phone.replace(/\D/g, '') !== buyerPhone.replace(/\D/g, '')
+        (existingUsedItem.buyer_customer_code && String(existingUsedItem.buyer_customer_code) !== String(buyer.id))
+        || String(existingUsedItem.buyer_name || '').toLowerCase() !== buyer.name.toLowerCase()
+        || String(existingUsedItem.buyer_phone || '').replace(/\D/g, '') !== buyer.phone.replace(/\D/g, '')
       )) {
         error.textContent = 'Used devices for different buyers must be checked out separately.';
         return;
@@ -20574,11 +20646,11 @@
         qty: 1,
         is_used_device: true,
         used_device_id: device.id,
-        buyer_name: buyerName,
-        buyer_phone: buyerPhone,
+        buyer_customer_code: buyer.id,
+        buyer_name: buyer.name,
+        buyer_phone: buyer.phone,
         buyer_address: buyerAddress
       });
-      els.customerInput.value = buyerName;
       closeUsedDeviceDetail();
       renderCart();
       showToast('Used device added to checkout.');
@@ -20607,6 +20679,7 @@
         is_special: Boolean(item.is_special),
         is_used_device: Boolean(item.is_used_device),
         used_device_id: item.used_device_id || '',
+        buyer_customer_code: item.buyer_customer_code || '',
         buyer_name: item.buyer_name || '',
         buyer_phone: item.buyer_phone || '',
         buyer_address: item.buyer_address || '',
@@ -24531,37 +24604,44 @@
       }
 
       const usedDeviceItems = state.cart.filter(item => item.is_used_device && item.used_device_id);
-      if (usedDeviceItems.some(item => !item.buyer_name || !item.buyer_phone || !item.buyer_address)) {
-        showToast('Buyer name, phone, and address are required for used-device sales.');
+      const usedDeviceCustomer = usedDeviceItems.length ? selectedRepairCustomer() : null;
+      if (usedDeviceItems.length && !usedDeviceCustomer) return;
+      if (usedDeviceItems.some(item => (
+        (item.buyer_customer_code && String(item.buyer_customer_code) !== String(usedDeviceCustomer.id))
+        || (!item.buyer_customer_code && item.buyer_name && item.buyer_name.toLowerCase() !== usedDeviceCustomer.name.toLowerCase())
+        || (!item.buyer_customer_code && item.buyer_phone && item.buyer_phone.replace(/\D/g, '') !== usedDeviceCustomer.phone.replace(/\D/g, ''))
+      ))) {
+        showToast('The selected customer does not match the buyer already attached to this used device. Check them out separately.');
         return;
       }
-      if (usedDeviceItems.length > 1) {
-        const firstBuyerName = usedDeviceItems[0].buyer_name.toLowerCase();
-        const firstBuyerPhone = usedDeviceItems[0].buyer_phone.replace(/\D/g, '');
-        if (usedDeviceItems.some(item => item.buyer_name.toLowerCase() !== firstBuyerName || item.buyer_phone.replace(/\D/g, '') !== firstBuyerPhone)) {
-          showToast('Used devices for different buyers must be checked out separately.');
-          return;
-        }
-      }
       if (repairTickets.length && usedDeviceItems.length && (
-        repairTickets[0].customerName.toLowerCase() !== usedDeviceItems[0].buyer_name.toLowerCase()
-        || repairTickets[0].customerPhone.replace(/\D/g, '') !== usedDeviceItems[0].buyer_phone.replace(/\D/g, '')
+        repairTickets[0].customerName.toLowerCase() !== usedDeviceCustomer.name.toLowerCase()
+        || repairTickets[0].customerPhone.replace(/\D/g, '') !== usedDeviceCustomer.phone.replace(/\D/g, '')
       )) {
         showToast('Repair and used-device items for different customers must be checked out separately.');
         return;
       }
 
+      const usedDeviceCustomerRecord = usedDeviceItems.length ? selectedCustomerRecord() : null;
+      const usedDeviceCustomerAddress = customerPostalAddress(usedDeviceCustomerRecord);
+      usedDeviceItems.forEach(item => {
+        item.buyer_customer_code = usedDeviceCustomer.id;
+        item.buyer_name = usedDeviceCustomer.name;
+        item.buyer_phone = usedDeviceCustomer.phone;
+        item.buyer_address = usedDeviceCustomerAddress;
+      });
+
       const customerName = state.exchangeReturn
         ? state.exchangeReturn.customer_name
         : repairTickets.length
         ? repairTickets[0].customerName
-        : (usedDeviceItems.length ? usedDeviceItems[0].buyer_name : (els.customerInput.value.trim() || 'Walk-in Customer'));
+        : (usedDeviceItems.length ? usedDeviceCustomer.name : (els.customerInput.value.trim() || 'Walk-in Customer'));
       const customer = customerDetailsForOrder(customerName);
       const customerPhone = state.exchangeReturn
         ? state.exchangeReturn.customer_phone
         : repairTickets.length
         ? repairTickets[0].customerPhone
-        : (usedDeviceItems.length ? usedDeviceItems[0].buyer_phone : (customer ? (customer.phone || customer.phone_number || '') : ''));
+        : (usedDeviceItems.length ? usedDeviceCustomer.phone : (customer ? (customer.phone || customer.phone_number || '') : ''));
 
       const order = {
         id: 'POS-' + Date.now(),
@@ -24575,7 +24655,7 @@
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_code: usesStoreCredit ? creditCustomerCode : (customer && customer.id || ''),
-        customer_address: usedDeviceItems.length ? usedDeviceItems[0].buyer_address : '',
+        customer_address: usedDeviceItems.length ? usedDeviceCustomerAddress : '',
         customer_email: receiptCustomerEmail({
           customer_email: customer ? (customer.email || '') : '',
           customer_phone: customerPhone
@@ -25469,6 +25549,12 @@
       if (event.target.id === 'usedDeviceSellForm') addUsedDeviceToCart(event.target);
     });
     els.usedDeviceDetailBody.addEventListener('click', event => {
+      const selectCustomerButton = event.target.closest('[data-used-select-customer]');
+      if (selectCustomerButton) {
+        closeUsedDeviceDetail();
+        flagRepairCustomer('Select an existing customer, or add the customer first.', { notify: false });
+        return;
+      }
       const publishButton = event.target.closest('[data-used-publish]');
       if (publishButton) submitUsedDevicePublish(publishButton.dataset.usedPublish, publishButton);
       const invoiceButton = event.target.closest('[data-used-view-invoice]');

@@ -261,13 +261,55 @@ const { chromium } = require('playwright');
     assert.equal(detail.sentInspection, false, 'A device save still sent an inspection');
     await page.evaluate(() => closeUsedDeviceDetail());
 
+    // Selling a used device uses the customer selected in the main checkout
+    // panel. The detail view no longer repeats name, phone or address fields,
+    // and an address is not required when the selected customer has none.
+    const saleWithoutCustomer = await page.evaluate(() => {
+      state.cart = [];
+      state.selectedCustomerId = '';
+      els.customerInput.value = '';
+      const device = {
+        id: 'USED-SALE', device_code: 'USED-SALE', category: 'Phone', brand: 'Apple', model: 'iPhone 13',
+        status: 'ready_for_sale', condition_grade: 'Good', sale_price: 649,
+        inspection: {}, seller: {}, acquisition: {}
+      };
+      state.usedDevices = [device];
+      openUsedDeviceDetail(device.id, true);
+      return {
+        duplicateBuyerFields: els.usedDeviceDetailBody.querySelectorAll('[name^="buyer_"]').length,
+        sellText: els.usedDeviceDetailBody.querySelector('#usedDeviceSellForm').innerText
+      };
+    });
+    assert.equal(saleWithoutCustomer.duplicateBuyerFields, 0, 'Buyer details were still requested inside the device form');
+    assert.match(saleWithoutCustomer.sellText, /Select the customer in Checkout first/);
+    await page.locator('#usedDeviceSellForm .used-sell-button').click();
+    assert.match(await page.locator('#usedDeviceSellError').innerText(), /Select or add the customer/);
+    assert.equal(await page.evaluate(() => state.cart.length), 0, 'A used device was added without a selected customer');
+
+    const selectedBuyer = await page.evaluate(() => {
+      closeUsedDeviceDetail();
+      const customer = { id: 'CUS-BUYER', name: 'Jane Buyer', phone: '0488666316', email: '' };
+      state.customers = [customer];
+      selectCustomerSearchResult(customer);
+      openUsedDeviceDetail('USED-SALE', true);
+      return els.usedDeviceDetailBody.querySelector('#usedDeviceSellForm').innerText;
+    });
+    assert.match(selectedBuyer, /Jane Buyer/);
+    assert.match(selectedBuyer, /0488666316/);
+    await page.locator('#usedDeviceSellForm .used-sell-button').click();
+    const saleCartItem = await page.evaluate(() => state.cart[0]);
+    assert.equal(saleCartItem.buyer_customer_code, 'CUS-BUYER');
+    assert.equal(saleCartItem.buyer_name, 'Jane Buyer');
+    assert.equal(saleCartItem.buyer_phone, '0488666316');
+    assert.equal(saleCartItem.buyer_address, '', 'An address was invented or still required for the buyer');
+
     await page.evaluate(async () => {
       els.usedDeviceDetailBody.innerHTML = '<div id="usedDeviceCostList"></div>';
       await loadUsedDeviceCosts({id:'USED-TEST'});
     });
     assert.match(await page.locator('#usedDeviceCostList').innerText(), /administrators only/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
+    console.log('PASS: optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();
