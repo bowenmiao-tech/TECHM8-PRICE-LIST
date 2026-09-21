@@ -5693,51 +5693,6 @@
       cursor: not-allowed;
     }
 
-    .used-sale-customer {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      min-height: 54px;
-      padding: 11px 0;
-      border-top: 1px solid var(--tm-line);
-      border-bottom: 1px solid var(--tm-line);
-    }
-
-    .used-sale-customer > i {
-      flex: 0 0 auto;
-      color: var(--tm-green);
-      font-size: 24px;
-    }
-
-    .used-sale-customer.missing > i { color: var(--tm-red); }
-
-    .used-sale-customer-copy {
-      flex: 1 1 190px;
-      min-width: 0;
-      display: grid;
-      gap: 2px;
-    }
-
-    .used-sale-customer-copy strong,
-    .used-sale-customer-copy span {
-      overflow-wrap: anywhere;
-    }
-
-    .used-sale-customer-copy strong { font-size: 13px; }
-    .used-sale-customer-copy span { color: var(--tm-muted); font-size: 11px; font-weight: 750; }
-
-    .used-sale-customer-select {
-      flex: 0 0 auto;
-      min-height: 38px;
-      margin-left: auto;
-      padding: 0 11px;
-      border: 1px solid var(--tm-line-strong);
-      border-radius: 7px;
-      color: var(--tm-ink);
-      background: #fff;
-      font-weight: 900;
-    }
-
     .used-form {
       display: grid;
       gap: 14px;
@@ -19630,7 +19585,7 @@
                 <strong>${usedDeviceSalePriceText(device)}</strong>
                 <span class="used-status ${escapeHtml(device.status)}">${escapeHtml(usedDeviceStatusLabel(device.status))}</span>
               </div>
-              <button class="used-sell-button" type="button" data-used-sell="${escapeHtml(device.id)}" title="Sell this device" ${device.status === 'ready_for_sale' ? '' : 'disabled'}>
+              <button class="used-sell-button" type="button" data-used-sell="${escapeHtml(device.id)}" title="Add to Checkout for the selected customer" ${device.status === 'ready_for_sale' ? '' : 'disabled'}>
                 <i class="bi bi-cart-plus"></i> Sell
               </button>
             </article>
@@ -20253,19 +20208,10 @@
       return state.usedDevices.find(device => device.id === state.selectedUsedDeviceId) || null;
     }
 
-    function renderUsedDeviceDetail(device, focusSell = false) {
+    function renderUsedDeviceDetail(device) {
       if (!device) return;
       const editable = !['sold', 'returned_to_seller', 'disposed'].includes(device.status);
       const seller = device.seller || {};
-      const saleCustomerRecord = selectedCustomerRecord();
-      const saleCustomerName = customerSearchName(saleCustomerRecord);
-      const saleCustomerPhone = repairCustomerPhone(saleCustomerRecord);
-      const saleCustomerReady = Boolean(
-        saleCustomerRecord
-        && saleCustomerName
-        && saleCustomerName.toLowerCase() !== 'walk-in customer'
-        && validRepairCustomerPhone(saleCustomerPhone)
-      );
       els.usedDeviceDetailTitle.textContent = usedDeviceTitle(device);
       els.usedDeviceDetailSubtitle.textContent = `${device.id} - ${usedDeviceIdentifier(device)}`;
       els.usedDeviceDetailBody.innerHTML = `
@@ -20324,21 +20270,6 @@
           </div>
           <div id="usedDeviceSaleTest"></div>
         </section>
-        ${device.status === 'ready_for_sale' ? `
-          <form id="usedDeviceSellForm" class="used-form-section">
-            <h2>Sell Device</h2>
-            <div class="used-sale-customer ${saleCustomerReady ? '' : 'missing'}">
-              <i class="bi ${saleCustomerReady ? 'bi-person-check-fill' : 'bi-person-exclamation'}" aria-hidden="true"></i>
-              <div class="used-sale-customer-copy">
-                <strong>${escapeHtml(saleCustomerReady ? saleCustomerName : 'Select the customer in Checkout first')}</strong>
-                <span>${escapeHtml(saleCustomerReady ? saleCustomerPhone : 'Search or add the customer in the right-hand customer field, just like a repair.')}</span>
-              </div>
-              ${saleCustomerReady ? '' : `<button class="used-sale-customer-select" type="button" data-used-select-customer><i class="bi bi-person-plus"></i> Select customer</button>`}
-            </div>
-            <div id="usedDeviceSellError" class="used-form-error" role="alert"></div>
-            <div class="used-detail-actions"><button class="used-sell-button" type="submit"><i class="bi bi-cart-plus"></i> Add to Checkout</button></div>
-          </form>
-        ` : ''}
         ${device.status === 'sold' && device.sold_order_id ? `
           <div class="used-detail-actions"><button class="repair-action primary" type="button" data-used-view-invoice="${escapeHtml(device.sold_order_id)}"><i class="bi bi-eye"></i> View Invoice #${escapeHtml(device.sold_invoice_number)}</button></div>
         ` : ''}
@@ -20376,7 +20307,6 @@
       mountUsedDeviceSaleTest(device);
       loadUsedDeviceWebsiteStatus(device);
       if (editable) loadUsedDeviceCosts(device);
-      if (focusSell) setTimeout(() => els.usedDeviceDetailBody.querySelector('#usedDeviceSellForm button')?.focus(), 0);
     }
 
     // The public page a published device lives on, on the storefront site.
@@ -20565,11 +20495,11 @@
       });
     }
 
-    function openUsedDeviceDetail(deviceId, focusSell = false) {
+    function openUsedDeviceDetail(deviceId) {
       const device = state.usedDevices.find(item => item.id === deviceId);
       if (!device) return;
       state.selectedUsedDeviceId = deviceId;
-      renderUsedDeviceDetail(device, focusSell);
+      renderUsedDeviceDetail(device);
       els.usedDeviceDetailModal.classList.add('show');
       els.usedDeviceDetailModal.setAttribute('aria-hidden', 'false');
     }
@@ -20628,19 +20558,17 @@
       }
     }
 
-    function addUsedDeviceToCart(form) {
-      const device = selectedUsedDevice();
+    // Sell goes straight from the device row to Checkout, for the customer
+    // selected in the Checkout customer field.
+    function addUsedDeviceToCart(deviceId) {
+      const device = state.usedDevices.find(item => item.id === deviceId);
       if (!device || device.status !== 'ready_for_sale') return;
-      const error = form.querySelector('#usedDeviceSellError');
-      const buyer = selectedRepairCustomer({ notify: false, focus: false });
-      if (!buyer) {
-        error.textContent = 'Select or add the customer in the Checkout customer field first. A valid phone number is required; address is optional.';
-        return;
-      }
+      const buyer = selectedRepairCustomer();
+      if (!buyer) return;
       const buyerRecord = selectedCustomerRecord();
       const buyerAddress = customerPostalAddress(buyerRecord);
       if (state.cart.some(item => item.used_device_id === device.id)) {
-        error.textContent = 'This device is already in the cart.';
+        showToast('This device is already in the cart.');
         return;
       }
       const existingUsedItem = state.cart.find(item => item.is_used_device);
@@ -20649,7 +20577,7 @@
         || String(existingUsedItem.buyer_name || '').toLowerCase() !== buyer.name.toLowerCase()
         || String(existingUsedItem.buyer_phone || '').replace(/\D/g, '') !== buyer.phone.replace(/\D/g, '')
       )) {
-        error.textContent = 'Used devices for different buyers must be checked out separately.';
+        showToast('Used devices for different buyers must be checked out separately.');
         return;
       }
 
@@ -20669,7 +20597,6 @@
         buyer_phone: buyer.phone,
         buyer_address: buyerAddress
       });
-      closeUsedDeviceDetail();
       renderCart();
       showToast('Used device added to checkout.');
     }
@@ -25490,9 +25417,9 @@
         loadUsedDevices();
         return;
       }
-      if (sellButton && !sellButton.disabled) {
+      if (sellButton) {
         event.stopPropagation();
-        openUsedDeviceDetail(sellButton.dataset.usedSell, true);
+        if (!sellButton.disabled) addUsedDeviceToCart(sellButton.dataset.usedSell);
         return;
       }
       if (tabButton) {
@@ -25564,15 +25491,8 @@
       event.preventDefault();
       if (event.target.id === 'usedDeviceUpdateForm') updateUsedDevice(event.target);
       if (event.target.id === 'usedDeviceCostForm') submitUsedDeviceCost(event.target);
-      if (event.target.id === 'usedDeviceSellForm') addUsedDeviceToCart(event.target);
     });
     els.usedDeviceDetailBody.addEventListener('click', event => {
-      const selectCustomerButton = event.target.closest('[data-used-select-customer]');
-      if (selectCustomerButton) {
-        closeUsedDeviceDetail();
-        flagRepairCustomer('Select an existing customer, or add the customer first.', { notify: false });
-        return;
-      }
       const publishButton = event.target.closest('[data-used-publish]');
       if (publishButton) submitUsedDevicePublish(publishButton.dataset.usedPublish, publishButton);
       const invoiceButton = event.target.closest('[data-used-view-invoice]');

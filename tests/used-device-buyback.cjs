@@ -261,9 +261,8 @@ const { chromium } = require('playwright');
     assert.equal(detail.sentInspection, false, 'A device save still sent an inspection');
     await page.evaluate(() => closeUsedDeviceDetail());
 
-    // Selling a used device uses the customer selected in the main checkout
-    // panel. The detail view no longer repeats name, phone or address fields,
-    // and an address is not required when the selected customer has none.
+    // Sell on the device row adds it straight to Checkout for the customer
+    // selected there. The device detail has no sell section of its own.
     const saleWithoutCustomer = await page.evaluate(() => {
       state.cart = [];
       state.selectedCustomerId = '';
@@ -274,34 +273,40 @@ const { chromium } = require('playwright');
         inspection: {}, seller: {}, acquisition: {}
       };
       state.usedDevices = [device];
-      openUsedDeviceDetail(device.id, true);
+      openUsedDeviceDetail(device.id);
+      const detailText = els.usedDeviceDetailBody.innerText;
+      const sellInDetail = els.usedDeviceDetailBody.querySelectorAll('#usedDeviceSellForm, [data-used-select-customer]').length;
+      closeUsedDeviceDetail();
+      els.usedDeviceContent.innerHTML = renderUsedDeviceInventory();
+      els.usedDeviceContent.querySelector('[data-used-sell="USED-SALE"]').click();
       return {
-        duplicateBuyerFields: els.usedDeviceDetailBody.querySelectorAll('[name^="buyer_"]').length,
-        sellText: els.usedDeviceDetailBody.querySelector('#usedDeviceSellForm').innerText
+        detailText,
+        sellInDetail,
+        cartLength: state.cart.length,
+        flagged: els.customerInput.closest('.customer-card').classList.contains('needs-customer'),
+        detailOpened: els.usedDeviceDetailModal.classList.contains('show')
       };
     });
-    assert.equal(saleWithoutCustomer.duplicateBuyerFields, 0, 'Buyer details were still requested inside the device form');
-    assert.match(saleWithoutCustomer.sellText, /Select the customer in Checkout first/);
-    await page.locator('#usedDeviceSellForm .used-sell-button').click();
-    assert.match(await page.locator('#usedDeviceSellError').innerText(), /Select or add the customer/);
-    assert.equal(await page.evaluate(() => state.cart.length), 0, 'A used device was added without a selected customer');
+    assert.equal(saleWithoutCustomer.sellInDetail, 0, 'The device detail still has a sell section');
+    assert.doesNotMatch(saleWithoutCustomer.detailText, /Sell Device|Select the customer in Checkout first/);
+    assert.equal(saleWithoutCustomer.cartLength, 0, 'A used device was added without a selected customer');
+    assert.ok(saleWithoutCustomer.flagged, 'The Checkout customer field was not flagged');
+    assert.equal(saleWithoutCustomer.detailOpened, false, 'Sell opened the device detail instead of Checkout');
 
-    const selectedBuyer = await page.evaluate(() => {
-      closeUsedDeviceDetail();
+    const saleCartItem = await page.evaluate(() => {
       const customer = { id: 'CUS-BUYER', name: 'Jane Buyer', phone: '0488666316', email: '' };
       state.customers = [customer];
       selectCustomerSearchResult(customer);
-      openUsedDeviceDetail('USED-SALE', true);
-      return els.usedDeviceDetailBody.querySelector('#usedDeviceSellForm').innerText;
+      els.usedDeviceContent.querySelector('[data-used-sell="USED-SALE"]').click();
+      els.usedDeviceContent.querySelector('[data-used-sell="USED-SALE"]').click();
+      return { item: state.cart[0], cartLength: state.cart.length };
     });
-    assert.match(selectedBuyer, /Jane Buyer/);
-    assert.match(selectedBuyer, /0488666316/);
-    await page.locator('#usedDeviceSellForm .used-sell-button').click();
-    const saleCartItem = await page.evaluate(() => state.cart[0]);
-    assert.equal(saleCartItem.buyer_customer_code, 'CUS-BUYER');
-    assert.equal(saleCartItem.buyer_name, 'Jane Buyer');
-    assert.equal(saleCartItem.buyer_phone, '0488666316');
-    assert.equal(saleCartItem.buyer_address, '', 'An address was invented or still required for the buyer');
+    assert.equal(saleCartItem.cartLength, 1, 'The same device went into the cart twice');
+    assert.equal(saleCartItem.item.used_device_id, 'USED-SALE');
+    assert.equal(saleCartItem.item.buyer_customer_code, 'CUS-BUYER');
+    assert.equal(saleCartItem.item.buyer_name, 'Jane Buyer');
+    assert.equal(saleCartItem.item.buyer_phone, '0488666316');
+    assert.equal(saleCartItem.item.buyer_address, '', 'An address was invented or still required for the buyer');
 
     // Staff see what was repaired, never what it cost.
     await page.evaluate(async () => {
@@ -341,7 +346,7 @@ const { chromium } = require('playwright');
     assert.equal(websitePanel.readyDisabled, false, 'A finished device could not be published');
     assert.match(websitePanel.readyLabel, /Put on Sale & Website/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
+    console.log('PASS: Sell adds straight to Checkout, repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();
