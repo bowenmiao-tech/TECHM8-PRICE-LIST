@@ -57,6 +57,22 @@ const { chromium } = require('playwright');
           Phone: [{ key: 'power', label: 'Server-driven power check' }, { key: 'touch', label: 'Server-driven touch check' }]
         } } });
       }
+      if (url.includes('resource=documents')) {
+        return route.fulfill({ json: {
+          ok: true,
+          seller_id: { type: 'Passport', reference: 'TEST' },
+          documents: [{
+            document_code: 'BBD-20260922-TESTDOCUMENT001',
+            signed_seller_name: 'Test Seller',
+            signed_at: '2026-09-22T01:00:00Z',
+            witnessed_by: 'Tester',
+            pdf_sha256: 'a'.repeat(64),
+            pdf_url: 'https://example.test/agreement.pdf',
+            signature_url: 'https://example.test/signature.png'
+          }],
+          id_photos: [{ id: 'id-photo', image_url: 'https://example.test/id.jpg' }]
+        } });
+      }
       if (url.includes('resource=costs')) return route.fulfill({json:{ok:true,costs:[],can_view_costs:false,writable:true}});
       if (url.includes('/pos-used-devices')) {
         return route.fulfill({ json: { ok: true, devices: [], summary: {}, transactions: [] } });
@@ -133,7 +149,7 @@ const { chromium } = require('playwright');
 
     // A blocked handset is refused outright, not merely kept off the shelf.
     const blocked = await page.evaluate(async () => {
-      state.usedDeviceIntakeCounts = { intake: 1 };
+      state.usedDeviceIntakeCounts = { intake: 1, seller_id: 1 };
       const form = usedDeviceBuyFormEl();
       form.querySelector('[name="imei"]').value = '356938035643809';
       form.querySelector('[name="storage"]').value = '128GB';
@@ -197,7 +213,10 @@ const { chromium } = require('playwright');
     });
     assert.match(labels, /Server-driven power check/, 'The POS ignored the checklist from the database');
 
-    // Exercise the real form submit event, one photo, and the acquisition request.
+    // Exercise the real form submit event, required device and seller-ID photos,
+    // seller review/signature, and the acquisition request.
+    uploads.push({ id: 'device-photo-1', stage: 'intake' });
+    uploads.push({ id: 'seller-id-photo-1', stage: 'seller_id' });
     await page.evaluate(() => {
       const form = usedDeviceBuyFormEl();
       for (const [name, value] of Object.entries({seller_name:'Test Seller', seller_phone:'', seller_email:'', seller_address:'1 Test Street', seller_id_type:'Passport', seller_id_reference:'TEST', purchase_cost:'300', clean_check_status:'Pending'})) form.elements[name].value = value;
@@ -216,7 +235,30 @@ const { chromium } = require('playwright');
     assert.equal(preserved.seller, 'Test Seller');
     assert.deepEqual(preserved.inspection, {power:'pass', touch:'fail'});
     assert.equal(await page.locator('#usedDeviceInspectionGrid select').count(), 0);
+    await page.waitForFunction(() => state.usedDeviceIntakeCounts
+      && state.usedDeviceIntakeCounts.intake === 1
+      && state.usedDeviceIntakeCounts.seller_id === 1);
     await page.locator('#usedDeviceBuySubmit').click();
+    await page.locator('#repairCardModal.show').waitFor();
+    const agreementText = await page.locator('#repairCardBody').innerText();
+    assert.match(agreementText, /Test Seller/);
+    assert.match(agreementText, /Passport · TEST/);
+    assert.match(agreementText, /iPhone 13/);
+    assert.match(agreementText, /\$300\.00/);
+    assert.equal(await page.evaluate(() => window.savedAcquisition), null,
+      'The purchase was saved before the seller signed');
+    await page.locator('#repairCardAck').check();
+    await page.evaluate(() => {
+      const canvas = document.getElementById('repairCardSignaturePad');
+      const context = canvas.getContext('2d');
+      context.beginPath();
+      context.moveTo(10, 10);
+      context.lineTo(80, 30);
+      context.stroke();
+      state.repairCard.hasInk = true;
+      updateRepairCardSubmitState();
+    });
+    await page.locator('#repairCardSubmit').click();
     await page.waitForFunction(() => window.savedAcquisition !== null);
     const saved = await page.evaluate(() => window.savedAcquisition);
     assert.equal(saved.action, 'acquire');
@@ -232,11 +274,15 @@ const { chromium } = require('playwright');
     assert.equal(saved.payload.condition_grade, 'Faulty', 'A failed check did not grade the device');
     assert.equal(saved.payload.payout_method, 'Cash');
     assert.equal(saved.payload.payout_reference_type, '', 'Cash recorded a payout destination');
+    assert.equal(saved.payload.terms_acknowledged, true);
+    assert.equal(saved.payload.signed_seller_name, 'Test Seller');
+    assert.equal(saved.payload.terms_version, 'local-test');
+    assert.match(saved.payload.signature_image, /^data:image\/png;base64,/);
     await page.waitForFunction(() => state.usedDeviceTab === 'inventory');
 
     // The device detail shows what it was bought as but cannot edit it, and
     // the pre-sale test is where sellability is decided.
-    const detail = await page.evaluate(async () => {
+    const detail = await page.evaluate(() => {
       const device = {
         id: 'USED-DETAIL', device_code: 'USED-DETAIL', category: 'Phone', brand: 'Apple', model: 'iPhone 13',
         status: 'inspection', condition_grade: 'Good', intake_condition_grade: 'Faulty', battery_health: 90,
@@ -246,20 +292,25 @@ const { chromium } = require('playwright');
       window.savedUpdate = null;
       usedDeviceApiPost = async (action, payload) => { window.savedUpdate = {action, payload}; return {ok: true}; };
       openUsedDeviceDetail('USED-DETAIL');
-      const form = els.usedDeviceDetailBody.querySelector('#usedDeviceUpdateForm');
-      await updateUsedDevice(form);
       return {
         editableChecks: els.usedDeviceDetailBody.querySelectorAll('[data-used-inspection-prefix="detail"]').length,
         testHost: Boolean(els.usedDeviceDetailBody.querySelector('#usedDeviceSaleTest')),
-        summary: els.usedDeviceDetailBody.querySelector('.used-detail-summary').innerText,
-        sentInspection: window.savedUpdate && Object.prototype.hasOwnProperty.call(window.savedUpdate.payload, 'inspection')
+        summary: els.usedDeviceDetailBody.querySelector('.used-detail-summary').innerText
       };
     });
     assert.equal(detail.editableChecks, 0, 'The purchase inspection could still be edited from the device detail');
     assert.ok(detail.testHost, 'The pre-sale test was not mounted on the device detail');
     assert.match(detail.summary, /Faulty/, 'What the device was bought as was not shown');
-    assert.equal(detail.sentInspection, false, 'A device save still sent an inspection');
-    await page.evaluate(() => closeUsedDeviceDetail());
+    await page.locator('#usedDeviceBuybackDocuments').getByText('BBD-20260922-TESTDOCUMENT001').waitFor();
+    const agreementRecord = await page.locator('#usedDeviceBuybackDocuments').innerText();
+    assert.match(agreementRecord, /Open Signed PDF/);
+    assert.match(agreementRecord, /Open Seller ID/);
+    assert.match(agreementRecord, /SHA-256 a{64}/);
+    const sentInspection = await page.evaluate(async () => {
+      await updateUsedDevice(els.usedDeviceDetailBody.querySelector('#usedDeviceUpdateForm'));
+      return window.savedUpdate && Object.prototype.hasOwnProperty.call(window.savedUpdate.payload, 'inspection');
+    });
+    assert.equal(sentInspection, false, 'A device save still sent an inspection');
 
     // Sell on the device row adds it straight to Checkout for the customer
     // selected there. The device detail has no sell section of its own.
@@ -380,7 +431,7 @@ const { chromium } = require('playwright');
     assert.equal(websitePanel.readyDisabled, false, 'A finished device could not be published');
     assert.match(websitePanel.readyLabel, /Put on Sale & Website/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: devices reserved or sold online are shown and not sold at the counter, Sell adds straight to Checkout, repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
+    console.log('PASS: signed buyback review, seller signature, immutable agreement links and seller-ID retrieval, devices reserved or sold online are shown and not sold at the counter, Sell adds straight to Checkout, repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, required device and seller-ID evidence, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();

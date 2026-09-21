@@ -5791,6 +5791,32 @@
       font-weight: 700;
     }
 
+    .used-document-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .used-document-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fbfdfd;
+    }
+
+    .used-document-card strong,
+    .used-document-card span { overflow-wrap: anywhere; }
+    .used-document-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+    .used-document-hash { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+    @media (max-width: 700px) {
+      .used-document-card { grid-template-columns: 1fr; }
+      .used-document-actions { justify-content: flex-start; }
+    }
+
     .used-required-tag {
       display: inline-block;
       margin-left: 8px;
@@ -10174,6 +10200,7 @@
       usedDeviceLoading: false,
       usedDeviceIntakeKey: '',
       usedDeviceIntakeCounts: null,
+      usedDeviceBuybackTerms: null,
       usedDeviceChecklists: null,
       usedDeviceCosts: null,
       selectedUsedDeviceId: '',
@@ -10443,6 +10470,7 @@
       googleReviewClose: document.getElementById('googleReviewClose'),
       googleReviewCancel: document.getElementById('googleReviewCancel'),
       repairCardModal: document.getElementById('repairCardModal'),
+      repairCardTitle: document.getElementById('repairCardTitle'),
       repairCardBody: document.getElementById('repairCardBody'),
       repairCardSubtitle: document.getElementById('repairCardSubtitle'),
       repairCardSubmit: document.getElementById('repairCardSubmit'),
@@ -16194,13 +16222,14 @@
       const acknowledged = Boolean(ack && ack.checked);
       if (box) box.classList.toggle('is-locked', !acknowledged);
       const named = Boolean(nameInput && nameInput.value.trim());
+      const signer = state.repairCard.mode === 'buyback' ? 'seller' : 'customer';
       if (readiness && !state.repairCard.saving) {
         readiness.textContent = !acknowledged
           ? 'Tick the terms and conditions box to unlock signing.'
           : !named
-            ? 'Type the customer name before continuing.'
+            ? `Type the ${signer} name before continuing.`
             : !state.repairCard.hasInk
-              ? 'Ask the customer to sign in the box above.'
+              ? `Ask the ${signer} to sign in the box above.`
               : '';
       }
       els.repairCardSubmit.disabled = !(acknowledged && named && state.repairCard.hasInk) || state.repairCard.saving;
@@ -16229,6 +16258,7 @@
       const snapshot = buildRepairCardSnapshot();
       state.repairCard = { snapshot, hasInk: false, saving: false, mode: 'create', ticketCode: '', reason: '' };
 
+      els.repairCardTitle.textContent = 'Repair Card';
       els.repairCardSubtitle.textContent = `${snapshot.store_name} · ${snapshot.staff_name}`;
       els.repairCardBody.innerHTML = `
         ${repairCardDetailsHtml(snapshot)}
@@ -16343,6 +16373,32 @@
       const signature = signatureDataUrl();
 
       try {
+        if (state.repairCard.mode === 'buyback') {
+          const expectedName = String((state.repairCard.buybackPayload || {}).seller_name || '').trim();
+          const normalized = value => String(value || '').trim().replace(/\s+/g, '').toLocaleLowerCase();
+          if (normalized(customerName) !== normalized(expectedName)) {
+            throw new Error('The signature name must match the seller name entered on the purchase.');
+          }
+          const saved = await usedDeviceApiPost('acquire', {
+            ...state.repairCard.buybackPayload,
+            signed_seller_name: customerName.trim(),
+            terms_version: String((state.repairCard.buybackTerms || {}).version || ''),
+            terms_acknowledged: true,
+            signature_image: signature
+          });
+          state.shiftPaymentTotals = null;
+          state.usedDeviceIntakeKey = '';
+          state.usedDeviceIntakeCounts = null;
+          state.usedDeviceTab = 'inventory';
+          state.usedDeviceSearch = '';
+          closeRepairCardModal();
+          await loadUsedDevices();
+          const buybackNumber = saved && saved.device && saved.device.acquisition && saved.device.acquisition.buyback_number;
+          const documentCode = saved && saved.document && saved.document.document_code;
+          showToast(`${buybackNumber ? `Buyback #${buybackNumber}` : 'Purchase'} completed. Signed agreement${documentCode ? ` ${documentCode}` : ''} is saved and cannot be changed.`);
+          return;
+        }
+
         if (state.repairCard.mode === 'resign') {
           await saveRepairCardSignature(state.repairCard.ticketCode, {
             customerName: customerName.trim(),
@@ -16407,7 +16463,9 @@
         state.repairCard.saving = false;
         els.repairCardSubmit.innerHTML = state.repairCard.mode === 'resign'
           ? '<i class="bi bi-pen"></i> Save Signature'
-          : '<i class="bi bi-pen"></i> Confirm &amp; Create Ticket';
+          : state.repairCard.mode === 'buyback'
+            ? '<i class="bi bi-file-earmark-lock"></i> Sign &amp; Complete Purchase'
+            : '<i class="bi bi-pen"></i> Confirm &amp; Create Ticket';
         updateRepairCardSubmitState();
       }
     }
@@ -17307,6 +17365,7 @@
       };
       closeTicketDetailModal();
 
+      els.repairCardTitle.textContent = 'Repair Card';
       els.repairCardSubtitle.textContent = `${snapshot.store_name} · ${replacing ? 're-signing' : 'signing'} ${ticket.id}`;
       els.repairCardBody.innerHTML = `
         ${repairCardDetailsHtml(snapshot)}
@@ -19720,10 +19779,10 @@
           </section>
 
           <section class="used-form-section">
-            <h2>Photo Evidence <span class="used-required-tag" id="usedDeviceIntakeTag">At least 1 photo required</span></h2>
+            <h2>Photo Evidence <span class="used-required-tag" id="usedDeviceIntakeTag">Device and seller ID photos required</span></h2>
             <div class="used-field-hint" style="margin-bottom:8px;">
-              Take at least one device photo while the seller is still here.
-              All uploaded photos stay attached to this device.
+              Take at least one device photo and one clear seller ID photo while the seller is still here.
+              Use the two tabs below. All uploaded evidence stays attached to this purchase.
             </div>
             <div id="usedDeviceIntakeEvidence"></div>
           </section>
@@ -19769,7 +19828,7 @@
           <div class="used-form-footer">
             <div id="usedDeviceBuyError" class="used-form-error" role="alert"></div>
             <button class="repair-action" type="button" data-used-tab-action="inventory">Cancel</button>
-            <button id="usedDeviceBuySubmit" class="repair-action primary" type="submit"><i class="bi bi-check2-circle"></i> Complete Purchase</button>
+            <button id="usedDeviceBuySubmit" class="repair-action primary" type="submit"><i class="bi bi-file-earmark-text"></i> Review &amp; Sign Purchase</button>
           </div>
         </form>
       `;
@@ -19854,7 +19913,7 @@
       const host = els.usedDeviceContent.querySelector('#usedDeviceIntakeEvidence');
       if (!host || !window.Techm8UsedDeviceEvidence) return;
       if (!state.usedDeviceIntakeKey) state.usedDeviceIntakeKey = crypto.randomUUID();
-      state.usedDeviceIntakeCounts = {intake: 0};
+      state.usedDeviceIntakeCounts = {intake: 0, seller_id: 0};
       window.Techm8UsedDeviceEvidence.mount(host, {
         storeCode: repairTicketStoreCode(),
         intakeKey: state.usedDeviceIntakeKey,
@@ -19871,14 +19930,19 @@
       return Number((state.usedDeviceIntakeCounts || {}).intake || 0);
     }
 
+    function usedDeviceSellerIdPhotoCount() {
+      return Number((state.usedDeviceIntakeCounts || {}).seller_id || 0);
+    }
+
     function refreshUsedDeviceIntakeTag() {
       const tag = els.usedDeviceContent.querySelector('#usedDeviceIntakeTag');
       if (!tag) return;
       const taken = usedDeviceIntakePhotoCount();
-      const enough = taken >= USED_DEVICE_REQUIRED_INTAKE_PHOTOS;
+      const sellerId = usedDeviceSellerIdPhotoCount();
+      const enough = taken >= USED_DEVICE_REQUIRED_INTAKE_PHOTOS && sellerId >= 1;
       tag.textContent = enough
-        ? `${taken} photos taken`
-        : `${taken} of ${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} required photos`;
+        ? `${taken} device · ${sellerId} ID photo${sellerId === 1 ? '' : 's'}`
+        : `${taken}/${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} device · ${sellerId}/1 seller ID`;
       tag.classList.toggle('done', enough);
     }
 
@@ -20132,6 +20196,113 @@
       if (brandInput) brandInput.focus();
     }
 
+    function usedDeviceBuybackDetailsHtml(payload) {
+      const deviceName = [payload.brand, payload.model, payload.variant, payload.storage, payload.color].filter(Boolean).join(' ');
+      const deviceId = payload.imei ? `IMEI ${payload.imei}` : `Serial ${payload.serial_number}`;
+      const payout = payload.payout_method === 'Bank Transfer'
+        ? payload.payout_reference_type === 'PayID'
+          ? `Bank Transfer · PayID ${payload.payout_payid}`
+          : `Bank Transfer · ${payload.payout_account_name} · BSB ${payload.payout_bsb} · Account ${payload.payout_account_number}`
+        : payload.payout_method;
+      const cells = [
+        ['Seller', payload.seller_name],
+        ['Residential address', payload.seller_address],
+        ['Government ID', [payload.seller_id_type, payload.seller_id_reference].filter(Boolean).join(' · ')],
+        ['Device', deviceName],
+        ['Device ID', deviceId],
+        ['Purchase amount', money(payload.purchase_cost)],
+        ['Payout', payout],
+        ['Store', storeById(state.storeId).name],
+        ['Witnessed by', state.selectedStaffName]
+      ];
+      const inspections = Object.entries(payload.inspection || {});
+      return `
+        <div class="repair-card-section">
+          <h3>Purchase Details</h3>
+          <div class="repair-card-grid">
+            ${cells.map(([label, value]) => `
+              <div class="repair-card-cell"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value || '-'))}</strong></div>
+            `).join('')}
+          </div>
+          ${payload.notes ? `<p class="repair-panel-text"><strong>Device notes:</strong> ${escapeHtml(payload.notes)}</p>` : ''}
+        </div>
+        <div class="repair-card-section">
+          <h3>Recorded Inspection</h3>
+          <div class="repair-card-tests">
+            ${inspections.length ? inspections.map(([key, result]) => {
+              const label = key.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+              const value = String(result || 'Not tested');
+              const cls = value === 'pass' ? 'pass' : value === 'fail' ? 'fail' : 'skip';
+              return `<div class="repair-card-test"><span>${escapeHtml(label)}</span><b class="${cls}">${escapeHtml(value.replace(/\b\w/g, letter => letter.toUpperCase()))}</b></div>`;
+            }).join('') : '<div class="repair-card-test"><span>Inspection</span><b class="skip">Not recorded</b></div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadUsedDeviceBuybackTerms() {
+      if (state.usedDeviceBuybackTerms && state.usedDeviceBuybackTerms.body) return state.usedDeviceBuybackTerms;
+      if (typeof localDashboardTestMode !== 'undefined' && localDashboardTestMode) {
+        state.usedDeviceBuybackTerms = {
+          version: 'local-test',
+          body: 'I confirm that I own this device or have authority to sell it, that the details above are correct, and that ownership transfers to TechM8 when the recorded purchase amount is paid.'
+        };
+        return state.usedDeviceBuybackTerms;
+      }
+      const result = await usedDeviceApiGet('buyback-terms');
+      state.usedDeviceBuybackTerms = {
+        version: String(result.version || ''),
+        body: String(result.body || '')
+      };
+      return state.usedDeviceBuybackTerms;
+    }
+
+    async function openUsedDeviceBuybackSignature(payload) {
+      const terms = await loadUsedDeviceBuybackTerms();
+      if (!terms.body) throw new Error('The buyback agreement could not be loaded. Check the connection and try again.');
+      state.repairCard = {
+        snapshot: payload,
+        buybackPayload: payload,
+        buybackTerms: terms,
+        hasInk: false,
+        saving: false,
+        mode: 'buyback',
+        ticketCode: '',
+        reason: ''
+      };
+      els.repairCardTitle.textContent = 'Device Buyback Agreement';
+      els.repairCardSubtitle.textContent = `${storeById(state.storeId).name} · ${state.selectedStaffName}`;
+      els.repairCardBody.innerHTML = `
+        ${usedDeviceBuybackDetailsHtml(payload)}
+        <div class="repair-card-section">
+          <h3>Seller Declaration</h3>
+          <div class="repair-card-terms">${escapeHtml(terms.body)}</div>
+          <label class="repair-card-ack">
+            <input id="repairCardAck" type="checkbox">
+            <span>I have checked the device, purchase amount and identification above. I agree to this buyback and confirm that I have the legal right to sell this device to TechM8.</span>
+          </label>
+          <label class="repair-field" style="margin-top:12px;">
+            Seller name
+            <input id="repairCardCustomerName" class="repair-input" type="text" maxlength="120" autocomplete="name" value="${escapeHtml(payload.seller_name)}" placeholder="Type the seller name">
+          </label>
+          <div id="repairCardSignatureBox" class="repair-card-signature-box is-locked">
+            <canvas id="repairCardSignaturePad"></canvas>
+            <div class="repair-card-signature-foot">
+              <span>The seller signs above with a finger or stylus.</span>
+              <button id="repairCardSignatureClear" class="repair-action" type="button">Clear</button>
+            </div>
+          </div>
+          <div id="repairCardReadiness" class="repair-card-readiness" role="status" aria-live="polite"></div>
+          <div id="repairCardError" class="repair-card-error" role="alert"></div>
+        </div>
+      `;
+      els.repairCardSubmit.innerHTML = '<i class="bi bi-file-earmark-lock"></i> Sign &amp; Complete Purchase';
+      els.repairCardModal.classList.add('show');
+      els.repairCardModal.setAttribute('aria-hidden', 'false');
+      attachSignaturePad();
+      updateRepairCardSubmitState();
+    }
+
     async function submitUsedDevicePurchase(form) {
       const error = form.querySelector('#usedDeviceBuyError');
       const submit = form.querySelector('#usedDeviceBuySubmit');
@@ -20140,6 +20311,10 @@
       const category = String(data.get('category') || '');
       if (usedDeviceIntakePhotoCount() < USED_DEVICE_REQUIRED_INTAKE_PHOTOS) {
         error.textContent = `Take at least ${USED_DEVICE_REQUIRED_INTAKE_PHOTOS} intake photo before paying the seller. You can add more photos if needed.`;
+        return;
+      }
+      if (usedDeviceSellerIdPhotoCount() < 1) {
+        error.textContent = 'Open the Seller ID tab and take a clear photo of the identification before paying the seller.';
         return;
       }
       const imeiDigits = String(data.get('imei') || '').replace(/\D/g, '');
@@ -20176,13 +20351,13 @@
 
       error.textContent = '';
       submit.disabled = true;
-      submit.textContent = 'Saving Purchase...';
+      submit.textContent = 'Preparing Agreement...';
       try {
         const activeShift = await syncCurrentShiftWithDatabase();
         if (!activeShift || activeShift.status !== 'open') {
           throw new Error('Open the store shift before buying a used device.');
         }
-        const saved = await usedDeviceApiPost('acquire', {
+        const purchasePayload = {
           store_code: repairTicketStoreCode(),
           staff_name: state.selectedStaffName,
           shift_id: activeShift.id,
@@ -20226,22 +20401,14 @@
           status: 'inspection',
           intake_key: state.usedDeviceIntakeKey,
           notes: String(data.get('notes') || '').trim()
-        });
-        state.shiftPaymentTotals = null;
-        // A saved purchase consumes its intake photos; the next one starts a new key.
-        state.usedDeviceIntakeKey = '';
-        state.usedDeviceIntakeCounts = null;
-        state.usedDeviceTab = 'inventory';
-        state.usedDeviceSearch = '';
-        await loadUsedDevices();
-        const buybackNumber = saved && saved.device && saved.device.acquisition && saved.device.acquisition.buyback_number;
-        showToast(`${buybackNumber ? `Buyback #${buybackNumber} saved` : 'Purchase saved'} with its intake photos. The device stays in inspection until it is priced and photographed for sale.`);
+        };
+        await openUsedDeviceBuybackSignature(purchasePayload);
       } catch (requestError) {
         console.error(requestError);
-        error.textContent = requestError.message || 'Device purchase could not be saved.';
+        error.textContent = requestError.message || 'The buyback agreement could not be prepared.';
       } finally {
         submit.disabled = false;
-        submit.innerHTML = '<i class="bi bi-check2-circle"></i> Complete Purchase';
+        submit.innerHTML = '<i class="bi bi-file-earmark-text"></i> Review &amp; Sign Purchase';
       }
     }
 
@@ -20275,6 +20442,10 @@
         ${device.status === 'sold' && device.sold_online_order_code ? `
           <div class="used-online-notice sold"><i class="bi bi-bag-check" aria-hidden="true"></i><span>Sold online on website order ${escapeHtml(device.sold_online_order_code)}. The website admin has the order and payment.</span></div>
         ` : ''}
+        <section class="used-form-section">
+          <h2>Signed Buyback Agreement</h2>
+          <div id="usedDeviceBuybackDocuments" class="used-document-list"><div class="used-cost-meta">Loading signed agreement...</div></div>
+        </section>
         ${editable ? `
           <form id="usedDeviceUpdateForm" class="used-form-section">
             <h2>Inventory</h2>
@@ -20352,6 +20523,7 @@
       `;
       mountUsedDeviceEvidence(device);
       mountUsedDeviceSaleTest(device);
+      loadUsedDeviceBuybackDocuments(device);
       loadUsedDeviceWebsiteStatus(device);
       if (editable) loadUsedDeviceCosts(device);
     }
@@ -20366,6 +20538,58 @@
       withdrawn: 'Taken off the website',
       failed: 'Could not reach the website'
     };
+
+    function renderUsedDeviceBuybackDocuments(payload) {
+      const host = els.usedDeviceDetailBody.querySelector('#usedDeviceBuybackDocuments');
+      if (!host) return;
+      const documents = Array.isArray(payload.documents) ? payload.documents : [];
+      const idPhotos = Array.isArray(payload.id_photos) ? payload.id_photos : [];
+      const sellerId = payload.seller_id || {};
+      const safeUrl = value => /^https?:\/\//i.test(String(value || '')) ? String(value) : '';
+      const documentRows = documents.map(document => {
+        const pdfUrl = safeUrl(document.pdf_url);
+        const signatureUrl = safeUrl(document.signature_url);
+        return `
+          <article class="used-document-card">
+            <div>
+              <strong>${escapeHtml(document.document_code || 'Signed agreement')}</strong>
+              <div class="used-cost-meta">Signed by ${escapeHtml(document.signed_seller_name || '')} · ${escapeHtml(formatDateTime(document.signed_at))} · witnessed by ${escapeHtml(document.witnessed_by || '')}</div>
+              <div class="used-cost-meta used-document-hash" title="Full immutable PDF fingerprint">SHA-256 ${escapeHtml(document.pdf_sha256 || '')}</div>
+            </div>
+            <div class="used-document-actions">
+              ${pdfUrl ? `<a class="repair-action primary" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-file-earmark-pdf"></i> Open Signed PDF</a>` : '<span class="used-cost-meta">PDF unavailable</span>'}
+              ${signatureUrl ? `<a class="repair-action" href="${escapeHtml(signatureUrl)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-pen"></i> View Signature</a>` : ''}
+            </div>
+          </article>
+        `;
+      }).join('');
+      const idRows = idPhotos.map((photo, index) => {
+        const photoUrl = safeUrl(photo.image_url);
+        return photoUrl ? `<a class="repair-action" href="${escapeHtml(photoUrl)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-person-vcard"></i> Open Seller ID${idPhotos.length > 1 ? ` ${index + 1}` : ''}</a>` : '';
+      }).join('');
+      host.innerHTML = `
+        ${documentRows || '<div class="used-cost-meta">No signed agreement is on file. Older purchases may not have one; all new buybacks require one.</div>'}
+        <article class="used-document-card">
+          <div>
+            <strong>Seller identification</strong>
+            <div class="used-cost-meta">${escapeHtml([sellerId.type, sellerId.reference].filter(Boolean).join(' · ') || 'No identification reference recorded')}</div>
+          </div>
+          <div class="used-document-actions">${idRows || '<span class="used-cost-meta">No ID photo available</span>'}</div>
+        </article>
+      `;
+    }
+
+    async function loadUsedDeviceBuybackDocuments(device) {
+      try {
+        const payload = await usedDeviceApiGet('documents', { device_code: device.id });
+        if (state.selectedUsedDeviceId !== device.id) return;
+        renderUsedDeviceBuybackDocuments(payload);
+      } catch (error) {
+        console.error(error);
+        const host = els.usedDeviceDetailBody.querySelector('#usedDeviceBuybackDocuments');
+        if (host) host.innerHTML = `<div class="used-form-error">${escapeHtml(error.message || 'The signed agreement could not be loaded.')}</div>`;
+      }
+    }
 
     async function usedDevicePublishRequest(payload) {
       const response = await fetch(POS_USED_DEVICE_PUBLISH_ENDPOINT, {
