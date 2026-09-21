@@ -435,6 +435,14 @@
     .used-line-list { display: grid; gap: 8px; }
     .used-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 11.5px; font-weight: 800; }
     .used-line span { color: #7f8e95; font-weight: 700; }
+    .used-cost-line { align-items: center; }
+    .used-cost-line > div:first-child { flex: 1 1 260px; min-width: 0; }
+    .used-cost-amount { display: flex; gap: 6px; align-items: center; }
+    .used-cost-amount input, .used-cost-add input, .used-cost-add select { height: 38px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; font-weight: 800; }
+    .used-cost-amount input { width: 120px; }
+    .used-cost-amount .used-secondary-button, .used-cost-add .used-primary-button { min-height: 38px; }
+    .used-cost-add { display: grid; grid-template-columns: 150px minmax(0, 1fr) 120px auto; gap: 8px; margin-top: 12px; }
+    @media (max-width: 640px) { .used-cost-add { grid-template-columns: minmax(0, 1fr); } }
     .used-detail-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
     .used-tab-dot { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--red); vertical-align: middle; }
     .used-locked-block { background: #f7f9fa; }
@@ -1866,19 +1874,36 @@
           </div>
 
           <div data-used-detail-panel="history" hidden>
-            ${(detail.costs || []).length ? `
-              <section class="used-detail-block">
-                <h3>Refurbishment</h3>
-                <div class="used-line-list">
-                  ${detail.costs.map(cost => `
-                    <div class="used-line">
-                      <div>${escapeHtml(cost.description)}<span> · ${escapeHtml(cost.kind)}${cost.repair_ticket_code ? ` · ${escapeHtml(cost.repair_ticket_code)}` : ''}</span></div>
-                      <div>${money(cost.amount)}</div>
+            <section class="used-detail-block">
+              <h3>Refurbishment</h3>
+              <p class="page-subtitle">Staff record what was repaired or replaced. The amount is entered here and never shown to staff or on the website. Total so far ${money(device.refurb_cost)}.</p>
+              <div class="used-line-list">
+                ${(detail.costs || []).map(cost => `
+                  <div class="used-line used-cost-line">
+                    <div>
+                      ${escapeHtml(cost.description)}
+                      <span> · ${escapeHtml(cost.kind)}${cost.repair_ticket_code ? ` · ${escapeHtml(cost.repair_ticket_code)}` : ''} · ${escapeHtml(cost.staff_name || '')} · ${escapeHtml(formatDateTime(cost.created_at))}</span>
                     </div>
-                  `).join('')}
+                    <div class="used-cost-amount">
+                      <input type="number" min="0.01" step="0.01" inputmode="decimal" aria-label="Amount for ${escapeHtml(cost.description)}"
+                        data-used-cost-amount="${escapeHtml(cost.id)}" value="${cost.amount == null ? '' : number(cost.amount)}" placeholder="Not priced">
+                      <button type="button" class="used-secondary-button" data-used-cost-save="${escapeHtml(cost.id)}">Save</button>
+                    </div>
+                  </div>
+                `).join('') || '<p class="page-subtitle">No repairs recorded yet.</p>'}
+              </div>
+              ${['returned_to_seller', 'disposed'].includes(device.status) ? '' : `
+                <div class="used-cost-add">
+                  <select data-used-cost-new="kind" aria-label="Type">
+                    <option value="part">Part</option><option value="labour">Labour</option><option value="external">External service</option>
+                  </select>
+                  <input type="text" maxlength="300" data-used-cost-new="description" placeholder="What was repaired or replaced" aria-label="What was repaired or replaced">
+                  <input type="number" min="0.01" step="0.01" inputmode="decimal" data-used-cost-new="amount" placeholder="Amount" aria-label="Amount">
+                  <button type="button" class="used-primary-button" data-used-cost-add>Add</button>
                 </div>
-              </section>
-            ` : ''}
+              `}
+              <div class="used-listing-status" id="usedCostStatus"></div>
+            </section>
             <section class="used-detail-block">
               <h3>History</h3>
               <div class="used-line-list">
@@ -2035,6 +2060,56 @@
           status.textContent = error.message || 'That could not be saved.';
           buttons.forEach(button => { if (button) button.disabled = false; });
         }
+      }
+
+      // Repair amounts are the admin's: staff record what was done in the POS,
+      // and the price of the work is entered here.
+      async function saveUsedCost(payload, button) {
+        const status = document.getElementById('usedCostStatus');
+        const device = (usedStock.detail || {}).device || {};
+        if (button) button.disabled = true;
+        if (status) { status.dataset.error = 'false'; status.textContent = 'Saving...'; }
+        try {
+          await window.Techm8StaffAuth.callRpc('save_admin_used_device_cost', {
+            session_token: window.Techm8StaffAuth.getToken(),
+            payload
+          });
+          await loadUsedStock();
+          await openUsedDeviceDetail(device.device_code, true);
+          const fresh = document.getElementById('usedCostStatus');
+          if (fresh) fresh.textContent = 'Saved.';
+        } catch (error) {
+          if (status) { status.dataset.error = 'true'; status.textContent = error.message || 'That could not be saved.'; }
+          if (button) button.disabled = false;
+        }
+      }
+
+      function saveUsedCostAmount(costId, button) {
+        const input = els.usedDeviceDialogBody.querySelector(`[data-used-cost-amount="${CSS.escape(costId)}"]`);
+        const value = String(input ? input.value : '').trim();
+        if (value && !(Number(value) > 0)) {
+          const status = document.getElementById('usedCostStatus');
+          if (status) { status.dataset.error = 'true'; status.textContent = 'An amount must be above zero.'; }
+          return;
+        }
+        saveUsedCost({ cost_id: costId, amount: value }, button);
+      }
+
+      function addUsedCostLine(button) {
+        const field = name => els.usedDeviceDialogBody.querySelector(`[data-used-cost-new="${name}"]`);
+        const description = String(field('description').value || '').trim();
+        const amount = String(field('amount').value || '').trim();
+        const status = document.getElementById('usedCostStatus');
+        if (!description) {
+          if (status) { status.dataset.error = 'true'; status.textContent = 'Say what was repaired or replaced.'; }
+          return;
+        }
+        if (amount && !(Number(amount) > 0)) {
+          if (status) { status.dataset.error = 'true'; status.textContent = 'An amount must be above zero.'; }
+          return;
+        }
+        const device = (usedStock.detail || {}).device || {};
+        saveUsedCost({ device_code: device.device_code, kind: field('kind').value, description, amount }, button);
       }
 
       async function loadUsedDevices() {
@@ -2328,6 +2403,16 @@
         const tabButton = event.target.closest('[data-used-detail-tab]');
         if (tabButton) {
           setUsedDetailTab(tabButton.dataset.usedDetailTab);
+          return;
+        }
+        const costSave = event.target.closest('[data-used-cost-save]');
+        if (costSave) {
+          saveUsedCostAmount(costSave.dataset.usedCostSave, costSave);
+          return;
+        }
+        const costAdd = event.target.closest('[data-used-cost-add]');
+        if (costAdd) {
+          addUsedCostLine(costAdd);
           return;
         }
         if (event.target.closest('#usedListingPublish')) submitUsedListing(true);

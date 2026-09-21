@@ -21,6 +21,16 @@ repeatable SKU with a quantity per store; a used device is one physical thing
 whose stock is always one and which is gone when it sells. None of the product
 grouping, variant, fit-profile or inventory rules apply to it.
 
+## Where customers see it
+
+The storefront pages live in the website repository and read this catalogue on every visit:
+
+- `used-devices.html` - the category list, `?category=used-phones` by default, with a tab per category
+- `used-device.html?d=<slug>` - one device: its listing photos, model, storage, colour, condition,
+  battery (by the rule below), the price, and the store it is in with a call button
+
+Nothing about them is prerendered, because a device can sell at the counter at any moment.
+
 ## Reading the catalogue
 
 Both calls are ordinary Supabase RPCs. Use the project's publishable
@@ -64,7 +74,7 @@ everything. `result_limit` is capped at 200.
       "price": 649.00,
       "description": "Good condition. Light signs of use.\n\nEvery second-hand device is tested in store ...",
       "highlights": [
-        "23 of 23 inspection checks passed",
+        "21 of 21 inspection checks passed",
         "Battery health 89%",
         "128GB storage",
         "Wiped and reset, ready to set up",
@@ -104,7 +114,11 @@ frequent outcome here, not a fault.
   fixed count.
 - `description` contains `\n\n` paragraph breaks and no markup.
 - `price` is in AUD and includes GST, consistent with the rest of the site.
-- `battery_health` is null for anything without a measurable battery.
+- `battery_health` is sent only when it is 85% or more. Below that it is null and the highlights carry
+  "Good battery" instead, so the number never reaches the public site. It is also null for anything
+  without a measurable battery. The storefront applies the same rule again as a safeguard.
+- The inspection highlight counts only the checks that apply to the device: a tablet with no SIM
+  tray reads "13 of 13 inspection checks passed", not "13 of 21".
 - Cache for minutes, not hours. A device can sell at the counter at any time,
   and the listing goes down within seconds of that happening.
 

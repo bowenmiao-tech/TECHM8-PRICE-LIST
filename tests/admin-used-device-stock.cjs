@@ -97,6 +97,9 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
             photos:{intake:device.intake_photo_count, listing:device.listing_photo_count}
           };
         }
+        if (name === 'save_admin_used_device_cost') {
+          return {ok:true, id: params.payload.cost_id || 'new', amount: params.payload.amount, refurb_cost: Number(params.payload.amount || 0)};
+        }
         if (name === 'set_admin_used_device_listing') {
           const device = find(params.payload.device_code);
           device.sale_price = params.payload.sale_price;
@@ -202,6 +205,24 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
         'The purchase inspection offered something to edit');
       if (shots) await page.screenshot({path: path.join(shots, `admin-purchase-${label}.png`)});
 
+      // Staff record the repair; the admin prices it here.
+      await page.locator('.used-detail-tabs [data-used-detail-tab="history"]').click();
+      await page.locator('[data-used-cost-amount="c1"]').fill('55');
+      await page.locator('[data-used-cost-save="c1"]').click();
+      await page.waitForFunction(() => window.__rpcCalls.some(call => call.name === 'save_admin_used_device_cost'));
+      const priced = await page.evaluate(() => window.__rpcCalls.filter(call => call.name === 'save_admin_used_device_cost').pop());
+      assert.equal(priced.params.payload.cost_id, 'c1');
+      assert.equal(priced.params.payload.amount, '55');
+      await page.locator('.used-detail-tabs [data-used-detail-tab="history"]').waitFor();
+      await page.locator('[data-used-cost-new="description"]').fill('Replaced the charging port');
+      await page.locator('[data-used-cost-new="amount"]').fill('35');
+      await page.locator('[data-used-cost-add]').click();
+      await page.waitForFunction(() => window.__rpcCalls.filter(call => call.name === 'save_admin_used_device_cost').length === 2);
+      const added = await page.evaluate(() => window.__rpcCalls.filter(call => call.name === 'save_admin_used_device_cost').pop());
+      assert.equal(added.params.payload.device_code, 'USED-UNTESTED');
+      assert.equal(added.params.payload.description, 'Replaced the charging port');
+      assert.equal(added.params.payload.amount, '35');
+
       // Photos taken by mistake can be removed from every tab, seller ID included.
       await page.locator('.used-detail-tabs [data-used-detail-tab="history"]').click();
       await page.locator('#usedDeviceDialogEvidence [data-stage="listing"]').click();
@@ -267,7 +288,7 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
       assert.deepEqual(pageErrors, [], `${label} page errors: ${pageErrors.join(', ')}`);
       await page.close();
     }
-    console.log('PASS: for-sale and sold lists with stores; four-page device detail; photo removal including seller ID; locked purchase record; incomplete test refused; complete test recorded without touching the purchase record; priced approval and website push; desktop, iPad and phone.');
+    console.log('PASS: for-sale and sold lists with stores; four-page device detail; admin-only repair pricing; photo removal including seller ID; locked purchase record; incomplete test refused; complete test recorded without touching the purchase record; priced approval and website push; desktop, iPad and phone.');
   } finally {
     await browser.close();
     server.close();

@@ -303,13 +303,45 @@ const { chromium } = require('playwright');
     assert.equal(saleCartItem.buyer_phone, '0488666316');
     assert.equal(saleCartItem.buyer_address, '', 'An address was invented or still required for the buyer');
 
+    // Staff see what was repaired, never what it cost.
     await page.evaluate(async () => {
       els.usedDeviceDetailBody.innerHTML = '<div id="usedDeviceCostList"></div>';
       await loadUsedDeviceCosts({id:'USED-TEST'});
     });
-    assert.match(await page.locator('#usedDeviceCostList').innerText(), /administrators only/);
+    assert.match(await page.locator('#usedDeviceCostList').innerText(), /No repairs recorded/);
+    const repairList = await page.evaluate(() => {
+      state.usedDeviceCosts = [{ id: 'c1', kind: 'part', description: 'Replaced the back glass', staff_name: 'Tester', amount: null }];
+      renderUsedDeviceCostList();
+      return els.usedDeviceDetailBody.querySelector('#usedDeviceCostList').innerText;
+    });
+    assert.match(repairList, /Replaced the back glass/, 'A recorded repair was not listed');
+    assert.doesNotMatch(repairList, /\$/, 'A repair amount was shown to staff');
+
+    // The website panel says what is missing, and a finished device goes on
+    // sale and online in one press.
+    const websitePanel = await page.evaluate(() => {
+      els.usedDeviceDetailBody.innerHTML = '<div id="usedDeviceWebsite"></div>';
+      renderUsedDeviceWebsite({
+        status: 'inspection', website_status: 'not_published', listing_photo_count: 0, can_publish: false,
+        blockers: ['No pre-sale test has been recorded yet', 'No listing photo has been added', 'No sale price has been set yet']
+      });
+      const blocked = {
+        text: els.usedDeviceDetailBody.innerText,
+        disabled: els.usedDeviceDetailBody.querySelector('[data-used-publish="publish"]').disabled
+      };
+      renderUsedDeviceWebsite({
+        status: 'inspection', website_status: 'not_published', listing_photo_count: 2, can_publish: true, blockers: []
+      });
+      const ready = els.usedDeviceDetailBody.querySelector('[data-used-publish="publish"]');
+      return { blocked, readyDisabled: ready.disabled, readyLabel: ready.innerText };
+    });
+    assert.ok(websitePanel.blocked.disabled, 'An unfinished device could be published');
+    assert.match(websitePanel.blocked.text, /No pre-sale test has been recorded yet/, 'The panel did not say what was missing');
+    assert.match(websitePanel.blocked.text, /No sale price has been set yet/);
+    assert.equal(websitePanel.readyDisabled, false, 'A finished device could not be published');
+    assert.match(websitePanel.readyLabel, /Put on Sale & Website/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
+    console.log('PASS: repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();

@@ -5762,6 +5762,18 @@
       gap: 8px;
     }
 
+    .used-website-blockers {
+      padding: 10px 12px;
+      border: 1px solid #f0cbc7;
+      border-radius: 8px;
+      background: #fff5f3;
+      color: #8f3830;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .used-website-blockers ul { margin: 5px 0 0; padding-left: 18px; }
+
     .used-website-state {
       justify-self: start;
       padding: 4px 11px;
@@ -20332,20 +20344,19 @@
         ` : ''}
         ${editable ? `
           <section class="used-form-section">
-            <h2>Refurbishment Cost</h2>
+            <h2>Refurbishment</h2>
             <div class="used-field-hint" style="margin-bottom:10px;">
-              Parts, bench time and anything sent out. Every margin figure uses the purchase price plus these.
+              Record what was repaired or replaced. The admin portal adds what it cost.
               Recording a part here does not move product stock.
             </div>
             <form id="usedDeviceCostForm" class="used-form-grid">
               <label class="used-field">Type
                 <select name="kind"><option value="part">Part</option><option value="labour">Labour</option><option value="external">External service</option></select>
               </label>
-              <label class="used-field">Amount *<input name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
               <label class="used-field">Repair ticket<input name="repair_ticket_code" type="text" placeholder="Optional"></label>
-              <label class="used-field span-2">What was it? *<input name="description" type="text" maxlength="300" required placeholder="Example: replacement screen"></label>
+              <label class="used-field span-2">What was repaired or replaced? *<input name="description" type="text" maxlength="300" required placeholder="Example: replaced the screen and the battery"></label>
               <div class="used-field"><span style="visibility:hidden">Add</span>
-                <button class="repair-action primary" type="submit"><i class="bi bi-plus-lg"></i> Add Cost</button>
+                <button class="repair-action primary" type="submit"><i class="bi bi-plus-lg"></i> Add Repair</button>
               </div>
             </form>
             <div id="usedDeviceCostError" class="used-form-error" role="alert"></div>
@@ -20367,6 +20378,9 @@
       if (editable) loadUsedDeviceCosts(device);
       if (focusSell) setTimeout(() => els.usedDeviceDetailBody.querySelector('#usedDeviceSellForm button')?.focus(), 0);
     }
+
+    // The public page a published device lives on, on the storefront site.
+    const USED_DEVICE_WEBSITE_PAGE = 'https://www.techm8australia.com/used-device.html';
 
     const USED_DEVICE_WEBSITE_LABELS = {
       not_published: 'Not on the website',
@@ -20400,24 +20414,34 @@
       }
     }
 
+    // One press puts a finished device on sale and on the website. Until it is
+    // finished, the panel says exactly what is still missing instead of just
+    // greying the button out.
     function renderUsedDeviceWebsite(status) {
       const host = els.usedDeviceDetailBody.querySelector('#usedDeviceWebsite');
       if (!host) return;
       const state = String(status.website_status || 'not_published');
       const photos = Number(status.listing_photo_count || 0);
-      const canPublish = status.can_publish === true && photos > 0;
+      const blockers = Array.isArray(status.blockers) ? status.blockers : [];
+      const canPublish = status.can_publish === true;
+      const onSale = status.status === 'ready_for_sale';
       const pending = status.pending || null;
+      const pageUrl = status.website_slug ? `${USED_DEVICE_WEBSITE_PAGE}?d=${encodeURIComponent(status.website_slug)}` : '';
       host.innerHTML = `
         <div class="used-website-state ${escapeHtml(state)}">${escapeHtml(USED_DEVICE_WEBSITE_LABELS[state] || state)}</div>
         <div class="used-cost-meta">
           ${photos} listing photo${photos === 1 ? '' : 's'}.
-          ${status.website_slug ? `Page: ${escapeHtml(status.website_slug)}.` : ''}
-          ${!status.can_publish ? 'Only a device that is ready for sale can go on the website.' : ''}
-          ${status.can_publish && !photos ? 'Add a listing photo first.' : ''}
+          ${pageUrl && state === 'published' ? `<a href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer">Open the website page</a>` : ''}
         </div>
+        ${blockers.length ? `
+          <div class="used-website-blockers">
+            <strong>Before it can go on the website:</strong>
+            <ul>${blockers.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
         ${pending ? `<div class="used-cost-meta">Queued to ${escapeHtml(pending.action)}${Number(pending.attempts) > 1 ? ` · ${escapeHtml(String(pending.attempts))} attempts` : ''}${pending.last_error ? ` · ${escapeHtml(pending.last_error)}` : ''}</div>` : ''}
         <div class="used-detail-actions">
-          <button class="repair-action primary" type="button" data-used-publish="publish" ${canPublish ? '' : 'disabled'}><i class="bi bi-globe"></i> Publish to Website</button>
+          <button class="repair-action primary" type="button" data-used-publish="publish" ${canPublish ? '' : 'disabled'}><i class="bi bi-globe"></i> ${onSale ? 'Update Website' : 'Put on Sale &amp; Website'}</button>
           <button class="repair-action" type="button" data-used-publish="withdraw" ${state === 'published' || state === 'queued' ? '' : 'disabled'}><i class="bi bi-eye-slash"></i> Take Down</button>
         </div>
       `;
@@ -20434,9 +20458,11 @@
           device_code: device.id,
           action
         });
-        showToast(action === 'publish' ? 'Sent to the website.' : 'Taken off the website.');
-        await loadUsedDeviceWebsiteStatus(device);
+        showToast(action === 'publish' ? 'On sale and sent to the website.' : 'Taken off the website.');
         await loadUsedDevices();
+        const refreshed = state.usedDevices.find(item => item.id === device.id);
+        if (refreshed) renderUsedDeviceDetail(refreshed);
+        else await loadUsedDeviceWebsiteStatus(device);
       } catch (error) {
         console.error(error);
         if (host) host.insertAdjacentHTML('beforeend', `<div class="used-form-error">${escapeHtml(error.message || 'The website request failed.')}</div>`);
@@ -20459,10 +20485,9 @@
                 <strong>${escapeHtml(cost.description || '')}</strong>
                 <div class="used-cost-meta">${escapeHtml(usedDeviceCostLabel(cost.kind))}${cost.repair_ticket_code ? ` · ${escapeHtml(cost.repair_ticket_code)}` : ''} · ${escapeHtml(cost.staff_name || '')}</div>
               </div>
-              <strong>${money(cost.amount)}</strong>
             </div>
           `).join('')
-        : '<div class="used-cost-meta">Nothing spent on this device yet.</div>';
+        : '<div class="used-cost-meta">No repairs recorded on this device yet.</div>';
     }
 
     async function loadUsedDeviceCosts(device) {
@@ -20471,11 +20496,6 @@
       try {
         const payload = await usedDeviceApiGet('costs', { device_code: device.id });
         state.usedDeviceCosts = Array.isArray(payload.costs) ? payload.costs : [];
-        if (payload.can_view_costs === false) {
-          const host = els.usedDeviceDetailBody.querySelector('#usedDeviceCostList');
-          if (host) host.textContent = 'You can record costs here. Cost history is visible to administrators only.';
-          return;
-        }
       } catch (error) {
         console.error(error);
       }
@@ -20488,9 +20508,8 @@
       const data = new FormData(form);
       const error = form.parentElement.querySelector('#usedDeviceCostError');
       const description = String(data.get('description') || '').trim();
-      const amount = Number(data.get('amount'));
-      if (!description || !Number.isFinite(amount) || amount <= 0) {
-        error.textContent = 'Enter what was spent and how much.';
+      if (!description) {
+        error.textContent = 'Enter what was repaired or replaced.';
         return;
       }
       const submit = form.querySelector('button[type="submit"]');
@@ -20505,7 +20524,6 @@
           id: crypto.randomUUID(),
           kind: String(data.get('kind') || 'part'),
           description,
-          amount,
           repair_ticket_code: String(data.get('repair_ticket_code') || '').trim()
         });
         form.reset();
@@ -20513,7 +20531,7 @@
         await loadUsedDevices();
         const refreshed = state.usedDevices.find(item => item.id === device.id);
         if (refreshed) renderUsedDeviceDetail(refreshed);
-        showToast('Cost recorded against this device.');
+        showToast('Repair recorded against this device.');
       } catch (requestError) {
         console.error(requestError);
         error.textContent = requestError.message || 'The cost could not be saved.';
