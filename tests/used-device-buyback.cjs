@@ -200,7 +200,7 @@ const { chromium } = require('playwright');
     // Exercise the real form submit event, one photo, and the acquisition request.
     await page.evaluate(() => {
       const form = usedDeviceBuyFormEl();
-      for (const [name, value] of Object.entries({seller_name:'Test Seller', seller_phone:'0400000000', seller_address:'1 Test Street', seller_id_type:'Passport', seller_id_reference:'TEST', purchase_cost:'300', clean_check_status:'Pending'})) form.elements[name].value = value;
+      for (const [name, value] of Object.entries({seller_name:'Test Seller', seller_phone:'', seller_email:'', seller_address:'1 Test Street', seller_id_type:'Passport', seller_id_reference:'TEST', purchase_cost:'300', clean_check_status:'Pending'})) form.elements[name].value = value;
       form.querySelectorAll('input[type="checkbox"][required]').forEach(input => input.checked = true);
       syncCurrentShiftWithDatabase = async () => ({id:'SHIFT-TEST', status:'open'});
       window.savedAcquisition = null;
@@ -225,6 +225,9 @@ const { chromium } = require('playwright');
     assert.ok(saved.payload.intake_key);
     // A device arrives unpriced, and a failed check grades it faulty until
     // someone says otherwise.
+    // Phone and email are optional: the real form submit went through without them.
+    assert.equal(saved.payload.seller_phone, '', 'The purchase needed a seller phone');
+    assert.equal(saved.payload.seller_email, '', 'The purchase needed a seller email');
     assert.equal(saved.payload.sale_price, 0, 'A purchase carried a sale price');
     assert.equal(saved.payload.condition_grade, 'Faulty', 'A failed check did not grade the device');
     assert.equal(saved.payload.payout_method, 'Cash');
@@ -264,7 +267,7 @@ const { chromium } = require('playwright');
     });
     assert.match(await page.locator('#usedDeviceCostList').innerText(), /administrators only/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
+    console.log('PASS: optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();
