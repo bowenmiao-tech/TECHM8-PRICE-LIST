@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
   <script src="./repair-ticket-updates.js?v=20260912.1"></script>
   <link rel="stylesheet" href="./used-device-evidence.css?v=20260921.1">
-  <script src="./used-device-evidence.js?v=20260921.1"></script>
+  <script src="./used-device-evidence.js?v=20260922.1"></script>
   <link rel="stylesheet" href="./used-device-sale-test.css?v=20260920.1">
   <script src="./used-device-sale-test.js?v=20260920.1"></script>
   <script src="./vendor/sortable.min.js"></script>
@@ -19480,7 +19480,9 @@
         renderUsedDeviceView();
       }
       try {
-        const payload = await usedDeviceApiGet('transfers');
+        const [payload, network] = await Promise.all([usedDeviceApiGet('transfers'), usedDeviceApiGet('network')]);
+        state.usedNetworkDevices = Array.isArray(network.devices) ? network.devices : [];
+        state.usedNetworkStores = Array.isArray(network.stores) ? network.stores : [];
         state.usedTransfers = Array.isArray(payload.transfers) ? payload.transfers : [];
         state.usedTransferSummary = payload.summary || {};
       } catch (error) {
@@ -19586,7 +19588,27 @@
     function renderUsedDeviceTransfers() {
       const myStore = repairTicketStoreCode();
       const summary = state.usedTransferSummary || {};
+      const devices = state.usedNetworkDevices.filter(device => device.store_code === myStore && ['inspection', 'ready_for_sale'].includes(device.status) && !device.transfer);
+      const stores = state.usedNetworkStores.filter(store => store.store_code !== myStore && store.store_code !== 'warehouse');
       return `
+        <form id="usedTransferSendForm" class="used-form-section">
+          <h2>Send a device</h2>
+          <div class="used-form-grid">
+            <label class="used-field span-2">Device
+              <select name="device_code" required><option value="">Select a device at this store</option>
+                ${devices.map(device => `<option value="${escapeHtml(device.id)}">${escapeHtml(usedDeviceTitle(device))} · ${escapeHtml(usedDeviceIdentifier(device))}</option>`).join('')}
+              </select>
+            </label>
+            <label class="used-field">To store
+              <select name="to_store_code" required><option value="">Select destination</option>
+                ${stores.map(store => `<option value="${escapeHtml(store.store_code)}">${escapeHtml(store.store_name)}</option>`).join('')}
+              </select>
+            </label>
+          </div>
+          <p class="used-field-hint">The receiving store takes a photo and confirms receipt. The device then belongs to that store.</p>
+          <button type="submit" class="repair-action primary" ${devices.length && stores.length ? '' : 'disabled'}>Send device</button>
+          <div class="used-form-error" role="alert" id="usedTransferSendError"></div>
+        </form>
         <section class="used-summary-grid" aria-label="Device transfer summary">
           <div class="used-summary-item"><span>Waiting for you</span><strong>${Number(summary.incoming_count || 0)}</strong></div>
           <div class="used-summary-item"><span>Sent, not yet received</span><strong>${Number(summary.outgoing_count || 0)}</strong></div>
@@ -19964,71 +19986,81 @@
       }
     }
 
-    // Sending asks which store and why. The device does not leave this store's
-    // books until the other end accepts it, so this is a dispatch, not a
-    // handover, and the wording says so.
-    async function sendUsedDeviceToStore(deviceCode) {
-      const device = state.usedNetworkDevices.find(item => item.id === deviceCode)
-        || state.usedDevices.find(item => item.id === deviceCode);
-      if (!device) return;
-      const myStore = repairTicketStoreCode();
-      const options = (state.usedNetworkStores || []).filter(store => store.store_code !== myStore);
-      if (!options.length) {
-        showToast('No other store is available to send to.');
+    async function sendUsedDeviceToStore(deviceCode, destination = '') {
+      if (!destination) {
+        setUsedDeviceTab('transfers');
+        await loadUsedDeviceTransfers();
+        const select = document.querySelector('#usedTransferSendForm [name="device_code"]');
+        if (select) { select.value = deviceCode; select.focus(); }
         return;
       }
-      const prompt = options.map((store, index) => `${index + 1}. ${store.store_name}`).join('\n');
-      const chosen = window.prompt(
-        `Send ${usedDeviceTitle(device)} to which store?\n\n${prompt}\n\nType the number.`, '1');
-      if (chosen === null) return;
-      const target = options[Number(chosen.trim()) - 1];
-      if (!target) {
-        showToast('That was not one of the stores listed.');
-        return;
-      }
-      const note = window.prompt(
-        `Sending ${usedDeviceTitle(device)} to ${target.store_name}.\n\n`
-        + 'Anything the receiving store should know? (optional)', '');
-      if (note === null) return;
+      const form = document.getElementById('usedTransferSendForm');
+      const button = form?.querySelector('button[type="submit"]');
+      if (button?.disabled) return;
+      if (button) button.disabled = true;
       try {
         await usedDeviceApiPost('transfer-send', {
-          store_code: myStore,
-          device_code: deviceCode,
-          to_store_code: target.store_code,
-          note: note.trim()
+          store_code: repairTicketStoreCode(), staff_name: state.selectedStaffName,
+          device_code: deviceCode, to_store_code: destination
         });
-        showToast(`Sent to ${target.store_name}. It stays on your books until they receive it.`);
-        await Promise.all([loadUsedDeviceNetwork({render: false}), loadUsedDeviceTransfers({render: false})]);
-        renderUsedDeviceView();
+        showToast('Device sent. Waiting for the destination store to confirm receipt.');
+        await loadUsedDeviceTransfers();
       } catch (error) {
-        console.error(error);
-        showToast(error.message || 'The device could not be sent.');
-      }
+        const message = error.message || 'The device could not be sent.';
+        if (form) form.querySelector('#usedTransferSendError').textContent = message;
+        else showToast(message);
+      } finally { if (button) button.disabled = false; }
     }
 
     async function receiveUsedDeviceTransfer(transferCode) {
       const transfer = state.usedTransfers.find(item => item.transfer_code === transferCode);
-      if (!transfer) return;
-      const snapshot = transfer.device_snapshot || {};
-      const note = window.prompt(
-        `Receiving ${[snapshot.brand, snapshot.model, snapshot.storage].filter(Boolean).join(' ')}\n`
-        + `from ${transfer.from_store_name}.\n\n`
-        + `It was sent as: ${snapshot.condition_grade || 'no grade'}`
-        + `${snapshot.battery_health ? `, battery ${snapshot.battery_health}%` : ''}.\n\n`
-        + 'Check it against that now. Note anything different (optional):', '');
-      if (note === null) return;
-      try {
-        await usedDeviceApiPost('transfer-receive', {
-          store_code: repairTicketStoreCode(),
-          transfer_code: transferCode,
-          note: note.trim()
-        });
-        showToast('Received. It is on your bench - confirm the condition before selling it.');
-        await Promise.all([loadUsedDeviceTransfers({render: false}), loadUsedDevices()]);
-      } catch (error) {
-        console.error(error);
-        showToast(error.message || 'The transfer could not be received.');
-      }
+      if (!transfer || document.getElementById('usedTransferReceiptDialog')) return;
+      const dialog = document.createElement('dialog');
+      dialog.id = 'usedTransferReceiptDialog';
+      dialog.style.cssText = 'width:min(720px, calc(100% - 32px));max-height:90vh;overflow:auto;border:1px solid #ccd9de;border-radius:14px;padding:24px;';
+      dialog.innerHTML = `<h2>Confirm receipt</h2>
+        <p>${escapeHtml(transfer.device_code)} · ${escapeHtml(transfer.from_store_name)} → ${escapeHtml(transfer.to_store_name)}</p>
+        <p>Take at least one photo of the received device, then confirm.</p>
+        <div id="usedTransferReceiptEvidence"></div>
+        <div role="alert" class="used-form-error" id="usedTransferReceiptError"></div>
+        <div style="display:flex;gap:12px;margin-top:16px;">
+          <button type="button" class="repair-action" data-receipt-close>Cancel</button>
+          <button type="button" class="repair-action primary" data-receipt-confirm disabled>Confirm receipt</button>
+        </div>`;
+      document.body.appendChild(dialog);
+      dialog.showModal();
+      let count = 0, saving = false, uploading = false;
+      const key = crypto.randomUUID();
+      const confirm = dialog.querySelector('[data-receipt-confirm]');
+      const cancel = dialog.querySelector('[data-receipt-close]');
+      const error = dialog.querySelector('#usedTransferReceiptError');
+      dialog.addEventListener('cancel', event => { if (saving) event.preventDefault(); });
+      dialog.addEventListener('close', () => dialog.remove());
+      cancel.addEventListener('click', () => dialog.close());
+      const evidence = window.Techm8UsedDeviceEvidence.mount(dialog.querySelector('#usedTransferReceiptEvidence'), {
+        storeCode: repairTicketStoreCode(), intakeKey: key,
+        stageKeys: ['intake'], stageLabel: 'Receipt photos',
+        stageHint: 'Photograph the device received. At least one photo is required.',
+        getToken: () => window.Techm8StaffAuth.getToken(),
+        onChange: counts => { count = Number(counts.intake || 0); confirm.disabled = saving || uploading || count < 1; },
+        onBusyChange: busy => { uploading = busy; confirm.disabled = saving || uploading || count < 1; }
+      });
+      confirm.addEventListener('click', async () => {
+        if (saving || uploading || count < 1) return;
+        saving = true; confirm.disabled = true; cancel.disabled = true; error.textContent = '';
+        evidence.state.writable = false; evidence.render();
+        try {
+          await usedDeviceApiPost('transfer-receive', {
+            store_code: repairTicketStoreCode(), staff_name: state.selectedStaffName,
+            transfer_code: transferCode, receipt_intake_key: key
+          });
+          dialog.close();
+          showToast('Received. The device now belongs to this store.');
+          await loadUsedDeviceTransfers();
+        } catch (requestError) {
+          error.textContent = requestError.message || 'Receipt could not be saved. Please retry.';
+        } finally { saving = false; evidence.state.writable = true; evidence.render(); confirm.disabled = uploading || count < 1; cancel.disabled = false; }
+      });
     }
 
     async function cancelUsedDeviceTransfer(transferCode) {
@@ -25754,6 +25786,12 @@
       });
     });
     els.usedDeviceContent.addEventListener('submit', event => {
+      if (event.target.id === 'usedTransferSendForm') {
+        event.preventDefault();
+        const data = new FormData(event.target);
+        sendUsedDeviceToStore(String(data.get('device_code') || ''), String(data.get('to_store_code') || ''));
+        return;
+      }
       if (event.target.id !== 'usedDeviceBuyForm') return;
       event.preventDefault();
       submitUsedDevicePurchase(event.target);

@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
   <script src="./repair-ticket-updates.js?v=20260909.1"></script>
   <link rel="stylesheet" href="./used-device-evidence.css?v=20260921.1">
-  <script src="./used-device-evidence.js?v=20260921.1"></script>
+  <script src="./used-device-evidence.js?v=20260922.1"></script>
   <link rel="stylesheet" href="./used-device-sale-test.css?v=20260920.1">
   <script src="./used-device-sale-test.js?v=20260920.1"></script>
   <style>
@@ -1912,6 +1912,21 @@
               <div class="used-listing-status" id="usedCostStatus"></div>
             </section>
             <section class="used-detail-block">
+              <h3>Transfers</h3>
+              <div class="used-line-list">
+                ${(detail.transfers || []).map(transfer => `
+                  <div class="used-line"><div>
+                    <strong>${escapeHtml(transfer.from_store_name)} → ${escapeHtml(transfer.to_store_name)}</strong>
+                    <span> · ${escapeHtml(transfer.status === 'received' ? 'Received' : transfer.status === 'cancelled' ? 'Cancelled' : 'Waiting for receipt')}
+                      · ${escapeHtml(transfer.transfer_code)}</span>
+                    <p>Sent by ${escapeHtml(transfer.sent_by)} · ${escapeHtml(formatDateTime(transfer.sent_at))}
+                    ${transfer.received_at ? `<br>Received by ${escapeHtml(transfer.received_by)} · ${escapeHtml(formatDateTime(transfer.received_at))} · ${(transfer.receipt_photo_ids || []).length} receipt photo(s)` : ''}</p>
+                  </div></div>
+                `).join('') || '<p class="page-subtitle">No transfers yet.</p>'}
+              </div>
+              <div id="usedDeviceTransferPhotos"></div>
+            </section>
+            <section class="used-detail-block">
               <h3>History</h3>
               <div class="used-line-list">
                 ${(detail.ledger || []).map(entry => `
@@ -1949,6 +1964,15 @@
             storeCode: device.store_code,
             deviceCode: device.device_code,
             getToken: () => window.Techm8StaffAuth.getToken()
+          });
+        }
+        const receiptIds = (detail.transfers || []).flatMap(transfer => transfer.receipt_photo_ids || []);
+        if (receiptIds.length && window.Techm8UsedDeviceEvidence) {
+          window.Techm8UsedDeviceEvidence.mount(document.getElementById('usedDeviceTransferPhotos'), {
+            storeCode: device.store_code, deviceCode: device.device_code,
+            getToken: () => window.Techm8StaffAuth.getToken(), photoIds: receiptIds,
+            stageKeys: ['refurb'], stageLabel: 'Receipt photos',
+            stageHint: 'Photos taken by the receiving store. Each photo includes its transfer reference.', readOnly: true
           });
         }
         setUsedDetailTab(tab);

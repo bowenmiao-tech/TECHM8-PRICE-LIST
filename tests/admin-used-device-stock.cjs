@@ -93,6 +93,7 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
             seller:{buyback_number:device.buyback_number, acquisition_code:'BUY-1', name:'Test Seller', phone:'0400000000', email:'', address:'1 Test Street', id_type:'Driver Licence', id_reference:'TEST-1', is_owner:true, owner_name:'', owner_address:'', acquisition_statement:'', payout_method:'Bank Transfer', payout_amount:device.purchase_cost, payout_reference_type:'PayID', payout_payid:'0400000000', payout_bsb:'', payout_account_number:'', payout_account_name:''},
             inspection: checklist.map(item => ({key:item.key, label:item.label, answer:intake[item.key] || '', retired:false})),
             costs:[{id:'c1',kind:'part',description:'Replacement battery',amount:40,repair_ticket_code:'',staff_name:'Bowen',created_at:'2026-09-12T01:00:00Z'}],
+            transfers:[{transfer_code:'DTR-ADMIN-TEST',from_store_name:'Toowong',to_store_name:'Park Ridge',status:'received',sent_by:'Sender',received_by:'Receiver',sent_at:'2026-09-21T00:00:00Z',received_at:'2026-09-21T01:00:00Z',receipt_photo_ids:['receipt-1']}],
             ledger:[{type:'acquisition',amount:300,from_status:null,to_status:'inspection',staff_name:'Bowen',notes:'Device purchased from seller',created_at:'2026-09-10T01:00:00Z'}],
             photos:{intake:device.intake_photo_count, listing:device.listing_photo_count}
           };
@@ -115,7 +116,7 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
   try {
     for (const [label, width, height] of SIZES) {
       const page = await browser.newPage({viewport: {width, height}});
-      const devicePhotos = [{id: 'photo-listing-1', stage: 'listing'}, {id: 'photo-listing-2', stage: 'listing'}, {id: 'photo-id-1', stage: 'seller_id'}];
+      const devicePhotos = [{id:'receipt-1',stage:'refurb',file_name:'Transfer DTR-ADMIN-TEST receipt'}, {id: 'photo-listing-1', stage: 'listing'}, {id: 'photo-listing-2', stage: 'listing'}, {id: 'photo-id-1', stage: 'seller_id'}];
       const photoRemovals = [];
       const pageErrors = [];
       page.on('pageerror', error => pageErrors.push(error.message));
@@ -207,6 +208,11 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
 
       // Staff record the repair; the admin prices it here.
       await page.locator('.used-detail-tabs [data-used-detail-tab="history"]').click();
+      await page.locator('#usedDeviceTransferPhotos .ude-photo').waitFor();
+      assert.match(await page.locator('#usedDeviceDialogBody').innerText(), /Toowong → Park Ridge/);
+      assert.equal(await page.locator('#usedDeviceTransferPhotos .ude-photo').count(), 1);
+      assert.equal(await page.locator('#usedDeviceTransferPhotos [data-remove]').count(), 0);
+      assert.match(await page.locator('#usedDeviceTransferPhotos').innerText(), /DTR-ADMIN-TEST/);
       await page.locator('[data-used-cost-amount="c1"]').fill('55');
       await page.locator('[data-used-cost-save="c1"]').click();
       await page.waitForFunction(() => window.__rpcCalls.some(call => call.name === 'save_admin_used_device_cost'));

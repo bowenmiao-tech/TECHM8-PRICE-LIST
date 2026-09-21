@@ -61,8 +61,9 @@
     state.loadPromise = (async () => {
       try {
         const data = await request(instance.options);
-        state.entries = (data.updates || data.uploads || []).map(entry => ({kind: 'photo', ...entry}));
-        state.writable = instance.options.intakeKey ? true : data.writable === true;
+        state.entries = (data.updates || data.uploads || []).map(entry => ({kind: 'photo', ...entry}))
+          .filter(entry => !instance.options.photoIds || instance.options.photoIds.includes(entry.id));
+        state.writable = !instance.options.readOnly && (instance.options.intakeKey ? true : data.writable === true);
         state.isAdmin = data.is_admin === true;
         state.loaded = true;
         state.error = false;
@@ -213,9 +214,10 @@
       if (old.root === root || !old.root.isConnected) { old.controller.abort(); mounts.delete(old); }
     }
     const intakeMode = Boolean(options.intakeKey);
-    const stages = STAGES.filter(stage => (intakeMode ? INTAKE_STAGES.includes(stage.key) : true));
+    const stages = STAGES.filter(stage => (intakeMode ? INTAKE_STAGES.includes(stage.key) : true) && (!options.stageKeys || options.stageKeys.includes(stage.key)))
+      .map(stage => ({...stage, label: options.stageLabel || stage.label, hint: options.stageHint || stage.hint}));
     const state = {
-      entries: [], queue: [], draft: '', writable: intakeMode, isAdmin: false,
+      entries: [], queue: [], draft: '', writable: intakeMode && !options.readOnly, isAdmin: false,
       commentStage: 'refurb', activeStage: stages[0].key
     };
     const controller = new AbortController();
@@ -251,6 +253,7 @@
     }
 
     function render() {
+      if (options.onBusyChange) options.onBusyChange(Boolean(state.busy || state.loading));
       const readonly = !state.writable;
       const tally = counts(state);
       const active = stages.find(stage => stage.key === state.activeStage) || stages[0];
@@ -277,7 +280,7 @@
       status.dataset.error = String(Boolean(state.error));
 
       const entries = state.entries.slice().sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0));
-      const meta = entry => `<div class="ude-meta"><strong>${escape(entry.author)}</strong><time>${escape(date(entry.created_at))}</time></div>`;
+      const meta = entry => `<div class="ude-meta">${options.photoIds ? `<span>${escape(entry.file_name || '')}</span>` : ''}<strong>${escape(entry.author)}</strong><time>${escape(date(entry.created_at))}</time></div>`;
       const photos = entries.filter(entry => entry.kind === 'photo' && entry.stage === state.activeStage);
       const notes = entries.filter(entry => entry.kind === 'comment');
       // Staff never see a saved seller ID photo, so only the admin can remove one.
