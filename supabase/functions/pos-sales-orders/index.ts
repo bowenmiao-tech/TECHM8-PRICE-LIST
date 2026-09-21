@@ -172,16 +172,38 @@ Deno.serve(async (request) => {
           target_order_code: requestedOrderCode,
         });
         if (existing.status < 400 && existing.body.ok && existing.body.order) {
-          const inventory = await syncSavedOrder(sessionToken, storeCode, existing.body.order as JsonRecord);
+          const existingOrder = existing.body.order as JsonRecord;
+          const inventory = await syncSavedOrder(sessionToken, storeCode, existingOrder);
+          const exchangeSource = existingOrder.exchange_source as JsonRecord | undefined;
+          let exchangeInventory: JsonRecord | null = null;
+          if (exchangeSource?.order_id) {
+            const original = await callRpc("get_pos_sales_order_for_store", {
+              session_token: sessionToken,
+              target_store_code: storeCode,
+              target_order_code: String(exchangeSource.order_id),
+            });
+            if (original.status < 400 && original.body.ok && original.body.order) {
+              exchangeInventory = await syncSavedOrder(
+                sessionToken,
+                storeCode,
+                original.body.order as JsonRecord,
+              );
+            }
+          }
           return jsonResponse({
             ...existing.body,
             inventory,
-            inventory_sync_pending: !inventory.ok,
+            exchange_inventory: exchangeInventory,
+            inventory_sync_pending: !inventory.ok || Boolean(exchangeInventory && !exchangeInventory.ok),
           });
         }
       }
 
-      const saved = await callRpc("save_pos_sales_order_for_store", {
+      const isExchange = record.exchange_refund && typeof record.exchange_refund === "object"
+        && !Array.isArray(record.exchange_refund);
+      const saved = await callRpc(isExchange
+        ? "save_pos_exchange_order_for_store"
+        : "save_pos_sales_order_for_store", {
         session_token: sessionToken,
         payload: record,
       });
@@ -190,10 +212,17 @@ Deno.serve(async (request) => {
         ? saved.body.order as JsonRecord
         : {};
       const inventory = await syncSavedOrder(sessionToken, storeCode, order);
+      const exchangeOrder = (saved.body.exchange_order && typeof saved.body.exchange_order === "object")
+        ? saved.body.exchange_order as JsonRecord
+        : null;
+      const exchangeInventory = exchangeOrder
+        ? await syncSavedOrder(sessionToken, storeCode, exchangeOrder)
+        : null;
       return jsonResponse({
         ...saved.body,
         inventory,
-        inventory_sync_pending: !inventory.ok,
+        exchange_inventory: exchangeInventory,
+        inventory_sync_pending: !inventory.ok || Boolean(exchangeInventory && !exchangeInventory.ok),
       }, saved.status);
     }
 

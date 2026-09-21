@@ -6886,6 +6886,12 @@
     .refund-credit-create button { min-height: 40px; padding: 0 10px; border: 1px solid var(--tm-green); border-radius: 7px; color: var(--tm-green-dark); background: #fff; font-weight: 850; cursor: pointer; }
     .payment-credit-info { padding: 8px 0 3px; color: var(--tm-green-dark); font-size: 12px; font-weight: 850; }
     .payment-credit-info[hidden] { display: none; }
+    .cart-return-credit { display: grid; gap: 7px; padding: 13px; border: 1px solid #efb76f; border-left: 4px solid #dc7b17; border-radius: 8px; background: #fff8ee; }
+    .cart-return-credit-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .cart-return-credit-title { display: flex; align-items: center; gap: 7px; color: #8a4300; font-weight: 950; }
+    .cart-return-credit-amount { color: #8a4300; font-size: 18px; font-weight: 950; }
+    .cart-return-credit-meta { color: #6a5848; font-size: 11px; font-weight: 750; line-height: 1.35; }
+    .cart-return-credit .icon-action { flex: 0 0 auto; }
     @media (max-width: 620px) { .refund-credit-create { grid-template-columns: 1fr 1fr; } .refund-credit-create button { grid-column: 1 / -1; } }
 
     .ticket-detail-modal {
@@ -9033,6 +9039,7 @@
         <div class="summary-box">
           <div class="summary-line"><span>Items</span><strong id="summaryItems">0</strong></div>
           <div class="summary-line"><span>Subtotal</span><strong id="summarySubtotal">$0.00</strong></div>
+          <div id="summaryReturnCreditRow" class="summary-line" hidden><span>Return credit</span><strong id="summaryReturnCredit">-$0.00</strong></div>
           <div class="summary-line"><span>GST Included</span><strong id="summaryGst">$0.00</strong></div>
           <div class="summary-line total"><span>Total</span><strong id="summaryTotal">$0.00</strong></div>
         </div>
@@ -9534,6 +9541,7 @@
             <option value="CNYpay">CNYpay</option>
             <option value="Bank Transfer">Bank Transfer</option>
             <option value="Store Credit">Store Credit</option>
+            <option value="Exchange">Exchange - add return to cart</option>
           </select>
         </label>
         <div id="refundCreditFields" class="refund-credit-fields span-2" hidden>
@@ -10076,6 +10084,7 @@
       scheduledStoreId: '',
       openingConfirmed: false,
       payment: 'Card',
+      exchangeReturn: null,
       paymentSession: {
         method: 'Card',
         payments: [],
@@ -10321,6 +10330,8 @@
       itemNoteCancel: document.getElementById('itemNoteCancel'),
       summaryItems: document.getElementById('summaryItems'),
       summarySubtotal: document.getElementById('summarySubtotal'),
+      summaryReturnCreditRow: document.getElementById('summaryReturnCreditRow'),
+      summaryReturnCredit: document.getElementById('summaryReturnCredit'),
       summaryGst: document.getElementById('summaryGst'),
       summaryTotal: document.getElementById('summaryTotal'),
       customerInput: document.getElementById('customerInput'),
@@ -11558,7 +11569,7 @@
         loadHeldOrders();
       }
       if (reloadProducts) {
-        state.cart = [];
+        resetCartState();
         loadProducts();
         renderCart();
       }
@@ -16154,7 +16165,7 @@
         return;
       }
       const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
-      if (price <= 0 || price > 1000000) {
+      if (price < 0 || price > 1000000 || (price === 0 && !state.repair.specialOrder)) {
         showToast('Enter a valid repair price before the customer signs.');
         return;
       }
@@ -16375,7 +16386,7 @@
       }
 
       const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
-      if (price <= 0 || price > 1000000) {
+      if (price < 0 || price > 1000000 || (price === 0 && !state.repair.specialOrder)) {
         const priceInput = els.repairWorkspace.querySelector('#repairQuotedPrice');
         if (priceInput) priceInput.focus();
         throw new Error('Enter one valid repair price before creating the ticket.');
@@ -16521,7 +16532,7 @@
           </div>
           <div class="repair-summary-item">
             <div class="repair-summary-label">Quote</div>
-            <input class="repair-input" id="repairQuotedPrice" type="number" inputmode="decimal" min="0.01" max="1000000" step="0.01" placeholder="Enter one exact amount" value="${escapeHtml(priceInputValue)}">
+            <input class="repair-input" id="repairQuotedPrice" type="number" inputmode="decimal" min="${state.repair.specialOrder ? '0' : '0.01'}" max="1000000" step="0.01" placeholder="Enter one exact amount" value="${escapeHtml(priceInputValue)}">
             <div class="repair-price-hint">${priceInputValue
               ? 'Numbers only. The final agreed amount will be saved.'
               : 'The price list contains a range or no price. Enter one exact agreed amount.'}</div>
@@ -17730,14 +17741,14 @@
         <div class="repair-panel repair-cart-panel">
           <div>
             <div class="repair-cart-title">${escapeHtml(currentRepairCartName())}</div>
-            <div class="repair-cart-meta">${state.repair.ticketId ? `Ticket ${escapeHtml(state.repair.ticketId)}` : 'Unsaved draft'} · ${cartPrice > 0 ? money(cartPrice) : 'No valid price'}</div>
+            <div class="repair-cart-meta">${state.repair.ticketId ? `Ticket ${escapeHtml(state.repair.ticketId)}` : 'Unsaved draft'} · ${cartPrice > 0 || (state.repair.specialOrder && cartPrice === 0) ? money(cartPrice) : 'No valid price'}</div>
           </div>
           ${state.repair.ticketId ? `
-            <button id="addRepairToCartBtn" class="repair-action primary" type="button" ${state.repair.addedToCart || cartPrice <= 0 ? 'disabled' : ''}>
+            <button id="addRepairToCartBtn" class="repair-action primary" type="button" ${state.repair.addedToCart || cartPrice < 0 || (cartPrice === 0 && !state.repair.specialOrder) ? 'disabled' : ''}>
               ${state.repair.addedToCart ? 'Added to Cart' : 'Add to Cart'}
             </button>
           ` : `
-            <button id="createRepairTicketBtn" class="repair-action primary" type="button" ${cartPrice > 0 && !state.repair.mediaBusy ? '' : 'disabled'}>
+            <button id="createRepairTicketBtn" class="repair-action primary" type="button" ${(cartPrice > 0 || (state.repair.specialOrder && cartPrice === 0)) && !state.repair.mediaBusy ? '' : 'disabled'}>
               Create Ticket
             </button>
           `}
@@ -20658,8 +20669,8 @@
         return false;
       }
       const nextPrice = Number(rawValue);
-      if (!Number.isFinite(nextPrice) || nextPrice <= 0 || nextPrice > 1000000) {
-        showToast('Enter a valid unit price between $0.01 and $1,000,000.00.');
+      if (!Number.isFinite(nextPrice) || nextPrice < 0 || nextPrice > 1000000) {
+        showToast('Enter a valid unit price between $0.00 and $1,000,000.00.');
         renderCart();
         return false;
       }
@@ -20695,7 +20706,8 @@
 
     function renderCart() {
       refreshTicketDetailCartLock();
-      if (!state.cart.length) {
+      const exchangeReturn = state.exchangeReturn;
+      if (!state.cart.length && !exchangeReturn) {
         els.cartArea.innerHTML = `
           <div class="cart-empty">
             <div>
@@ -20708,6 +20720,21 @@
       } else {
         els.cartArea.innerHTML = `
           <div class="cart-list">
+            ${exchangeReturn ? `
+              <div class="cart-return-credit">
+                <div class="cart-return-credit-head">
+                  <div>
+                    <div class="cart-return-credit-title"><i class="bi bi-arrow-left-right"></i>Return for exchange</div>
+                    <div class="cart-return-credit-meta">Invoice #${escapeHtml(String(exchangeReturn.invoice_number || exchangeReturn.order_id || ''))} · ${escapeHtml(exchangeReturn.customer_name || '')}</div>
+                  </div>
+                  <button class="icon-action" type="button" data-remove-exchange title="Remove return credit" aria-label="Remove return credit"><i class="bi bi-x-lg"></i></button>
+                </div>
+                <div class="cart-return-credit-head">
+                  <div class="cart-return-credit-meta">${escapeHtml((exchangeReturn.lines || []).map(line => `${line.name || 'Returned item'} × ${line.quantity || 0}`).join(' · '))}</div>
+                  <div class="cart-return-credit-amount">-${money(exchangeReturn.total || 0)}</div>
+                </div>
+              </div>
+            ` : ''}
             ${state.cart.map(item => {
               const overrideText = cartPriceOverrideText(item);
               const hasNote = Boolean(noteText(item.note, 500).trim());
@@ -20733,7 +20760,7 @@
                       ` : `
                         <span class="cart-price-input-wrap">
                           <span>$</span>
-                          <input class="cart-price-input" type="number" min="0.01" max="1000000" step="0.01" value="${roundedMoneyValue(item.sale_price).toFixed(2)}" data-cart-price="${escapeHtml(item.id)}" aria-label="Unit price for ${escapeHtml(item.name)}">
+                          <input class="cart-price-input" type="number" min="0" max="1000000" step="0.01" value="${roundedMoneyValue(item.sale_price).toFixed(2)}" data-cart-price="${escapeHtml(item.id)}" aria-label="Unit price for ${escapeHtml(item.name)}">
                         </span>
                       `}
                     </label>
@@ -20763,13 +20790,17 @@
 
       const itemCount = state.cart.reduce((sum, item) => sum + item.qty, 0);
       const subtotal = state.cart.reduce((sum, item) => sum + item.sale_price * item.qty, 0);
+      const returnCredit = exchangeReturn ? numberValue(exchangeReturn.total) : 0;
+      const amountDue = Math.max(0, roundedMoneyValue(subtotal - returnCredit));
       const gst = subtotal / 11;
       els.summaryItems.textContent = itemCount;
       els.summarySubtotal.textContent = money(subtotal);
+      els.summaryReturnCreditRow.hidden = returnCredit <= 0;
+      els.summaryReturnCredit.textContent = `-${money(returnCredit)}`;
       els.summaryGst.textContent = money(gst);
-      els.summaryTotal.textContent = money(subtotal);
-      els.payBtn.textContent = subtotal > 0 ? `${money(subtotal)} Checkout` : 'Checkout';
-      els.payBtn.disabled = subtotal <= 0;
+      els.summaryTotal.textContent = money(amountDue);
+      els.payBtn.textContent = `${money(amountDue)} Checkout`;
+      els.payBtn.disabled = state.cart.length === 0;
     }
 
     function renderAll() {
@@ -21218,7 +21249,7 @@
       ];
 
       state.products = products;
-      state.cart = [];
+      resetCartState();
       state.storeId = 'park-ridge';
       state.productBrowseMode = 'categories';
       state.search = '';
@@ -21632,7 +21663,7 @@
         state.category = 'Uncategorized';
         state.subcategory = '';
         state.productBrowseMode = 'category';
-        state.cart = [];
+        resetCartState();
         setActiveView('products');
         renderProductBrowser();
         renderCart();
@@ -21650,7 +21681,7 @@
             ? [brandedCaseProducts[2]]
           : brandedCaseProducts;
         state.search = '';
-        state.cart = [];
+        resetCartState();
         state.productBrowseMode = 'all';
         setActiveView('products');
         renderProductBrowser();
@@ -21756,7 +21787,7 @@
         setStocktakeMode(true);
         openStocktakeEditor('1002', { skipAccessCheck: true });
       } else {
-        state.cart = [];
+        resetCartState();
         state.search = '';
         state.category = 'All';
         state.subcategory = '';
@@ -21779,7 +21810,7 @@
       syncCurrentRepairTicketSnapshot({ persist: false });
 
       const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
-      if (price <= 0) {
+      if (price < 0 || (price === 0 && !state.repair.specialOrder)) {
         showToast('This repair needs a valid price before adding to cart.');
         return;
       }
@@ -21891,7 +21922,7 @@
         openTicketDetailModal(ticket.id);
         return;
       }
-      if (selected.price <= 0) {
+      if (selected.price < 0 || (selected.price === 0 && !ticket.specialOrder)) {
         showToast('This repair needs a valid price before checkout.');
         openTicketDetailModal(ticket.id);
         return;
@@ -21942,6 +21973,18 @@
       renderCart();
     }
 
+    function removeExchangeReturn() {
+      if (!state.exchangeReturn) return;
+      state.exchangeReturn = null;
+      renderCart();
+      showToast('Return credit removed. The original invoice was not changed.');
+    }
+
+    function resetCartState() {
+      state.cart = [];
+      state.exchangeReturn = null;
+    }
+
     function openSpecialProductModal() {
       els.specialProductForm.reset();
       els.specialProductError.textContent = '';
@@ -21990,6 +22033,18 @@
 
     function cartTotal() {
       return roundedMoneyValue(state.cart.reduce((sum, item) => sum + item.sale_price * item.qty, 0));
+    }
+
+    function exchangeReturnTotal() {
+      return state.exchangeReturn ? roundedMoneyValue(state.exchangeReturn.total) : 0;
+    }
+
+    function exchangeCreditApplied() {
+      return Math.min(cartTotal(), exchangeReturnTotal());
+    }
+
+    function cartAmountDue() {
+      return Math.max(0, roundedMoneyValue(cartTotal() - exchangeReturnTotal()));
     }
 
     function cartItemCount() {
@@ -22246,10 +22301,19 @@
       }
       state.paymentSession = {
         method: 'Card',
-        payments: [],
+        payments: exchangeCreditApplied() > 0
+          ? [{ method: 'Exchange Credit', amount: exchangeCreditApplied() }]
+          : [],
         amount: '',
-        balanceOrderId: ''
+        balanceOrderId: '',
+        creditCustomerCode: state.exchangeReturn ? state.exchangeReturn.customer_code : '',
+        creditCustomerName: state.exchangeReturn ? state.exchangeReturn.customer_name : ''
       };
+      if (cartTotal() === 0 || paymentRemaining() <= 0) {
+        showToast(cartTotal() === 0 ? 'Saving $0.00 sale...' : 'Processing exchange...');
+        checkout(state.paymentSession.payments.slice(), { noCharge: cartTotal() === 0 });
+        return;
+      }
       setPaymentAmountToRemaining();
       els.paymentModal.classList.add('show');
       els.paymentModal.setAttribute('aria-hidden', 'false');
@@ -23129,9 +23193,11 @@
     }
 
     function updateRefundCreditMethod() {
-      const credit = els.refundMethod.value === 'Store Credit';
+      const credit = els.refundMethod.value === 'Store Credit' || els.refundMethod.value === 'Exchange';
       els.refundCreditFields.hidden = !credit;
-      els.refundSubmitBtn.textContent = credit ? 'Issue Store Credit' : 'Confirm Refund';
+      els.refundSubmitBtn.textContent = els.refundMethod.value === 'Exchange'
+        ? 'Add Return to Cart'
+        : (credit ? 'Issue Store Credit' : 'Confirm Refund');
       if (credit && !refundCreditCustomer) searchRefundCreditCustomers();
     }
 
@@ -23230,10 +23296,42 @@
         els.refundReason.focus();
         return;
       }
+      const isExchange = els.refundMethod.value === 'Exchange';
       const isStoreCredit = els.refundMethod.value === 'Store Credit';
-      if (isStoreCredit && (!refundCreditCustomer || !refundCreditCustomer.id)) {
+      if ((isStoreCredit || isExchange) && (!refundCreditCustomer || !refundCreditCustomer.id)) {
         els.refundError.textContent = 'Select or create the customer account that will receive Store Credit.';
         els.refundCreditSearch.focus();
+        return;
+      }
+      if (isExchange) {
+        if (state.exchangeReturn) {
+          els.refundError.textContent = 'This cart already contains a return. Remove it before adding another invoice.';
+          return;
+        }
+        const selectedCustomer = selectedCustomerRecord();
+        if (state.cart.length && selectedCustomer
+          && String(selectedCustomer.id) !== String(refundCreditCustomer.id)) {
+          els.refundError.textContent = 'The current cart belongs to another customer. Hold or clear it before starting this exchange.';
+          return;
+        }
+        const exchangeTotal = roundedMoneyValue(lines.reduce((sum, line) => sum + line.amount, 0));
+        state.exchangeReturn = {
+          order_id: order.id,
+          invoice_number: invoiceNumberText(order),
+          customer_code: refundCreditCustomer.id,
+          customer_name: customerSearchName(refundCreditCustomer),
+          customer_phone: customerSearchPhone(refundCreditCustomer),
+          reason,
+          lines: lines.map(line => {
+            const original = (order.items || []).find(item => String(item.line_id) === String(line.line_id)) || {};
+            return { ...line, name: original.name || 'Returned item' };
+          }),
+          total: exchangeTotal
+        };
+        selectCustomerSearchResult(refundCreditCustomer);
+        closeRefundModal();
+        renderCart();
+        showToast(`${money(exchangeTotal)} return credit added. Add the replacement product and checkout.`);
         return;
       }
       if (isStoreCredit && !window.confirm(
@@ -23303,6 +23401,12 @@
         }
         if (payload.order && typeof payload.order === 'object') {
           Object.assign(order, payload.order);
+        }
+        if (payload.exchange_refund_id) {
+          order.exchange_refund_id = payload.exchange_refund_id;
+          order.exchange_credit_issued = roundedMoneyValue(payload.exchange_credit_issued);
+          order.exchange_credit_used = roundedMoneyValue(payload.exchange_credit_used);
+          order.store_credit_remaining = roundedMoneyValue(payload.store_credit_remaining);
         }
         order.sync_pending = Boolean(payload.inventory_sync_pending);
         order.inventory_sync_pending = Boolean(payload.inventory_sync_pending);
@@ -23437,9 +23541,19 @@
           </div>
         </div>
       `).join('');
-      const paymentRows = payments.map(payment => `
+      const paymentRows = (payments.length ? payments : [{ method: order.payment_method || 'No Charge', amount: 0 }]).map(payment => `
         <div class="receipt-total-row"><span>${escapeHtml(paymentMethodLabel(payment.method))}</span><strong>${money(payment.amount)}</strong></div>
       `).join('');
+      const exchangeSource = order.exchange_source && typeof order.exchange_source === 'object'
+        ? order.exchange_source
+        : null;
+      const exchangeRows = exchangeSource ? `
+        <div class="receipt-total-row"><span>Return from invoice #${escapeHtml(exchangeSource.invoice_number || '')}</span><strong>${money(exchangeSource.credit_issued || 0)}</strong></div>
+        <div class="receipt-total-row"><span>Return credit used</span><strong>${money(exchangeSource.credit_used || 0)}</strong></div>
+        ${numberValue(order.store_credit_remaining) > 0
+          ? `<div class="receipt-total-row"><span>Exchange credit remaining</span><strong>${money(order.store_credit_remaining)}</strong></div>`
+          : ''}
+      ` : '';
       const customerRows = order.customer_name && order.customer_name !== 'Walk-in Customer'
         ? `
           <div class="receipt-meta-row"><span>Customer</span><strong>${escapeHtml(order.customer_name)}</strong></div>
@@ -23477,7 +23591,8 @@
         </section>
         <div class="receipt-rule"></div>
         <section class="receipt-totals">
-          <div class="receipt-section-label">PAYMENT</div>
+           <div class="receipt-section-label">PAYMENT</div>
+          ${exchangeRows}
           ${paymentRows}
           ${refundTotal > 0 ? `<div class="receipt-total-row"><span>Refunded</span><strong>-${money(refundTotal)}</strong></div>` : ''}
           ${refundTotal > 0 ? `<div class="receipt-total-row"><span>Net paid</span><strong>${money(Math.max(0, total - refundTotal))}</strong></div>` : ''}
@@ -24148,7 +24263,7 @@
       const held = heldOrders();
       const index = held.findIndex(order => order.id === id);
       if (index < 0) return;
-      if (state.cart.length && !confirm('Replace current cart with this held order?')) return;
+      if ((state.cart.length || state.exchangeReturn) && !confirm('Replace current cart with this held order?')) return;
       const order = held[index];
       if (!order.sync_pending) {
         try {
@@ -24168,6 +24283,7 @@
       }
       held.splice(index, 1);
       state.cart = Array.isArray(order.items) ? order.items : [];
+      state.exchangeReturn = order.exchange_return || null;
       els.customerInput.value = order.customer && order.customer !== 'Walk-in Customer' ? order.customer : '';
       cacheHeldOrders(held);
       closeHoldListModal();
@@ -24316,13 +24432,13 @@
         return;
       }
 
-      const normalizedPayments = Array.isArray(payments) && payments.length
+      const total = cartTotal();
+      const normalizedPayments = Array.isArray(payments)
         ? payments.map(payment => ({
           method: paymentMethodLabel(payment.method),
           amount: roundedMoneyValue(payment.amount)
         })).filter(payment => payment.amount > 0)
-        : [{ method: state.payment, amount: cartTotal() }];
-      const total = cartTotal();
+        : (total > 0 ? [{ method: state.payment, amount: total }] : []);
       const paymentTotal = roundedMoneyValue(normalizedPayments.reduce((sum, payment) => sum + payment.amount, 0));
       const isDeposit = Boolean(options && options.deposit) && paymentTotal > 0 && paymentTotal < total;
       if (paymentTotal > total + 0.005) {
@@ -24337,9 +24453,11 @@
         showToast('Used devices must be paid in full. Remove the device to take a deposit.');
         return;
       }
-      const paymentSummary = summarizePayments(normalizedPayments);
-      const usesStoreCredit = normalizedPayments.some(payment => payment.method === 'Store Credit');
-      const creditCustomerCode = state.paymentSession.creditCustomerCode || '';
+      const paymentSummary = total === 0 ? 'No Charge' : summarizePayments(normalizedPayments);
+      const usesStoreCredit = normalizedPayments.some(payment => ['Store Credit', 'Exchange Credit'].includes(payment.method));
+      const creditCustomerCode = state.paymentSession.creditCustomerCode
+        || (state.exchangeReturn && state.exchangeReturn.customer_code)
+        || '';
       if (usesStoreCredit && !creditCustomerCode) {
         showToast('Select a customer account before using Store Credit.');
         return;
@@ -24433,11 +24551,15 @@
         return;
       }
 
-      const customerName = repairTickets.length
+      const customerName = state.exchangeReturn
+        ? state.exchangeReturn.customer_name
+        : repairTickets.length
         ? repairTickets[0].customerName
         : (usedDeviceItems.length ? usedDeviceItems[0].buyer_name : (els.customerInput.value.trim() || 'Walk-in Customer'));
       const customer = customerDetailsForOrder(customerName);
-      const customerPhone = repairTickets.length
+      const customerPhone = state.exchangeReturn
+        ? state.exchangeReturn.customer_phone
+        : repairTickets.length
         ? repairTickets[0].customerPhone
         : (usedDeviceItems.length ? usedDeviceItems[0].buyer_phone : (customer ? (customer.phone || customer.phone_number || '') : ''));
 
@@ -24466,6 +24588,16 @@
         amount_paid: Math.min(paymentTotal, total),
         balance_due: isDeposit ? roundedMoneyValue(total - paymentTotal) : 0,
         items: state.cart.map(posOrderLineFromCartItem),
+        exchange_refund: state.exchangeReturn ? {
+          order_id: state.exchangeReturn.order_id,
+          customer_code: state.exchangeReturn.customer_code,
+          reason: state.exchangeReturn.reason,
+          lines: state.exchangeReturn.lines.map(line => ({
+            line_id: line.line_id,
+            amount: roundedMoneyValue(line.amount),
+            quantity: Math.max(0, Math.floor(numberValue(line.quantity)))
+          }))
+        } : undefined,
         created_at: new Date().toISOString(),
         sync_pending: true
       };
@@ -24516,8 +24648,10 @@
 
       if (repairTickets.length) resetRepairState();
 
-      state.cart = [];
+      const completedExchange = state.exchangeReturn ? { ...state.exchangeReturn } : null;
+      resetCartState();
       els.customerInput.value = '';
+      if (completedExchange) await loadProducts({ force: true });
       await loadRepairTickets();
       if (repairCartItems.length && !isDeposit) {
         await finalizeRepairCardsAfterPayment(
@@ -24532,7 +24666,14 @@
       await loadTodayProgress({ silent: true });
       renderCart();
       openReceiptCompleteModal(order);
-      if (isDeposit) {
+      if (completedExchange) {
+        const remainingCredit = roundedMoneyValue(order.store_credit_remaining);
+        showToast(remainingCredit > 0
+          ? `Exchange completed. ${money(remainingCredit)} from this return remains as Store Credit.`
+          : `Exchange completed on invoice ${invoiceNumberText(order)}.`);
+      } else if (total === 0) {
+        showToast(`$0.00 invoice ${invoiceNumberText(order)} saved.`);
+      } else if (isDeposit) {
         showToast(`Deposit ${money(paymentTotal)} taken. ${money(total - paymentTotal)} still owing on invoice ${invoiceNumberText(order)}.`);
       } else {
         showToast(order.sync_pending
@@ -24736,6 +24877,7 @@
         store_code: repairTicketStoreCode(),
         staff_name: state.selectedStaffName,
         items: state.cart.map(item => ({ ...item })),
+        exchange_return: state.exchangeReturn ? { ...state.exchangeReturn } : null,
         created_at: new Date().toISOString(),
         sync_pending: true
       };
@@ -24748,7 +24890,7 @@
       }
       held.unshift(heldOrder);
       cacheHeldOrders(held.slice(0, 50));
-      state.cart = [];
+      resetCartState();
       els.customerInput.value = '';
       renderCart();
       const heldLabel = heldOrderLabel(heldOrder);
@@ -24758,9 +24900,9 @@
     }
 
     function discardCart() {
-      if (!state.cart.length) return;
+      if (!state.cart.length && !state.exchangeReturn) return;
       if (!confirm('Discard current cart?')) return;
-      state.cart = [];
+      resetCartState();
       renderCart();
       showToast('Cart discarded.');
     }
@@ -25628,9 +25770,11 @@
     els.cartArea.addEventListener('click', event => {
       const qtyButton = event.target.closest('[data-qty]');
       const removeButton = event.target.closest('[data-remove]');
+      const removeExchangeButton = event.target.closest('[data-remove-exchange]');
       const noteButton = event.target.closest('[data-open-cart-note]');
       if (qtyButton) changeQty(qtyButton.dataset.qty, qtyButton.dataset.dir);
       if (removeButton) removeFromCart(removeButton.dataset.remove);
+      if (removeExchangeButton) removeExchangeReturn();
       if (noteButton) openItemNoteModal(noteButton.dataset.openCartNote);
     });
 

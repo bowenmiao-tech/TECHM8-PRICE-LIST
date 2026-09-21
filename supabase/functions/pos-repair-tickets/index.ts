@@ -6,12 +6,12 @@ const corsHeaders = {
 
 type JsonRecord = Record<string, unknown>;
 
-function normalizedRepairPrice(value: unknown): string | null {
+function normalizedRepairPrice(value: unknown, allowZero = false): string | null {
   const raw = String(value ?? "").trim();
   const match = raw.match(/^\$?([0-9]+(?:\.[0-9]{1,2})?)$/);
   if (!match) return null;
   const amount = Number(match[1]);
-  if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000) return null;
+  if (!Number.isFinite(amount) || amount < 0 || (!allowZero && amount === 0) || amount > 1000000) return null;
   return `$${amount.toFixed(2)}`;
 }
 
@@ -165,7 +165,9 @@ Deno.serve(async (request) => {
       const storeCode = String(ticketPayload.store_code || ticketPayload.store_db_code || "").trim().toLowerCase();
       if (!storeCode) return jsonResponse({ ok: false, message: "store_code is required." }, 400);
       const actor = await authorize(request, sessionToken, storeCode, String(ticketPayload.staff_name || ticketPayload.updated_by || ""));
-      const repairPrice = normalizedRepairPrice(ticketPayload.price);
+      const specialOrder = ticketPayload.specialOrder === true
+        || String(ticketPayload.specialOrder || ticketPayload.special_order || "").toLowerCase() === "true";
+      const repairPrice = normalizedRepairPrice(ticketPayload.price, specialOrder);
       if (!repairPrice) {
         return jsonResponse({
           ok: false,
