@@ -101,6 +101,7 @@ async function runItem(item: RecordValue) {
     listing: {
       device_category: listing.device_category,
       store_code: listing.store_code,
+      store_name: listing.store_name,
       title: listing.title,
       brand: listing.brand,
       model: listing.model,

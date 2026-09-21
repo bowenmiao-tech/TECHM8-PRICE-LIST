@@ -339,17 +339,21 @@ Two functions in two projects. The staff project never holds the website project
 supabase secrets set WEBSITE_FUNCTIONS_URL=https://fwlronvmgqzkleofriis.supabase.co/functions/v1
 supabase secrets set USED_DEVICE_PUBLISH_SECRET=<generate one, share with both projects>
 supabase functions deploy pos-used-device-publish --no-verify-jwt
+supabase functions deploy used-device-online-orders --no-verify-jwt
 
 # Website/product project
 supabase secrets set USED_DEVICE_PUBLISH_SECRET=<the same value>
 supabase functions deploy used-device-listings --project-ref fwlronvmgqzkleofriis --no-verify-jwt
 ```
 
-Website project migration:
+Website project migrations:
 
 ```text
 supabase/website-migrations/20260911002000_add_used_device_listings.sql
+supabase/website-migrations/20260921170000_sell_used_devices_in_the_shop.sql
 ```
+
+Selling a used device online needs the website's `create-checkout-session` and `submit-order` (from the website repository) deployed with it: they reserve the device through `used-device-online-orders` before the customer pays, using the same shared secret. The website reaches the staff project at `https://abkjbhmifswfexpjkval.supabase.co/functions/v1` unless `POS_FUNCTIONS_URL` is set there. Roll out in this order so no order is ever taken without a reservation: website migration, then the website functions, then `used-device-online-orders`, then the staff migration.
 
 `pos-used-device-publish` drains the queue when POSTed an empty body, so schedule it every few minutes; a publish that fails is retried up to five times before the device is marked `failed` in the POS. The storefront contract is in `USED_DEVICE_WEBSITE_API.md`.
 

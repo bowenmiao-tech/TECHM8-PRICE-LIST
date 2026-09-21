@@ -5676,6 +5676,30 @@
       background: #e3f2fd;
     }
 
+    .used-status.reserved {
+      color: #5b3a94;
+      background: #eee6fb;
+    }
+
+    /* A website order holds this device, or bought it. */
+    .used-online-notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border: 1px solid #d9c9f3;
+      border-radius: 8px;
+      color: #4a2f7a;
+      background: #f6f1fd;
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.4;
+    }
+
+    .used-online-notice i { font-size: 18px; line-height: 1; }
+    .used-online-notice.sold { border-color: #bfdcf2; color: #175d8c; background: #eef6fc; }
+
     .used-sell-button {
       min-height: 42px;
       padding: 0 13px;
@@ -19227,6 +19251,21 @@
       return numberValue(device && device.sale_price) > 0 ? money(device.sale_price) : 'Not priced';
     }
 
+    // A website order holding the device. Until that order is paid or cancelled
+    // on the website, the device cannot be sold, repriced or taken off sale here.
+    function usedDeviceOnlineOrderText(device) {
+      const order = device && device.online_order;
+      if (!order || !order.order_code) return '';
+      const code = order.order_code;
+      if (order.kind === 'reserved') {
+        return `Reserved by website order ${code}, to be paid in store. When the customer comes in, take payment for that order in the website admin, not at this till.`;
+      }
+      if (order.kind === 'processing') {
+        return `Website order ${code} has been paid and the payment is being processed. It will show as sold here shortly.`;
+      }
+      return `A customer is paying for this online right now (website order ${code}). If they do not finish, it goes back on sale${order.until ? ` at ${formatDateTime(order.until)}` : ' shortly'}.`;
+    }
+
     function usedDeviceTransactionLabel(type) {
       return ({
         acquisition: 'Device purchased',
@@ -19583,9 +19622,11 @@
               <div class="used-device-value">
                 <span>Sale price</span>
                 <strong>${usedDeviceSalePriceText(device)}</strong>
-                <span class="used-status ${escapeHtml(device.status)}">${escapeHtml(usedDeviceStatusLabel(device.status))}</span>
+                ${device.online_order
+                  ? '<span class="used-status reserved">Reserved online</span>'
+                  : `<span class="used-status ${escapeHtml(device.status)}">${escapeHtml(usedDeviceStatusLabel(device.status))}</span>`}
               </div>
-              <button class="used-sell-button" type="button" data-used-sell="${escapeHtml(device.id)}" title="Add to Checkout for the selected customer" ${device.status === 'ready_for_sale' ? '' : 'disabled'}>
+              <button class="used-sell-button" type="button" data-used-sell="${escapeHtml(device.id)}" title="${device.online_order ? 'Reserved by a website order' : 'Add to Checkout for the selected customer'}" ${device.status === 'ready_for_sale' && !device.online_order ? '' : 'disabled'}>
                 <i class="bi bi-cart-plus"></i> Sell
               </button>
             </article>
@@ -20228,6 +20269,12 @@
           <div><span>ID viewed</span><strong>${escapeHtml([seller.id_type, seller.id_reference].filter(Boolean).join(' - '))}</strong></div>
           <div><span>Acquired by</span><strong>${escapeHtml(device.acquired_by || '')}</strong></div>
         </div>
+        ${device.online_order ? `
+          <div class="used-online-notice"><i class="bi bi-globe2" aria-hidden="true"></i><span>${escapeHtml(usedDeviceOnlineOrderText(device))}</span></div>
+        ` : ''}
+        ${device.status === 'sold' && device.sold_online_order_code ? `
+          <div class="used-online-notice sold"><i class="bi bi-bag-check" aria-hidden="true"></i><span>Sold online on website order ${escapeHtml(device.sold_online_order_code)}. The website admin has the order and payment.</span></div>
+        ` : ''}
         ${editable ? `
           <form id="usedDeviceUpdateForm" class="used-form-section">
             <h2>Inventory</h2>
@@ -20563,6 +20610,10 @@
     function addUsedDeviceToCart(deviceId) {
       const device = state.usedDevices.find(item => item.id === deviceId);
       if (!device || device.status !== 'ready_for_sale') return;
+      if (device.online_order) {
+        showToast(usedDeviceOnlineOrderText(device));
+        return;
+      }
       const buyer = selectedRepairCustomer();
       if (!buyer) return;
       const buyerRecord = selectedCustomerRecord();

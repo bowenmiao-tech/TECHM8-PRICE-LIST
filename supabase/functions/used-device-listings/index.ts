@@ -73,6 +73,16 @@ Deno.serve(async request => {
     const input = await request.json().catch(() => null);
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid request.');
     const action = String(input.action || '');
+
+    // The POS catching up with website orders: who holds each device now.
+    if (action === 'order-holds') {
+      const deviceCodes = Array.isArray(input.device_codes)
+        ? input.device_codes.map((code: unknown) => String(code || '').trim()).filter((code: string) => /^USED-[A-Z0-9]{6,32}$/.test(code))
+        : [];
+      if (deviceCodes.length > 500) throw new Error('Too many devices in one request.');
+      return reply(await rpc('get_used_device_order_holds', {device_codes: deviceCodes}));
+    }
+
     const deviceCode = String(input.device_code || '').trim();
     if (!/^USED-[A-Z0-9]{6,32}$/.test(deviceCode)) throw new Error('Invalid device code.');
 

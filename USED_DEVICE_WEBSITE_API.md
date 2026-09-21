@@ -14,22 +14,38 @@ storefront does not have to poll or reconcile anything.
 - Project: `fwlronvmgqzkleofriis` (the same project as `products`)
 - Tables: `used_device_categories`, `used_device_listings`
 - Images: the public storage bucket `used-device-listing-images`
-- Migration: `supabase/website-migrations/20260911002000_add_used_device_listings.sql`
+- Migrations: `supabase/website-migrations/20260911002000_add_used_device_listings.sql`,
+  `supabase/website-migrations/20260921170000_sell_used_devices_in_the_shop.sql`
 
-Used devices are deliberately **not** rows in `products`. A product is a
-repeatable SKU with a quantity per store; a used device is one physical thing
-whose stock is always one and which is gone when it sells. None of the product
-grouping, variant, fit-profile or inventory rules apply to it.
+The listing is the record of what the public is told. Each published listing
+also has a mirror row in `products` (`source_system = 'pos_used_device'`, SKU =
+the device code), under the shop category Second Hand Devices / Used Phones (and
+so on), so the shop, the cart and checkout treat it like any other product. It
+is written only by `upsert_used_device_listing`; do not edit it in the product
+admin. Two rules keep it one of a kind:
+
+- its slug starts with `used-`. The cart and both checkout functions read that
+  as "one only";
+- an order holds it. Checkout calls `claim_used_devices_for_order` once the
+  order is saved, and reserves the device in the POS before the customer pays.
+  Paid, being paid, or reserved to pay in store hides it from the shop. While
+  the customer is only on the payment page it stays visible, and the same
+  customer starting again replaces their old checkout (the old Stripe session
+  is closed first, so nobody can pay twice). Anyone else is refused until the
+  checkout lapses: the Stripe session expires after 30 minutes, the hold after 45.
 
 ## Where customers see it
 
 The storefront pages live in the website repository and read this catalogue on every visit:
 
+- the shop (`shop.html`) - Second Hand Devices in the category menu, each device a normal product card
 - `used-devices.html` - the category list, `?category=used-phones` by default, with a tab per category
-- `used-device.html?d=<slug>` - one device: its listing photos, model, storage, colour, condition,
-  battery (by the rule below), the price, and the store it is in with a call button
+- `used-device.html?d=<slug>` - one device: its listing photos, brand, model, storage, colour,
+  condition, battery (by the rule below), the device location, the price and Add to cart, with no
+  quantity. `product.html?slug=used-...` sends the visitor here.
 
-Nothing about them is prerendered, because a device can sell at the counter at any moment.
+Nothing about them is prerendered, and they are left out of the sitemap and the Merchant Center feed,
+because a device can sell at the counter at any moment.
 
 ## Reading the catalogue
 
@@ -117,8 +133,10 @@ frequent outcome here, not a fault.
 - `battery_health` is sent only when it is 85% or more. Below that it is null and the highlights carry
   "Good battery" instead, so the number never reaches the public site. It is also null for anything
   without a measurable battery. The storefront applies the same rule again as a safeguard.
-- The inspection highlight counts only the checks that apply to the device: a tablet with no SIM
-  tray reads "13 of 13 inspection checks passed", not "13 of 21".
+- There is no inspection count in the highlights, and no "In stock at" line: the store comes as
+  `store_code` and `store_name`, and the page shows it as the device location. The page drops either
+  line from an older listing that still carries it.
+- `product_id` and `sku` are the shop product, for the cart.
 - Cache for minutes, not hours. A device can sell at the counter at any time,
   and the listing goes down within seconds of that happening.
 
@@ -132,8 +150,9 @@ identifier or a seller's details is a real problem.
 1. The POS builds the listing from a function that never reads those columns.
 2. `used_device_listings` has a check constraint rejecting any run of fifteen
    digits in the title, description or condition summary.
-3. The public read functions select an explicit column list that excludes
-   `device_code` and `store_code`.
+3. The public read functions select an explicit column list. The store is
+   public (it is where the device is), and so is the shop product's SKU, which
+   is the internal stock code, not anything printed on the device.
 
 If the storefront needs to identify a device for an enquiry form, use `slug`.
 
@@ -151,7 +170,24 @@ Staff do not upload anything to this project. The chain is:
 4. `upsert_used_device_listing` writes the row.
 
 Price changes republish. Selling, returning to the seller, disposal, or moving
-a device back to inspection withdraws it. Each intention carries a
+a device back to inspection withdraws it. The shop product follows the listing.
+
+## Selling it online
+
+1. Checkout saves the order, then `claim_used_devices_for_order` locks each
+   device's listing and records the claim (`used_device_order_claims`). It
+   refuses a second unit, a stale price, a sold listing, or a device another
+   order holds.
+2. The website calls `used-device-online-orders` in the staff project
+   (`action: "hold"`, shared secret). The POS refuses a device that is no longer
+   ready for sale or is held by another order; the website then deletes the order.
+3. A card, Afterpay, Klarna, Zip or WeChat checkout goes to Stripe with a
+   30-minute session. Pay in store is reserved until the order is paid or
+   cancelled in the website admin.
+4. Every five minutes while a device is reserved, the staff project asks
+   `used-device-listings` (`action: "order-holds"`), which answers from
+   `get_used_device_order_holds`, and applies it: paid is a sale in the POS,
+   abandoned or cancelled frees the device, and the sale takes the listing down. Each intention carries a
 `source_version`, and this project ignores anything older than what it already
 holds, so a slow retry can never resurrect a sold device.
 

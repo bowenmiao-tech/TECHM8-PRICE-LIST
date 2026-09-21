@@ -308,6 +308,40 @@ const { chromium } = require('playwright');
     assert.equal(saleCartItem.item.buyer_phone, '0488666316');
     assert.equal(saleCartItem.item.buyer_address, '', 'An address was invented or still required for the buyer');
 
+    // A device a website order holds cannot be sold at the counter, and staff
+    // are told which order has it; one sold online says so instead of an invoice.
+    const onlineOrder = await page.evaluate(() => {
+      state.cart = [];
+      const reserved = {
+        id: 'USED-WEB', device_code: 'USED-WEB', category: 'Phone', brand: 'Apple', model: 'iPhone 14',
+        status: 'ready_for_sale', condition_grade: 'Good', sale_price: 599, inspection: {}, seller: {}, acquisition: {},
+        online_order: { order_code: 'TM8-20260921-ABC123', kind: 'reserved', until: null }
+      };
+      const soldOnline = {
+        id: 'USED-WEBSOLD', device_code: 'USED-WEBSOLD', category: 'Phone', brand: 'Apple', model: 'iPhone 13',
+        status: 'sold', condition_grade: 'Good', sale_price: 499, inspection: {}, seller: {}, acquisition: {},
+        sold_online_order_code: 'TM8-20260921-DEF456'
+      };
+      state.usedDevices = [reserved, soldOnline];
+      els.usedDeviceContent.innerHTML = renderUsedDeviceInventory();
+      const row = els.usedDeviceContent.querySelector('[data-used-device-details="USED-WEB"]');
+      const sell = row.querySelector('[data-used-sell]');
+      const rowText = row.innerText;
+      sell.disabled = false;
+      sell.click();
+      openUsedDeviceDetail('USED-WEB');
+      const reservedDetail = els.usedDeviceDetailBody.innerText;
+      closeUsedDeviceDetail();
+      openUsedDeviceDetail('USED-WEBSOLD');
+      const soldDetail = els.usedDeviceDetailBody.innerText;
+      closeUsedDeviceDetail();
+      return { rowText, sellWasDisabled: row.querySelector('[data-used-sell]').title, cart: state.cart.length, reservedDetail, soldDetail };
+    });
+    assert.match(onlineOrder.rowText, /Reserved online/, 'The row does not say the device is reserved online');
+    assert.equal(onlineOrder.cart, 0, 'A device reserved online went into the counter cart');
+    assert.match(onlineOrder.reservedDetail, /website order TM8-20260921-ABC123, to be paid in store/);
+    assert.match(onlineOrder.soldDetail, /Sold online on website order TM8-20260921-DEF456/);
+
     // Staff see what was repaired, never what it cost.
     await page.evaluate(async () => {
       els.usedDeviceDetailBody.innerHTML = '<div id="usedDeviceCostList"></div>';
@@ -346,7 +380,7 @@ const { chromium } = require('playwright');
     assert.equal(websitePanel.readyDisabled, false, 'A finished device could not be published');
     assert.match(websitePanel.readyLabel, /Put on Sale & Website/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: Sell adds straight to Checkout, repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
+    console.log('PASS: devices reserved or sold online are shown and not sold at the counter, Sell adds straight to Checkout, repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, one-photo purchase submission, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();

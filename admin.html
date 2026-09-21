@@ -1597,6 +1597,9 @@
         if (device.status === 'returned_to_seller') return '<span class="used-state sold">Returned to seller</span>';
         if (device.status === 'disposed') return '<span class="used-state sold">Written off</span>';
         if (device.status === 'ready_for_sale') {
+          if (device.online_order_code) {
+            return `<span class="used-state ready">${device.online_hold_kind === 'reserved' ? 'Reserved online, pay in store' : 'Customer paying online'}</span>`;
+          }
           if (device.website_status === 'published') return '<span class="used-state live">Live on the site</span>';
           if (device.website_status === 'queued') return '<span class="used-state ready">Going online…</span>';
           if (device.website_status === 'failed') return '<span class="used-state blocked">Website push failed</span>';
@@ -1642,7 +1645,9 @@
               `<span class="used-device-title">${escapeHtml(usedDeviceName(device))}</span><span class="used-device-sub">${escapeHtml(device.condition_grade || '')}${device.battery_health ? ` · battery ${number(device.battery_health)}%` : ''}</span>`,
               escapeHtml(identity),
               escapeHtml(formatDateTime(device.sold_at)),
-              device.sold_invoice_number ? `#${escapeHtml(String(device.sold_invoice_number))}` : '',
+              device.sold_invoice_number
+                ? `#${escapeHtml(String(device.sold_invoice_number))}`
+                : device.sold_online_order_code ? `Website ${escapeHtml(device.sold_online_order_code)}` : '',
               money(device.sold_amount),
               `<span class="${number(device.margin) < 0 ? 'value-refund' : 'value-main'}">${money(device.margin)}</span>`
             ]
@@ -1785,6 +1790,8 @@
               ${fact('Battery now', device.battery_health == null ? '' : `${number(device.battery_health)}%`)}
               ${device.status === 'sold' ? fact('Sold for', money(device.sold_amount)) : ''}
               ${device.status === 'sold' && device.sold_invoice_number ? fact('Invoice', `#${escapeHtml(String(device.sold_invoice_number))}`) : ''}
+              ${device.status === 'sold' && device.sold_online_order_code ? fact('Website order', escapeHtml(device.sold_online_order_code)) : ''}
+              ${device.online_order_code ? fact('Website order', `${escapeHtml(device.online_order_code)} · ${device.online_hold_kind === 'reserved' ? 'to be paid in store' : 'customer paying'}`) : ''}
             </div>
             ${inStock ? `
               <section class="used-detail-block used-listing-card">
