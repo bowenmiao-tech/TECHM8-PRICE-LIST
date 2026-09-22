@@ -84,6 +84,11 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
             stores:[{store_code:'parkridge',store_name:'Park Ridge Town Centre',count:1},{store_code:'toowong',store_name:'Toowong Village',count:1}]
           };
         }
+        if (name === 'delete_admin_used_device') {
+          if (window.__deleteFail) throw new Error('Deletion failed; please retry');
+          for (const group of Object.keys(window.__stock)) window.__stock[group] = window.__stock[group].filter(device => device.device_code !== params.target_device_code);
+          return {ok:true};
+        }
         if (name === 'get_admin_used_device_detail') {
           const device = find(params.target_device_code);
           const intake = window.__intake[device.device_code];
@@ -289,6 +294,21 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
       await page.waitForFunction(() => document.querySelector('#usedStockBody').innerText.includes('$649.00'));
       assert.match(await page.locator('#usedStockBody').innerText(), /Going online|Live on the site/);
 
+      // Cancelling sends nothing. An error keeps the record open; retry removes it.
+      await page.evaluate(() => { window.confirm = () => false; });
+      await page.locator('#usedDeviceDelete').click();
+      assert.equal(await page.evaluate(() => window.__rpcCalls.filter(c => c.name === 'delete_admin_used_device').length), 0);
+      await page.evaluate(() => { window.confirm = () => true; window.__deleteFail = true; });
+      await page.locator('#usedDeviceDelete').click();
+      await page.waitForFunction(() => document.querySelector('#usedDeviceDeleteStatus').textContent.includes('Deletion failed'));
+      assert.equal(await page.locator('#usedDeviceDelete').isEnabled(), true);
+      await page.evaluate(() => { window.__deleteFail = false; });
+      await page.locator('#usedDeviceDelete').click();
+      await page.waitForFunction(() => !document.querySelector('#usedDeviceDialog').open);
+      const deletion = await page.evaluate(() => window.__rpcCalls.find(c => c.name === 'delete_admin_used_device'));
+      assert.equal(deletion.params.target_device_code, 'USED-READY');
+      assert.equal(deletion.params.confirmation_code, 'USED-READY');
+      assert.equal(await page.locator('#usedStockBody').innerText().then(text => text.includes('iPhone 13')), false);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert.ok(overflow <= 0, `${label}: the page scrolls sideways by ${overflow}px`);
       assert.deepEqual(pageErrors, [], `${label} page errors: ${pageErrors.join(', ')}`);

@@ -1772,6 +1772,10 @@
         const tab = USED_DETAIL_TABS.some(([key]) => key === usedStock.detailTab) ? usedStock.detailTab : 'listing';
 
         els.usedDeviceDialogBody.innerHTML = `
+          <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+            <button type="button" class="used-secondary-button" id="usedDeviceDelete" style="color:#b42318;border-color:#f2b8b5;">Delete device</button>
+          </div>
+          <div id="usedDeviceDeleteStatus" role="alert" class="used-listing-status"></div>
           <div class="used-detail-tabs" role="tablist">
             ${USED_DETAIL_TABS.map(([key, label]) => `
               <button type="button" role="tab" class="preset-button" data-used-detail-tab="${key}">${label}${
@@ -2035,7 +2039,7 @@
 
       // Approving a device queues the website push; this carries it over now so
       // the owner sees the result instead of waiting for the next drain.
-      async function pushUsedDeviceLive(storeCode, deviceCode) {
+      async function pushUsedDeviceLive(storeCode, deviceCode, action = 'publish') {
         const config = window.TECHM8_SUPABASE || {};
         const response = await fetch(`${config.url}/functions/v1/pos-used-device-publish`, {
           method: 'POST',
@@ -2044,10 +2048,38 @@
             apikey: config.anonKey || '',
             'x-staff-session': window.Techm8StaffAuth.getToken()
           },
-          body: JSON.stringify({ store_code: storeCode, device_code: deviceCode, action: 'publish' })
+          body: JSON.stringify({ store_code: storeCode, device_code: deviceCode, action })
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || data.ok === false) throw new Error(data.message || 'The website push did not go through.');
+      }
+
+      async function deleteUsedDevice() {
+        const device = usedStock.detail?.device;
+        const button = document.getElementById('usedDeviceDelete');
+        const status = document.getElementById('usedDeviceDeleteStatus');
+        if (!device || button.disabled) return;
+        if (!window.confirm(`Permanently delete ${usedDeviceName(device)}?\n\n${device.device_code}\nIMEI / Serial: ${device.imei || device.serial_number || '—'}\n\nThe device and its attached records will be removed. Existing sales invoices are kept. This cannot be undone.`)) return;
+        button.disabled = true;
+        status.dataset.error = 'false';
+        status.textContent = 'Deleting device…';
+        try {
+          if (['published', 'queued', 'failed'].includes(device.website_status)) {
+            status.textContent = 'Withdrawing the website listing before deletion…';
+            await pushUsedDeviceLive(device.store_code, device.device_code, 'withdraw');
+          }
+          await window.Techm8StaffAuth.callRpc('delete_admin_used_device', {
+            session_token: window.Techm8StaffAuth.getToken(),
+            target_device_code: device.device_code, confirmation_code: device.device_code
+          });
+          usedStock.detail = null;
+          els.usedDeviceDialog.close();
+          await loadUsedStock();
+        } catch (error) {
+          status.dataset.error = 'true';
+          status.textContent = error.message || 'The device could not be deleted.';
+          button.disabled = false;
+        }
       }
 
       async function submitUsedListing(publish) {
@@ -2431,6 +2463,7 @@
       });
       els.usedDeviceDialogClose.addEventListener('click', () => els.usedDeviceDialog.close());
       els.usedDeviceDialogBody.addEventListener('click', event => {
+        if (event.target.closest('#usedDeviceDelete')) { deleteUsedDevice(); return; }
         const tabButton = event.target.closest('[data-used-detail-tab]');
         if (tabButton) {
           setUsedDetailTab(tabButton.dataset.usedDetailTab);
