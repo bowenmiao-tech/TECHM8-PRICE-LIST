@@ -48,4 +48,35 @@ begin
  assert not has_function_privilege('anon','public.manage_pos_repair_memo(text,jsonb)','execute');
 end;
 $$;
+
+create temporary table repair_price_validation_probe(
+  card_kind text not null,
+  price text,
+  special_order boolean not null default false
+) on commit drop;
+
+create trigger validate_repair_price_probe
+before insert or update on repair_price_validation_probe
+for each row execute function public.enforce_pos_repair_ticket_numeric_price();
+
+do $$
+declare
+  denied boolean := false;
+begin
+  insert into repair_price_validation_probe(card_kind,price) values('memo','$0.00');
+  assert (select price from repair_price_validation_probe where card_kind='memo')='$0.00';
+
+  begin
+    insert into repair_price_validation_probe(card_kind,price) values('repair','$0.00');
+  exception when others then
+    denied:=true;
+    assert sqlerrm='Ordinary repair price must be above zero; only a special repair may start at zero',
+      'Normal zero-price repair failed for the wrong reason: ' || sqlerrm;
+  end;
+  assert denied, 'Normal zero-price repair was accepted';
+
+  insert into repair_price_validation_probe(card_kind,price,special_order) values('repair','$0.00',true);
+  assert (select count(*) from repair_price_validation_probe where card_kind='repair' and special_order)=1;
+end;
+$$;
 rollback;
