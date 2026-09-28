@@ -123,6 +123,13 @@ function receiptItemDisplayName(item: JsonRecord): string {
     : rawName.replace(/\bCASETiFY(?:\s+Cases)?\b/gi, "CTFY");
 }
 
+function usableSku(value: unknown): string {
+  const sku = String(value || "").trim();
+  return /stock[\s-]*keeping\s+unit|scannable\s+barcode|track\s+the\s+movement\s+of\s+inventory/i.test(sku)
+    ? ""
+    : sku;
+}
+
 function receiptTermsHtml(profile: StoreProfile, hasRepair: boolean): string {
   return `
     <div style="font-weight:900;font-size:16px;color:#14231e;">Terms &amp; Condition</div>
@@ -162,7 +169,7 @@ function receiptEmailHtml(order: JsonRecord, note: string): string {
     <tr>
       <td style="padding:14px 0;border-bottom:1px solid #e2e8e6;">
         <div style="font-weight:800;color:#14231e;">${escapeHtml(receiptItemDisplayName(item))}</div>
-        ${item.sku ? `<div style="margin-top:4px;font-size:12px;color:#708078;">SKU: ${escapeHtml(item.sku)}</div>` : ""}
+        ${usableSku(item.sku) ? `<div style="margin-top:4px;font-size:12px;color:#708078;">SKU: ${escapeHtml(usableSku(item.sku))}</div>` : ""}
         ${item.note ? `<div style="margin-top:5px;padding-left:8px;border-left:2px solid #07896f;font-size:12px;line-height:1.45;color:#43564e;">Note: ${escapeHtml(String(item.note).trim()).replaceAll("\n", "<br>")}</div>` : ""}
       </td>
       <td style="padding:14px 8px;border-bottom:1px solid #e2e8e6;text-align:center;color:#52625b;">${escapeHtml(item.qty || 1)}</td>

@@ -13153,7 +13153,7 @@
 
         return {
           id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
-          sku: item.sku || '',
+          sku: usableSku(item.sku),
           name: item.name || item.product_name || 'Unnamed product',
           brand: String(item.brand || ''),
           category,
@@ -20919,6 +20919,13 @@
       return String(value || '').replace(/\r\n?/g, '\n').slice(0, maxLength);
     }
 
+    function usableSku(value) {
+      const sku = String(value || '').trim();
+      return /stock[\s-]*keeping\s+unit|scannable\s+barcode|track\s+the\s+movement\s+of\s+inventory/i.test(sku)
+        ? ''
+        : sku;
+    }
+
     function posOrderLineFromCartItem(item) {
       return {
         product_id: item.id,
@@ -23452,7 +23459,7 @@
             <input type="checkbox" data-refund-check>
             <span>
               <span class="refund-line-name">${escapeHtml(item.name || 'Sale item')}</span>
-              <span class="refund-line-meta">${escapeHtml(item.ticket_id ? `Ticket ${item.ticket_id}` : item.sku || (item.line_type === 'repair' ? 'Repair' : 'Product'))} · ${escapeHtml(availableText)}</span>
+              <span class="refund-line-meta">${escapeHtml(item.ticket_id ? `Ticket ${item.ticket_id}` : usableSku(item.sku) || (item.line_type === 'repair' ? 'Repair' : 'Product'))} · ${escapeHtml(availableText)}</span>
             </span>
             <span class="refund-line-controls">
               <label>Refund amount $<input type="number" min="0.01" max="${refundable.toFixed(2)}" step="0.01" value="${initialAmount.toFixed(2)}" data-refund-amount aria-label="Refund amount for ${escapeHtml(item.name || 'item')}" disabled></label>
@@ -23858,7 +23865,7 @@
       const itemRows = items.map(item => `
         <div class="receipt-item">
           <div class="receipt-item-name">${escapeHtml(receiptItemDisplayName(item))}</div>
-          ${item.sku ? `<div class="receipt-item-sku">SKU: ${escapeHtml(item.sku)}</div>` : ''}
+          ${usableSku(item.sku) ? `<div class="receipt-item-sku">SKU: ${escapeHtml(usableSku(item.sku))}</div>` : ''}
           ${item.note ? `<div class="receipt-item-note">Note: ${escapeHtml(noteText(item.note, 500).trim())}</div>` : ''}
           <div class="receipt-item-line">
             <span>${Math.max(1, Number(item.qty || 1))} x ${money(item.unit_price)}</span>
@@ -24076,7 +24083,7 @@
     }
 
     function invoiceWarrantyHistoryHtml(items) {
-      const claims = items.flatMap(item => (item.warranty?.claims || []).map(claim => ({ ...claim, item_name: item.name, sku: item.sku })))
+      const claims = items.flatMap(item => (item.warranty?.claims || []).map(claim => ({ ...claim, item_name: item.name, sku: usableSku(item.sku) })))
         .sort((a, b) => String(b.claimed_at).localeCompare(String(a.claimed_at)));
       if (!claims.length) return '';
       return `<section class="invoice-detail-section">
@@ -24245,7 +24252,7 @@
               <article class="invoice-detail-line">
                 <div>
                   <strong>${escapeHtml(item.name || 'Item')}</strong>
-                  <div class="invoice-line-meta">${escapeHtml(item.sku ? `SKU ${item.sku} · ` : '')}${escapeHtml(`${qty} × ${money(unitPrice)}`)}${item.category ? ` · ${escapeHtml(item.category)}` : ''}</div>
+                  <div class="invoice-line-meta">${escapeHtml(usableSku(item.sku) ? `SKU ${usableSku(item.sku)} · ` : '')}${escapeHtml(`${qty} × ${money(unitPrice)}`)}${item.category ? ` · ${escapeHtml(item.category)}` : ''}</div>
                   ${note ? `<div class="invoice-line-note">${escapeHtml(note)}</div>` : ''}
                   ${refunded > 0 ? `<div class="invoice-line-meta">Refunded ${money(refunded)}${numberValue(item.refunded_quantity) ? ` · ${numberValue(item.refunded_quantity)} returned` : ''}</div>` : ''}
                 </div>

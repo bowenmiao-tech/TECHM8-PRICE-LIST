@@ -23,6 +23,13 @@ def clean_text(value) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
+def clean_sku(value) -> str:
+    sku = clean_text(value)
+    if re.search(r"stock[\s-]*keeping\s+unit|scannable\s+barcode|track\s+the\s+movement\s+of\s+inventory", sku, re.I):
+        return ""
+    return sku
+
+
 def key_text(value) -> str:
     return re.sub(r"[^a-z0-9]+", " ", clean_text(value).lower()).strip()
 
@@ -284,7 +291,7 @@ def line_payload(workbook_row, report_row, invoice_notes: str, line_number: int)
     ex_gst = money(line_total - tax)
     unit_price = line_total / Decimal(quantity)
     item_id = clean_text(workbook_row.get("Item Code"))
-    sku = clean_text(workbook_row.get("Item Sku"))
+    sku = clean_sku(workbook_row.get("Item Sku"))
     description = clean_text(workbook_row.get("Description"))
     note = description
     report_row = report_row or {}

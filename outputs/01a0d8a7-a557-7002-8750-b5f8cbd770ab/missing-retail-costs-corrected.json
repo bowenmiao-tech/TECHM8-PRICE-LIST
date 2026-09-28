@@ -1,0 +1,128 @@
+[
+  {
+    "shop": "TW",
+    "date": "2026-09-03",
+    "line_id": 21741,
+    "product_id": "2177",
+    "label": "iPhone 13 Pro（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 550
+  },
+  {
+    "shop": "TW",
+    "date": "2026-09-06",
+    "line_id": 21823,
+    "product_id": "2177",
+    "label": "iPad 9th Touch screen（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 159
+  },
+  {
+    "shop": "TW",
+    "date": "2026-09-16",
+    "line_id": 22023,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "TW",
+    "date": "2026-09-17",
+    "line_id": 22043,
+    "product_id": "2177",
+    "label": "Pop sockets（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 5
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21717,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-04",
+    "line_id": 21777,
+    "product_id": "2177",
+    "label": "iPhone 7 Plus battery（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 70
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-10",
+    "line_id": 21910,
+    "product_id": "100",
+    "label": "1M Ultra Tough USB-C to Lightning Cable",
+    "net_qty": 1,
+    "net_sales": 30
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-14",
+    "line_id": 21990,
+    "product_id": "2177",
+    "label": "iPhone 13 128GB（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 499
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-17",
+    "line_id": 22059,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-19",
+    "line_id": 22084,
+    "product_id": "2177",
+    "label": "其他商品（POS 未注明）",
+    "net_qty": 1,
+    "net_sales": 19
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-19",
+    "line_id": 22090,
+    "product_id": "100",
+    "label": "1M Ultra Tough USB-C to Lightning Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-19",
+    "line_id": 22098,
+    "product_id": "2177",
+    "label": "Office keyboard / Bluetooth add-on（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 29.99
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-19",
+    "line_id": 22099,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-20",
+    "line_id": 22108,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  }
+]

@@ -1,0 +1,218 @@
+[
+  {
+    "shop": "TW",
+    "date": "2026-09-03",
+    "line_id": 21741,
+    "product_id": "2177",
+    "label": "iPhone 13 Pro（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 550
+  },
+  {
+    "shop": "TW",
+    "date": "2026-09-06",
+    "line_id": 21823,
+    "product_id": "2177",
+    "label": "iPad 9th Touch screen（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 159
+  },
+  {
+    "shop": "TW",
+    "date": "2026-09-16",
+    "line_id": 22023,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "TW",
+    "date": "2026-09-17",
+    "line_id": 22043,
+    "product_id": "2177",
+    "label": "Pop sockets（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 5
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21714,
+    "product_id": "repairdesk:8554",
+    "label": "iPhone 15 Rich Diary Black Flip Case",
+    "net_qty": 1,
+    "net_sales": 45
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21715,
+    "product_id": "repairdesk:11004",
+    "label": "iPhone 17 C Daub Hearts Magsafe",
+    "net_qty": 1,
+    "net_sales": 55
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21717,
+    "product_id": "repairdesk:8830",
+    "label": "1M ULTRA TOUGH TYPE C TO TYPE C CABLE",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21718,
+    "product_id": "repairdesk:6319",
+    "label": "iPhone 13 Apple Logo Case Black",
+    "net_qty": 1,
+    "net_sales": 45
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21720,
+    "product_id": "repairdesk:9669",
+    "label": "GS06 Mini Function Mobile Phone Power Data Transmit Convert Card Reader Type-C To USB OTG Adapter",
+    "net_qty": 1,
+    "net_sales": 15
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21721,
+    "product_id": "repairdesk:5940",
+    "label": "2M Ultra Tough TYPE-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21725,
+    "product_id": "repairdesk:11101",
+    "label": "Iphone 14 Pro Max Silicone MagSafe Hard Case — Matte Black",
+    "net_qty": 1,
+    "net_sales": 49.95
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-01",
+    "line_id": 21727,
+    "product_id": "repairdesk:6673",
+    "label": "1M High Quality Cable Lighting",
+    "net_qty": 1,
+    "net_sales": 25
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-02",
+    "line_id": 21728,
+    "product_id": "repairdesk:5907",
+    "label": "1M ULTRA TOUGH TYPE-C CABLE",
+    "net_qty": 1,
+    "net_sales": 29
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-02",
+    "line_id": 21730,
+    "product_id": "repairdesk:9425",
+    "label": "iPhone 16 plus apple logo MagSafe black Phone Case",
+    "net_qty": 1,
+    "net_sales": 59
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-02",
+    "line_id": 21731,
+    "product_id": "repairdesk:7719",
+    "label": "iPad Z-Fold Case 10th Gen Black",
+    "net_qty": 1,
+    "net_sales": 39.95
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-04",
+    "line_id": 21777,
+    "product_id": "2177",
+    "label": "iPhone 7 Plus battery（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 70
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-10",
+    "line_id": 21910,
+    "product_id": "100",
+    "label": "1M Ultra Tough USB-C to Lightning Cable",
+    "net_qty": 1,
+    "net_sales": 30
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-14",
+    "line_id": 21990,
+    "product_id": "2177",
+    "label": "iPhone 13 128GB（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 499
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-17",
+    "line_id": 22059,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-19",
+    "line_id": 22084,
+    "product_id": "2177",
+    "label": "其他商品（POS 未注明）",
+    "net_qty": 1,
+    "net_sales": 19
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-19",
+    "line_id": 22090,
+    "product_id": "100",
+    "label": "1M Ultra Tough USB-C to Lightning Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-19",
+    "line_id": 22098,
+    "product_id": "2177",
+    "label": "Office keyboard / Bluetooth add-on（POS 其他商品）",
+    "net_qty": 1,
+    "net_sales": 29.99
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-19",
+    "line_id": 22099,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  },
+  {
+    "shop": "FF",
+    "date": "2026-09-20",
+    "line_id": 22108,
+    "product_id": "99",
+    "label": "1M Ultra Tough USB-C to USB-C Cable",
+    "net_qty": 1,
+    "net_sales": 35
+  }
+]
