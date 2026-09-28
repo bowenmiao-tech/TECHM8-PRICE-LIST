@@ -29,7 +29,7 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
   const staffAuthStub = `
     window.__rpcCalls = [];
     const checklist = [{key:'touch',label:'Touch working'},{key:'wireless_charging',label:'Wireless charging working'}];
-    const base = {category:'Phone', condition_grade:'Good', website_status:'not_published', sale_price:0,
+    const base = {category:'Phone', condition_grade:'Good', website_status:'not_published', sale_price:null,
       ready_at:null, sold_at:null, sold_invoice_number:null, sold_amount:0, margin:null, status:'inspection'};
     const ready = Object.assign({}, base, {
       id:'USED-READY', device_code:'USED-READY', store_code:'toowong', store_name:'Toowong Village',
@@ -278,20 +278,20 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
       assert.ok(!(await page.locator('[data-used-detail-panel="test"]').isHidden()), 'Saving a test jumped away from the test page');
       await page.locator('#usedDeviceDialogClose').click();
 
-      // A tested device: price it, see the margin, confirm, and it goes live.
+      // A tested device may be listed at zero; the loss remains visible.
       await page.locator('[data-used-device="USED-READY"]').click();
       await page.locator('#usedListingPrice').waitFor();
       assert.ok(!(await page.locator('#usedListingPublish').isDisabled()), 'A ready device could not be published');
-      await page.locator('#usedListingPrice').fill('649');
-      await page.waitForFunction(() => document.querySelector('#usedListingMargin').textContent.includes('Margin'));
-      assert.match(await page.locator('#usedListingMargin').innerText(), /Margin \$309\.00/, 'The margin preview was wrong');
+      await page.locator('#usedListingPrice').fill('0');
+      await page.waitForFunction(() => document.querySelector('#usedListingMargin').textContent.includes('Loss'));
+      assert.match(await page.locator('#usedListingMargin').innerText(), /Loss \$340\.00/, 'The zero-price loss preview was wrong');
       await page.locator('#usedListingPublish').click();
       await page.waitForFunction(() => window.__rpcCalls.some(call => call.name === 'set_admin_used_device_listing'));
       const listingCall = await page.evaluate(() => window.__rpcCalls.find(call => call.name === 'set_admin_used_device_listing'));
       assert.equal(listingCall.params.payload.device_code, 'USED-READY');
-      assert.equal(listingCall.params.payload.sale_price, 649);
+      assert.equal(listingCall.params.payload.sale_price, 0);
       assert.equal(listingCall.params.payload.publish, true, 'Confirm did not ask to publish');
-      await page.waitForFunction(() => document.querySelector('#usedStockBody').innerText.includes('$649.00'));
+      await page.waitForFunction(() => document.querySelector('#usedStockBody').innerText.includes('$0.00'));
       assert.match(await page.locator('#usedStockBody').innerText(), /Going online|Live on the site/);
 
       // Cancelling sends nothing. An error keeps the record open; retry removes it.

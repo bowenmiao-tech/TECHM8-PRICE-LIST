@@ -71,11 +71,11 @@ const {chromium} = require('playwright');
         intakeOpen: true,
         status: 'repairing',
         deviceInStore: true,
-        quote: {brand: 'Apple', model: 'iPhone 15', issue: 'Inspection', price: '49.00'},
+        quote: {brand: 'Apple', model: 'iPhone 15', issue: 'Inspection', price: '0.00'},
         brand: 'Apple',
         model: 'iPhone 15',
         issue: 'Inspection',
-        quotedPrice: '$49.00',
+        quotedPrice: '$0.00',
         customerId: 'CUS-TEST',
         customerName: 'Jane',
         customerPhone: '0400000000',
@@ -107,12 +107,21 @@ const {chromium} = require('playwright');
     await page.locator('#repairCardSubmit').click();
     await page.waitForFunction(() => state.repair.ticketId.startsWith('RPR-'));
     assert.equal(await page.evaluate(() => state.repairTickets.length), 1);
+    assert.equal(cardRequests.at(-1).ticket_payload.price, '$0.00');
+    assert.equal(await page.evaluate(() => repairBoardHtml().includes(`data-ticket-cart="${state.repairTickets[0].id}"`)), true,
+      'The repair board hid the cart button for a zero-priced ticket');
+    const zeroCart = await page.evaluate(() => {
+      const ticket = state.repairTickets[0];
+      addRepairTicketToCart(ticket.id);
+      return state.cart.filter(item => item.ticket_id === ticket.id).map(item => item.sale_price);
+    });
+    assert.deepEqual(zeroCart, [0], 'A normal zero-priced repair could not be added to the cart');
     assert.equal(photoRequests.length, 1);
     assert.equal(photoRequests[0].kind, 'photo');
     assert(photoRequests[0].data_url.startsWith('data:image/jpeg;base64,'));
     assert.equal(pageErrors.length, 0, pageErrors.join('\n'));
 
-    console.log('PASS: special $0 remains allowed; exact create error; no ghost ticket; atomic ticket/signature request; image metadata separation and follow-up upload.');
+    console.log('PASS: special and normal $0 repairs, zero-priced cart item, exact create error, no ghost ticket, atomic ticket/signature request and follow-up upload.');
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));

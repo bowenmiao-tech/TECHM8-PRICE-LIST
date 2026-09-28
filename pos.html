@@ -6264,6 +6264,15 @@
     .special-modal.repair-job-modal { width: min(560px, 94vw); }
     #repairJobModal { z-index: 20020; }
     #finishCardModal { z-index: 20030; }
+    .special-modal.repair-reopen-modal { width: min(560px, 94vw); }
+    #repairReopenModal { z-index: 20020; }
+    .repair-job-fields label.repair-reopen-device {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--tm-ink);
+    }
+    .repair-job-fields .repair-reopen-device input { width: 18px; height: 18px; min-height: 18px; padding: 0; }
     .finish-card-body { padding: 4px 0 8px; display: grid; gap: 12px; }
     .finish-card-ticket {
       border: 1px solid var(--tm-line);
@@ -9326,7 +9335,7 @@
           <datalist id="repairJobSuggestions"></datalist>
         </label>
         <label>Price
-          <input id="repairJobPrice" type="number" min="0.01" max="1000000" step="0.01" inputmode="decimal" required>
+          <input id="repairJobPrice" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" required>
         </label>
         <label>Status
           <select id="repairJobStatus">
@@ -9355,6 +9364,36 @@
       <div class="repair-card-foot">
         <button id="repairJobCancel" class="soft-action" type="button">Cancel</button>
         <button id="repairJobSave" class="pay-action" type="submit"><i class="bi bi-floppy"></i> Save repair</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="repairReopenModal" class="modal-backdrop" aria-hidden="true">
+    <form id="repairReopenForm" class="special-modal repair-reopen-modal" role="dialog" aria-modal="true" aria-labelledby="repairReopenTitle">
+      <div class="repair-card-head">
+        <div>
+          <h2 id="repairReopenTitle" class="repair-card-title">Reopen for follow-up</h2>
+          <div id="repairReopenSubtitle" class="repair-card-subtitle"></div>
+        </div>
+        <button id="repairReopenClose" class="icon-button" type="button" aria-label="Close reopen form"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="repair-job-fields">
+        <label class="wide">What did the customer come back with? *
+          <textarea id="repairReopenReason" maxlength="2000" placeholder="e.g. Screen flickering again after 2 weeks, touch not working at the top"></textarea>
+        </label>
+        <label>Put the card in
+          <select id="repairReopenStatus"></select>
+        </label>
+        <label class="repair-reopen-device">
+          <input id="repairReopenDevice" type="checkbox" checked>
+          Device is back in store
+        </label>
+      </div>
+      <div class="ticket-jobs-note">The note is saved on this card, next to the earlier repair, invoices and photos.</div>
+      <div id="repairReopenError" class="repair-job-error" role="alert"></div>
+      <div class="repair-card-foot">
+        <button id="repairReopenCancel" class="soft-action" type="button">Cancel</button>
+        <button id="repairReopenSave" class="pay-action" type="submit"><i class="bi bi-arrow-repeat"></i> Reopen card</button>
       </div>
     </form>
   </div>
@@ -9519,6 +9558,7 @@
       <div class="ticket-detail-head">
         <div id="ticketDetailRef" class="ticket-detail-ref"></div>
         <div class="ticket-detail-head-actions">
+          <button id="ticketReopenButton" class="repair-action primary" type="button" hidden><i class="bi bi-arrow-repeat"></i> Reopen for follow-up</button>
           <button id="ticketFinishButton" class="repair-action primary" type="button" hidden><i class="bi bi-check2-all"></i> Finish card</button>
           <button id="ticketDeleteButton" class="repair-action ticket-delete" type="button"><i class="bi bi-trash"></i> Delete</button>
           <select id="ticketDetailStatus" class="repair-select"></select>
@@ -10359,6 +10399,14 @@
       repairJobApproval: document.getElementById('repairJobApproval'),
       repairJobNote: document.getElementById('repairJobNote'),
       repairJobError: document.getElementById('repairJobError'),
+      repairReopenModal: document.getElementById('repairReopenModal'),
+      repairReopenForm: document.getElementById('repairReopenForm'),
+      repairReopenSubtitle: document.getElementById('repairReopenSubtitle'),
+      repairReopenReason: document.getElementById('repairReopenReason'),
+      repairReopenStatus: document.getElementById('repairReopenStatus'),
+      repairReopenDevice: document.getElementById('repairReopenDevice'),
+      repairReopenError: document.getElementById('repairReopenError'),
+      repairReopenSave: document.getElementById('repairReopenSave'),
       perfSummary: document.getElementById('perfSummary'),
       perfTrend: document.getElementById('perfTrend'),
       perfCategories: document.getElementById('perfCategories'),
@@ -10542,6 +10590,7 @@
       ticketDetailRef: document.getElementById('ticketDetailRef'),
       ticketDetailStatus: document.getElementById('ticketDetailStatus'),
       ticketFinishButton: document.getElementById('ticketFinishButton'),
+      ticketReopenButton: document.getElementById('ticketReopenButton'),
       ticketDeleteButton: document.getElementById('ticketDeleteButton'),
       ticketDetailClose: document.getElementById('ticketDetailClose'),
       refundModal: document.getElementById('refundModal'),
@@ -13162,8 +13211,8 @@
           pos_category_id: Number(item.pos_category_id || posCategory.id || 0) || null,
           source_category: sourceCategory,
           source_subcategory: sourceSubcategory,
-          cost_price: Number(item.cost_price || item.cost || 0),
-          sale_price: Number(item.sale_price || item.price || item.sell_price || 0),
+          cost_price: Number(item.cost_price ?? item.cost ?? 0),
+          sale_price: Number(item.sale_price ?? item.price ?? item.sell_price ?? 0),
           barcode: item.barcode || '',
           image_url: normalizeImageUrl(getProductImageUrl(item)),
           product_group_code: String(item.product_group_code || productGroup.code || ''),
@@ -13356,22 +13405,32 @@
     }
 
     function quotePriceLabel(price) {
-      const raw = String(price || '').trim();
+      const raw = String(price ?? '').trim();
       if (!raw || raw.toUpperCase() === 'N/A') return 'N/A';
       return raw.startsWith('$') ? raw : '$' + raw;
     }
 
     function priceNumber(value) {
-      const raw = String(value || '').trim();
+      const raw = String(value ?? '').trim();
       const match = raw.match(/^\$?([0-9]+(?:\.[0-9]{1,2})?)$/);
       if (!match) return 0;
       const parsed = Number(match[1]);
-      return Number.isFinite(parsed) && parsed > 0 && parsed <= 1000000 ? parsed : 0;
+      return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1000000 ? parsed : 0;
+    }
+
+    function validRepairPrice(value) {
+      const raw = String(value ?? '').trim();
+      return /^\$?[0-9]+(?:\.[0-9]{1,2})?$/.test(raw)
+        && Number(raw.replace('$', '')) <= 1000000;
+    }
+
+    function currentRepairPriceValue() {
+      const entered = state.repair.quotedPrice;
+      return entered === '' || entered == null ? state.repair.quote?.price : entered;
     }
 
     function repairPriceInputValue(value) {
-      const parsed = priceNumber(value);
-      return parsed > 0 ? parsed.toFixed(2) : '';
+      return validRepairPrice(value) ? priceNumber(value).toFixed(2) : '';
     }
 
     function currentRepairCartName() {
@@ -15050,7 +15109,7 @@
           fileName: item.fileName || ''
         })),
         quote: { ...quote },
-        quotedPrice: state.repair.quotedPrice || quotePriceLabel(quote.price)
+        quotedPrice: quotePriceLabel(currentRepairPriceValue())
       };
     }
 
@@ -15097,7 +15156,7 @@
       const ticket = state.repairTickets.find(item => item.id === state.repair.ticketId);
       if (!ticket) return null;
       normalizeRepairTicket(ticket);
-      ticket.price = state.repair.quotedPrice || ticket.price;
+      ticket.price = state.repair.quotedPrice === '' || state.repair.quotedPrice == null ? ticket.price : state.repair.quotedPrice;
       ticket.intake = currentRepairSnapshot();
       if (options.persist !== false) saveRepairTickets(ticket);
       return ticket;
@@ -16052,7 +16111,7 @@
         was agreed. */
     function buildRepairCardSnapshot() {
       const quote = state.repair.quote || {};
-      const basePrice = priceNumber(state.repair.quotedPrice || quote.price);
+      const basePrice = priceNumber(currentRepairPriceValue());
       const profile = state.repair.testProfile === 'computer' ? 'Laptop / Desktop' : 'Phone / Tablet';
       return {
         captured_at: new Date().toISOString(),
@@ -16064,7 +16123,7 @@
           ? state.repair.specialName
           : `${quote.brand || ''} ${quote.model || ''}`.trim(),
         issue: quote.issue || state.repair.issue || '',
-        price: state.repair.quotedPrice || quotePriceLabel(quote.price),
+        price: quotePriceLabel(currentRepairPriceValue()),
         work_items: [{
           name: quote.issue || state.repair.issue || 'Repair service',
           price: basePrice,
@@ -16244,8 +16303,8 @@
         showToast('Complete every required repair detail before the customer signs.');
         return;
       }
-      const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
-      if (price < 0 || price > 1000000 || (price === 0 && !state.repair.specialOrder)) {
+      const price = priceNumber(currentRepairPriceValue());
+      if (!validRepairPrice(currentRepairPriceValue())) {
         showToast('Enter a valid repair price before the customer signs.');
         return;
       }
@@ -16494,8 +16553,8 @@
         throw new Error('Go back and complete the highlighted repair details before creating the ticket.');
       }
 
-      const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
-      if (price < 0 || price > 1000000 || (price === 0 && !state.repair.specialOrder)) {
+      const price = priceNumber(currentRepairPriceValue());
+      if (!validRepairPrice(currentRepairPriceValue())) {
         const priceInput = els.repairWorkspace.querySelector('#repairQuotedPrice');
         if (priceInput) priceInput.focus();
         throw new Error('Enter one valid repair price before creating the ticket.');
@@ -16622,7 +16681,7 @@
       const repairName = state.repair.specialOrder
         ? (state.repair.specialName || quote.model || quote.issue || 'Special repair')
         : [quote.brand, quote.model].filter(Boolean).join(' ');
-      const quoteLabel = state.repair.quotedPrice || quotePriceLabel(quote.price || state.repair.specialPrice);
+      const quoteLabel = quotePriceLabel(currentRepairPriceValue() ?? state.repair.specialPrice);
       const priceInputValue = repairPriceInputValue(quoteLabel);
       const deviceIdType = normalizedRepairDeviceIdType();
       return `
@@ -16641,7 +16700,7 @@
           </div>
           <div class="repair-summary-item">
             <div class="repair-summary-label">Quote</div>
-            <input class="repair-input" id="repairQuotedPrice" type="number" inputmode="decimal" min="${state.repair.specialOrder ? '0' : '0.01'}" max="1000000" step="0.01" placeholder="Enter one exact amount" value="${escapeHtml(priceInputValue)}">
+            <input class="repair-input" id="repairQuotedPrice" type="number" inputmode="decimal" min="0" max="1000000" step="0.01" placeholder="Enter one exact amount" value="${escapeHtml(priceInputValue)}">
             <div class="repair-price-hint">${priceInputValue
               ? 'Numbers only. The final agreed amount will be saved.'
               : 'The price list contains a range or no price. Enter one exact agreed amount.'}</div>
@@ -16780,6 +16839,7 @@
       els.ticketDetailRef.textContent = 'New card · ' + repairStatusLabel(status);
       els.ticketDetailStatus.hidden = true;
       els.ticketFinishButton.hidden = true;
+      els.ticketReopenButton.hidden = true;
       els.ticketDeleteButton.hidden = true;
       els.ticketDetailMain.innerHTML = '<h2 class="ticket-detail-title">New memo card</h2><p>Keep a note, track an order or follow up with a customer. All fields are optional.</p>' + memoFieldsHtml({});
       els.ticketDetailSide.innerHTML = '<h3 class="ticket-side-title">Comments & images</h3><p>Create the card to add comments, upload images and track activity.</p>';
@@ -16795,6 +16855,7 @@
       els.ticketDetailRef.textContent = ticket.id;
       const locked = Boolean(ticket.closedAt) || ticket.active === false;
       els.ticketDetailMain.innerHTML = `<h2 class="ticket-detail-title">${escapeHtml(ticket.displayLabel || 'Memo card')}</h2><div class="ticket-detail-subtitle">Memo · ${escapeHtml(ticket.store_name || '')}</div>`
+        + ticketClosedNoteHtml(ticket)
         + memoFieldsHtml(ticket, locked, inCart || ticket.paymentStatus !== 'unpaid')
         + ticketJobsPanelHtml(ticket)
         + `<div class="ticket-detail-sections">${[['password','Password'],['imei','IMEI'],['function','Function'],['photos','Photos And Evidence'],['card','Repair Card']].map(([id,label])=>`<button class="repair-chip ${state.selectedTicketSection === id ? 'active' : ''}" type="button" data-ticket-section="${id}">${label}</button>`).join('')}</div><div class="ticket-detail-content">${ticketDetailSectionHtml(ticket)}</div>`;
@@ -16842,7 +16903,7 @@
         <div class="repair-board-toolbar">
           <div class="search-wrap">
             <i class="bi bi-search"></i>
-            <input id="repairBoardSearch" class="search-input" type="search" value="${escapeHtml(state.repairSearch)}" placeholder="Search tickets, including Done / Deleted">
+            <input id="repairBoardSearch" class="search-input" type="search" value="${escapeHtml(state.repairSearch)}" placeholder="Search ticket, invoice #, customer or phone (includes Done / Deleted)">
           </div>
           <div class="repair-search-status">${state.repairSearchLoading ? 'Searching...' : `${storeTickets.length} ${state.repairSearch.trim() ? 'matching' : 'open'} ticket${storeTickets.length === 1 ? '' : 's'}`}</div>
         </div>
@@ -16872,7 +16933,7 @@
                         <div class="ticket-title">${escapeHtml(ticket.displayLabel || ticket.title || 'Repair ticket')}</div>
                         ${ticket.displayLabel && ticket.cardKind !== 'memo' ? `<div class="ticket-device-sub">${escapeHtml(ticket.title || '')}</div>` : ''}
                       </div>
-                      ${ticket.active !== false && !ticket.closedAt && ticket.paymentStatus !== 'deposit' && numberValue(ticket.unbilledTotal) > 0 ? `
+                      ${ticket.active !== false && !ticket.closedAt && ticket.paymentStatus !== 'deposit' && (!ticket.baseInvoiced || (ticket.jobs || []).some(repairJobCanBill)) ? `
                         <button class="ticket-cart-button" type="button" data-ticket-cart="${escapeHtml(ticket.id)}" title="Add ticket to cart" ${state.cart.some(item => item.ticket_id === ticket.id) ? 'disabled' : ''}>
                           <i class="bi bi-cart-plus"></i>
                         </button>
@@ -16885,6 +16946,7 @@
                     <div class="ticket-tags">
                       ${ticket.active === false ? '<span class="ticket-tag danger">Deleted</span>' : (ticket.closedAt ? '<span class="ticket-tag">Done</span>' : '')}
                       ${ticket.cardKind === 'memo' ? '<span class="ticket-tag">Memo</span>' : ''}
+                      ${ticket.active !== false && !ticket.closedAt && (ticket.activity || []).some(item => item.reopened) ? '<span class="ticket-tag warn"><i class="bi bi-arrow-repeat"></i> Follow-up</span>' : ''}
                       ${ticket.specialOrder ? '<span class="ticket-tag">Special</span>' : ''}
                       ${ticket.deviceInStore ? '<span class="ticket-tag">Device in store</span>' : ''}
                       ${ticket.motherboardRepair ? '<span class="ticket-tag danger">Mainboard</span>' : ''}
@@ -16974,6 +17036,75 @@
           : 'This card has no paid invoice yet.');
     }
 
+    // A customer who returns with a problem after pickup used to get a fresh
+    // card, and staff had to dig up the old repair to see what was done.
+    // Reopening puts the original card back on the board instead, with the new
+    // complaint saved as a note beside the earlier work, invoices and photos.
+    function ticketClosedNoteHtml(ticket) {
+      if (!ticket.closedAt || ticket.active === false) return '';
+      const outcome = ticket.resolution ? ` as ${String(ticket.resolution).replace(/_/g, ' ')}` : '';
+      return `<div class="ticket-detail-locked-note"><i class="bi bi-check-circle"></i><span>Closed ${escapeHtml(formatDateTime(ticket.closedAt))}${escapeHtml(outcome)}. Customer back with a problem? Use Reopen for follow-up to put this card back on the board and add notes.</span></div>`;
+    }
+
+    function openRepairReopenModal(ticket) {
+      if (!ticket || !ticket.closedAt || ticket.active === false) return;
+      els.repairReopenForm.dataset.ticketId = ticket.id;
+      els.repairReopenSubtitle.textContent = [ticket.id, ticket.title, ticket.customerName].filter(Boolean).join(' · ');
+      els.repairReopenReason.value = '';
+      els.repairReopenStatus.innerHTML = repairBoardColumns
+        .filter(column => column.id !== 'over_3_months_uncollected')
+        .map(column => `<option value="${column.id}" ${column.id === 'repairing' ? 'selected' : ''}>${escapeHtml(column.label)}</option>`)
+        .join('');
+      els.repairReopenDevice.checked = true;
+      els.repairReopenError.textContent = '';
+      els.repairReopenSave.disabled = false;
+      els.repairReopenModal.classList.add('show');
+      els.repairReopenModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => els.repairReopenReason.focus(), 0);
+    }
+
+    function closeRepairReopenModal() {
+      delete els.repairReopenForm.dataset.ticketId;
+      els.repairReopenModal.classList.remove('show');
+      els.repairReopenModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function submitRepairReopen(event) {
+      event.preventDefault();
+      const ticketId = els.repairReopenForm.dataset.ticketId;
+      if (!ticketId || els.repairReopenSave.disabled) return;
+      const reason = els.repairReopenReason.value.trim();
+      els.repairReopenError.textContent = '';
+      if (!reason) {
+        els.repairReopenError.textContent = 'Describe what the customer came back with.';
+        els.repairReopenReason.focus();
+        return;
+      }
+      els.repairReopenSave.disabled = true;
+      try {
+        const payload = await repairJobRequest({
+          action: 'reopen',
+          ticket_code: ticketId,
+          reason,
+          status: els.repairReopenStatus.value,
+          device_in_store: els.repairReopenDevice.checked
+        });
+        if (!payload.ticket) throw new Error('The reopened card was not returned. Refresh the Repair Board.');
+        const updated = normalizeRepairTicket(payload.ticket);
+        const index = state.repairTickets.findIndex(item => item.id === updated.id);
+        if (index >= 0) state.repairTickets[index] = updated;
+        else state.repairTickets.unshift(updated);
+        closeRepairReopenModal();
+        renderRepairWorkspace();
+        if (state.selectedTicketId === updated.id) renderTicketDetailModal();
+        showToast(`${updated.id} is back on the Repair Board in ${repairStatusLabel(updated.status)}.`);
+      } catch (error) {
+        console.error(error);
+        els.repairReopenError.textContent = error.message || 'The card could not be reopened.';
+        els.repairReopenSave.disabled = false;
+      }
+    }
+
     function ticketJobsPanelHtml(ticket) {
       const locked = ticket.active === false || Boolean(ticket.closedAt);
       const outstanding = numberValue(ticket.outstandingTotal);
@@ -17026,7 +17157,7 @@
         id: '__base__',
         base: true,
         name: ticket.baseJobName || ticket.issue || 'Repair service',
-        price: priceNumber(ticket.basePrice || ticket.price),
+        price: priceNumber(ticket.basePrice ?? ticket.price),
         invoiced: ticket.baseInvoiced,
         status: 'approved',
         note: ''
@@ -17130,7 +17261,7 @@
       if (!draft) return;
       const name = els.repairJobName.value.trim().toLowerCase();
       const match = draft.suggestions.find(row => String(row.issue || '').trim().toLowerCase() === name);
-      if (match && numberValue(match.price) > 0) els.repairJobPrice.value = numberValue(match.price).toFixed(2);
+      if (match && validRepairPrice(match.price)) els.repairJobPrice.value = priceNumber(match.price).toFixed(2);
     }
 
     async function submitRepairJob(event) {
@@ -17151,8 +17282,8 @@
         els.repairJobName.focus();
         return;
       }
-      if (price <= 0 || price > 1000000) {
-        els.repairJobError.textContent = 'Enter a valid price above $0.';
+      if (!validRepairPrice(els.repairJobPrice.value)) {
+        els.repairJobError.textContent = 'Enter a valid price of $0 or more.';
         els.repairJobPrice.focus();
         return;
       }
@@ -17320,7 +17451,7 @@
       const intake = ticket.intake || {};
       const workItems = [{
         name: ticket.baseJobName || ticket.issue || 'Repair service',
-        price: priceNumber(ticket.basePrice || ticket.price),
+        price: priceNumber(ticket.basePrice ?? ticket.price),
         status: 'approved',
         approval_method: 'signature',
         note: ''
@@ -17413,7 +17544,8 @@
       deleted: 'bi-trash',
       refund: 'bi-arrow-counterclockwise',
       details: 'bi-pencil',
-      reorder: 'bi-arrows-move'
+      reorder: 'bi-arrows-move',
+      reopened: 'bi-arrow-repeat'
     };
 
     function isTicketComment(item) {
@@ -17445,7 +17577,7 @@
         }
         return `
           <div class="ticket-activity-item is-event">
-            <span class="ticket-activity-dot" aria-hidden="true"><i class="bi ${TICKET_ACTIVITY_ICONS[item.type] || 'bi-clock-history'}"></i></span>
+            <span class="ticket-activity-dot" aria-hidden="true"><i class="bi ${TICKET_ACTIVITY_ICONS[item.reopened ? 'reopened' : item.type] || 'bi-clock-history'}"></i></span>
             <div class="ticket-activity-card">
               <div><strong>${escapeHtml(staffName)}</strong> ${escapeHtml(item.text || '')}</div>
               <div class="ticket-activity-meta">${escapeHtml(formatDateTime(item.at))}</div>
@@ -17499,6 +17631,7 @@
       els.ticketDetailStatus.innerHTML = repairBoardColumns.map(column => `<option value="${column.id}" ${ticket.status === column.id ? 'selected' : ''}>${escapeHtml(column.label)}</option>`).join('');
       els.ticketDetailStatus.disabled = Boolean(ticket.closedAt);
       renderTicketFinishButton(ticket);
+      els.ticketReopenButton.hidden = !(ticket.closedAt && ticket.active !== false);
       els.ticketDeleteButton.hidden = ticket.active === false;
       if (ticket.active === false && ticket.cardKind === 'memo') {
         els.ticketDetailStatus.disabled = true;
@@ -17521,7 +17654,7 @@
       if (ticket.cardKind === 'memo') { renderMemoDetail(ticket, inCart); return; }
       state.selectedTicketInCart = inCart;
       const customerLocked = ticket.paymentStatus !== 'unpaid' || inCart;
-      const priceLabel = ticket.price || intake.quotedPrice || '';
+      const priceLabel = ticket.price ?? intake.quotedPrice ?? '';
       const storeLabel = ticket.store_name || storeById(state.storeId).name;
       if (els.ticketDetailRef) {
         els.ticketDetailRef.innerHTML = `<i class="bi bi-receipt-cutoff"></i><span>${escapeHtml(ticket.id)}</span>`;
@@ -17541,6 +17674,7 @@
           ${priceLabel ? `<span>·</span><span class="price">${escapeHtml(priceLabel)}</span>` : ''}
           <span>·</span><span>${escapeHtml(storeLabel)}</span>
         </div>
+        ${ticketClosedNoteHtml(ticket)}
         <div class="ticket-detail-grid">
           ${customerLocked ? `
             <div class="ticket-detail-box"><div class="ticket-detail-label">Customer${inCart ? ' <i class="bi bi-lock-fill"></i>' : ''}</div><div class="ticket-detail-value">${escapeHtml(ticket.customerName || 'Walk-in Customer')}</div></div>
@@ -17745,7 +17879,7 @@
 
     function repairIntakeHtml() {
       const quote = state.repair.quote || {};
-      const cartPrice = priceNumber(state.repair.quotedPrice || quote.price);
+      const cartPrice = priceNumber(currentRepairPriceValue());
       const mediaHtml = state.repair.media.map(item => `
         <div class="media-preview">
           ${item.type === 'image' ? `<img src="${item.src}" alt="">` : '<span>Video<br>placeholder</span>'}
@@ -17851,14 +17985,14 @@
         <div class="repair-panel repair-cart-panel">
           <div>
             <div class="repair-cart-title">${escapeHtml(currentRepairCartName())}</div>
-            <div class="repair-cart-meta">${state.repair.ticketId ? `Ticket ${escapeHtml(state.repair.ticketId)}` : 'Unsaved draft'} · ${cartPrice > 0 || (state.repair.specialOrder && cartPrice === 0) ? money(cartPrice) : 'No valid price'}</div>
+            <div class="repair-cart-meta">${state.repair.ticketId ? `Ticket ${escapeHtml(state.repair.ticketId)}` : 'Unsaved draft'} · ${validRepairPrice(currentRepairPriceValue()) ? money(cartPrice) : 'No valid price'}</div>
           </div>
           ${state.repair.ticketId ? `
-            <button id="addRepairToCartBtn" class="repair-action primary" type="button" ${state.repair.addedToCart || cartPrice < 0 || (cartPrice === 0 && !state.repair.specialOrder) ? 'disabled' : ''}>
+            <button id="addRepairToCartBtn" class="repair-action primary" type="button" ${state.repair.addedToCart || !validRepairPrice(currentRepairPriceValue()) ? 'disabled' : ''}>
               ${state.repair.addedToCart ? 'Added to Cart' : 'Add to Cart'}
             </button>
           ` : `
-            <button id="createRepairTicketBtn" class="repair-action primary" type="button" ${(cartPrice > 0 || (state.repair.specialOrder && cartPrice === 0)) && !state.repair.mediaBusy ? '' : 'disabled'}>
+            <button id="createRepairTicketBtn" class="repair-action primary" type="button" ${validRepairPrice(currentRepairPriceValue()) && !state.repair.mediaBusy ? '' : 'disabled'}>
               Create Ticket
             </button>
           `}
@@ -19304,10 +19438,8 @@
       })[status] || String(status || 'Unknown');
     }
 
-    // A device is bought without a price and gets one before it is listed, so
-    // zero means "nobody has priced it yet", not "free".
     function usedDeviceSalePriceText(device) {
-      return numberValue(device && device.sale_price) > 0 ? money(device.sale_price) : 'Not priced';
+      return device && device.sale_price != null ? money(device.sale_price) : 'Not priced';
     }
 
     // A website order holding the device. Until that order is paid or cancelled
@@ -19815,7 +19947,7 @@
               <label class="used-field">IMEI / lost-stolen check *
                 <select name="clean_check_status" required><option value="Pending">Pending</option><option value="Clean">Clean</option><option value="Blocked">Blocked</option><option value="Not Applicable">Not Applicable</option></select>
               </label>
-              <label class="used-field">Purchase price *<input name="purchase_cost" type="number" min="0.01" step="0.01" inputmode="decimal" required></label>
+              <label class="used-field">Purchase price *<input name="purchase_cost" type="number" min="0" step="0.01" inputmode="decimal" required></label>
               <label class="used-field">Payout method *
                 <select id="usedDevicePayoutMethod" name="payout_method" required><option>Cash</option><option>Bank Transfer</option></select>
               </label>
@@ -20819,8 +20951,8 @@
       const data = new FormData(form);
       const status = String(data.get('status') || device.status);
       const error = form.querySelector('#usedDeviceUpdateError');
-      if (status === 'ready_for_sale' && !(Number(data.get('sale_price')) > 0)) {
-        error.textContent = 'Set a sale price before this device is ready for sale.';
+      if (status === 'ready_for_sale' && (String(data.get('sale_price') ?? '').trim() === '' || !Number.isFinite(Number(data.get('sale_price'))) || Number(data.get('sale_price')) < 0)) {
+        error.textContent = 'Enter a sale price of $0 or more.';
         return;
       }
       const submit = form.querySelector('button[type="submit"]');
@@ -22141,8 +22273,8 @@
       }
       syncCurrentRepairTicketSnapshot({ persist: false });
 
-      const price = priceNumber(state.repair.quotedPrice || (state.repair.quote && state.repair.quote.price));
-      if (price < 0 || (price === 0 && !state.repair.specialOrder)) {
+      const price = priceNumber(currentRepairPriceValue());
+      if (!validRepairPrice(currentRepairPriceValue())) {
         showToast('This repair needs a valid price before adding to cart.');
         return;
       }
@@ -22224,12 +22356,12 @@
         pending.push({
           jobCode: '__base__',
           name: ticket.baseJobName || ticket.issue || 'Repair service',
-          price: priceNumber(ticket.basePrice || ticket.price),
+          price: ticket.basePrice ?? ticket.price,
           note: ''
         });
       }
       ticket.jobs.filter(repairJobCanBill).forEach(job => {
-        pending.push({ jobCode: job.id, name: job.name, price: numberValue(job.price), note: job.note || '' });
+        pending.push({ jobCode: job.id, name: job.name, price: job.price, note: job.note || '' });
       });
 
       if (!pending.length) {
@@ -22254,7 +22386,7 @@
         openTicketDetailModal(ticket.id);
         return;
       }
-      if (selected.price < 0 || (selected.price === 0 && !ticket.specialOrder)) {
+      if (!validRepairPrice(selected.price)) {
         showToast('This repair needs a valid price before checkout.');
         openTicketDetailModal(ticket.id);
         return;
@@ -22271,7 +22403,7 @@
         name: selected.name,
         category: 'Repair',
         cost_price: 0,
-        sale_price: selected.price,
+        sale_price: priceNumber(selected.price),
         barcode: '',
         image_url: '',
         qty: 1,
@@ -24628,7 +24760,7 @@
         const billing = (repairCartItems || []).filter(item => item.ticket_id === ticket.id);
         const remaining = [];
         if (!ticket.baseInvoiced) {
-          remaining.push({ name: ticket.baseJobName || ticket.issue || 'Repair service', price: priceNumber(ticket.basePrice || ticket.price) });
+          remaining.push({ name: ticket.baseJobName || ticket.issue || 'Repair service', price: priceNumber(ticket.basePrice ?? ticket.price) });
         }
         (ticket.jobs || []).forEach(job => {
           if (!job.invoiced && job.status !== 'cancelled') remaining.push(job);
@@ -24843,7 +24975,7 @@
             .map(item => item.repair_job_id || '__base__')
         );
         if (!ticket.baseInvoiced && !billing.has('__base__')) {
-          rows.push(`${ticket.baseJobName || ticket.issue || 'Repair service'} ${money(priceNumber(ticket.basePrice || ticket.price))}`);
+          rows.push(`${ticket.baseJobName || ticket.issue || 'Repair service'} ${money(priceNumber(ticket.basePrice ?? ticket.price))}`);
         }
         (ticket.jobs || []).forEach(job => {
           if (repairJobCanBill(job) && !billing.has(job.id)) {
@@ -26442,7 +26574,7 @@
         return;
       }
       if (!ticket || !ticket.canClose || !ticket.invoiceOrderId) return;
-      if (!window.confirm(`Close ${ticket.id} as repaired? The card leaves the Repair Board and cannot be reopened.`)) return;
+      if (!window.confirm(`Close ${ticket.id} as repaired? The card leaves the Repair Board. If the customer comes back, search the invoice or ticket number and reopen it.`)) return;
       applyRepairJobChange({
         action: 'finalize',
         ticket_code: ticket.id,
@@ -26450,6 +26582,15 @@
         decision: 'finish',
         resolution: 'repaired'
       }, 'Repair card closed.');
+    });
+    els.ticketReopenButton.addEventListener('click', () => {
+      openRepairReopenModal(normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId)));
+    });
+    els.repairReopenForm.addEventListener('submit', submitRepairReopen);
+    document.getElementById('repairReopenCancel').addEventListener('click', closeRepairReopenModal);
+    document.getElementById('repairReopenClose').addEventListener('click', closeRepairReopenModal);
+    els.repairReopenModal.addEventListener('click', event => {
+      if (event.target === els.repairReopenModal) closeRepairReopenModal();
     });
     els.ticketDetailStatus.addEventListener('change', event => {
       if (state.selectedTicketId) updateRepairTicketStatus(state.selectedTicketId, event.target.value);
@@ -26724,6 +26865,11 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && els.repairJobModal.classList.contains('show')) {
         closeRepairJobModal();
+      }
+      if (event.key === 'Escape' && els.repairReopenModal.classList.contains('show')) {
+        // Only the reopen form; the card behind it stays open.
+        closeRepairReopenModal();
+        return;
       }
       if (event.key === 'Escape' && els.stocktakeModal.classList.contains('show')) {
         closeStocktakeEditor();
