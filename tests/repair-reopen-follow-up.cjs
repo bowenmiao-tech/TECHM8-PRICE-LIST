@@ -19,7 +19,7 @@ const {chromium}=require('playwright');
   const b=req.postDataJSON();requests.push(b);
   if(fail){fail=false;return route.fulfill({status:400,json:{ok:false,message:'Test reopen failed'}});}
   assert.equal(b.action,'reopen');
-  return route.fulfill({json:{ok:true,ticket:{...closed,status:b.status,closedAt:null,resolution:null,deviceInStore:b.device_in_store,
+  return route.fulfill({json:{ok:true,ticket:{...closed,id:b.ticket_code,status:b.status,closedAt:null,resolution:null,deviceInStore:b.device_in_store,
    activity:[{id:'A2',type:'status',reopened:true,text:'reopened this card for a follow-up check (was closed as repaired) in '+b.status,staffName:'Staff',at:new Date().toISOString()},...closed.activity]}}});
  });
  await page.goto(`http://127.0.0.1:${server.address().port}/pos.html?dashboard-test`);
@@ -63,7 +63,19 @@ const {chromium}=require('playwright');
  const card=page.locator('[data-board-status=waiting_customer_confirmation] [data-ticket-id="RPR-REOPEN"]');
  assert.equal(await card.count(),1,'Reopened card must return to the chosen column');
  assert.equal(await card.locator('.ticket-tag',{hasText:'Follow-up'}).count(),1,'Follow-up tag missing');
+
+ // Moving a Done card with the status list reopens it with no note.
+ await page.evaluate(ticket=>{state.repairTickets.push(normalizeRepairTicket({...ticket,id:'RPR-MOVE'}));state.repairSearch='RPR';els.repairWorkspace.innerHTML=repairBoardHtml();},closed);
+ assert.equal(await page.locator('[data-board-status=history] [data-ticket-id="RPR-MOVE"]').getAttribute('draggable'),'true','Done card must be draggable');
+ await page.evaluate(()=>openTicketDetailModal('RPR-MOVE'));
+ assert.equal(await page.locator('#ticketDetailStatus').isDisabled(),false,'Done card status list must not be locked');
+ assert.equal(await page.locator('#ticketDetailStatus').inputValue(),'','Done card must not look like Need to order');
+ await page.locator('#ticketDetailStatus').selectOption('repairing');
+ await page.waitForFunction(()=>!state.repairTickets.find(t=>t.id==='RPR-MOVE').closedAt);
+ assert.deepEqual([requests.at(-1).ticket_code,requests.at(-1).status,requests.at(-1).reason],['RPR-MOVE','repairing','']);
+ assert.equal(await page.locator('#ticketDetailStatus').inputValue(),'repairing');
+ assert.equal(await page.locator('[data-board-status=repairing] [data-ticket-id="RPR-MOVE"]').count(),1,'Moved card missing from its new column');
  assert.equal(errors.length,0,errors.join('\n'));
- console.log('PASS: invoice search hint; Done card only in search; reopen button + closed note; reason required; failure keeps input; request payload; card back in chosen column with Follow-up tag; no runtime errors.');
+ console.log('PASS: invoice search hint; Done card only in search; reopen button + closed note; reason required; failure keeps input; request payload; card back in chosen column with Follow-up tag; Done card draggable and movable from the status list; no runtime errors.');
  } finally {await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

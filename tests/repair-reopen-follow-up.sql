@@ -20,10 +20,13 @@ begin
   result := public.manage_pos_repair_memo(token, request || jsonb_build_object('action', 'finish-memo'));
   assert result#>>'{ticket,closedAt}' is not null, 'Memo did not close';
 
-  denied := false;
-  begin perform public.reopen_pos_repair_ticket(token, jsonb_build_object('store_code', store_code_value, 'ticket_code', code, 'reason', '   '));
-  exception when others then denied := true; message := sqlerrm; end;
-  assert denied and message = 'Describe what the customer came back with', 'Blank reason accepted';
+  -- Moving a Done card (status list or drag) sends no note.
+  result := public.reopen_pos_repair_ticket(token, jsonb_build_object('store_code', store_code_value, 'ticket_code', code, 'reason', '   ', 'status', 'over_3_months_uncollected'));
+  assert result#>>'{ticket,status}' = 'over_3_months_uncollected' and result#>>'{ticket,closedAt}' is null, 'Move without a note did not reopen';
+  assert result#>>'{ticket,readyForPickupAt}' is not null, 'Uncollected column needs a pickup date';
+  assert jsonb_array_length(public.get_repair_ticket_updates(token, store_code_value, code)->'updates') = 0, 'Blank note saved as a comment';
+  result := public.manage_pos_repair_memo(token, request || jsonb_build_object('action', 'finish-memo'));
+  assert result#>>'{ticket,closedAt}' is not null, 'Memo did not close again';
 
   denied := false;
   begin perform public.reopen_pos_repair_ticket(token, jsonb_build_object('store_code', store_code_value, 'ticket_code', code, 'reason', 'x', 'status', 'closed'));
@@ -93,6 +96,9 @@ begin
   assert (result#>>'{ticket,canClose}')::boolean, 'Paid card with no new work should be closable again';
   assert (public.search_pos_repair_tickets(repair_token, repair_store, '', 500)->'tickets') @> jsonb_build_array(jsonb_build_object('id', repair_code)),
     'Reopened card missing from the board';
+
+  perform public.move_pos_repair_ticket(repair_token, jsonb_build_object('store_code', repair_store, 'status', 'repairing', 'ordered_codes', jsonb_build_array(repair_code)));
+  assert (select board_position from public.pos_repair_tickets where ticket_code = repair_code) = 10, 'Reopened card could not be reordered after a drag';
 
   result := public.finalize_pos_repair_ticket_after_checkout(repair_token, jsonb_build_object(
     'store_code', repair_store, 'ticket_code', repair_code, 'order_code', order_value, 'decision', 'finish', 'resolution', 'no_fault_found'));

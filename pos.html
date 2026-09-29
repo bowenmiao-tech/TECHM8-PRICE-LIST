@@ -15834,7 +15834,7 @@
       const status = column.dataset.boardStatus;
       if (status === 'history') return;
       const ticket = state.repairTickets.find(item => item.id === ticketId);
-      if (!ticket || ticket.active === false || ticket.closedAt) return;
+      if (!ticket || ticket.active === false) return;
 
       // Read the destination order before anything re-renders the board.
       const index = boardInsertIndex(column, clientY);
@@ -15861,8 +15861,22 @@
     async function updateRepairTicketStatus(ticketId, status) {
       const ticket = state.repairTickets.find(item => item.id === ticketId);
       if (!ticket || ticket.status === status) return;
-      if (ticket.active === false || ticket.closedAt) {
-        showToast('Closed repair cards cannot be moved.');
+      if (ticket.active === false) {
+        showToast('Deleted repair cards cannot be moved.');
+        return;
+      }
+      // Moving a Done card is how staff take it back for a follow-up check.
+      if (ticket.closedAt) {
+        try {
+          await reopenRepairTicket(ticketId, status);
+          renderRepairWorkspace();
+          if (state.selectedTicketId === ticketId && els.ticketDetailModal.classList.contains('show')) renderTicketDetailModal();
+          showToast(`${ticketId} reopened in ${repairStatusLabel(status)}. Add a comment for what the customer came back with.`);
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || 'The card could not be reopened.');
+          if (state.selectedTicketId === ticketId && els.ticketDetailModal.classList.contains('show')) renderTicketDetailModal();
+        }
         return;
       }
       if (ticket.cardKind === 'memo') {
@@ -16927,7 +16941,7 @@
                   <span class="board-count">${tickets.length}</span>
                 </div>
                 ${tickets.map(ticket => `
-                  <div class="ticket-card" draggable="${ticket.active === false || ticket.closedAt ? 'false' : 'true'}" data-ticket-id="${escapeHtml(ticket.id)}">
+                  <div class="ticket-card" draggable="${ticket.active === false ? 'false' : 'true'}" data-ticket-id="${escapeHtml(ticket.id)}">
                     <div class="ticket-top">
                       <div class="ticket-title-wrap">
                         <div class="ticket-title">${escapeHtml(ticket.displayLabel || ticket.title || 'Repair ticket')}</div>
@@ -17043,7 +17057,28 @@
     function ticketClosedNoteHtml(ticket) {
       if (!ticket.closedAt || ticket.active === false) return '';
       const outcome = ticket.resolution ? ` as ${String(ticket.resolution).replace(/_/g, ' ')}` : '';
-      return `<div class="ticket-detail-locked-note"><i class="bi bi-check-circle"></i><span>Closed ${escapeHtml(formatDateTime(ticket.closedAt))}${escapeHtml(outcome)}. Customer back with a problem? Use Reopen for follow-up to put this card back on the board and add notes.</span></div>`;
+      return `<div class="ticket-detail-locked-note"><i class="bi bi-check-circle"></i><span>Closed ${escapeHtml(formatDateTime(ticket.closedAt))}${escapeHtml(outcome)}. Customer back with a problem? Pick a column in the status list, drag the card, or use Reopen for follow-up to write a note first.</span></div>`;
+    }
+
+    // Updates the card object in place, so a board drop that awaited the move
+    // sees the new status and can go on to save the card order.
+    async function reopenRepairTicket(ticketId, status, reason = '', deviceInStore = true) {
+      const payload = await repairJobRequest({
+        action: 'reopen',
+        ticket_code: ticketId,
+        reason,
+        status,
+        device_in_store: deviceInStore
+      });
+      if (!payload.ticket) throw new Error('The reopened card was not returned. Refresh the Repair Board.');
+      const updated = normalizeRepairTicket(payload.ticket);
+      const existing = state.repairTickets.find(item => item.id === updated.id);
+      if (existing) {
+        Object.keys(existing).forEach(key => { if (!(key in updated)) delete existing[key]; });
+        return Object.assign(existing, updated);
+      }
+      state.repairTickets.unshift(updated);
+      return updated;
     }
 
     function openRepairReopenModal(ticket) {
@@ -17082,18 +17117,7 @@
       }
       els.repairReopenSave.disabled = true;
       try {
-        const payload = await repairJobRequest({
-          action: 'reopen',
-          ticket_code: ticketId,
-          reason,
-          status: els.repairReopenStatus.value,
-          device_in_store: els.repairReopenDevice.checked
-        });
-        if (!payload.ticket) throw new Error('The reopened card was not returned. Refresh the Repair Board.');
-        const updated = normalizeRepairTicket(payload.ticket);
-        const index = state.repairTickets.findIndex(item => item.id === updated.id);
-        if (index >= 0) state.repairTickets[index] = updated;
-        else state.repairTickets.unshift(updated);
+        const updated = await reopenRepairTicket(ticketId, els.repairReopenStatus.value, reason, els.repairReopenDevice.checked);
         closeRepairReopenModal();
         renderRepairWorkspace();
         if (state.selectedTicketId === updated.id) renderTicketDetailModal();
@@ -17174,7 +17198,7 @@
             <span>Outstanding and unbilled</span>
             <strong>${money(outstanding)}</strong>
           </div>
-          ${locked ? '<div class="ticket-jobs-note">This card is closed. A new problem needs a new repair card.</div>' : ''}
+          ${locked && ticket.active !== false ? '<div class="ticket-jobs-note">This card is Done. To work on it again, pick a column in the status list or use Reopen for follow-up.</div>' : ''}
         </section>
       `;
     }
@@ -17628,8 +17652,11 @@
       const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
       if (!ticket) return;
       const intake = ticket.intake || {};
-      els.ticketDetailStatus.innerHTML = repairBoardColumns.map(column => `<option value="${column.id}" ${ticket.status === column.id ? 'selected' : ''}>${escapeHtml(column.label)}</option>`).join('');
-      els.ticketDetailStatus.disabled = Boolean(ticket.closedAt);
+      // A Done card has no board column, so show that instead of letting the
+      // first column appear selected; picking a column reopens it.
+      els.ticketDetailStatus.innerHTML = (ticket.closedAt ? '<option value="" selected disabled>Done · pick a column to reopen</option>' : '')
+        + repairBoardColumns.map(column => `<option value="${column.id}" ${!ticket.closedAt && ticket.status === column.id ? 'selected' : ''}>${escapeHtml(column.label)}</option>`).join('');
+      els.ticketDetailStatus.disabled = false;
       renderTicketFinishButton(ticket);
       els.ticketReopenButton.hidden = !(ticket.closedAt && ticket.active !== false);
       els.ticketDeleteButton.hidden = ticket.active === false;
@@ -26199,7 +26226,7 @@
       const card = event.target.closest('[data-ticket-id]');
       if (!card) return;
       const ticket = state.repairTickets.find(item => item.id === card.dataset.ticketId);
-      if (!ticket || ticket.active === false || ticket.closedAt) {
+      if (!ticket || ticket.active === false) {
         event.preventDefault();
         return;
       }
