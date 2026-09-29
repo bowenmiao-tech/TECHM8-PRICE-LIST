@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- maximum-scale stops iPad Safari zooming into every field under 16px;
+       Safari still allows pinch-zoom. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="techm8-pos-build" content="2026-09-10-repair-comments-photos">
   <title>TECHM8 POS</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
@@ -67,6 +69,20 @@
       display: grid;
       grid-template-columns: var(--pos-rail-width) minmax(0, 1fr) var(--pos-cart-width);
       background: var(--tm-soft);
+    }
+
+    /* iPad: the keyboard shrinks the visual viewport and Safari scrolls the
+       page up to the field. The app already shrinks to the visible height, so
+       it must also follow that scroll, or it slides off screen and leaves the
+       grey page background over the field. Phones keep a normal document so
+       the wide layout can still scroll sideways. */
+    @media (min-width: 721px) {
+      .pos-app {
+        position: fixed;
+        top: var(--pos-viewport-offset, 0px);
+        left: 0;
+        right: 0;
+      }
     }
 
     .rail {
@@ -11050,13 +11066,42 @@
       });
     }
 
+    // Once the keyboard has shrunk the app, the field being typed in can sit
+    // below the new bottom edge of its panel. Scroll only that panel, and only
+    // when the field is actually out of view.
+    function keepFocusedFieldVisible() {
+      const field = document.activeElement;
+      if (!field || !field.matches('input, textarea, select')) return;
+      if (!field.closest('.pos-app, .modal-backdrop')) return;
+      const view = window.visualViewport;
+      const top = view ? view.offsetTop : 0;
+      const bottom = top + (view ? view.height : window.innerHeight);
+      const rect = field.getBoundingClientRect();
+      if (rect.top < top || rect.bottom > bottom) field.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+
+    let posViewportLastHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    function handlePosViewportResize() {
+      queuePosViewportSync();
+      const height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const shrank = height < posViewportLastHeight - 1;
+      posViewportLastHeight = height;
+      // The second frame is the one laid out at the new app height.
+      if (shrank) requestAnimationFrame(() => requestAnimationFrame(keepFocusedFieldVisible));
+    }
+
     syncPosViewportSize();
-    window.addEventListener('resize', syncPosViewportSize);
+    window.addEventListener('resize', handlePosViewportResize);
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', queuePosViewportSync);
+      window.visualViewport.addEventListener('resize', handlePosViewportResize);
       // Safari moves the visual viewport when the keyboard opens over a field.
       window.visualViewport.addEventListener('scroll', queuePosViewportSync);
     }
+    // A field focused while the keyboard is already open never resizes the
+    // viewport, so check it directly too.
+    document.addEventListener('focusin', () => {
+      setTimeout(keepFocusedFieldVisible, 300);
+    });
 
     function money(value) {
       return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value || 0));
