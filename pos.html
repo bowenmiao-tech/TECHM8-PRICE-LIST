@@ -23880,6 +23880,7 @@
 
     async function persistPosOrder(order, silent = false) {
       if (!order || !order.id) return false;
+      delete order.save_error;
       try {
         const response = await fetch(POS_SALES_ORDERS_ENDPOINT, {
           method: 'POST',
@@ -23910,6 +23911,7 @@
       } catch (error) {
         console.error(error);
         order.sync_pending = true;
+        order.save_error = error.message || 'The order could not be saved.';
         updateStoredOrder(order);
         if (!silent) showToast('Sale completed locally. Database sync will retry automatically.');
         return false;
@@ -25103,7 +25105,7 @@
       const databaseSaved = await persistPosOrder(order, true);
       if (!databaseSaved) {
         removeStoredOrder(order.id);
-        showToast('Checkout was not completed. The cart is unchanged; check the connection and try again.');
+        showToast(`Checkout was not completed. ${order.save_error || 'The order could not be saved.'} The cart is unchanged.`);
         return;
       }
       state.shiftPaymentTotals = null;
@@ -25144,13 +25146,18 @@
         }
       });
 
+      usedDeviceItems.forEach(item => {
+        const device = state.usedDevices.find(entry => entry.id === item.used_device_id);
+        if (device) device.status = 'sold';
+      });
       if (repairTickets.length) resetRepairState();
 
       const completedExchange = state.exchangeReturn ? { ...state.exchangeReturn } : null;
       resetCartState();
       els.customerInput.value = '';
-      if (completedExchange) await loadProducts({ force: true });
-      await loadRepairTickets();
+      // Repair completion needs the newly invoiced jobs; unrelated refreshes
+      // must not delay the customer's receipt after the sale is saved.
+      if (repairCartItems.length) await loadRepairTickets();
       if (repairCartItems.length && !isDeposit) {
         await finalizeRepairCardsAfterPayment(
           order,
@@ -25158,12 +25165,14 @@
           repairCartItems
         );
       }
-      if (usedDeviceItems.length) await loadUsedDevices();
       renderProducts();
       renderRepairWorkspace();
-      await loadTodayProgress({ silent: true });
       renderCart();
       openReceiptCompleteModal(order);
+      refreshAfterCheckout({
+        products: Boolean(completedExchange),
+        usedDevices: Boolean(usedDeviceItems.length)
+      });
       if (completedExchange) {
         const remainingCredit = roundedMoneyValue(order.store_credit_remaining);
         showToast(remainingCredit > 0
@@ -25178,6 +25187,23 @@
           ? `${order.id} paid. Database sync is pending.`
           : `${order.id} paid and saved to the POS database.`);
       }
+    }
+
+    function refreshAfterCheckout(options = {}) {
+      // Run independent refreshes together. Their failure must not turn a
+      // successfully saved payment into an apparent checkout failure.
+      const refreshes = [() => loadTodayProgress({ silent: true })];
+      if (options.products) refreshes.push(async () => {
+        await loadProducts({ force: true });
+        renderProducts();
+      });
+      if (options.usedDevices) refreshes.push(() => loadUsedDevices());
+      return Promise.allSettled(refreshes.map(refresh => Promise.resolve().then(refresh)))
+        .then(results => {
+          results.forEach(result => {
+            if (result.status === 'rejected') console.error('Post-payment refresh failed:', result.reason);
+          });
+        });
     }
 
     function orderBalanceDue(order) {
@@ -25284,19 +25310,20 @@
         updateStoredOrder(payload.order);
         state.shiftPaymentTotals = null;
         const balance = orderBalanceDue(payload.order);
-        await loadRepairTickets();
-        if (balance <= 0) {
+        const repairTicketIds = repairTicketIdsFromOrder(payload.order);
+        if (repairTicketIds.length) await loadRepairTickets();
+        if (balance <= 0 && repairTicketIds.length) {
           await finalizeRepairCardsAfterPayment(
             payload.order,
-            repairTicketIdsFromOrder(payload.order),
+            repairTicketIds,
             Array.isArray(payload.order.items) ? payload.order.items : []
           );
         }
         renderRepairWorkspace();
         renderInvoiceHistory();
-        await loadTodayProgress({ silent: true });
         state.lastCompletedOrder = payload.order;
         openReceiptCompleteModal(payload.order);
+        refreshAfterCheckout();
         showToast(balance > 0
           ? `Payment recorded. ${money(balance)} still owing.`
           : `Invoice ${invoiceNumberText(payload.order)} is now paid in full.`);
