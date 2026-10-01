@@ -23228,7 +23228,8 @@
     const PERF_CATEGORIES = [
       { type: 'repair', label: 'Repairs', icon: 'bi-tools' },
       { type: 'retail', label: 'Products', icon: 'bi-box-seam' },
-      { type: 'used_device', label: 'Devices', icon: 'bi-phone' }
+      { type: 'used_device', label: 'Devices', icon: 'bi-phone' },
+      { type: 'other', label: 'Other', icon: 'bi-three-dots' }
     ];
 
     function formatInvoiceDate(value) {
@@ -25521,6 +25522,7 @@
       // Run independent refreshes together. Their failure must not turn a
       // successfully saved payment into an apparent checkout failure.
       const refreshes = [() => loadTodayProgress({ silent: true })];
+      if (state.activeView === 'orders') refreshes.push(() => loadPerformanceReport());
       if (options.products) refreshes.push(async () => {
         await loadProducts({ force: true });
         renderProducts();
