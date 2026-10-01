@@ -5343,9 +5343,30 @@
       font-weight: 750;
     }
 
-    #ticketPrintLabel {
-      margin: 12px 0 0 8px;
-      vertical-align: middle;
+    .ticket-flag-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .ticket-flag-row .ticket-flag-toggle { margin-top: 0; }
+
+    .ticket-print-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 34px;
+      padding: 0 13px;
+      border: 1px solid var(--tm-line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--tm-ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 850;
+      cursor: pointer;
     }
 
     .ticket-flag-toggle {
@@ -16619,7 +16640,6 @@
           ticket: pendingTicket
         });
         const ticketCode = commitCreatedRepairTicket(saved.ticket);
-        printRepairLabel(state.repairTickets.find(item => item.id === ticketCode));
         const photoResult = await uploadRepairIntakePhotos(ticketCode);
         closeRepairCardModal();
         if (!photoResult.ok) {
@@ -17803,13 +17823,15 @@
           ${priceLabel ? `<span>·</span><span class="price">${escapeHtml(priceLabel)}</span>` : ''}
           <span>·</span><span>${escapeHtml(storeLabel)}</span>
         </div>
-        <button id="ticketMainboardToggle" class="ticket-flag-toggle" type="button" role="switch"
-          aria-checked="${ticket.motherboardRepair ? 'true' : 'false'}" ${ticket.syncPending ? 'disabled' : ''}
-          title="Inspections that turn into a board repair: shows the red Mainboard tag on the Repair Board card">
-          <span class="ticket-flag-switch" aria-hidden="true"></span>
-          <span>Mainboard repair</span>
-        </button>
-        <button id="ticketPrintLabel" class="repair-action" type="button"><i class="bi bi-printer"></i> Print repair tag</button>
+        <div class="ticket-flag-row">
+          <button id="ticketMainboardToggle" class="ticket-flag-toggle" type="button" role="switch"
+            aria-checked="${ticket.motherboardRepair ? 'true' : 'false'}" ${ticket.syncPending ? 'disabled' : ''}
+            title="Inspections that turn into a board repair: shows the red Mainboard tag on the Repair Board card">
+            <span class="ticket-flag-switch" aria-hidden="true"></span>
+            <span>Mainboard repair</span>
+          </button>
+          <button id="ticketPrintLabel" class="ticket-print-tag" type="button"><i class="bi bi-printer"></i> Print repair tag</button>
+        </div>
         ${ticketClosedNoteHtml(ticket)}
         <div class="ticket-detail-grid">
           ${customerLocked ? `
@@ -24340,8 +24362,8 @@
 </html>`;
     }
 
-    // Printed through a hidden iframe rather than window.open: ticket creation
-    // awaits the server first, by which point Chrome blocks a pop-up.
+    // Printed on demand from the ticket detail modal (most intake happens on
+    // iPads with no printer), through a hidden iframe so no pop-up is needed.
     function printRepairLabel(ticket) {
       if (!ticket || !ticket.id) return;
       const previous = document.getElementById('repairLabelPrintFrame');
