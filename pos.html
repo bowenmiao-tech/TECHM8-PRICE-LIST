@@ -5343,6 +5343,11 @@
       font-weight: 750;
     }
 
+    #ticketPrintLabel {
+      margin: 12px 0 0 8px;
+      vertical-align: middle;
+    }
+
     .ticket-flag-toggle {
       display: inline-flex;
       align-items: center;
@@ -16614,6 +16619,7 @@
           ticket: pendingTicket
         });
         const ticketCode = commitCreatedRepairTicket(saved.ticket);
+        printRepairLabel(state.repairTickets.find(item => item.id === ticketCode));
         const photoResult = await uploadRepairIntakePhotos(ticketCode);
         closeRepairCardModal();
         if (!photoResult.ok) {
@@ -17803,6 +17809,7 @@
           <span class="ticket-flag-switch" aria-hidden="true"></span>
           <span>Mainboard repair</span>
         </button>
+        <button id="ticketPrintLabel" class="repair-action" type="button"><i class="bi bi-printer"></i> Print repair tag</button>
         ${ticketClosedNoteHtml(ticket)}
         <div class="ticket-detail-grid">
           ${customerLocked ? `
@@ -21194,6 +21201,8 @@
           ? `CTFY · ${String(item.variant_name || item.name || '').trim()}`
           : item.name,
         category: item.category || '',
+        // Preserve the checkout-time cost for future item profit reports.
+        ...(Number(item.cost_price) > 0 ? { unit_cost_ex_gst: Number(item.cost_price) } : {}),
         is_repair: Boolean(item.is_repair),
         is_special: Boolean(item.is_special),
         is_used_device: Boolean(item.is_used_device),
@@ -24257,6 +24266,106 @@
 </html>`;
     }
 
+    // Tag stuck on the device at intake. Same 80 mm / 72 mm print spec as the
+    // thermal receipt; no price, password or terms because it travels with
+    // the device. Board repair is only ticked YES when chosen at intake, so a
+    // technician can still tick it after diagnosis; send away and the fix
+    // result are always left for handwriting.
+    function repairLabelDocument(ticket) {
+      const intake = ticket.intake || {};
+      const box = on => `<span class="box${on ? ' on' : ''}">${on ? '&#10003;' : ''}</span>`;
+      const notes = noteText(intake.deviceNotes || '', 300).trim();
+      const storeName = ticket.store_name || storeById(ticket.store_id || state.storeId).name || '';
+      const device = ticket.specialOrder ? 'Special Order' : (ticket.title || '');
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Repair Tag ${escapeHtml(ticket.id)}</title>
+  <style>
+    @page { size: auto; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body { width: 80mm; min-width: 80mm; margin: 0; padding: 0; color: #000; background: #fff; font-family: Arial, Helvetica, sans-serif; }
+    .repair-label { width: 72mm; max-width: 72mm; margin: 0; padding: 3mm 3mm 4mm; font-size: 10.5px; line-height: 1.35; overflow-wrap: anywhere; }
+    .label-head { display: flex; justify-content: space-between; align-items: baseline; gap: 2mm; font-size: 10px; font-weight: 800; }
+    .label-sub { margin-top: .5mm; font-size: 9.5px; }
+    .label-customer { margin-top: 2mm; font-size: 20px; font-weight: 900; line-height: 1.15; }
+    .label-phone { margin-top: .8mm; font-size: 14px; font-weight: 800; }
+    .label-rule { margin: 2.2mm 0; border-top: 1px dashed #000; }
+    .label-rule.solid { border-top: 1.5px solid #000; }
+    .label-rows { display: grid; gap: 1.2mm; }
+    .label-row { display: grid; grid-template-columns: 15mm minmax(0, 1fr); gap: 2mm; align-items: start; }
+    .label-row > span { font-size: 9.5px; }
+    .label-row > strong { min-width: 0; overflow-wrap: anywhere; }
+    .label-problem { font-size: 13px; font-weight: 900; }
+    .label-notes { margin-top: .5mm; padding-left: 1.5mm; border-left: 1px solid #000; font-size: 9.5px; white-space: pre-wrap; font-weight: 400; }
+    .label-note-title { font-size: 9.5px; font-weight: 800; }
+    .label-note-line { height: 6mm; border-bottom: 1px solid #000; }
+    .check-row { display: grid; grid-template-columns: 24mm 1fr 1fr; align-items: center; gap: 1.5mm; padding: .8mm 0; font-weight: 800; }
+    .check-row.result { grid-template-columns: 1fr 1fr; font-size: 14px; padding-top: 1.5mm; }
+    .check { display: inline-flex; align-items: center; gap: 1.5mm; }
+    .box { width: 4.2mm; height: 4.2mm; border: 1.5px solid #000; display: inline-grid; place-items: center; font-size: 11px; line-height: 1; flex: none; }
+    .result .box { width: 5.5mm; height: 5.5mm; font-size: 14px; }
+    .box.on { background: #000; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  </style>
+</head>
+<body>
+  <main class="repair-label">
+    <div class="label-head"><span>${escapeHtml(storeName)}</span><span>${escapeHtml(ticket.id)}</span></div>
+    <div class="label-sub">${escapeHtml(formatDateTime(ticket.createdAt))} · Staff: ${escapeHtml(ticket.createdBy || '')}</div>
+    <div class="label-customer">${escapeHtml(ticket.customerName || '')}</div>
+    ${ticket.customerPhone ? `<div class="label-phone">${escapeHtml(ticket.customerPhone)}</div>` : ''}
+    <div class="label-rule"></div>
+    <div class="label-rows">
+      <div class="label-row"><span>Device</span><strong>${escapeHtml(device)}</strong></div>
+      <div class="label-row"><span>Problem</span>
+        <strong>
+          <div class="label-problem">${escapeHtml(ticket.issue || '')}</div>
+          ${notes ? `<div class="label-notes">${escapeHtml(notes)}</div>` : ''}
+        </strong>
+      </div>
+    </div>
+    <div class="label-rule"></div>
+    <div class="label-note-title">Note</div>
+    <div class="label-note-line"></div>
+    <div class="label-note-line"></div>
+    <div class="label-note-line"></div>
+    <div class="label-rule"></div>
+    <div class="check-row"><span>Board repair</span><span class="check">${box(ticket.motherboardRepair)}YES</span><span class="check">${box(false)}NO</span></div>
+    <div class="check-row"><span>Send away</span><span class="check">${box(false)}YES</span><span class="check">${box(false)}NO</span></div>
+    <div class="label-rule solid"></div>
+    <div class="check-row result"><span class="check">${box(false)}FIX</span><span class="check">${box(false)}NOT FIX</span></div>
+  </main>
+</body>
+</html>`;
+    }
+
+    // Printed through a hidden iframe rather than window.open: ticket creation
+    // awaits the server first, by which point Chrome blocks a pop-up.
+    function printRepairLabel(ticket) {
+      if (!ticket || !ticket.id) return;
+      const previous = document.getElementById('repairLabelPrintFrame');
+      if (previous) previous.remove();
+      const frame = document.createElement('iframe');
+      frame.id = 'repairLabelPrintFrame';
+      frame.setAttribute('aria-hidden', 'true');
+      frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+      document.body.appendChild(frame);
+      const doc = frame.contentWindow.document;
+      doc.open();
+      doc.write(repairLabelDocument(normalizeRepairTicket(ticket)));
+      doc.close();
+      setTimeout(() => {
+        try {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        } catch (error) {
+          console.error(error);
+          showToast('The repair tag could not be printed. Open the ticket and use Print repair tag.');
+        }
+      }, 250);
+    }
+
     function invoiceDetailField(label, value) {
       const text = String(value ?? '').trim();
       if (!text || text === '-') return '';
@@ -26786,6 +26895,10 @@
       if (event.target.closest('#memoSave')) { saveMemoCard(event.target.closest('#memoSave')); return; }
       if (event.target.closest('#ticketLabelSave')) {
         saveTicketBoardLabel();
+        return;
+      }
+      if (event.target.closest('#ticketPrintLabel')) {
+        printRepairLabel(state.repairTickets.find(item => item.id === state.selectedTicketId));
         return;
       }
       if (event.target.closest('#ticketMainboardToggle')) {
