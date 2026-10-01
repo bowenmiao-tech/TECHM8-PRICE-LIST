@@ -937,6 +937,70 @@
       font-weight: 900;
     }
 
+    .target-hourly {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: end;
+      gap: 10px 18px;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 16px;
+      background: rgba(255,255,255,.07);
+    }
+
+    .target-hourly-kicker {
+      color: rgba(255,255,255,.66);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .target-hourly-value {
+      margin-top: 6px;
+      font-size: 32px;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .target-hourly-value span {
+      margin-left: 3px;
+      color: rgba(255,255,255,.66);
+      font-size: 15px;
+      font-weight: 850;
+    }
+
+    .target-hourly-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px 20px;
+      color: rgba(255,255,255,.66);
+      font-size: 11px;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .target-hourly-stats strong {
+      display: block;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .target-hourly-note {
+      grid-column: 1 / -1;
+      color: rgba(255,255,255,.6);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    @media (max-width: 560px) {
+      .target-hourly { grid-template-columns: 1fr; }
+      .target-hourly-stats { justify-content: flex-start; text-align: left; }
+    }
+
     .target-action-stack { display: grid; gap: 12px; }
 
     .target-review-card,
@@ -12761,6 +12825,32 @@
       const monthlyNote = Number(target.monthly_points || 0) > 0
         ? `${Number(target.monthly_remaining_points || 0)} monthly points left · ${Number(target.remaining_days || 1)} days remaining`
         : `Set by ${target.updated_by || 'system'}`;
+      const hourly = progress.monthly_hourly_sales || null;
+      const hourlyHours = numberValue(hourly?.hours);
+      const hourlyShiftHours = numberValue(hourly?.shift_hours);
+      const [hourlyYear, hourlyMonth] = String(hourly?.month || '').split('-').map(Number);
+      const hourlyMonthLabel = hourlyYear && hourlyMonth
+        ? new Date(hourlyYear, hourlyMonth - 1, 1).toLocaleString('en-AU', { month: 'long' })
+        : 'This month';
+      const hourlyNote = hourlyHours <= 0
+        ? 'No hours yet this month. Hours come from the timesheet on your daily report.'
+        : hourlyShiftHours > 0
+          ? `Hours from daily report timesheets. ${hourlyShiftHours.toFixed(1)} h counted from shift open and close times where there was no timesheet.`
+          : 'Hours from daily report timesheets.';
+      const hourlyHtml = hourly ? `
+        <div class="target-hourly">
+          <div>
+            <div class="target-hourly-kicker">${escapeHtml(hourlyMonthLabel)} · Sales per hour</div>
+            <div class="target-hourly-value">${hourly.sales_per_hour == null ? '—' : escapeHtml(money(hourly.sales_per_hour))}<span>/h</span></div>
+          </div>
+          <div class="target-hourly-stats">
+            <div><strong>${escapeHtml(money(hourly.net_sales))}</strong>sales</div>
+            <div><strong>${escapeHtml(hourlyHours.toFixed(1))} h</strong>worked</div>
+            <div><strong>${escapeHtml(String(numberValue(hourly.days_worked)))}</strong>days</div>
+          </div>
+          <div class="target-hourly-note">${escapeHtml(hourlyNote)}</div>
+        </div>
+      ` : '';
 
       const quote = state.dashboardQuote;
       const quoteRows = dashboardQuoteRows();
@@ -12833,6 +12923,7 @@
               <span>${escapeHtml(monthlyNote)}</span>
               <span>Updated ${escapeHtml(syncTime)}</span>
             </div>
+            ${hourlyHtml}
           </article>
 
           <div class="target-action-stack">
