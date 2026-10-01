@@ -5438,6 +5438,11 @@
       font-weight: 800;
     }
 
+    .ticket-meta.ticket-customer {
+      color: var(--tm-ink);
+      font-weight: 900;
+    }
+
     .ticket-tags {
       display: flex;
       flex-wrap: wrap;
@@ -17075,8 +17080,8 @@
                       ` : '<span></span>'}
                     </div>
                     ${ticket.cardKind === 'memo' ? `<div class="ticket-meta memo-preview">${escapeHtml(ticket.intake.memoNotes || 'Memo / follow-up')}</div><div class="ticket-meta">${escapeHtml([ticket.customerName, ticket.customerPhone].filter(Boolean).join(' · '))}</div>` : `
-                    <div class="ticket-meta">${escapeHtml(ticket.id)} · ${escapeHtml(ticket.store_code || storeById(state.storeId).code)} · ${escapeHtml(ticket.issue || 'Repair')} · ${money(numberValue(ticket.outstandingTotal))}${(ticket.jobs || []).length ? ` · ${(ticket.jobs || []).length + 1} repairs` : ''}</div>
-                    <div class="ticket-meta">${escapeHtml(ticket.customerName || '')} · ${escapeHtml(ticket.customerPhone || 'Phone missing')}</div>
+                    <div class="ticket-meta ticket-customer">${escapeHtml(ticket.customerName || '')} · ${escapeHtml(ticket.customerPhone || 'Phone missing')}</div>
+                    <div class="ticket-meta">${escapeHtml(ticket.issue || 'Repair')} · ${money(numberValue(ticket.outstandingTotal))}${(ticket.jobs || []).length ? ` · ${(ticket.jobs || []).length + 1} repairs` : ''}</div>
                     `}
                     <div class="ticket-tags">
                       ${ticket.active === false ? '<span class="ticket-tag danger">Deleted</span>' : (ticket.closedAt ? '<span class="ticket-tag">Done</span>' : '')}
