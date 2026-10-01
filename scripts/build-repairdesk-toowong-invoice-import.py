@@ -352,7 +352,7 @@ def build_import(args) -> dict:
     )
     report_headers, report_rows, repaired_report_rows = load_item_report(
         args.item_report, args.store_name, args.min_invoice, args.max_invoice
-    )
+    ) if args.item_report else ([], [], 0)
 
     workbook_by_invoice = defaultdict(list)
     for row in workbook_rows:
@@ -388,7 +388,7 @@ def build_import(args) -> dict:
         for workbook_row in workbook_group:
             key = item_identity_key(workbook_row.get("Item Code"), workbook_row.get("Item Sku"))
             matched = report_queues[key].pop(0) if report_queues[key] else None
-            if matched is None:
+            if matched is None and args.item_report:
                 line_match_failures.append({
                     "invoice_number": number,
                     "item_id": clean_text(workbook_row.get("Item Code")),
@@ -471,25 +471,25 @@ def build_import(args) -> dict:
                 "source_invoice_notes": invoice_notes,
                 "source_customer": customer,
                 "source_import_file": args.invoice_export.name,
-                "source_item_report_file": args.item_report.name,
+                "source_item_report_file": args.item_report.name if args.item_report else "",
             },
             "items": lines,
             "payments": payments,
         })
 
     all_expected = set(range(args.min_invoice, args.max_invoice + 1))
-    missing_invoice_numbers = sorted(all_expected - report_ids)
+    missing_invoice_numbers = sorted(all_expected - (report_ids if args.item_report else workbook_ids))
     imported_total = sum((decimal_value(invoice["total"]) for invoice in prepared), Decimal("0"))
     imported_paid_total = sum((decimal_value(invoice["amount_paid"]) for invoice in prepared), Decimal("0"))
 
     blocking_issues = {
         "missing_in_invoice_export": missing_in_workbook,
-        "missing_in_item_report": missing_in_report,
+        "missing_in_item_report": missing_in_report if args.item_report else [],
     }
     manifest = {
         "source": {
             "invoice_export": str(args.invoice_export),
-            "item_report": str(args.item_report),
+            "item_report": str(args.item_report) if args.item_report else None,
             "store_name": args.store_name,
             "order_prefix": args.order_prefix,
             "invoice_range": [args.min_invoice, args.max_invoice],
@@ -555,13 +555,17 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Prepare idempotent RepairDesk Toowong invoice import batches.")
     parser.add_argument("--invoice-export", type=Path, default=Path.home() / "Downloads" / "Invoices2026-08-20-23-08-59.xlsx")
     parser.add_argument("--item-report", type=Path, default=Path.home() / "Downloads" / "Item Wise Sales Report.csv")
+    parser.add_argument("--invoice-only", action="store_true", help="Build from the invoice workbook when no item-wise export is available")
     parser.add_argument("--output-dir", type=Path, default=Path(".codex-temp/repairdesk-toowong-invoice-import"))
     parser.add_argument("--store-name", default="TechM8 Toowong")
     parser.add_argument("--order-prefix", default="RD-TW-INV-")
     parser.add_argument("--min-invoice", type=int, default=1)
     parser.add_argument("--max-invoice", type=int, default=3848)
     parser.add_argument("--batch-size", type=int, default=50)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.invoice_only:
+        args.item_report = None
+    return args
 
 
 if __name__ == "__main__":
