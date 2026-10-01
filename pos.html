@@ -9,12 +9,13 @@
   <title>TECHM8 POS</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="./browser-uuid.js?v=20261001.1"></script>
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js?v=20260904.1"></script>
   <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
-  <script src="./repair-ticket-updates.js?v=20260912.1"></script>
+  <script src="./repair-ticket-updates.js?v=20261001.1"></script>
   <link rel="stylesheet" href="./used-device-evidence.css?v=20260921.1">
-  <script src="./used-device-evidence.js?v=20260922.1"></script>
+  <script src="./used-device-evidence.js?v=20261001.1"></script>
   <link rel="stylesheet" href="./used-device-sale-test.css?v=20260920.1">
   <script src="./used-device-sale-test.js?v=20260920.1"></script>
   <script src="./vendor/sortable.min.js"></script>
@@ -12621,7 +12622,7 @@
           body: JSON.stringify({
             store_code: repairTicketStoreCode(),
             staff_name: state.selectedStaffName,
-            event_code: crypto.randomUUID(),
+            event_code: window.techm8RandomUUID(),
             customer_name: String(customerName).trim()
           })
         });
@@ -13295,7 +13296,7 @@
           || getCategoryLabel(item.product_subcategory);
 
         return {
-          id: String(item.id || item.product_id || item.sku || crypto.randomUUID()),
+          id: String(item.id || item.product_id || item.sku || window.techm8RandomUUID()),
           sku: usableSku(item.sku),
           name: item.name || item.product_name || 'Unnamed product',
           brand: String(item.brand || ''),
@@ -14104,7 +14105,7 @@
           note: '',
           search: '',
           items: [],
-          requestKey: crypto.randomUUID(),
+          requestKey: window.techm8RandomUUID(),
           submitting: false
         };
         state.transferModalMode = 'dispatch';
@@ -14312,7 +14313,7 @@
         return;
       }
       state.transferReceipt = {
-        key: crypto.randomUUID(),
+        key: window.techm8RandomUUID(),
         note: '',
         photos: [],
         submitting: false,
@@ -14412,7 +14413,7 @@
         return;
       }
       state.transferReceipt = {
-        key: crypto.randomUUID(),
+        key: window.techm8RandomUUID(),
         reason: '',
         photos: [],
         submitting: false,
@@ -14770,7 +14771,7 @@
         ],
         receipts: [{
           id: 980001,
-          receipt_key: crypto.randomUUID(),
+          receipt_key: window.techm8RandomUUID(),
           receipt_type: 'receive',
           received_by: 'Bowen',
           note: 'Two received for UI test',
@@ -15232,7 +15233,7 @@
             type: 'image',
             src,
             fileName: `${baseName}.jpg`,
-            uploadId: crypto.randomUUID()
+            uploadId: window.techm8RandomUUID()
           });
         } catch (error) {
           errors.push(error.message || 'One repair photo could not be prepared.');
@@ -16942,7 +16943,7 @@
 
     function openNewMemo(status) {
       if (!repairBoardColumns.some(column => column.id === status)) return;
-      newMemoDraft = {id: 'MEMO-' + crypto.randomUUID(), status};
+      newMemoDraft = {id: 'MEMO-' + window.techm8RandomUUID(), status};
       state.selectedTicketId = '';
       els.ticketDetailRef.textContent = 'New card · ' + repairStatusLabel(status);
       els.ticketDetailStatus.hidden = true;
@@ -20194,7 +20195,7 @@
     function mountUsedDeviceIntakeEvidence() {
       const host = els.usedDeviceContent.querySelector('#usedDeviceIntakeEvidence');
       if (!host || !window.Techm8UsedDeviceEvidence) return;
-      if (!state.usedDeviceIntakeKey) state.usedDeviceIntakeKey = crypto.randomUUID();
+      if (!state.usedDeviceIntakeKey) state.usedDeviceIntakeKey = window.techm8RandomUUID();
       state.usedDeviceIntakeCounts = {intake: 0, seller_id: 0};
       window.Techm8UsedDeviceEvidence.mount(host, {
         storeCode: repairTicketStoreCode(),
@@ -20290,7 +20291,7 @@
       document.body.appendChild(dialog);
       dialog.showModal();
       let count = 0, saving = false, uploading = false;
-      const key = crypto.randomUUID();
+      const key = window.techm8RandomUUID();
       const confirm = dialog.querySelector('[data-receipt-confirm]');
       const cancel = dialog.querySelector('[data-receipt-close]');
       const error = dialog.querySelector('#usedTransferReceiptError');
@@ -21014,7 +21015,7 @@
           staff_name: state.selectedStaffName,
           device_code: device.id,
           // A client-generated ID makes a retry after a timeout harmless.
-          id: crypto.randomUUID(),
+          id: window.techm8RandomUUID(),
           kind: String(data.get('kind') || 'part'),
           description,
           repair_ticket_code: String(data.get('repair_ticket_code') || '').trim()
@@ -22607,7 +22608,7 @@
       }
 
       state.cart.push({
-        id: 'special-' + Date.now() + '-' + crypto.randomUUID(),
+        id: 'special-' + Date.now() + '-' + window.techm8RandomUUID(),
         sku: 'SPECIAL',
         name,
         category: 'Special Products',
@@ -24364,7 +24365,7 @@
       const item = (order.items || []).find(item => String(item.line_id) === String(lineId));
       if (!item?.warranty?.can_claim) return;
       const key = `${order.id}:${lineId}`;
-      if (!warrantyClaimRequests.has(key)) warrantyClaimRequests.set(key, crypto.randomUUID());
+      if (!warrantyClaimRequests.has(key)) warrantyClaimRequests.set(key, window.techm8RandomUUID());
       button.disabled = true;
       button.textContent = 'Saving claim…';
       try {

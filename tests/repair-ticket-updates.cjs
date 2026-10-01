@@ -11,11 +11,14 @@ const {chromium} = require('playwright');
     assert(source.includes('repair-ticket-updates.js'));
     assert(source.includes('Techm8RepairUpdates.mount'));
   }
-  const script = fs.readFileSync(path.join(root, 'repair-ticket-updates.js'), 'utf8');
+  const script = fs.readFileSync(path.join(root, 'browser-uuid.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'repair-ticket-updates.js'), 'utf8');
   new Function(script);
   const browser = await chromium.launch({headless: true, channel: 'chrome'});
   try {
     const context = await browser.newContext({viewport: {width: 1100, height: 900}});
+    await context.addInitScript(() => {
+      Object.defineProperty(window.crypto, 'randomUUID', {value: undefined, configurable: true});
+    });
     const entries = [];
     let failPost = false;
     const errors = [];

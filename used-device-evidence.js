@@ -124,7 +124,7 @@
         notify(instance);
         return;
       }
-      state.queue.push(...files.map(file => ({file, stage, id: crypto.randomUUID()})));
+      state.queue.push(...files.map(file => ({file, stage, id: window.techm8RandomUUID()})));
     }
     if (!state.queue.length) return;
     state.busy = true;
@@ -190,7 +190,7 @@
     state.error = false;
     state.message = 'Saving note...';
     if (!state.pendingComment || state.pendingComment.body !== body) {
-      state.pendingComment = {kind: 'comment', stage: state.commentStage, id: crypto.randomUUID(), body};
+      state.pendingComment = {kind: 'comment', stage: state.commentStage, id: window.techm8RandomUUID(), body};
     }
     notify(instance);
     try {

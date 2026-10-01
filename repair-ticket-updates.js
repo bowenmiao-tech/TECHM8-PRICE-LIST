@@ -76,7 +76,7 @@
     if (state.busy || !state.writable || mount.options.readonly) return;
     if (files) {
       if (files.length > 10) { state.error = true; state.message = 'Choose up to 10 images at a time.'; notify(state); return; }
-      state.queue.push(...files.map(file => ({file, id: crypto.randomUUID()})));
+      state.queue.push(...files.map(file => ({file, id: window.techm8RandomUUID()})));
     }
     if (!state.queue.length) return;
     state.busy = true; state.error = false;
@@ -161,7 +161,7 @@
         const body = state.draft.trim();
         if (!body) return;
         state.busy = true; state.error = false; state.message = 'Saving comment...';
-        if (!state.pendingComment || state.pendingComment.body !== body) state.pendingComment = {kind: 'comment', id: crypto.randomUUID(), body};
+        if (!state.pendingComment || state.pendingComment.body !== body) state.pendingComment = {kind: 'comment', id: window.techm8RandomUUID(), body};
         notify(state);
         try {
           await request(options, state.pendingComment);
@@ -186,7 +186,7 @@
     }
     state.writable = true;
     state.queue.push(...prepared.map(item => ({
-      id: item.id || crypto.randomUUID(),
+      id: item.id || window.techm8RandomUUID(),
       data: item.data,
       fileName: item.fileName || 'Screenshot.jpg'
     })));
