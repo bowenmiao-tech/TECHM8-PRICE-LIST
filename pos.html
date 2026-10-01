@@ -937,10 +937,13 @@
       font-weight: 900;
     }
 
+    /* Flex rather than grid so the stats drop below the rate as one row
+       whenever the card is too narrow for both, at any viewport width. */
     .target-hourly {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: end;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
       gap: 10px 18px;
       margin-top: 16px;
       padding: 14px 16px;
@@ -965,16 +968,16 @@
     }
 
     .target-hourly-value span {
-      margin-left: 3px;
       color: rgba(255,255,255,.66);
       font-size: 15px;
       font-weight: 850;
     }
 
+    .target-hourly-value span:first-child { margin-right: 6px; }
+    .target-hourly-value span:last-child { margin-left: 3px; }
+
     .target-hourly-stats {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
       gap: 8px 20px;
       color: rgba(255,255,255,.66);
       font-size: 11px;
@@ -990,16 +993,12 @@
     }
 
     .target-hourly-note {
-      grid-column: 1 / -1;
+      flex-basis: 100%;
       color: rgba(255,255,255,.6);
       font-size: 11px;
       font-weight: 750;
     }
 
-    @media (max-width: 560px) {
-      .target-hourly { grid-template-columns: 1fr; }
-      .target-hourly-stats { justify-content: flex-start; text-align: left; }
-    }
 
     .target-action-stack { display: grid; gap: 12px; }
 
@@ -12835,13 +12834,13 @@
       const hourlyNote = hourlyHours <= 0
         ? 'No hours yet this month. Hours come from opening and closing your shift in POS.'
         : hourlyTimesheetHours > 0
-          ? `Hours from POS shift open and close times. ${hourlyTimesheetHours.toFixed(1)} h taken from daily report timesheets on days the shift was not closed.`
-          : 'Hours from POS shift open and close times.';
+          ? `Sales by payment date. Hours from POS shift open and close times; ${hourlyTimesheetHours.toFixed(1)} h taken from daily report timesheets on days the shift was not closed.`
+          : 'Sales by payment date. Hours from POS shift open and close times.';
       const hourlyHtml = hourly ? `
         <div class="target-hourly">
           <div>
-            <div class="target-hourly-kicker">${escapeHtml(hourlyMonthLabel)} · Sales per hour</div>
-            <div class="target-hourly-value">${hourly.sales_per_hour == null ? '—' : escapeHtml(money(hourly.sales_per_hour))}<span>/h</span></div>
+            <div class="target-hourly-kicker">${escapeHtml(hourlyMonthLabel)}</div>
+            <div class="target-hourly-value"><span>Sale:</span>${hourly.sales_per_hour == null ? '—' : escapeHtml(money(hourly.sales_per_hour))}<span>/ per hour</span></div>
           </div>
           <div class="target-hourly-stats">
             <div><strong>${escapeHtml(money(hourly.net_sales))}</strong>sales</div>
