@@ -12827,16 +12827,16 @@
         : `Set by ${target.updated_by || 'system'}`;
       const hourly = progress.monthly_hourly_sales || null;
       const hourlyHours = numberValue(hourly?.hours);
-      const hourlyShiftHours = numberValue(hourly?.shift_hours);
+      const hourlyTimesheetHours = numberValue(hourly?.timesheet_hours);
       const [hourlyYear, hourlyMonth] = String(hourly?.month || '').split('-').map(Number);
       const hourlyMonthLabel = hourlyYear && hourlyMonth
         ? new Date(hourlyYear, hourlyMonth - 1, 1).toLocaleString('en-AU', { month: 'long' })
         : 'This month';
       const hourlyNote = hourlyHours <= 0
-        ? 'No hours yet this month. Hours come from the timesheet on your daily report.'
-        : hourlyShiftHours > 0
-          ? `Hours from daily report timesheets. ${hourlyShiftHours.toFixed(1)} h counted from shift open and close times where there was no timesheet.`
-          : 'Hours from daily report timesheets.';
+        ? 'No hours yet this month. Hours come from opening and closing your shift in POS.'
+        : hourlyTimesheetHours > 0
+          ? `Hours from POS shift open and close times. ${hourlyTimesheetHours.toFixed(1)} h taken from daily report timesheets on days the shift was not closed.`
+          : 'Hours from POS shift open and close times.';
       const hourlyHtml = hourly ? `
         <div class="target-hourly">
           <div>
