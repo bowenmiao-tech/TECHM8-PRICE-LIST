@@ -5342,6 +5342,55 @@
       font-weight: 750;
     }
 
+    .ticket-flag-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 12px;
+      padding: 6px 13px 6px 7px;
+      border: 1px solid var(--tm-line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--tm-ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .ticket-flag-switch {
+      position: relative;
+      flex: none;
+      width: 34px;
+      height: 20px;
+      border-radius: 999px;
+      background: #d5dedb;
+      transition: background .15s;
+    }
+
+    .ticket-flag-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+      transition: transform .15s;
+    }
+
+    .ticket-flag-toggle[aria-checked="true"] {
+      border-color: #f3c2bc;
+      background: #fff0ee;
+      color: var(--tm-red);
+    }
+
+    .ticket-flag-toggle[aria-checked="true"] .ticket-flag-switch { background: var(--tm-red); }
+    .ticket-flag-toggle[aria-checked="true"] .ticket-flag-switch::after { transform: translateX(14px); }
+    .ticket-flag-toggle:disabled { opacity: .55; cursor: progress; }
+
     .ticket-title {
       font-size: 13px;
       font-weight: 950;
@@ -17614,7 +17663,8 @@
       refund: 'bi-arrow-counterclockwise',
       details: 'bi-pencil',
       reorder: 'bi-arrows-move',
-      reopened: 'bi-arrow-repeat'
+      reopened: 'bi-arrow-repeat',
+      mainboard: 'bi-cpu'
     };
 
     function isTicketComment(item) {
@@ -17746,6 +17796,12 @@
           ${priceLabel ? `<span>·</span><span class="price">${escapeHtml(priceLabel)}</span>` : ''}
           <span>·</span><span>${escapeHtml(storeLabel)}</span>
         </div>
+        <button id="ticketMainboardToggle" class="ticket-flag-toggle" type="button" role="switch"
+          aria-checked="${ticket.motherboardRepair ? 'true' : 'false'}" ${ticket.syncPending ? 'disabled' : ''}
+          title="Inspections that turn into a board repair: shows the red Mainboard tag on the Repair Board card">
+          <span class="ticket-flag-switch" aria-hidden="true"></span>
+          <span>Mainboard repair</span>
+        </button>
         ${ticketClosedNoteHtml(ticket)}
         <div class="ticket-detail-grid">
           ${customerLocked ? `
@@ -26705,6 +26761,21 @@
       }, input.value.trim() ? 'Board label saved.' : 'Board label cleared.');
     }
 
+    // Inspections often turn into a board repair after diagnosis; this only
+    // flips the Mainboard tag, never the price, jobs or invoice.
+    async function toggleTicketMainboard(button) {
+      const ticket = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (!ticket || button.disabled) return;
+      const next = !ticket.motherboardRepair;
+      button.disabled = true;
+      const updated = await applyRepairJobChange({
+        action: 'mainboard',
+        ticket_code: ticket.id,
+        motherboard_repair: next
+      }, next ? 'Marked as mainboard repair.' : 'Mainboard repair mark removed.');
+      if (!updated) button.disabled = false;
+    }
+
     els.ticketDetailMain.addEventListener('keydown', event => {
       if (event.target.id !== 'ticketLabelInput' || event.key !== 'Enter') return;
       event.preventDefault();
@@ -26715,6 +26786,10 @@
       if (event.target.closest('#memoSave')) { saveMemoCard(event.target.closest('#memoSave')); return; }
       if (event.target.closest('#ticketLabelSave')) {
         saveTicketBoardLabel();
+        return;
+      }
+      if (event.target.closest('#ticketMainboardToggle')) {
+        toggleTicketMainboard(event.target.closest('#ticketMainboardToggle'));
         return;
       }
       const jobAdd = event.target.closest('[data-job-add]');

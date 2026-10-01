@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+let handler;const calls=[];
+globalThis.Deno={env:{get:name=>name==='SUPABASE_URL'?'https://backend.test':'server-key'},serve:fn=>handler=fn};
+globalThis.fetch=async(url,options)=>{const body=JSON.parse(options.body);calls.push({url,body});return Response.json(url.endsWith('pos_authorized_actor')?{ok:true,store_code:'toowong',staff_name:'Verified staff'}:{ok:true});};
+await import('../supabase/functions/pos-repair-tickets/index.ts');
+const request=(body,token='session')=>handler(new Request('https://edge.test',{method:'POST',headers:{'x-staff-session':token,'Content-Type':'application/json'},body:JSON.stringify(body)}));
+const body={store_code:'toowong',ticket_code:'RPR-1',action:'mainboard',motherboard_repair:true,staff_name:'Spoofed'};
+assert.equal((await request(body,'')).status,401);
+assert.equal((await request(body)).status,200);
+assert(calls.at(-1).url.endsWith('/set_pos_repair_ticket_mainboard'));
+assert.equal(calls.at(-1).body.payload.staff_name,'Verified staff');
+assert.equal(calls.at(-1).body.payload.motherboard_repair,true);
+console.log('PASS: mainboard routed to set_pos_repair_ticket_mainboard with the verified actor; session required.');
