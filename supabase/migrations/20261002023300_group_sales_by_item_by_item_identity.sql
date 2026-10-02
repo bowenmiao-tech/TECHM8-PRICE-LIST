@@ -108,7 +108,7 @@ begin
       between from_value and to_value
   ),
   filtered as materialized (
-    select *, case when item_type = 'Repairs' then name else coalesce(nullif(product_id,''),nullif(sku,''),name) end item_key
+    select *, coalesce(nullif(product_id,''),nullif(sku,''),name) item_key
     from movements
     where (type_value = '' or lower(item_type) = type_value)
       and (query_value = '' or field_value = '' or
@@ -121,20 +121,30 @@ begin
           else '' end) like '%' || query_value || '%')
   ),
   grouped_store as materialized (
-    select store_code, store_name, item_type, item_key, repair_category, category, brand, model, name product_name,
+    select store_code, store_name, item_type, item_key,
+      (array_agg(repair_category order by abs(movement_quantity) desc,business_date desc))[1] repair_category,
+      (array_agg(category order by abs(movement_quantity) desc,business_date desc))[1] category,
+      (array_agg(brand order by abs(movement_quantity) desc,business_date desc))[1] brand,
+      (array_agg(model order by abs(movement_quantity) desc,business_date desc))[1] model,
+      (array_agg(name order by business_date asc,id asc))[1] product_name,
       round(sum(movement_quantity), 2) qty,
       round(sum(movement_revenue), 2) total,
       round(sum(movement_discount), 2) discount,
       case when count(*) filter (where movement_cost is null) = 0 then round(sum(movement_cost), 2) else null end cogs,
       count(*) filter (where movement_cost is null) unknown_cost_lines
     from filtered
-    group by store_code,store_name,item_type,item_key,repair_category,category,brand,model,name
+    group by store_code,store_name,item_type,item_key
   ),
   grouped as materialized (
     select
       case when store_value = '' then '' else store_code end store_code,
       case when store_value = '' then 'Stores' else store_name end store_name,
-      item_type,item_key,repair_category,category,brand,model,product_name,
+      item_type,item_key,
+      (array_agg(repair_category order by abs(qty) desc))[1] repair_category,
+      (array_agg(category order by abs(qty) desc))[1] category,
+      (array_agg(brand order by abs(qty) desc))[1] brand,
+      (array_agg(model order by abs(qty) desc))[1] model,
+      (array_agg(product_name order by abs(qty) desc))[1] product_name,
       round(sum(qty),2) qty,
       round(sum(total),2) total,
       round(sum(discount),2) discount,
@@ -143,7 +153,7 @@ begin
       jsonb_agg(jsonb_build_object('store_name',store_name,'qty',qty,'total',total,'discount',discount,
         'cogs',cogs,'unknown_cost_lines',unknown_cost_lines) order by store_name) stores
     from grouped_store
-    group by 1,2,3,4,5,6,7,8,9
+    group by 1,2,3,4
   ),
   totals as (
     select count(*)::integer row_count, coalesce(round(sum(qty),2),0) qty,

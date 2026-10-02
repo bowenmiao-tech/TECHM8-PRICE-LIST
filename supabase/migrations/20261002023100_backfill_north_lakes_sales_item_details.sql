@@ -44,7 +44,7 @@ begin
     join public.store_locations store on store.id = sales_order.store_id
     where store.store_code = 'northlakes'
       and sales_order.invoice_number = (item->>'invoice_number')::bigint
-      and sales_order.order_code = 'RD-NL-INV-' || item->>'invoice_number'
+      and sales_order.order_code = 'RD-NL-INV-' || (item->>'invoice_number')
       and sales_order.order_payload->>'source_system' = 'repairdesk'
       and sales_order.order_payload->>'source_store_name' = 'TechM8 North Lakes'
       and line.legacy_import

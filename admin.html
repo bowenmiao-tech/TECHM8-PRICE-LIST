@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-admin-build" content="2026-10-02-sales-by-item">
+  <meta name="techm8-admin-build" content="2026-10-02-sales-by-item-all-stores">
   <title>TECHM8 Admin Portal</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -1044,7 +1044,7 @@
             </div>
           </div>
           <section class="item-report-filters" aria-label="Sales by item filters">
-            <label>Select Store<select id="itemStore"><option value="">Select All</option><option value="parkridge">TechM8 Park Ridge</option><option value="fairfield">TechM8 Fairfield</option><option value="northlakes">TechM8 North Lakes</option><option value="toowong">TechM8 Toowong</option></select></label>
+            <label>Select Store<select id="itemStore"><option value="">Select All</option><option value="parkridge">TechM8 Park Ridge</option><option value="fairfield">TechM8 Fairfield</option><option value="northlakes">TechM8 North Lakes</option><option value="toowong">TechM8 Toowong</option><option value="brassall">TechM8 Brassall</option></select></label>
             <label>Type<select id="itemType"><option value="">Please Select</option><option value="repairs">Repairs Ticket</option><option value="unlocking">Unlocking</option><option value="products">Products</option><option value="trade-in">Trade-in</option><option value="miscellaneous">Miscellaneous</option><option value="membership">Membership</option></select></label>
             <fieldset class="item-date-field"><legend>Date</legend><input id="itemDateFrom" type="date" aria-label="From date"><span>–</span><input id="itemDateTo" type="date" aria-label="To date"></fieldset>
             <label>Criteria<select id="itemCriteria"><option value="">Please Select</option><option value="product_name">Product Name</option><option value="repair_category">Repair Category</option><option value="category">Category/Sub Category</option><option value="brand">Brand</option><option value="model">Model</option></select></label>
@@ -1101,7 +1101,8 @@
     </aside>
   </div>
 
-  <script src="./sales-by-item-admin.js?v=20261002.1"></script>
+  <script src="./sales-by-item-xlsx.js?v=20261002.2"></script>
+  <script src="./sales-by-item-admin.js?v=20261002.2"></script>
   <script>
     (() => {
       const STORE_META = {

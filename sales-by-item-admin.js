@@ -91,33 +91,39 @@
   }
   async function allRows() {
     const collected = [];
+    const fixedParams = params(1000, 0);
     let report;
     do {
-      report = await window.Techm8StaffAuth.callRpc('get_admin_sales_by_item',params(1000,collected.length));
+      report = await window.Techm8StaffAuth.callRpc('get_admin_sales_by_item',{...fixedParams,page_offset:collected.length});
       collected.push(...(report.rows || []));
     } while (collected.length < Number(report.row_count || 0) && (report.rows || []).length);
     return { report, rows: collected };
   }
-  function csvCell(value) { return `"${String(value ?? '').replace(/"/g,'""')}"`; }
   async function exportExcel() {
+    $('itemExportExcel').disabled = true;
     try {
       alert('Preparing Excel export…');
-      const { rows } = await allRows();
+      const { report, rows } = await allRows();
       const headings = ['Stores','Type','Repair Category','Category/Sub Category','Brand','Model','Product Name','QTY','Total','COGS','Net Profit','Net Profit Margin'];
-      const lines = [headings, ...rows.map(row => [row.store_name,row.type,row.repair_category,row.category,row.brand,row.model,row.product_name,row.qty,row.total,row.cogs,row.net_profit,row.margin])];
-      const blob = new Blob(['\ufeff'+lines.map(line => line.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+      const numeric = value => value == null ? '' : Number(value);
+      const lines = [headings, ...rows.map(row => [row.store_name,row.type,row.repair_category,row.category,row.brand,row.model,row.product_name,numeric(row.qty),numeric(row.total),numeric(row.cogs),numeric(row.net_profit),numeric(row.margin)])];
+      const totals = report.totals || {};
+      lines.push(['Total','','','','','','',numeric(totals.qty),numeric(totals.total),numeric(totals.cogs),numeric(totals.net_profit),numeric(totals.margin)]);
+      const blob = window.Techm8SalesByItemXlsx.createWorkbook(lines);
       const url = URL.createObjectURL(blob), link = document.createElement('a');
-      link.href = url; link.download = `sales-by-item-${$('itemDateFrom').value}-${$('itemDateTo').value}.csv`;
+      link.href = url; link.download = `sales-by-item-${report.date_from}-${report.date_to}.xlsx`;
       document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url),30000);
-      alert(Number(state.report?.totals?.unknown_cost_lines) > 0 ? `${state.report.totals.unknown_cost_lines} lines have no recorded cost; incomplete profit cells are blank in the export.` : '');
+      alert(Number(totals.unknown_cost_lines) > 0 ? `${totals.unknown_cost_lines} lines have no recorded cost; incomplete profit cells are blank in the export.` : '');
     } catch (error) { alert(error.message || 'Export failed.',true); }
+    finally { $('itemExportExcel').disabled = false; }
   }
   async function printReport() {
     try {
       alert('Preparing full report for printing…');
       const { report, rows } = await allRows();
       const headers = Array.from(document.querySelectorAll('.item-report-table thead th')).map(cell => `<th>${html(cell.textContent)}</th>`).join('');
-      $('itemPrintArea').innerHTML = `<h1>Sales By Item Report</h1><p>${formatDate(report.date_from)} – ${formatDate(report.date_to)} · Accrual Basis · Amounts ex GST</p><table><thead><tr>${headers}</tr></thead><tbody>${rows.map(rowHtml).join('')}</tbody></table><p>${rows.length} items</p>`;
+      const totals = report.totals || {};
+      $('itemPrintArea').innerHTML = `<h1>Sales By Item Report</h1><p>${formatDate(report.date_from)} – ${formatDate(report.date_to)} · Accrual Basis · Amounts ex GST</p><table><thead><tr>${headers}</tr></thead><tbody>${rows.map(rowHtml).join('')}</tbody><tfoot><tr><th colspan="7">Total</th><th class="num">${qty(totals.qty)}</th><th class="num">${money(totals.total)}</th><th class="num">${money(totals.cogs)}</th><th class="num">${money(totals.net_profit)}</th><th class="num">${totals.margin == null ? '—' : `${qty(totals.margin)}%`}</th></tr></tfoot></table><p>${rows.length} items</p>`;
       alert(Number(report.totals?.unknown_cost_lines) > 0 ? 'Some items have no recorded cost; incomplete COGS and profit values are shown as —.' : '');
       window.print();
     } catch (error) { alert(error.message || 'Print preparation failed.',true); }
