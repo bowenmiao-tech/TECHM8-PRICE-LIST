@@ -167,14 +167,14 @@ begin
     'row_count',totals.row_count,
     'totals',jsonb_build_object('qty',totals.qty,'total',totals.total,'discount',totals.discount,'cogs',totals.cogs,
       'net_profit',case when totals.cogs is null then null else round(totals.total-totals.discount-totals.cogs,2) end,
-      'margin',case when totals.cogs is null or totals.total=0 then null else round((totals.total-totals.discount-totals.cogs)*100/totals.total,2) end,
+      'margin',case when totals.cogs is null or totals.total=totals.discount then null else round((totals.total-totals.discount-totals.cogs)*100/(totals.total-totals.discount),2) end,
       'unknown_cost_lines',totals.unknown_cost_lines),
     'rows',coalesce((select jsonb_agg(jsonb_build_object(
       'store_code',page.store_code,'store_name',page.store_name,'type',page.item_type,
       'repair_category',page.repair_category,'category',page.category,'brand',page.brand,'model',page.model,
       'product_name',page.product_name,'qty',page.qty,'total',page.total,'discount',page.discount,'cogs',page.cogs,
       'net_profit',case when page.cogs is null then null else round(page.total-page.discount-page.cogs,2) end,
-      'margin',case when page.cogs is null or page.total=0 then null else round((page.total-page.discount-page.cogs)*100/page.total,2) end,
+      'margin',case when page.cogs is null or page.total=page.discount then null else round((page.total-page.discount-page.cogs)*100/(page.total-page.discount),2) end,
       'unknown_cost_lines',page.unknown_cost_lines,'stores',page.stores
     ) order by page.qty desc,page.total desc,page.product_name,page.item_type,page.item_key,page.repair_category,page.category,page.brand,page.model)
       from (select * from grouped order by qty desc,total desc,product_name,item_type,item_key,repair_category,category,brand,model limit limit_value offset offset_value) page),'[]'::jsonb)
