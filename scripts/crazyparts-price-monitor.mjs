@@ -93,8 +93,8 @@ function normaliseModelHref(input) {
   const value = String(input || '').trim();
   if (!value) return null;
   if (/^https?:\/\//i.test(value)) return new URL(value).pathname;
-  if (value.startsWith('/products/')) return value.split('?')[0];
-  return `/products/${value.replace(/^\/+|\/+$/g, '')}`;
+  if (value.startsWith('/products/') || value.startsWith('/collection/')) return value.split('?')[0];
+  return `/collection/${value.replace(/^\/+|\/+$/g, '')}`;
 }
 
 function isEligibleRepairModel(model) {
@@ -180,6 +180,23 @@ async function launchBrowser(config, headful) {
   throw new Error(`Could not launch Chrome or Edge: ${lastError?.message || 'unknown error'}`);
 }
 
+async function selectDispatchWarehouse(page, config) {
+  const dialog = page.getByRole('dialog').filter({ hasText: 'Choose your dispatch store' });
+  const visible = await dialog.waitFor({ state: 'visible', timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!visible) return;
+
+  const warehouse = config.dispatchWarehouse || 'Sydney Warehouse';
+  const option = dialog.getByText(warehouse, { exact: true });
+  if (!await option.isVisible().catch(() => false)) {
+    throw new Error(`Crazy Parts requested a dispatch store, but ${warehouse} was not available.`);
+  }
+
+  await option.click();
+  await dialog.waitFor({ state: 'hidden', timeout: 10000 });
+}
+
 async function login(page, config, email, password) {
   let finalDetail = '';
   const attempts = Math.max(1, config.loginAttempts || 1);
@@ -195,12 +212,18 @@ async function login(page, config, email, password) {
     if (await termsCheckbox.isVisible().catch(() => false)) {
       await termsCheckbox.setChecked(true);
     }
-    await page.getByRole('button', { name: 'Login', exact: true }).click();
+    await selectDispatchWarehouse(page, config);
     try {
-      await page.waitForURL(/\/member\/dashboard/, {
-        waitUntil: 'domcontentloaded',
-        timeout: config.navigationTimeoutMs,
-      });
+      await Promise.all([
+        page.waitForURL((url) => (
+          !/\/account\/login\/?$/i.test(url.pathname)
+          && (/\/member\/dashboard\/?$/i.test(url.pathname) || /\/account\/?$/i.test(url.pathname))
+        ), {
+          waitUntil: 'domcontentloaded',
+          timeout: config.navigationTimeoutMs,
+        }),
+        page.getByRole('button', { name: 'Login', exact: true }).click(),
+      ]);
       finalDetail = '';
       break;
     } catch {
@@ -210,8 +233,10 @@ async function login(page, config, email, password) {
     }
   }
 
-  if (!page.url().includes('/member/dashboard')) {
-    throw new Error(`Login did not reach the member dashboard after ${attempts} attempt(s)${finalDetail ? `: ${finalDetail}` : ''}.`);
+  const loggedInPath = new URL(page.url()).pathname;
+  if (/\/account\/login\/?$/i.test(loggedInPath)
+    || !(/\/member\/dashboard\/?$/i.test(loggedInPath) || /\/account\/?$/i.test(loggedInPath))) {
+    throw new Error(`Login did not reach the member account after ${attempts} attempt(s)${finalDetail ? `: ${finalDetail}` : ''}.`);
   }
 
   const dashboardText = await page.locator('body').innerText();
@@ -230,25 +255,57 @@ async function discoverModels(page, config) {
     const host = elements.find((element) => {
       const navs = [...element.children].filter((child) => child.tagName === 'NAV');
       return navs.length >= 4
-        && (navs[0].innerText || '').startsWith('iPhone')
-        && (navs[1].innerText || '').startsWith('S Series');
+        && /apple/i.test(`${navs[0].getAttribute('aria-label') || ''} ${navs[0].innerText || ''}`)
+        && /samsung/i.test(`${navs[1].getAttribute('aria-label') || ''} ${navs[1].innerText || ''}`);
     });
 
     if (!host) return null;
 
     const navBrands = ['Apple', 'Samsung', 'Google', 'Other Models'];
     return [...host.children].slice(0, 4).flatMap((nav, navIndex) => {
-      return [...nav.children].flatMap((group) => {
-        const children = [...group.children];
-        const anchors = children.filter((child) => child.tagName === 'A' && child.getAttribute('href')?.startsWith('/products/'));
-        if (!anchors.length) return [];
+      const brand = nav.getAttribute('aria-label') || navBrands[navIndex];
+      if (navIndex === 3) {
+        const root = nav.querySelector(':scope > div');
+        return [...(root?.children || [])]
+          .filter((group) => group.tagName === 'DIV')
+          .flatMap((group) => {
+            const familyMarker = group.querySelector(':scope > span, :scope > a');
+            const family = (familyMarker?.textContent || '').trim();
+            if (!family) return [];
+            return [...group.querySelectorAll('a')]
+              .filter((anchor) => anchor !== familyMarker)
+              .filter((anchor) => {
+                const href = anchor.getAttribute('href') || '';
+                return href.startsWith('/products/') || href.startsWith('/collection/');
+              })
+              .map((anchor) => ({
+                brand,
+                family,
+                name: (anchor.textContent || '').trim(),
+                href: anchor.getAttribute('href').split('?')[0],
+              }));
+          });
+      }
 
-        const firstChild = children[0];
-        const family = (firstChild?.textContent || navBrands[navIndex]).trim();
-        const modelAnchors = firstChild?.tagName === 'A' && anchors.length > 1 ? anchors.slice(1) : anchors;
+      const familyAnchors = [...nav.querySelectorAll(':scope > div > div > a')].filter((anchor) => {
+        const href = anchor.getAttribute('href') || '';
+        return href.startsWith('/products/') || href.startsWith('/collection/');
+      });
 
+      return familyAnchors.flatMap((familyAnchor) => {
+        const familyContainer = familyAnchor.parentElement;
+        const modelAnchors = [...(familyContainer?.children || [])]
+          .filter((child) => child.tagName === 'DIV')
+          .map((child) => child.querySelector(':scope > a'))
+          .filter(Boolean)
+          .filter((anchor) => {
+            const href = anchor.getAttribute('href') || '';
+            return href.startsWith('/products/') || href.startsWith('/collection/');
+          });
+
+        const family = (familyAnchor.textContent || brand).trim();
         return modelAnchors.map((anchor) => ({
-          brand: navBrands[navIndex],
+          brand,
           family,
           name: (anchor.textContent || '').trim(),
           href: anchor.getAttribute('href').split('?')[0],
@@ -274,7 +331,7 @@ async function discoverModels(page, config) {
 
 async function extractProductCards(page, config) {
   const tier = config.expectedMemberTier;
-  return page.locator('a[href^="/products/detail/"]').evaluateAll((anchors, expectedTier) => {
+  return page.locator('a[href^="/products/detail/"], a[href^="/product/"]').evaluateAll((anchors, expectedTier) => {
     const uniqueAnchors = new Map();
     for (const anchor of anchors) {
       const href = anchor.getAttribute('href')?.split('&')[0];
@@ -287,7 +344,7 @@ async function extractProductCards(page, config) {
       let card = null;
       while (node && node !== document.body) {
         const uniqueDetailLinks = new Set(
-          [...node.querySelectorAll('a[href^="/products/detail/"]')]
+          [...node.querySelectorAll('a[href^="/products/detail/"], a[href^="/product/"]')]
             .map((link) => link.getAttribute('href')?.split('&')[0])
             .filter(Boolean),
         );
@@ -307,18 +364,34 @@ async function extractProductCards(page, config) {
         .sort((a, b) => b.length - a.length)[0];
       const lines = (card.innerText || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
       const tierIndex = lines.findIndex((line) => line.toLowerCase() === String(expectedTier).toLowerCase());
-      const memberPriceLine = tierIndex >= 0
-        ? lines.slice(tierIndex + 1).find((line) => /^\$[\d,.]+$/.test(line))
-        : null;
+      const priceText = tierIndex >= 0 ? lines.slice(tierIndex + 1, tierIndex + 7).join(' ') : '';
+      const splitPrice = priceText.match(/\$\s*([\d,]+)\.\s*(\d{2})\b/);
+      const wholePrice = priceText.match(/\$\s*([\d,]+)\b/);
+      const memberPriceLine = splitPrice
+        ? `$${splitPrice[1]}.${splitPrice[2]}`
+        : (wholePrice ? `$${wholePrice[1]}` : null);
       const syd = lines.find((line) => /^SYD:/i.test(line)) || '';
       const mel = lines.find((line) => /^MEL:/i.test(line)) || '';
 
       if (title && memberPriceLine) {
-        products.push({ title, href, memberPriceLine, syd, mel });
+        products.push({ title, href, memberPriceLine, priceText, syd, mel });
       }
     }
     return products;
   }, tier);
+}
+
+async function waitForMemberPrices(page, config) {
+  const timeout = Math.max(1000, Number(config.memberPriceWaitMs || 4000));
+  await page.waitForFunction((expectedTier) => {
+    const text = (document.body?.innerText || '').replace(/\s+/g, ' ');
+    const escapedTier = String(expectedTier).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = text.match(new RegExp(`${escapedTier}\\s*\\$\\s*([\\d,]+)\\.\\s*(\\d{2}).{0,160}?RRP:\\s*\\$\\s*([\\d,]+(?:\\.\\d{2})?)`, 'i'));
+    if (!match) return false;
+    const memberPrice = Number(`${match[1].replace(/,/g, '')}.${match[2]}`);
+    const retailPrice = Number(match[3].replace(/,/g, ''));
+    return Number.isFinite(memberPrice) && Number.isFinite(retailPrice) && memberPrice <= retailPrice * 0.95;
+  }, config.expectedMemberTier, { timeout }).catch(() => {});
 }
 
 async function scrapeModel(page, model, config) {
@@ -334,6 +407,7 @@ async function scrapeModel(page, model, config) {
       waitUntil: 'domcontentloaded',
       timeout: config.navigationTimeoutMs,
     });
+    await waitForMemberPrices(page, config);
 
     if (page.url().includes('/account/login')) {
       throw new Error('The Crazy Parts session expired during the run.');
@@ -360,6 +434,9 @@ async function scrapeModel(page, model, config) {
 
     const cards = await extractProductCards(page, config);
     for (const card of cards) {
+      if (process.env.CRAZYPARTS_DEBUG_PRICES === '1') {
+        console.log(`Price debug: ${card.title} | ${card.priceText} | ${card.memberPriceLine}`);
+      }
       const price = parseMoney(card.memberPriceLine);
       if (price == null) continue;
       const category = classifyProduct(card.title);
