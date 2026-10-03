@@ -68,12 +68,14 @@
 
   const state = {
     data: null,
-    tab: 'board',
+    tab: 'shipments',
     search: '',
     orderFilter: 'open',
-    parcelFilter: 'open',
-    parcelForwarder: '',
-    shipmentFilter: 'open',
+    shipmentView: 'active',
+    itemView: 'active',
+    expanded: new Set(),
+    doneLimit: 30,
+    itemLimit: 300,
     showStockedReceiving: false,
     selectedParcels: new Set(),
     receiving: null,
@@ -429,8 +431,12 @@
     return `<button class="pa-track" type="button" data-action="track" data-no="${esc(number)}" data-kind="${kind}" data-forwarder="${esc(forwarderId || '')}" title="复制单号并打开查询网站"><i class="bi bi-box-arrow-up-right"></i>${esc(number)}</button>`;
   }
 
-  function trackingList(shipment) {
-    return (shipment.tracking_numbers || []).map(number => trackButton(number, 'intl', shipment.forwarder_id)).join(' ');
+  function trackingList(shipment, limit) {
+    const numbers = shipment.tracking_numbers || [];
+    const shown = limit ? numbers.slice(0, limit) : numbers;
+    const hidden = numbers.slice(shown.length);
+    return shown.map(number => trackButton(number, 'intl', shipment.forwarder_id)).join(' ')
+      + (hidden.length ? ` <span class="pa-chip" title="${esc(hidden.join('\n'))}">+${hidden.length}</span>` : '');
   }
 
   function stageChip(map, key) {
@@ -480,27 +486,20 @@
     if (!state.data) return;
     renderTabCounts();
     els.tabs.querySelectorAll('[data-tab]').forEach(button => {
-      button.classList.toggle('active', !state.search && button.dataset.tab === state.tab);
+      button.classList.toggle('active', button.dataset.tab === state.tab);
     });
-    if (state.search.trim()) {
-      els.view.innerHTML = renderSearch(state.search.trim());
-      return;
-    }
     const renderers = {
-      board: renderBoard,
-      orders: renderOrders,
-      parcels: renderParcels,
-      shipments: renderShipments,
+      shipments: renderShipmentView,
+      items: renderItemsView,
       receiving: renderReceiving,
+      orders: renderOrders,
       settings: renderSettings
     };
-    els.view.innerHTML = (renderers[state.tab] || renderBoard)();
+    els.view.innerHTML = (renderers[state.tab] || renderShipmentView)();
   }
 
   function renderTabCounts() {
     const counts = {
-      orders: state.data.orders.filter(order => ['awaiting_payment', 'awaiting_dispatch', 'ordered'].includes(orderStage(order))).length,
-      parcels: state.data.parcels.filter(parcel => !parcel.shipment_id).length,
       shipments: state.data.shipments.filter(shipment => !DONE.has(shipment.status)).length,
       receiving: state.data.shipments.filter(shipment => ['arrived', 'received'].includes(shipment.status)).length
     };
@@ -511,28 +510,253 @@
     });
   }
 
-  function orderCard(order) {
-    const total = orderTotal(order);
-    return `<div class="pa-card" role="button" tabindex="0" data-action="open-order" data-id="${order.id}">
-      <div class="pa-card-title">${esc(itemsSummary(order) || order.notes || '(还没有明细)')}</div>
-      <div class="pa-card-meta"><span>${esc(order.po_number)}</span><span>${esc(supplierName(order.supplier_id) || '未指定供货商')}</span><span>${fmtDate(order.order_date)}</span></div>
-      <div class="pa-card-foot">${stageChip(ORDER_STAGE, orderStage(order))}${total != null ? chip(money(total, order.currency)) : ''}${order.paid_at ? chip('已付', 'green', 'bi-check2') : ''}</div>
+  // ---------- where is it ----------
+
+  const JOURNEY = ['供货商发货', '到转运仓', '已出收据', '国际运输', '到达澳洲', '已入库'];
+  const LAST_STEP = JOURNEY.length - 1;
+  const SHIPMENT_STEP = { draft: 1, declared: 2, shipped: 3, arrived: 4, received: 4, stocked: 5, closed: 5 };
+
+  function modeOf(channel) {
+    const text = String(channel || '');
+    if (/空|快递|dhl|fedex|ups|express/i.test(text)) return 'air';
+    if (/海/.test(text)) return 'sea';
+    return '';
+  }
+
+  function shipmentMode(shipment) {
+    const direct = modeOf(shipment.channel);
+    if (direct) return direct;
+    const modes = shipmentParcels(shipment).map(parcel => modeOf(parcel.channel)).filter(Boolean);
+    return modes[0] || '';
+  }
+
+  function modeChip(mode) {
+    if (mode === 'sea') return '<span class="pa-mode sea"><i class="bi bi-water"></i> 海运</span>';
+    if (mode === 'air') return '<span class="pa-mode air"><i class="bi bi-airplane"></i> 空运</span>';
+    return '';
+  }
+
+  // A parcel's place on the journey, plus one plain sentence saying where it is now.
+  function parcelWhere(parcel) {
+    const shipment = parcel.shipment_id && index.shipments.get(Number(parcel.shipment_id));
+    const forwarder = forwarderName((shipment && shipment.forwarder_id) || parcel.forwarder_id) || '转运';
+    if (!shipment) {
+      if (parcel.forwarder_received_at) return { step: 1, text: `在${forwarder}仓库，还没上国际单`, tone: 'amber' };
+      return { step: 0, text: `${parcel.courier || '国内'}快递在路上，还没到转运仓`, tone: 'blue' };
+    }
+    const mode = shipmentMode(shipment);
+    const modeWord = mode === 'air' ? '空运' : mode === 'sea' ? '海运' : '国际运输';
+    const where = {
+      draft: { text: `在${forwarder}仓库，准备组单`, tone: 'amber' },
+      declared: { text: `已出收据给${forwarder}，等发货`, tone: 'amber' },
+      shipped: { text: `${modeWord}中${shipment.eta ? ` · 预计 ${fmtDate(shipment.eta)} 到` : ''}`, tone: 'blue' },
+      arrived: { text: '已到澳洲，等签收', tone: 'orange' },
+      received: { text: `已签收${shipment.received_store_id ? `（${storeName(shipment.received_store_id)}）` : ''}，等点数入库`, tone: 'purple' },
+      stocked: { text: '已入库', tone: 'green' },
+      closed: { text: '已完成（历史记录）', tone: 'muted' }
+    }[shipment.status] || { text: SHIPMENT_STATUS[shipment.status].label, tone: '' };
+    return Object.assign({ step: SHIPMENT_STEP[shipment.status], shipment }, where);
+  }
+
+  function journeyBar(step, compact) {
+    return `<div class="pa-journey ${compact ? 'compact' : ''}" title="${esc(JOURNEY[step])}">${JOURNEY.map((label, position) => {
+      const cls = position < step || step === LAST_STEP ? 'done' : position === step ? 'current' : '';
+      return `<span class="pa-journey-step ${cls}"><i></i>${compact ? '' : `<em>${label}</em>`}</span>`;
+    }).join('')}</div>`;
+  }
+
+  function matchesQuery(parcel, words) {
+    const shipment = parcel.shipment_id && index.shipments.get(Number(parcel.shipment_id));
+    const order = parcel.purchase_order_id && index.orders.get(Number(parcel.purchase_order_id));
+    const text = [parcel.contents, parcel.tracking_no, parcel.courier, parcel.forwarder_ref, parcel.notes,
+      supplierName(parcelSupplierId(parcel)), order && order.po_number,
+      shipment && shipment.shipment_number, shipment && (shipment.tracking_numbers || []).join(' ')].join(' ').toLowerCase();
+    return words.every(word => text.includes(word));
+  }
+
+  function searchWords() {
+    return state.search.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  }
+
+  // ---------- 国际单 ----------
+
+  function shipmentBlock(shipment) {
+    const parcels = shipmentParcels(shipment).slice().sort((a, b) => Number(a.id) - Number(b.id));
+    const expanded = state.expanded.has(Number(shipment.id));
+    const shown = expanded ? parcels : parcels.slice(0, 8);
+    const cartons = parcels.reduce((sum, parcel) => sum + (Number(parcel.carton_count) || 0), 0);
+    const next = NEXT_STEP[shipment.status];
+    const dates = [
+      shipment.declared_at ? `出收据 ${fmtDate(shipment.declared_at)}` : '',
+      shipment.shipped_at ? `发货 ${fmtDate(shipment.shipped_at)}` : '',
+      shipment.eta && !shipment.arrived_at ? `预计到 ${fmtDate(shipment.eta)}` : '',
+      shipment.arrived_at ? `到澳洲 ${fmtDate(shipment.arrived_at)}` : ''
+    ].filter(Boolean);
+    let primary = '';
+    if (next) primary = `<button class="pa-btn small primary" type="button" data-action="advance-shipment" data-id="${shipment.id}">${esc(next.label)}</button>`;
+    if (['arrived', 'received'].includes(shipment.status)) {
+      primary = `<button class="pa-btn small primary" type="button" data-action="go-receive" data-id="${shipment.id}">${shipment.status === 'arrived' ? '签收点数' : '点数入库'}</button>`;
+    }
+    return `<article class="pa-ship">
+      <header class="pa-ship-head">
+        <div class="pa-ship-title">${modeChip(shipmentMode(shipment))}<strong>${esc(forwarderName(shipment.forwarder_id) || '还没选转运')}</strong>${trackingList(shipment, 2) || '<span class="pa-muted pa-small">还没有国际单号</span>'}</div>
+        ${stageChip(SHIPMENT_STATUS, shipment.status)}
+      </header>
+      ${journeyBar(SHIPMENT_STEP[shipment.status])}
+      ${dates.length ? `<div class="pa-ship-dates">${dates.join(' · ')}</div>` : ''}
+      <div class="pa-ship-items-title">这一单里有 ${parcels.length} 件货${cartons > parcels.length ? `（共 ${cartons} 箱）` : ''}</div>
+      ${parcels.length ? `<ul class="pa-ship-items">${shown.map(parcel => `<li data-action="open-parcel" data-id="${parcel.id}">
+        <span class="name">${esc(parcel.contents || '(没写品名)')}</span>
+        <span class="meta">${parcel.carton_count > 1 ? `${parcel.carton_count} 箱 · ` : ''}${esc(parcel.courier || '')}</span>
+      </li>`).join('')}</ul>` : '<p class="pa-muted pa-small">还没有货，点「编辑这一单」把货放进来</p>'}
+      ${parcels.length > 8 ? `<button class="pa-link" type="button" data-action="toggle-expand" data-id="${shipment.id}">${expanded ? '收起' : `显示全部 ${parcels.length} 件`}</button>` : ''}
+      <footer class="pa-ship-foot">
+        ${primary}
+        ${['draft', 'declared'].includes(shipment.status) && parcels.length ? `<button class="pa-btn small" type="button" data-action="copy-shipment-declaration" data-id="${shipment.id}"><i class="bi bi-clipboard"></i> 复制明细给转运</button>` : ''}
+        <button class="pa-btn small ghost" type="button" data-action="open-shipment" data-id="${shipment.id}">编辑这一单</button>
+      </footer>
+    </article>`;
+  }
+
+  function filterChips(name, current, options) {
+    return `<div class="pa-filters">${options.map(([value, label, count]) => `<button class="pa-filter ${current === value ? 'active' : ''}" type="button" data-action="filter" data-filter="${name}" data-value="${value}">${esc(label)}${count != null ? ` <b>${count}</b>` : ''}</button>`).join('')}</div>`;
+  }
+
+  function bulkBar() {
+    const selected = Array.from(state.selectedParcels);
+    if (!selected.length) return '';
+    const openBatches = state.data.shipments.filter(shipment => ['draft', 'declared'].includes(shipment.status));
+    return `<div class="pa-bulkbar">
+      <span>已选 ${selected.length} 件货</span>
+      <div class="pa-row-actions">
+        <button class="pa-btn small primary" type="button" data-action="batch-new">组成新的国际单</button>
+        ${openBatches.length ? `<select class="pa-select-inline" data-change="batchExisting" aria-label="放进已有国际单"><option value="">放进已有的单…</option>${openBatches.map(shipment => `<option value="${shipment.id}">${esc(forwarderName(shipment.forwarder_id) || '未选转运')} · ${esc((shipment.tracking_numbers || [])[0] || shipment.shipment_number)} · ${esc(SHIPMENT_STATUS[shipment.status].label)}</option>`).join('')}</select>` : ''}
+        <button class="pa-btn small" type="button" data-action="clear-selection">取消选择</button>
+      </div>
     </div>`;
   }
 
-  function parcelCard(parcel) {
-    const stage = parcelStage(parcel);
+  function renderShipmentView() {
+    const shipments = state.data.shipments;
+    const active = shipments.filter(shipment => !DONE.has(shipment.status));
+    const filters = {
+      active: shipment => !DONE.has(shipment.status),
+      sea: shipment => !DONE.has(shipment.status) && shipmentMode(shipment) === 'sea',
+      air: shipment => !DONE.has(shipment.status) && shipmentMode(shipment) === 'air',
+      arrived: shipment => ['arrived', 'received'].includes(shipment.status),
+      done: shipment => DONE.has(shipment.status)
+    };
+    const view = filters[state.shipmentView] ? state.shipmentView : 'active';
+    const urgency = { arrived: 0, received: 1, shipped: 2, declared: 3, draft: 4 };
+    let list = shipments.filter(filters[view]).sort((a, b) => view === 'done'
+      ? Number(b.id) - Number(a.id)
+      : (urgency[a.status] - urgency[b.status]) || String(a.eta || '9999').localeCompare(String(b.eta || '9999')) || Number(b.id) - Number(a.id));
+    const total = list.length;
+    if (view === 'done') list = list.slice(0, state.doneLimit);
+    const loose = state.data.parcels.filter(parcel => !parcel.shipment_id);
+    const atForwarder = loose.filter(parcel => parcel.forwarder_received_at);
+    const domestic = loose.filter(parcel => !parcel.forwarder_received_at);
+    return `<div class="pa-toolbar">
+        ${filterChips('shipmentView', view, [
+          ['active', '在途', active.length],
+          ['sea', '海运', active.filter(shipment => shipmentMode(shipment) === 'sea').length],
+          ['air', '空运', active.filter(shipment => shipmentMode(shipment) === 'air').length],
+          ['arrived', '已到澳洲', shipments.filter(filters.arrived).length],
+          ['done', '历史', shipments.filter(filters.done).length]
+        ])}
+      </div>
+      ${list.length ? `<div class="pa-ship-list">${list.map(shipmentBlock).join('')}</div>` : '<div class="pa-panel pa-empty">没有这样的国际单</div>'}
+      ${view === 'done' && total > list.length ? `<p class="pa-center"><button class="pa-btn small" type="button" data-action="more-done">再显示 30 单（还有 ${total - list.length} 单）</button></p>` : ''}
+      ${view !== 'done' && view !== 'arrived' ? `<section class="pa-panel pa-pending">
+        <div class="pa-panel-head"><h2>还没上国际单的货</h2><button class="pa-btn small primary" type="button" data-action="new-parcel"><i class="bi bi-plus-lg"></i> 登记包裹</button></div>
+        <div class="pa-group-head">在转运仓 ${atForwarder.length} 件 · 勾选后组成国际单</div>
+        ${atForwarder.length ? atForwarder.map(parcel => itemRow(parcel, true)).join('') : '<div class="pa-empty pa-small">没有</div>'}
+        <div class="pa-group-head">国内快递在路上 ${domestic.length} 件 · 到了转运仓就点「到仓了」</div>
+        ${domestic.length ? domestic.map(parcel => itemRow(parcel, true)).join('') : '<div class="pa-empty pa-small">没有</div>'}
+      </section>` : ''}
+      ${bulkBar()}`;
+  }
+
+  // ---------- 货品在哪 ----------
+
+  function itemRow(parcel, selectable) {
+    const where = parcelWhere(parcel);
+    const shipment = where.shipment;
+    const selected = state.selectedParcels.has(Number(parcel.id));
+    const canSelect = selectable && !parcel.shipment_id;
     const supplier = supplierName(parcelSupplierId(parcel));
-    return `<div class="pa-card" role="button" tabindex="0" data-action="open-parcel" data-id="${parcel.id}">
-      <div class="pa-card-title">${esc(parcel.contents || '(未填内容)')}</div>
-      <div class="pa-card-meta">${supplier ? `<span>${esc(supplier)}</span>` : ''}${parcel.courier ? `<span>${esc(parcel.courier)}</span>` : ''}${parcel.shipped_at ? `<span>发 ${fmtDate(parcel.shipped_at)}</span>` : ''}${parcel.carton_count > 1 ? `<span>${parcel.carton_count} 箱</span>` : ''}</div>
-      <div class="pa-card-foot">
-        ${trackButton(parcel.tracking_no, 'cn')}
-        ${parcel.forwarder_id ? chip(forwarderName(parcel.forwarder_id), '', 'bi-building') : ''}
-        ${parcel.forwarder_ref ? chip(`入仓 ${parcel.forwarder_ref.split(/\s+/)[0]}`, 'amber') : ''}
-        ${stage === 'domestic' ? '<button class="pa-btn small" type="button" data-action="parcel-at-forwarder" data-id="' + parcel.id + '">转运已签收</button>' : ''}
+    return `<div class="pa-item ${selected ? 'selected' : ''}" data-action="open-parcel" data-id="${parcel.id}">
+      ${canSelect ? `<input type="checkbox" data-action="toggle-parcel" data-id="${parcel.id}" ${selected ? 'checked' : ''} aria-label="选择这件货">` : ''}
+      <div class="pa-item-main">
+        <div class="pa-item-name" title="${esc(parcel.contents || '')}">${esc(parcel.contents || '(没写品名)')}</div>
+        <div class="pa-item-meta">
+          ${shipment ? `<button class="pa-link" type="button" data-action="show-shipment" data-id="${shipment.id}">${modeChip(shipmentMode(shipment))} 看这一单</button>${trackingList(shipment, 1)}` : ''}
+          ${parcel.tracking_no ? `<span>${esc(parcel.courier || '国内')}</span>${trackButton(parcel.tracking_no, 'cn')}` : ''}
+          ${supplier ? `<span>${esc(supplier)}</span>` : ''}
+          ${parcel.carton_count > 1 ? `<span>${parcel.carton_count} 箱</span>` : ''}
+        </div>
+      </div>
+      <div class="pa-item-where">${journeyBar(where.step, true)}<span class="pa-where-text tone-${where.tone}">${esc(where.text)}</span>
+        ${where.step === 0 && !shipment ? `<button class="pa-btn small" type="button" data-action="parcel-at-forwarder" data-id="${parcel.id}">到仓了</button>` : ''}
       </div>
     </div>`;
+  }
+
+  function renderItemsView() {
+    const words = searchWords();
+    const base = words.length ? state.data.parcels.filter(parcel => matchesQuery(parcel, words)) : state.data.parcels;
+    const withStep = base.map(parcel => ({ parcel, step: parcelWhere(parcel).step }));
+    const filters = {
+      active: entry => entry.step < LAST_STEP,
+      domestic: entry => entry.step === 0,
+      forwarder: entry => entry.step === 1 || entry.step === 2,
+      transit: entry => entry.step === 3,
+      arrived: entry => entry.step === 4,
+      done: entry => entry.step === LAST_STEP,
+      all: () => true
+    };
+    const view = filters[state.itemView] ? state.itemView : 'active';
+    const count = key => withStep.filter(filters[key]).length;
+    // Goods still on the way first (closest to arriving at the top), then history, newest first.
+    const list = withStep.filter(filters[view]).sort((a, b) => (Number(a.step === LAST_STEP) - Number(b.step === LAST_STEP))
+      || (b.step - a.step) || (Number(b.parcel.id) - Number(a.parcel.id)));
+    const matchingShipments = words.length
+      ? state.data.shipments.filter(shipment => {
+        const text = [shipment.shipment_number, (shipment.tracking_numbers || []).join(' ')].join(' ').toLowerCase();
+        return words.every(word => text.includes(word));
+      }).slice(0, 3)
+      : [];
+    const groups = view === 'active' && !words.length
+      ? [[4, '已到澳洲'], [3, '国际运输中'], [2, '已出收据，等转运发货'], [1, '在转运仓'], [0, '国内快递在路上']]
+        .map(([step, title]) => [title, list.filter(entry => entry.step === step)]).filter(([, entries]) => entries.length)
+      : [[null, list]];
+    const limit = state.itemLimit;
+    let shown = 0;
+    const body = groups.map(([title, entries]) => {
+      const rows = entries.slice(0, Math.max(0, limit - shown));
+      shown += rows.length;
+      return `${title ? `<div class="pa-group-head">${esc(title)} ${entries.length} 件</div>` : ''}${rows.map(entry => itemRow(entry.parcel, true)).join('')}`;
+    }).join('');
+    return `${words.length ? `<p class="pa-muted">搜索「${esc(state.search.trim())}」找到 ${base.length} 件货${matchingShipments.length ? `、${matchingShipments.length} 个国际单` : ''} · <button class="pa-link" type="button" data-action="clear-search">清除搜索</button></p>` : ''}
+      ${matchingShipments.length ? `<div class="pa-ship-list">${matchingShipments.map(shipmentBlock).join('')}</div>` : ''}
+      <div class="pa-toolbar">
+        ${filterChips('itemView', view, [
+          ['active', '在途', count('active')],
+          ['domestic', '国内快递', count('domestic')],
+          ['forwarder', '转运仓', count('forwarder')],
+          ['transit', '国际运输', count('transit')],
+          ['arrived', '到澳洲', count('arrived')],
+          ['done', '已入库/历史', count('done')],
+          ['all', '全部', base.length]
+        ])}
+      </div>
+      <section class="pa-panel pa-item-list">${list.length ? body : '<div class="pa-empty">没有找到，换个关键词试试</div>'}</section>
+      ${list.length > limit ? `<p class="pa-center pa-muted pa-small">只显示前 ${limit} 件 · <button class="pa-link" type="button" data-action="more-items">再显示 300 件</button></p>` : ''}
+      ${bulkBar()}`;
+  }
+
+  function filterBar(name, current, options) {
+    return filterChips(name, current, options);
   }
 
   function shipmentCard(shipment, extraClass) {
@@ -554,36 +778,6 @@
       ${preview ? `<div class="pa-small pa-muted" style="margin-top:4px">${esc(preview)}${parcels.length > 3 ? ' …' : ''}</div>` : ''}
       <div class="pa-card-foot">${trackingList(shipment)} ${action}</div>
     </div>`;
-  }
-
-  function column(title, hint, cards) {
-    return `<section class="pa-column">
-      <div class="pa-column-head"><div>${esc(title)}<small>${esc(hint)}</small></div><span class="num">${cards.length}</span></div>
-      <div class="pa-column-body">${cards.length ? cards.join('') : '<div class="pa-column-empty">暂无</div>'}</div>
-    </section>`;
-  }
-
-  function renderBoard() {
-    const data = state.data;
-    const openOrders = data.orders.filter(order => !order.cancelled_at);
-    const looseParcels = data.parcels.filter(parcel => !parcel.shipment_id);
-    const shipmentsIn = status => data.shipments.filter(shipment => shipment.status === status);
-    const doneCount = data.shipments.filter(shipment => DONE.has(shipment.status)).length;
-    return `<div class="pa-board">
-      ${column('下单 · 待付款', '等供货商出明细 / 付款', openOrders.filter(order => ['ordered', 'awaiting_payment'].includes(orderStage(order))).map(orderCard))}
-      ${column('已付款 · 待发货', '等供货商发国内快递', openOrders.filter(order => orderStage(order) === 'awaiting_dispatch').map(orderCard))}
-      ${column('国内运输中', '供货商已发货', looseParcels.filter(parcel => !parcel.forwarder_received_at).map(parcelCard))}
-      ${column('转运仓 · 待出收据', '勾选包裹组成批次，出明细给转运', shipmentsIn('draft').map(shipment => shipmentCard(shipment)).concat(looseParcels.filter(parcel => parcel.forwarder_received_at).map(parcelCard)))}
-      ${column('已出收据', '等转运发货', shipmentsIn('declared').map(shipment => shipmentCard(shipment)))}
-      ${column('转运发货', '国际运输中', shipmentsIn('shipped').map(shipment => shipmentCard(shipment)))}
-      ${column('到达澳洲', '待签收', shipmentsIn('arrived').map(shipment => shipmentCard(shipment)))}
-      ${column('已签收 · 待入库', '点数后入库', shipmentsIn('received').map(shipment => shipmentCard(shipment)))}
-    </div>
-    <p class="pa-small pa-muted">已完成 ${doneCount} 个批次 · <button class="pa-btn small ghost" type="button" data-action="show-done">查看</button></p>`;
-  }
-
-  function filterBar(name, current, options) {
-    return `<div class="pa-filters">${options.map(([value, label]) => `<button class="pa-filter ${current === value ? 'active' : ''}" type="button" data-action="filter" data-filter="${name}" data-value="${value}">${esc(label)}</button>`).join('')}</div>`;
   }
 
   function renderOrders() {
@@ -621,104 +815,6 @@
     </section>`;
   }
 
-  function parcelRow(parcel, selectable) {
-    const shipment = parcel.shipment_id && index.shipments.get(Number(parcel.shipment_id));
-    const selected = state.selectedParcels.has(Number(parcel.id));
-    return `<tr data-action="open-parcel" data-id="${parcel.id}" class="${selected ? 'selected' : ''}">
-      ${selectable ? `<td><input type="checkbox" data-action="toggle-parcel" data-id="${parcel.id}" ${selected ? 'checked' : ''} ${shipment && DONE.has(shipment.status) ? 'disabled' : ''} aria-label="选择包裹"></td>` : ''}
-      <td class="wrap"><strong>${esc(parcel.contents || '(未填内容)')}</strong>${parcel.notes ? `<div class="pa-small pa-muted">${esc(parcel.notes)}</div>` : ''}</td>
-      <td>${esc(supplierName(parcelSupplierId(parcel)) || '—')}</td>
-      <td>${parcel.courier ? `<div class="pa-small">${esc(parcel.courier)}</div>` : ''}${trackButton(parcel.tracking_no, 'cn')}</td>
-      <td>${esc(forwarderName(parcel.forwarder_id) || '—')}${parcel.channel ? `<div class="pa-small pa-muted">${esc(parcel.channel)}</div>` : ''}</td>
-      <td class="pa-small">${esc(parcel.forwarder_ref || '')}</td>
-      <td>${shipment ? `<div class="pa-small"><strong>${esc(shipment.shipment_number)}</strong></div>${trackingList(shipment)}` : '—'}</td>
-      <td>${stageChip(PARCEL_STAGE, parcelStage(parcel))}</td>
-      <td class="pa-small">${fmtDate(parcel.shipped_at || parcel.created_at)}</td>
-    </tr>`;
-  }
-
-  function parcelTable(rows, selectable) {
-    if (!rows.length) return '<div class="pa-empty">没有包裹</div>';
-    return `<div class="pa-table-wrap"><table class="pa-table">
-      <thead><tr>${selectable ? '<th></th>' : ''}<th>内容</th><th>供货商</th><th>国内快递</th><th>转运 / 渠道</th><th>入仓号</th><th>批次 / 国际单号</th><th>状态</th><th>日期</th></tr></thead>
-      <tbody>${rows.map(parcel => parcelRow(parcel, selectable)).join('')}</tbody>
-    </table></div>`;
-  }
-
-  function renderParcels() {
-    const filters = {
-      open: parcel => !DONE.has(parcelStage(parcel)),
-      domestic: parcel => parcelStage(parcel) === 'domestic',
-      at_forwarder: parcel => parcelStage(parcel) === 'at_forwarder',
-      unbatched: parcel => !parcel.shipment_id,
-      in_batch: parcel => parcel.shipment_id && !DONE.has(parcelStage(parcel)),
-      done: parcel => DONE.has(parcelStage(parcel)),
-      all: () => true
-    };
-    let rows = state.data.parcels.filter(filters[state.parcelFilter] || filters.open);
-    if (state.parcelForwarder) rows = rows.filter(parcel => String(parcel.forwarder_id || '') === state.parcelForwarder);
-    const selected = Array.from(state.selectedParcels);
-    const openBatches = state.data.shipments.filter(shipment => ['draft', 'declared'].includes(shipment.status));
-    return `<section class="pa-panel">
-      <div class="pa-panel-head">
-        ${filterBar('parcelFilter', state.parcelFilter, [['open', '未完成'], ['domestic', '国内运输中'], ['at_forwarder', '转运仓已签收'], ['unbatched', '未组批'], ['in_batch', '已组批'], ['done', '已完成'], ['all', '全部']])}
-        <div class="pa-filters">
-          <select class="pa-select-inline" data-change="parcelForwarder" aria-label="按转运筛选"><option value="">全部转运</option>${state.data.forwarders.map(forwarder => `<option value="${forwarder.id}" ${state.parcelForwarder === String(forwarder.id) ? 'selected' : ''}>${esc(forwarder.name)}</option>`).join('')}</select>
-          <button class="pa-btn small primary" type="button" data-action="new-parcel"><i class="bi bi-plus-lg"></i> 登记包裹</button>
-        </div>
-      </div>
-      ${parcelTable(rows, true)}
-    </section>
-    ${selected.length ? `<div class="pa-bulkbar">
-      <span>已选 ${selected.length} 个包裹</span>
-      <div class="pa-row-actions">
-        <button class="pa-btn small primary" type="button" data-action="batch-new">新建转运批次（出收据）</button>
-        ${openBatches.length ? `<select class="pa-select-inline" data-change="batchExisting" aria-label="加入现有批次"><option value="">加入现有批次…</option>${openBatches.map(shipment => `<option value="${shipment.id}">${esc(shipment.shipment_number)} · ${esc(shipmentTitle(shipment))} · ${esc(SHIPMENT_STATUS[shipment.status].label)}</option>`).join('')}</select>` : ''}
-        <button class="pa-btn small" type="button" data-action="clear-selection">清除</button>
-      </div>
-    </div>` : ''}`;
-  }
-
-  function shipmentRow(shipment) {
-    const parcels = shipmentParcels(shipment);
-    return `<tr data-action="open-shipment" data-id="${shipment.id}">
-      <td><strong>${esc(shipment.shipment_number)}</strong></td>
-      <td>${esc(forwarderName(shipment.forwarder_id) || '—')}${shipment.channel ? `<div class="pa-small pa-muted">${esc(shipment.channel)}</div>` : ''}</td>
-      <td>${trackingList(shipment) || '<span class="pa-muted">—</span>'}</td>
-      <td class="wrap pa-small">${parcels.length} 个：${esc(parcels.map(parcel => parcel.contents).filter(Boolean).slice(0, 4).join(' / '))}${parcels.length > 4 ? ' …' : ''}</td>
-      <td>${stageChip(SHIPMENT_STATUS, shipment.status)}</td>
-      <td class="pa-small">${[
-        shipment.declared_at ? `收据 ${fmtDate(shipment.declared_at)}` : '',
-        shipment.shipped_at ? `发货 ${fmtDate(shipment.shipped_at)}` : '',
-        shipment.eta && !shipment.arrived_at ? `预计 ${fmtDate(shipment.eta)}` : '',
-        shipment.arrived_at ? `到达 ${fmtDate(shipment.arrived_at)}` : ''
-      ].filter(Boolean).join('<br>')}</td>
-      <td class="num">${shipment.freight_amount != null ? money(shipment.freight_amount, shipment.freight_currency) : ''}</td>
-    </tr>`;
-  }
-
-  function renderShipments() {
-    const filters = {
-      open: shipment => !DONE.has(shipment.status),
-      declared: shipment => ['draft', 'declared'].includes(shipment.status),
-      shipped: shipment => shipment.status === 'shipped',
-      arrived: shipment => ['arrived', 'received'].includes(shipment.status),
-      done: shipment => DONE.has(shipment.status),
-      all: () => true
-    };
-    const rows = state.data.shipments.filter(filters[state.shipmentFilter] || filters.open);
-    return `<section class="pa-panel">
-      <div class="pa-panel-head">
-        ${filterBar('shipmentFilter', state.shipmentFilter, [['open', '进行中'], ['declared', '已出收据'], ['shipped', '转运发货'], ['arrived', '到达 / 待入库'], ['done', '已完成'], ['all', '全部']])}
-        <button class="pa-btn small primary" type="button" data-action="new-shipment"><i class="bi bi-plus-lg"></i> 新转运批次</button>
-      </div>
-      ${rows.length ? `<div class="pa-table-wrap"><table class="pa-table">
-        <thead><tr><th>批次</th><th>转运 / 渠道</th><th>国际单号</th><th>包裹</th><th>状态</th><th>日期</th><th class="num">运费</th></tr></thead>
-        <tbody>${rows.map(shipmentRow).join('')}</tbody>
-      </table></div>` : '<div class="pa-empty">没有符合条件的批次</div>'}
-    </section>`;
-  }
-
   function renderSettings() {
     const suppliers = state.data.suppliers;
     const forwarders = state.data.forwarders;
@@ -746,28 +842,6 @@
           <td>${esc(supplier.phone || '')}</td><td class="pa-small">${esc(supplier.website_url || '')}</td><td class="wrap pa-small">${esc(supplier.notes || '')}</td>
         </tr>`).join('')}</tbody></table></div>` : '<div class="pa-empty">还没有供货商</div>'}
     </section>`;
-  }
-
-  function renderSearch(query) {
-    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-    const matches = text => words.every(word => text.toLowerCase().includes(word));
-    const parcels = state.data.parcels.filter(parcel => {
-      const order = parcel.purchase_order_id && index.orders.get(Number(parcel.purchase_order_id));
-      const shipment = parcel.shipment_id && index.shipments.get(Number(parcel.shipment_id));
-      return matches([parcel.contents, parcel.tracking_no, parcel.courier, parcel.forwarder_ref, parcel.notes,
-        supplierName(parcelSupplierId(parcel)), order && order.po_number,
-        shipment && shipment.shipment_number, shipment && (shipment.tracking_numbers || []).join(' ')].join(' ').replace(/\s+/g, ' '));
-    });
-    const shipments = state.data.shipments.filter(shipment => matches([shipment.shipment_number,
-      (shipment.tracking_numbers || []).join(' '), shipment.notes, shipment.channel, forwarderName(shipment.forwarder_id)].join(' ')));
-    const orders = state.data.orders.filter(order => matches([order.po_number, order.supplier_order_ref, order.notes,
-      supplierName(order.supplier_id), itemsSummary(order)].join(' ')));
-    const total = parcels.length + shipments.length + orders.length;
-    return `<p class="pa-muted">搜索「${esc(query)}」找到 ${total} 条 · <button class="pa-btn small ghost" type="button" data-action="clear-search">清除搜索</button></p>
-      ${shipments.length ? `<section class="pa-panel"><div class="pa-panel-head"><h2>转运批次 (${shipments.length})</h2></div><div class="pa-table-wrap"><table class="pa-table"><thead><tr><th>批次</th><th>转运 / 渠道</th><th>国际单号</th><th>包裹</th><th>状态</th><th>日期</th><th class="num">运费</th></tr></thead><tbody>${shipments.map(shipmentRow).join('')}</tbody></table></div></section>` : ''}
-      ${parcels.length ? `<section class="pa-panel"><div class="pa-panel-head"><h2>国内包裹 (${parcels.length})</h2></div>${parcelTable(parcels, false)}</section>` : ''}
-      ${orders.length ? `<section class="pa-panel"><div class="pa-panel-head"><h2>采购单 (${orders.length})</h2></div><div class="pa-panel-body"><div class="pa-grid">${orders.map(orderCard).join('')}</div></div></section>` : ''}
-      ${total ? '' : '<div class="pa-empty">没有找到</div>'}`;
   }
 
   // ---------- receiving ----------
@@ -1257,7 +1331,7 @@
           ${field('渠道', `${input('channel', draft.channel, 'list="parcelChannels" placeholder="海运普货 / 空运 …"')}<span id="parcelChannelList">${channelDatalist('parcelChannels', draft.forwarder_id)}</span>`)}
           ${field('转运仓签收日期', `<div style="display:flex;gap:6px">${input('forwarder_received_at', draft.forwarder_received_at, 'type="date" style="flex:1"')}<button class="pa-btn small" type="button" data-action="set-today" data-target="forwarder_received_at">今天</button></div>`)}
           ${field('转运入仓号', input('forwarder_ref', draft.forwarder_ref, 'placeholder="例如 HT2609090021"'))}
-          ${field('转运批次', `<select name="shipment_id"><option value="">— 还没组批 —</option>${shipments.map(shipment => `<option value="${shipment.id}" ${Number(shipment.id) === Number(draft.shipment_id) ? 'selected' : ''}>${esc(shipment.shipment_number)} · ${esc(shipmentTitle(shipment))} · ${esc(SHIPMENT_STATUS[shipment.status].label)}${(shipment.tracking_numbers || [])[0] ? ` · ${esc(shipment.tracking_numbers[0])}` : ''}</option>`).join('')}</select>`)}
+          ${field('放在哪个国际单', `<select name="shipment_id"><option value="">— 还没上国际单 —</option>${shipments.map(shipment => `<option value="${shipment.id}" ${Number(shipment.id) === Number(draft.shipment_id) ? 'selected' : ''}>${esc(shipment.shipment_number)} · ${esc(shipmentTitle(shipment))} · ${esc(SHIPMENT_STATUS[shipment.status].label)}${(shipment.tracking_numbers || [])[0] ? ` · ${esc(shipment.tracking_numbers[0])}` : ''}</option>`).join('')}</select>`)}
         </div>
       </div>
       <div class="pa-section"><div class="pa-section-title">申报信息（出明细给转运用）</div>
@@ -1346,7 +1420,7 @@
         <div id="shipmentParcels">${renderShipmentParcels(draft)}</div>
       </div>
       <div class="pa-section">${field('备注', `<textarea name="notes">${esc(draft.notes || '')}</textarea>`, true)}</div>`;
-    openDrawer('shipment', existing ? `转运批次 ${existing.shipment_number}` : '新转运批次', existing ? stageLabel(SHIPMENT_STATUS, existing.status) : '选包裹 → 出明细给转运 → 等转运发货', body, drawerFoot('delete-shipment', Boolean(existing)), draft);
+    openDrawer('shipment', existing ? `国际单 ${existing.shipment_number}` : '新国际单', existing ? stageLabel(SHIPMENT_STATUS, existing.status) : '选包裹 → 出明细给转运 → 等转运发货', body, drawerFoot('delete-shipment', Boolean(existing)), draft);
   }
 
   function toLocalInput(value) {
@@ -1365,7 +1439,7 @@
         <div class="pa-mini-main"><strong>${esc(parcel.contents || '(未填内容)')}</strong><span class="pa-small pa-muted">${esc(supplierName(parcelSupplierId(parcel)))} ${esc(parcel.courier || '')} ${esc(parcel.tracking_no || '')}${parcel.forwarder_ref ? ` · 入仓 ${esc(parcel.forwarder_ref)}` : ''}</span></div>
         <button class="pa-btn small ghost danger" type="button" data-action="shipment-remove-parcel" data-id="${parcel.id}" title="移出批次"><i class="bi bi-x-lg"></i></button>
       </div>`).join('')}</div>` : '<p class="pa-muted pa-small">还没有包裹</p>'}
-      ${candidates.length ? `<div style="display:flex;gap:6px;margin-top:10px"><select class="pa-input" id="shipmentAddParcel"><option value="">添加还没组批的包裹…</option>${candidates.map(parcel => `<option value="${parcel.id}">${parcel.forwarder_received_at ? '✓ 已到仓 · ' : ''}${esc(forwarderName(parcel.forwarder_id) || '未指定转运')} · ${esc((parcel.contents || '').slice(0, 40))} · ${esc(parcel.tracking_no || '')}</option>`).join('')}</select><button class="pa-btn small" type="button" data-action="shipment-add-parcel">添加</button></div>` : ''}`;
+      ${candidates.length ? `<div style="display:flex;gap:6px;margin-top:10px"><select class="pa-input" id="shipmentAddParcel"><option value="">把还没上国际单的货加进来…</option>${candidates.map(parcel => `<option value="${parcel.id}">${parcel.forwarder_received_at ? '✓ 已到仓 · ' : ''}${esc(forwarderName(parcel.forwarder_id) || '未指定转运')} · ${esc((parcel.contents || '').slice(0, 40))} · ${esc(parcel.tracking_no || '')}</option>`).join('')}</select><button class="pa-btn small" type="button" data-action="shipment-add-parcel">添加</button></div>` : ''}`;
   }
 
   function declarationRows(parcelIds) {
@@ -1436,7 +1510,7 @@
     await api('save_shipment', payload);
     state.selectedParcels.clear();
     render();
-    toast('批次已保存');
+    toast('国际单已保存');
     closeDrawer();
   }
 
@@ -1658,8 +1732,31 @@
     'close-drawer': () => closeDrawer(),
     'close-modal': () => closeModal(),
     'track': element => trackNumber(element),
-    'clear-search': () => { state.search = ''; els.search.value = ''; render(); },
-    'show-done': () => { state.tab = 'shipments'; state.shipmentFilter = 'done'; render(); },
+    'clear-search': () => { state.search = ''; els.search.value = ''; state.itemView = 'active'; render(); },
+    'more-done': () => { state.doneLimit += 30; render(); },
+    'more-items': () => { state.itemLimit += 300; render(); },
+    'toggle-expand': element => {
+      const id = Number(element.dataset.id);
+      if (state.expanded.has(id)) state.expanded.delete(id); else state.expanded.add(id);
+      render();
+    },
+    'show-shipment': (element, event) => {
+      event.stopPropagation();
+      const shipment = index.shipments.get(Number(element.dataset.id));
+      if (!shipment) return;
+      state.search = (shipment.tracking_numbers || [])[0] || shipment.shipment_number;
+      els.search.value = state.search;
+      state.itemView = 'all';
+      state.tab = 'items';
+      render();
+      window.scrollTo(0, 0);
+    },
+    'copy-shipment-declaration': element => {
+      const shipment = index.shipments.get(Number(element.dataset.id));
+      const rows = declarationRows(shipmentParcels(shipment).map(parcel => parcel.id));
+      copyText(rows.map(row => row.map(cell => String(cell).replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n'));
+      toast('明细已复制，可以直接粘贴到微信或 Excel');
+    },
     'filter': element => {
       state[element.dataset.filter] = element.dataset.value;
       render();
@@ -1719,7 +1816,7 @@
       closeDrawer();
     },
     'delete-shipment': async () => {
-      if (!window.confirm('删除这个批次？里面的包裹会变回「未组批」。')) return;
+      if (!window.confirm('删除这个国际单？里面的货会回到「还没上国际单」。')) return;
       await api('delete_shipment', { id: state.drawer.draft.id });
       toast('批次已删除');
       closeDrawer();
@@ -1848,7 +1945,16 @@
     const target = event.target;
     if (target === els.search) {
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => { state.search = target.value; render(); }, 180);
+      searchTimer = setTimeout(() => {
+        const wasSearching = Boolean(state.search.trim());
+        state.search = target.value;
+        const searching = Boolean(state.search.trim());
+        // Searching answers "where is it", so it always lands on the item view and includes history.
+        if (searching && !wasSearching) state.itemView = 'all';
+        if (!searching && wasSearching) state.itemView = 'active';
+        if (searching) state.tab = 'items';
+        render();
+      }, 200);
       return;
     }
     if (target.dataset.itemField && state.drawer && state.drawer.type === 'order') {
@@ -1893,7 +1999,6 @@
       return;
     }
     if (!key) return;
-    if (key === 'parcelForwarder') { state.parcelForwarder = target.value; render(); }
     if (key === 'showStocked') { state.showStockedReceiving = target.checked; render(); }
     if (key === 'batchExisting' && target.value) {
       const shipment = index.shipments.get(Number(target.value));
@@ -1916,8 +2021,11 @@
     const button = event.target.closest('[data-tab]');
     if (!button) return;
     state.tab = button.dataset.tab;
-    state.search = '';
-    els.search.value = '';
+    if (state.tab !== 'items' && state.search) {
+      state.search = '';
+      els.search.value = '';
+      state.itemView = 'active';
+    }
     render();
   });
 

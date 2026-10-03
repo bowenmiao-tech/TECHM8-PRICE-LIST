@@ -7,34 +7,29 @@
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js?v=20260904.1"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="./purchasing-admin.css?v=20261002.1">
+  <link rel="stylesheet" href="./purchasing-admin.css?v=20261003.1">
 </head>
 <body>
   <div class="pa-app" id="app" data-auth-protected>
     <header class="pa-head">
-      <div>
-        <p class="pa-eyebrow">China Purchasing</p>
-        <h1>采购跟单</h1>
-        <p class="pa-sub">下单 → 付款 → 供货商发货 → 转运仓 → 出收据 → 转运发货 → 到达澳洲 → 签收点数 → 入库</p>
-      </div>
+      <h1>采购跟单</h1>
+      <label class="pa-search" title="品名、国内单号、国际单号、入仓号、供货商都能搜">
+        <i class="bi bi-search"></i>
+        <input id="globalSearch" type="search" placeholder="输入品名或单号，马上看到货到哪了" autocomplete="off">
+      </label>
       <div class="pa-head-actions">
-        <label class="pa-search" title="国内单号、国际单号、入仓号、采购单号、品名、供货商都能搜">
-          <i class="bi bi-search"></i>
-          <input id="globalSearch" type="search" placeholder="搜索任何单号 / 品名 / 供货商" autocomplete="off">
-        </label>
-        <button class="pa-btn primary" type="button" data-action="new-parcel"><i class="bi bi-box-seam"></i> 快速登记包裹</button>
-        <button class="pa-btn" type="button" data-action="new-order"><i class="bi bi-receipt"></i> 新采购单</button>
+        <button class="pa-btn primary" type="button" data-action="new-parcel"><i class="bi bi-plus-lg"></i> 登记包裹</button>
         <button class="pa-btn ghost" type="button" data-action="refresh" title="刷新"><i class="bi bi-arrow-clockwise"></i></button>
       </div>
     </header>
 
     <nav class="pa-tabs" id="tabs" role="tablist" aria-label="采购跟单">
-      <button class="pa-tab active" type="button" data-tab="board"><i class="bi bi-kanban"></i> 看板</button>
-      <button class="pa-tab" type="button" data-tab="orders"><i class="bi bi-receipt"></i> 采购单 <span class="count" data-count="orders" hidden></span></button>
-      <button class="pa-tab" type="button" data-tab="parcels"><i class="bi bi-box-seam"></i> 国内包裹 <span class="count" data-count="parcels" hidden></span></button>
-      <button class="pa-tab" type="button" data-tab="shipments"><i class="bi bi-airplane"></i> 转运批次 <span class="count" data-count="shipments" hidden></span></button>
-      <button class="pa-tab" type="button" data-tab="receiving"><i class="bi bi-clipboard-check"></i> 签收点数入库 <span class="count" data-count="receiving" hidden></span></button>
-      <button class="pa-tab" type="button" data-tab="settings"><i class="bi bi-gear"></i> 供货商 &amp; 转运</button>
+      <button class="pa-tab active" type="button" data-tab="shipments"><i class="bi bi-water"></i> 国际单 <span class="count" data-count="shipments" hidden></span></button>
+      <button class="pa-tab" type="button" data-tab="items"><i class="bi bi-geo-alt"></i> 货品在哪</button>
+      <button class="pa-tab" type="button" data-tab="receiving"><i class="bi bi-clipboard-check"></i> 签收入库 <span class="count" data-count="receiving" hidden></span></button>
+      <span class="pa-tabs-spacer"></span>
+      <button class="pa-tab minor" type="button" data-tab="orders"><i class="bi bi-receipt"></i> 采购单</button>
+      <button class="pa-tab minor" type="button" data-tab="settings"><i class="bi bi-gear"></i> 设置</button>
     </nav>
 
     <div class="pa-status" id="statusBar" hidden></div>
@@ -55,6 +50,6 @@
   <div class="pa-modal" id="modal" hidden></div>
   <div class="pa-toast" id="toast" hidden></div>
 
-  <script src="./purchasing-admin.js?v=20261002.1"></script>
+  <script src="./purchasing-admin.js?v=20261003.1"></script>
 </body>
 </html>

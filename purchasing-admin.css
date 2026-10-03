@@ -39,27 +39,27 @@ button { cursor: pointer; }
 .pa-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 14px;
+  align-items: center;
+  gap: 12px 16px;
   margin-bottom: 14px;
 }
-.pa-eyebrow { margin: 0 0 2px; color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.pa-head h1 { margin: 0; font-size: 24px; line-height: 1.2; }
-.pa-sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.pa-head h1 { margin: 0; font-size: 22px; line-height: 1.2; white-space: nowrap; }
 .pa-head-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 .pa-search {
   display: flex;
+  flex: 1 1 360px;
   align-items: center;
   gap: 8px;
-  min-width: 260px;
-  padding: 0 12px;
-  height: 38px;
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;
+  max-width: 640px;
+  padding: 0 14px;
+  height: 44px;
+  border: 2px solid var(--line-strong);
+  border-radius: 12px;
   background: #fff;
+  font-size: 15px;
 }
+.pa-search:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7, 137, 111, .12); }
 .pa-search i { color: var(--muted); }
 .pa-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; }
 
@@ -108,6 +108,65 @@ button { cursor: pointer; }
   white-space: nowrap;
 }
 .pa-tab.active { background: var(--green-soft); color: var(--green-dark); }
+.pa-tab.minor { font-weight: 500; font-size: 13px; }
+.pa-tabs-spacer { flex: 1; }
+
+/* Where-is-it progress: 供货商发货 → 到转运仓 → 已出收据 → 国际运输 → 到达澳洲 → 已入库 */
+.pa-journey { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin: 12px 0 6px; }
+.pa-journey-step { display: flex; flex-direction: column; gap: 4px; min-width: 0; color: var(--muted); font-size: 11px; }
+.pa-journey-step i { display: block; height: 6px; border-radius: 999px; background: #e3e9ec; }
+.pa-journey-step em { overflow: hidden; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.pa-journey-step.done i { background: var(--green); }
+.pa-journey-step.current i { background: var(--orange); }
+.pa-journey-step.current em { color: var(--ink); font-weight: 700; }
+.pa-journey.compact { display: inline-grid; flex: none; width: 108px; margin: 0; gap: 3px; vertical-align: middle; }
+.pa-journey.compact .pa-journey-step i { height: 6px; }
+
+.pa-mode { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.pa-mode.sea { background: var(--blue-soft); color: var(--blue); }
+.pa-mode.air { background: var(--purple-soft); color: var(--purple); }
+
+.pa-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.pa-filter b { margin-left: 2px; font-weight: 700; }
+.pa-link { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: var(--green-dark); font-weight: 600; font-size: 13px; }
+.pa-link:hover { text-decoration: underline; }
+.pa-center { text-align: center; }
+
+/* 国际单 cards: the shipment and every item inside it, visible at once */
+.pa-ship-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr)); gap: 12px; margin-bottom: 14px; align-items: start; }
+.pa-ship { padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 2px 8px rgba(32, 52, 61, .04); }
+.pa-ship-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.pa-ship-title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 15px; }
+.pa-ship-dates { color: var(--muted); font-size: 12px; }
+.pa-ship-items-title { margin: 12px 0 4px; font-size: 13px; font-weight: 700; }
+.pa-ship-items { margin: 0; padding: 0; list-style: none; border-top: 1px solid #eef2f4; }
+.pa-ship-items li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 4px; border-bottom: 1px solid #eef2f4; cursor: pointer; }
+.pa-ship-items li:hover { background: #f7fbfa; }
+.pa-ship-items .name { display: -webkit-box; flex: 1; min-width: 0; overflow: hidden; white-space: pre-line; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.pa-ship-items .meta { flex: none; max-width: 40%; color: var(--muted); font-size: 12px; text-align: right; }
+.pa-ship-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.pa-ship > .pa-link { margin-top: 6px; }
+
+/* 货品在哪 rows */
+.pa-item-list { overflow: hidden; }
+.pa-pending { margin-top: 4px; overflow: hidden; }
+.pa-group-head { padding: 9px 14px; border-bottom: 1px solid var(--line); background: #f8fafb; color: var(--muted); font-size: 13px; font-weight: 700; }
+.pa-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #eef2f4; background: #fff; cursor: pointer; }
+.pa-item:hover { background: #f7fbfa; }
+.pa-item.selected { background: var(--green-soft); }
+.pa-item > input[type="checkbox"] { flex: none; width: 18px; height: 18px; margin-top: 2px; accent-color: var(--green); }
+.pa-item-main { flex: 1; min-width: 0; }
+.pa-item-name { display: -webkit-box; overflow: hidden; font-weight: 600; white-space: pre-line; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.pa-item-where { display: flex; flex: 0 0 340px; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.pa-where-text { font-size: 13px; font-weight: 700; }
+.pa-where-text.tone-blue { color: var(--blue); }
+.pa-where-text.tone-amber { color: var(--amber); }
+.pa-where-text.tone-orange { color: #b85500; }
+.pa-where-text.tone-purple { color: var(--purple); }
+.pa-where-text.tone-green { color: var(--green-dark); }
+.pa-where-text.tone-muted { color: var(--muted); font-weight: 500; }
+.pa-item-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 5px; color: var(--muted); font-size: 12px; }
+.pa-item > .pa-btn { flex: none; }
 .pa-tab .count {
   min-width: 20px;
   padding: 1px 6px;
@@ -489,6 +548,10 @@ button { cursor: pointer; }
   .pa-search { min-width: 0; flex: 1 1 100%; }
   .pa-line { grid-template-columns: 1fr 1fr; }
   .pa-line .pa-sku { grid-column: 1 / -1; }
+  .pa-item { flex-wrap: wrap; }
+  .pa-item-main { flex-basis: calc(100% - 30px); }
+  .pa-item-where { flex: 1 1 100%; padding-left: 28px; }
+  .pa-tabs-spacer { display: none; }
   .pa-line-head { display: none; }
   .pa-column { max-height: none; }
 }
