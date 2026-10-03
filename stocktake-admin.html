@@ -30,7 +30,11 @@
       letter-spacing: 0;
     }
     button, a, input, select { font: inherit; }
-    .shell { width: min(1280px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 48px; }
+    .shell { width: min(1280px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 48px; display: flex; flex-direction: column; }
+    .topbar { order: 0; }
+    .points-panel { order: 1; }
+    .shell > .summary { order: 2; }
+    .accounts-panel { order: 3; }
     .topbar {
       display: flex;
       align-items: center;
@@ -215,7 +219,7 @@
     }
     .save-button:disabled { cursor: wait; opacity: .55; }
     .admin-row { background: #f6fbf9; }
-    .review-staff-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+    .review-staff-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
     .review-staff-card {
       display: grid; gap: 8px; padding: 13px 14px; text-align: left;
       border: 1px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer;
@@ -224,12 +228,22 @@
     .review-staff-card.active { border-color: var(--green); background: #eef8f4; box-shadow: 0 0 0 3px rgba(7,137,111,.12); }
     .review-staff-card.is-idle { opacity: .62; }
     .review-staff-name { font-size: 15px; font-weight: 950; }
-    .review-staff-figures { display: flex; gap: 14px; }
+    .review-staff-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
     .review-figure { display: grid; gap: 2px; }
     .review-figure span { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
     .review-figure strong { font-size: 18px; font-weight: 950; }
     .review-figure.last strong { color: var(--muted); font-size: 15px; }
+    .review-figure.total strong { color: var(--green-dark); }
     .review-staff-foot { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .score-detail { margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbfa; }
+    .score-detail[hidden] { display: none; }
+    .score-detail h3 { margin: 0 0 8px; font-size: 16px; }
+    .score-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .score-detail-grid div { padding: 12px; border-radius: 9px; background: #fff; border: 1px solid var(--line); }
+    .score-detail-grid span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .score-detail-grid strong { display: block; margin-top: 4px; font-size: 20px; }
+    .device-event { display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; margin-top: 6px; border: 1px solid var(--line); border-radius: 9px; background: #fff; font-size: 12px; font-weight: 750; }
+    .device-event strong { color: var(--green-dark); }
 
     .review-event-list { display: grid; gap: 7px; }
     .review-event {
@@ -278,6 +292,9 @@
       .review-event { grid-template-columns: minmax(0, 1fr) auto; }
       .review-event-date { grid-column: 1 / -1; }
       .review-event-meta { grid-column: 1 / -1; }
+      .score-detail-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .device-event { grid-template-columns: 1fr auto; }
+      .device-event span:first-child { grid-column: 1 / -1; }
       .staff-row { grid-template-columns: 42px minmax(0, 1fr) auto; }
       .store-field, .control-field { grid-column: 1 / -1; }
       .save-button { grid-column: 1 / -1; width: 100%; }
@@ -305,7 +322,7 @@
       <div class="summary-item"><span>Inventory enabled</span><strong id="inventoryCount">0</strong></div>
     </section>
 
-    <section class="panel">
+    <section class="panel accounts-panel">
       <div class="panel-head">
         <div>
           <h2>Staff Accounts, Stores And Inventory</h2>
@@ -317,32 +334,35 @@
       <div id="pageError" class="error" role="alert"></div>
     </section>
 
-    <section class="panel">
+    <section class="panel points-panel">
       <div class="panel-head">
         <div>
-          <h2>Google Reviews</h2>
-          <p class="subtitle">Each confirmed review is 5 points. Click a staff member to see only their reviews.</p>
+          <h2>Staff Points · This Month</h2>
+          <p class="subtitle">Google reviews + device bundles. Click a staff member for details.</p>
         </div>
-        <input id="reviewSearch" class="search-input" type="search" placeholder="Search customer, staff or store" aria-label="Search reviews">
+        <input id="reviewSearch" class="search-input" type="search" placeholder="Search staff" aria-label="Search staff points">
       </div>
 
       <div class="summary" style="margin-bottom:16px;">
-        <div class="summary-item"><span>This month</span><strong id="reviewThisMonth">0</strong></div>
-        <div class="summary-item"><span>This month points</span><strong id="reviewThisMonthPoints">0</strong></div>
-        <div class="summary-item"><span>Last month</span><strong id="reviewLastMonth">0</strong></div>
-        <div class="summary-item"><span>All time</span><strong id="reviewTotal">0</strong></div>
+        <div class="summary-item"><span>Google reviews</span><strong id="reviewThisMonthPoints">0 pts</strong></div>
+        <div class="summary-item"><span>Device bundles</span><strong id="deviceThisMonthPoints">0 pts</strong></div>
+        <div class="summary-item"><span>Total points</span><strong id="combinedThisMonthPoints">0 pts</strong></div>
+        <div class="summary-item"><span>Period</span><strong id="scorePeriod" style="font-size:18px;">This month</strong></div>
       </div>
 
       <div id="reviewStaffList" class="review-staff-list"><div class="empty">Loading reviews...</div></div>
+      <div id="scoreDetail" class="score-detail" hidden></div>
 
+      <div id="reviewHistory" hidden>
       <div class="panel-head" style="margin-top:22px;">
         <div>
-          <h2 id="reviewEventsTitle" style="font-size:17px;">Every Review</h2>
+          <h2 id="reviewEventsTitle" style="font-size:17px;">Review History</h2>
           <p class="subtitle" id="reviewFilterNote">Newest first. Store, customer and date for every recorded review.</p>
         </div>
         <button id="reviewClearFilter" class="button" type="button" hidden><i class="bi bi-x-lg"></i> Show all staff</button>
       </div>
       <div id="reviewEventList" class="review-event-list"></div>
+      </div>
       <div id="reviewError" class="error" role="alert"></div>
     </section>
   </main>
@@ -360,12 +380,14 @@
       pageError: document.getElementById('pageError'),
       toast: document.getElementById('toast'),
       reviewSearch: document.getElementById('reviewSearch'),
-      reviewThisMonth: document.getElementById('reviewThisMonth'),
       reviewThisMonthPoints: document.getElementById('reviewThisMonthPoints'),
-      reviewLastMonth: document.getElementById('reviewLastMonth'),
-      reviewTotal: document.getElementById('reviewTotal'),
+      deviceThisMonthPoints: document.getElementById('deviceThisMonthPoints'),
+      combinedThisMonthPoints: document.getElementById('combinedThisMonthPoints'),
+      scorePeriod: document.getElementById('scorePeriod'),
+      scoreDetail: document.getElementById('scoreDetail'),
       reviewStaffList: document.getElementById('reviewStaffList'),
       reviewEventList: document.getElementById('reviewEventList'),
+      reviewHistory: document.getElementById('reviewHistory'),
       reviewEventsTitle: document.getElementById('reviewEventsTitle'),
       reviewFilterNote: document.getElementById('reviewFilterNote'),
       reviewClearFilter: document.getElementById('reviewClearFilter'),
@@ -506,26 +528,54 @@
 
     function renderReviewStaff() {
       if (!reviewReport) return;
-      const rows = (reviewReport.staff || []).filter(row => row.total_reviews > 0 || row.active);
+      const query = String(els.reviewSearch.value || '').trim().toLowerCase();
+      const rows = (reviewReport.staff || []).filter(row =>
+        (row.total_reviews > 0 || Number(row.device_points || 0) > 0 || row.active)
+        && (!query || String(row.staff_name || '').toLowerCase().includes(query)));
       if (!rows.length) {
         els.reviewStaffList.innerHTML = '<div class="empty">No staff yet.</div>';
         return;
       }
       els.reviewStaffList.innerHTML = rows.map(row => `
-        <button class="review-staff-card ${reviewStaffFilter === row.normalized_staff_name ? 'active' : ''} ${row.total_reviews ? '' : 'is-idle'}"
+        <button class="review-staff-card ${reviewStaffFilter === row.normalized_staff_name ? 'active' : ''} ${Number(row.total_points || 0) ? '' : 'is-idle'}"
                 type="button" data-review-staff="${escapeHtml(row.normalized_staff_name)}">
           <span class="review-staff-name">${escapeHtml(row.staff_name)}${row.active ? '' : ' · inactive'}</span>
           <span class="review-staff-figures">
-            <span class="review-figure"><span>This month</span><strong>${row.this_month_points} pts</strong></span>
-            <span class="review-figure last"><span>Last month</span><strong>${row.last_month_points} pts</strong></span>
+            <span class="review-figure"><span>GG</span><strong>${Number(row.this_month_points || 0)} pts</strong></span>
+            <span class="review-figure"><span>Device</span><strong>${Number(row.device_points || 0)} pts</strong></span>
+            <span class="review-figure total"><span>Total</span><strong>${Number(row.total_points || 0)} pts</strong></span>
           </span>
-          <span class="review-staff-foot">${row.this_month_reviews} this month · ${row.total_reviews} all time${row.last_review_date ? ' · last ' + escapeHtml(reviewDateText(row.last_review_date)) : ''}</span>
+          <span class="review-staff-foot">${Number(row.this_month_reviews || 0)} reviews · ${Number(row.device_bundle_count || 0)} device bundles this month</span>
         </button>
       `).join('');
     }
 
+    function renderScoreDetail() {
+      const row = (reviewReport?.staff || []).find(item => item.normalized_staff_name === reviewStaffFilter);
+      els.scoreDetail.hidden = !row;
+      if (!row) { els.scoreDetail.innerHTML = ''; return; }
+      const bundles = (reviewReport.device_events || []).filter(item => item.normalized_staff_name === reviewStaffFilter);
+      els.scoreDetail.innerHTML = `
+        <h3>${escapeHtml(row.staff_name)} · This month</h3>
+        <div class="score-detail-grid">
+          <div><span>Google reviews</span><strong>${Number(row.this_month_points || 0)} pts</strong></div>
+          <div><span>Device bundles</span><strong>${Number(row.device_points || 0)} pts</strong></div>
+          <div><span>Total</span><strong>${Number(row.total_points || 0)} pts</strong></div>
+        </div>
+        <h3>Device bundle invoices</h3>
+        ${bundles.length ? bundles.map(item => `
+          <div class="device-event">
+            <span>${escapeHtml(reviewDateText(item.business_date))} · ${escapeHtml(item.order_code)}</span>
+            <span>${escapeHtml(item.store_name)} · ${Number(item.device_count)} device${Number(item.device_count) === 1 ? '' : 's'} + ${Number(item.accessory_count)} accessor${Number(item.accessory_count) === 1 ? 'y' : 'ies'}</span>
+            <strong>+${Number(item.points)} pts</strong>
+          </div>`).join('') : '<div class="empty">No device bundles this month.</div>'}
+      `;
+    }
+
     function renderReviewEvents() {
       if (!reviewReport) return;
+      els.reviewHistory.hidden = !reviewStaffFilter;
+      if (!reviewStaffFilter) return;
       const query = String(els.reviewSearch.value || '').trim().toLowerCase();
       let events = reviewReport.events || [];
       if (reviewStaffFilter) {
@@ -539,7 +589,7 @@
       const staffRow = reviewStaffFilter
         ? (reviewReport.staff || []).find(row => row.normalized_staff_name === reviewStaffFilter)
         : null;
-      els.reviewEventsTitle.textContent = staffRow ? `${staffRow.staff_name} · Reviews` : 'Every Review';
+      els.reviewEventsTitle.textContent = staffRow ? `${staffRow.staff_name} · Reviews` : 'Review History';
       els.reviewFilterNote.textContent = staffRow
         ? `${staffRow.this_month_points} pts this month · ${staffRow.last_month_points} pts last month · ${staffRow.total_reviews} reviews all time.`
         : 'Newest first. Store, customer and date for every recorded review.';
@@ -565,18 +615,19 @@
     function renderReviews() {
       if (!reviewReport) return;
       const totals = reviewReport.totals || {};
-      els.reviewThisMonth.textContent = String(totals.this_month_reviews ?? 0);
-      els.reviewThisMonthPoints.textContent = String(totals.this_month_points ?? 0);
-      els.reviewLastMonth.textContent = String(totals.last_month_reviews ?? 0);
-      els.reviewTotal.textContent = String(totals.total_reviews ?? 0);
+      els.reviewThisMonthPoints.textContent = `${Number(totals.this_month_points || 0)} pts`;
+      els.deviceThisMonthPoints.textContent = `${Number(totals.device_points || 0)} pts`;
+      els.combinedThisMonthPoints.textContent = `${Number(totals.combined_points || 0)} pts`;
+      els.scorePeriod.textContent = reviewDateText(reviewReport.this_month_start).replace(/^\d{2} /, '');
       renderReviewStaff();
+      renderScoreDetail();
       renderReviewEvents();
     }
 
     async function loadReviews() {
       els.reviewError.textContent = '';
       try {
-        const response = await fetch(`${STAFF_MANAGEMENT_ENDPOINT}?mode=reviews`, {
+        const response = await fetch(`${STAFF_MANAGEMENT_ENDPOINT}?mode=points`, {
           headers: { 'x-admin-session': window.Techm8StaffAuth.getToken() }
         });
         const result = await response.json().catch(() => ({}));
@@ -588,6 +639,7 @@
         reviewReport = null;
         els.reviewStaffList.innerHTML = '<div class="empty">Reviews unavailable.</div>';
         els.reviewEventList.innerHTML = '';
+        els.scoreDetail.hidden = true;
         els.reviewError.textContent = error.message || 'Reviews could not be loaded.';
       }
     }
@@ -656,10 +708,11 @@
 
     els.refreshBtn.addEventListener('click', () => { loadStaff(); loadReviews(); });
     els.searchInput.addEventListener('input', renderStaff);
-    els.reviewSearch.addEventListener('input', renderReviewEvents);
+    els.reviewSearch.addEventListener('input', () => { renderReviewStaff(); renderReviewEvents(); });
     els.reviewClearFilter.addEventListener('click', () => {
       reviewStaffFilter = '';
       renderReviewStaff();
+      renderScoreDetail();
       renderReviewEvents();
     });
     els.reviewStaffList.addEventListener('click', event => {
@@ -668,6 +721,7 @@
       const value = card.dataset.reviewStaff;
       reviewStaffFilter = reviewStaffFilter === value ? '' : value;
       renderReviewStaff();
+      renderScoreDetail();
       renderReviewEvents();
     });
     els.staffList.addEventListener('click', event => {

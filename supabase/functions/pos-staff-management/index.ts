@@ -46,8 +46,8 @@ Deno.serve(async (request) => {
   try {
     if (request.method === "GET") {
       const mode = new URL(request.url).searchParams.get("mode") || "";
-      if (mode === "reviews") {
-        const result = await callRpc("get_staff_google_review_report", {
+      if (mode === "reviews" || mode === "points") {
+        const result = await callRpc(mode === "points" ? "get_staff_points_report" : "get_staff_google_review_report", {
           session_token: sessionToken,
           result_limit: 500,
         });
