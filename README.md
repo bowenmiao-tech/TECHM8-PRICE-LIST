@@ -29,7 +29,8 @@ Front-end staff pages:
 - `quote.html` - repair quote lookup
 - `repair_workflow.html` - intake / workflow page
 - `daily-report.html` - daily report + weekly LCD count
-- `nl-report.html` - password-protected North Lakes outsourced product sales entry and history
+- North Lakes now enters the same `daily-report.html` flow as other stores, using the existing staff login with no additional NL password. Drafts and submissions use the ordinary daily-report APIs.
+- `nl-report.html` - retained legacy North Lakes outsourced product sales entry and history; no longer the default daily-report route. Its functions, data and password-protected legacy access are preserved. Admin can review the original reports and settlements through **NL Report Archive** (`nl-report-admin.html`).
 - `staff-documents.html` - staff document templates and report examples
 - `problem-solving.html` - internal guide library
 - `backup_price_lookup.html` - backup quote page
