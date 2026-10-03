@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { parseChat, validateChatInput } from "./chat-parse.ts";
 
 // Admin-only API for the China purchasing page. The admin session lives in the
 // staff/price-list project; the purchase tables and stock live here in the
@@ -18,6 +19,7 @@ const PAYLOAD_ACTIONS: Record<string, string> = {
   save_order: "purchase_admin_save_order",
   save_parcel: "purchase_admin_save_parcel",
   save_shipment: "purchase_admin_save_shipment",
+  import_chat: "purchase_admin_import_chat",
   create_product: "purchase_admin_create_product",
   post_receipt: "purchase_admin_post_receipt",
 };
@@ -45,6 +47,7 @@ function errorMessage(error: unknown, fallback: string): string {
 
 function errorStatus(message: string): number {
   if (/admin session|sign in/i.test(message)) return 401;
+  if (/ANTHROPIC_API_KEY|AI is busy|reach the AI/.test(message)) return 503;
   if (/not found/i.test(message)) return 404;
   if (/already|cannot|different operation/i.test(message)) return 409;
   if (/required|invalid|must|choose|needs|list|above zero/i.test(message)) return 400;
@@ -113,6 +116,29 @@ Deno.serve(async (request) => {
       });
       if (error) throw error;
       return jsonResponse({ ok: true, products: data || [] });
+    }
+
+    if (action === "parse_chat") {
+      const { text, images } = validateChatInput((payload as JsonRecord).text, (payload as JsonRecord).images);
+      const apiKey = Deno.env.get("ANTHROPIC_API_KEY") || "";
+      if (!apiKey) throw new Error("AI chat reading is not set up yet: add ANTHROPIC_API_KEY to the Edge Function secrets.");
+      const [suppliers, forwarders] = await Promise.all([
+        admin.from("suppliers").select("name").eq("is_active", true),
+        admin.from("purchase_forwarders").select("name, warehouse_address").eq("is_active", true),
+      ]);
+      if (suppliers.error) throw suppliers.error;
+      if (forwarders.error) throw forwarders.error;
+      const extraction = await parseChat({
+        apiKey,
+        text,
+        images,
+        suppliers: (suppliers.data || []).map((row) => String(row.name)),
+        forwarders: (forwarders.data || []).map((row) => ({
+          name: String(row.name),
+          warehouse_address: row.warehouse_address ? String(row.warehouse_address) : null,
+        })),
+      });
+      return jsonResponse({ ok: true, extraction });
     }
 
     if (PAYLOAD_ACTIONS[action]) {

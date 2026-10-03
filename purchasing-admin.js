@@ -7,7 +7,10 @@
   const DEFAULT_STORE_SLUG = 'fairfield';
   const RATE_KEY = 'techm8_purchase_cny_aud_rate';
   const SIGNER_KEY = 'techm8_purchase_receiver';
+  const FORWARDER_KEY = 'techm8_purchase_last_forwarder';
   const DOMESTIC_TRACK_URL = 'https://www.kuaidi100.com/chaxun?nu=';
+  const DEFAULT_SHIP_KG = 25;
+  const MAX_CHAT_IMAGES = 4;
 
   const COURIERS = ['顺丰', '中通', '圆通', '韵达', '申通', '极兔', '京东', '邮政', '德邦', '加运美', '信丰物流',
     '京广速递', '联昊通', '源安达', '速腾', '优速', '邦德', '平安达', '跨越速运', '安能', '其他'];
@@ -62,6 +65,19 @@
     [/Choose a valid POS category/i, '请选择 POS 分类'],
     [/SKU (\S+) is already used/i, 'SKU $1 已经存在'],
     [/SKU must be/i, 'SKU 只能用字母、数字和 - _ . /，2-80 位'],
+    [/ANTHROPIC_API_KEY to the Edge Function/i, 'AI 识别还没开通：需要在 Supabase 的 Edge Function Secrets 里加 ANTHROPIC_API_KEY'],
+    [/AI key is invalid/i, 'AI 密钥无效，请检查 Supabase 里的 ANTHROPIC_API_KEY'],
+    [/AI is busy/i, 'AI 现在太忙，过一分钟再试'],
+    [/reach the AI service/i, '连不上 AI 服务，请重试'],
+    [/AI could not read this chat/i, 'AI 读不了这段聊天，请手动登记'],
+    [/too long for one read/i, '聊天太长，请分成几段粘贴'],
+    [/unreadable result/i, 'AI 返回的结果不完整，请再试一次'],
+    [/Chat text or a screenshot is required/i, '请先粘贴聊天内容或者加截图'],
+    [/Chat text must be under/i, '聊天内容太长（最多 2 万字），请分成几段粘贴'],
+    [/at most \d+ images/i, `最多 ${MAX_CHAT_IMAGES} 张截图`],
+    [/Images must be JPEG/i, '截图只支持 JPG、PNG、WebP、GIF'],
+    [/Each image must be under/i, '每张截图要小于 3MB'],
+    [/Order lines or tracking numbers are required/i, '没有可以保存的明细或快递单号'],
     [/Admin session/i, '登录已过期，请重新登录'],
     [/Failed to fetch|NetworkError/i, '网络连接失败，请检查网络后重试']
   ];
@@ -349,12 +365,68 @@
     return parts.join(' · ');
   }
 
+  function kgText(value) {
+    return `${Math.round((Number(value) || 0) * 10) / 10} kg`;
+  }
+
+  function forwarderThreshold(forwarder) {
+    const value = forwarder && num(forwarder.ship_threshold_kg);
+    return value && value > 0 ? value : DEFAULT_SHIP_KG;
+  }
+
+  // Goods waiting at (or on the way to) each forwarder, weighed against the
+  // weight at which that forwarder's batch is worth shipping.
+  function forwarderLoads() {
+    const byForwarder = group(state.data.parcels.filter(parcel => !parcel.shipment_id), 'forwarder_id');
+    const weight = list => list.reduce((sum, parcel) => sum + (num(parcel.weight_kg) || 0), 0);
+    return Array.from(byForwarder.entries())
+      .map(([id, parcels]) => {
+        const forwarder = index.forwarders.get(id);
+        const atWarehouse = parcels.filter(parcel => parcel.forwarder_received_at);
+        const onTheWay = parcels.filter(parcel => !parcel.forwarder_received_at);
+        return {
+          id,
+          forwarder,
+          atWarehouse,
+          onTheWay,
+          kgAt: weight(atWarehouse),
+          kgWay: weight(onTheWay),
+          unweighed: parcels.filter(parcel => num(parcel.weight_kg) == null).length,
+          threshold: forwarderThreshold(forwarder)
+        };
+      })
+      .filter(load => load.forwarder)
+      .sort((a, b) => (b.kgAt / b.threshold) - (a.kgAt / a.threshold) || (b.kgWay - a.kgWay));
+  }
+
+  function supplierMessage(order, forwarder) {
+    if (!forwarder || !forwarder.warehouse_address) return '';
+    const lines = [`老板好，这单麻烦发到${forwarder.name}的仓库：`, forwarder.warehouse_address];
+    const summary = itemsSummary(order);
+    if (summary) lines.push(`明细：${summary}`);
+    lines.push(`${order.po_number ? `包裹上麻烦写 ${order.po_number}，` : ''}发货后把快递单号发群里，谢谢！`);
+    return lines.join('\n');
+  }
+
+  function forwarderRequest(load) {
+    const lines = [`${load.forwarder.name}你好，我在你们仓里有 ${load.atWarehouse.length} 件货${load.kgAt ? `（估计 ${kgText(load.kgAt)} 左右）` : ''}，麻烦称一下重量报个价，没问题就安排发货，谢谢！`];
+    load.atWarehouse.forEach((parcel, position) => {
+      const flags = [parcel.has_battery ? '带电' : '', parcel.has_magnet ? '带磁' : ''].filter(Boolean).join('、');
+      const number = [parcel.courier, parcel.tracking_no].filter(Boolean).join(' ') || '没有单号';
+      lines.push(`${position + 1}. ${number}${parcel.contents ? ` · ${parcel.contents}` : ''}${flags ? `（${flags}）` : ''}`);
+    });
+    const coming = load.onTheWay.map(parcel => parcel.tracking_no).filter(Boolean);
+    if (coming.length) lines.push(`另外还有 ${coming.length} 件在路上：${coming.join('、')}，到了赶得上就一起发。`);
+    return lines.join('\n');
+  }
+
   // ---------- payload builders (the API replaces whole records) ----------
 
   function orderPayload(order, overrides) {
     return Object.assign({
       id: order.id || null,
       supplier_id: order.supplier_id || null,
+      forwarder_id: order.forwarder_id || null,
       supplier_order_ref: order.supplier_order_ref || '',
       order_date: order.order_date || todayISO(),
       currency: order.currency || 'CNY',
@@ -636,6 +708,27 @@
     </div>`;
   }
 
+  function forwarderLoadPanel() {
+    const loads = forwarderLoads();
+    if (!loads.length) return '';
+    return `<div class="pa-loads">${loads.map(load => {
+      const ready = load.kgAt >= load.threshold;
+      const soon = !ready && load.kgAt + load.kgWay >= load.threshold;
+      const atPercent = Math.min(100, Math.round(load.kgAt / load.threshold * 100));
+      const wayPercent = Math.min(100 - atPercent, Math.round(load.kgWay / load.threshold * 100));
+      const name = esc(load.forwarder.name);
+      return `<div class="pa-load ${ready ? 'ready' : ''}">
+        <div class="pa-load-head"><strong>${name}</strong>${ready ? chip('够发了', 'green', 'bi-check-circle') : soon ? chip('路上的到了就够', 'amber') : ''}</div>
+        <div class="pa-load-bar" title="仓里 ${kgText(load.kgAt)}，路上 ${kgText(load.kgWay)}，够 ${kgText(load.threshold)} 发"><span class="at" style="width:${atPercent}%"></span><span class="way" style="width:${wayPercent}%"></span></div>
+        <div class="pa-load-meta">仓里 ${load.atWarehouse.length} 件 ≈ ${kgText(load.kgAt)} · 路上 ${load.onTheWay.length} 件 ≈ ${kgText(load.kgWay)} · 够 ${kgText(load.threshold)} 就发${load.unweighed ? ` · ${load.unweighed} 件没填重量` : ''}</div>
+        ${load.atWarehouse.length ? `<div class="pa-row-actions">
+          <button class="pa-btn small ${ready ? 'primary' : ''}" type="button" data-action="copy-forwarder-request" data-id="${load.id}"><i class="bi bi-clipboard"></i> 复制发货请求给${name}</button>
+          <button class="pa-btn small" type="button" data-action="select-forwarder-parcels" data-id="${load.id}">勾选仓里的货</button>
+        </div>` : ''}
+      </div>`;
+    }).join('')}</div>`;
+  }
+
   function renderShipmentView() {
     const shipments = state.data.shipments;
     const active = shipments.filter(shipment => !DONE.has(shipment.status));
@@ -668,7 +761,8 @@
       ${list.length ? `<div class="pa-ship-list">${list.map(shipmentBlock).join('')}</div>` : '<div class="pa-panel pa-empty">没有这样的国际单</div>'}
       ${view === 'done' && total > list.length ? `<p class="pa-center"><button class="pa-btn small" type="button" data-action="more-done">再显示 30 单（还有 ${total - list.length} 单）</button></p>` : ''}
       ${view !== 'done' && view !== 'arrived' ? `<section class="pa-panel pa-pending">
-        <div class="pa-panel-head"><h2>还没上国际单的货</h2><button class="pa-btn small primary" type="button" data-action="new-parcel"><i class="bi bi-plus-lg"></i> 登记包裹</button></div>
+        <div class="pa-panel-head"><h2>还没上国际单的货</h2><div class="pa-row-actions"><button class="pa-btn small primary" type="button" data-action="chat-import"><i class="bi bi-chat-dots"></i> 粘贴聊天记录</button><button class="pa-btn small" type="button" data-action="new-parcel"><i class="bi bi-plus-lg"></i> 登记包裹</button></div></div>
+        ${forwarderLoadPanel()}
         <div class="pa-group-head">在转运仓 ${atForwarder.length} 件 · 勾选后组成国际单</div>
         ${atForwarder.length ? atForwarder.map(parcel => itemRow(parcel, true)).join('') : '<div class="pa-empty pa-small">没有</div>'}
         <div class="pa-group-head">国内快递在路上 ${domestic.length} 件 · 到了转运仓就点「到仓了」</div>
@@ -694,6 +788,7 @@
           ${parcel.tracking_no ? `<span>${esc(parcel.courier || '国内')}</span>${trackButton(parcel.tracking_no, 'cn')}` : ''}
           ${supplier ? `<span>${esc(supplier)}</span>` : ''}
           ${parcel.carton_count > 1 ? `<span>${parcel.carton_count} 箱</span>` : ''}
+          ${num(parcel.weight_kg) ? `<span>${kgText(parcel.weight_kg)}</span>` : ''}
         </div>
       </div>
       <div class="pa-item-where">${journeyBar(where.step, true)}<span class="pa-where-text tone-${where.tone}">${esc(where.text)}</span>
@@ -828,6 +923,7 @@
             <dt>渠道</dt><dd>${esc((forwarder.channels || []).join('、') || '—')}</dd>
             <dt>单号前缀</dt><dd>${esc((forwarder.tracking_prefixes || []).join('、') || '—')}</dd>
             <dt>国内仓</dt><dd>${esc(forwarder.warehouse_address || '—')}</dd>
+            <dt>够发重量</dt><dd>${kgText(forwarderThreshold(forwarder))}${num(forwarder.ship_threshold_kg) ? '' : '（默认）'}</dd>
             ${forwarder.contact ? `<dt>联系</dt><dd>${esc(forwarder.contact)}</dd>` : ''}
           </dl>
         </div>`).join('')}</div></div>
@@ -1215,6 +1311,7 @@
           ${field('平台 / 订单号', input('supplier_order_ref', draft.supplier_order_ref, 'placeholder="1688 / 淘宝 订单号"'))}
           ${field('下单日期', input('order_date', draft.order_date, 'type="date"'))}
           ${field('供货商出明细日期', input('invoice_received_at', draft.invoice_received_at, 'type="date"'))}
+          ${field('发往哪个转运', `<div style="display:flex;gap:6px"><select name="forwarder_id" style="flex:1">${forwarderOptions(draft.forwarder_id)}</select><button class="pa-btn small" type="button" data-action="copy-supplier-address" title="复制转运仓地址和明细，发给供货商"><i class="bi bi-clipboard"></i> 发地址</button></div>`)}
         </div>
       </div>
       <div class="pa-section"><div class="pa-section-title">产品明细 <button class="pa-btn small" type="button" data-action="order-item-add"><i class="bi bi-plus-lg"></i> 加一行</button></div>
@@ -1268,6 +1365,7 @@
     const items = draft.items.filter(item => String(item.description || '').trim() || num(item.quantity));
     const payload = orderPayload(draft, {
       supplier_id: num(drawerValue('supplier_id')),
+      forwarder_id: num(drawerValue('forwarder_id')),
       supplier_order_ref: drawerValue('supplier_order_ref'),
       order_date: drawerValue('order_date'),
       invoice_received_at: drawerValue('invoice_received_at'),
@@ -1564,8 +1662,9 @@
       ${field('名称', input('name', draft.name), true)}
       ${field('单号查询网站', input('tracking_url', draft.tracking_url, 'placeholder="http://..."'), true)}
       ${field('后台 / 官网', input('website_url', draft.website_url, 'placeholder="下单后台或官网"'), true)}
-      ${field('国内仓收货地址（发给供货商）', `<textarea name="warehouse_address">${esc(draft.warehouse_address || '')}</textarea>`, true)}
+      ${field('国内仓收货地址（收件人、电话、地址、唛头，会原样发给供货商）', `<textarea name="warehouse_address">${esc(draft.warehouse_address || '')}</textarea>`, true)}
       ${field('联系人 / 微信', input('contact', draft.contact))}
+      ${field('仓里够多少公斤就发', input('ship_threshold_kg', draft.ship_threshold_kg, `type="number" min="1" step="0.5" placeholder="${DEFAULT_SHIP_KG}"`))}
       ${field('渠道（逗号分隔）', input('channels', (draft.channels || []).join('，'), 'placeholder="海运普货，空运普货，海运纯电"'))}
       ${field('国际单号前缀（逗号分隔）', input('tracking_prefixes', (draft.tracking_prefixes || []).join('，'), 'placeholder="ACWL，BKP"'))}
       ${field('备注', `<textarea name="notes">${esc(draft.notes || '')}</textarea>`, true)}
@@ -1591,6 +1690,7 @@
       website_url: drawerValue('website_url'),
       warehouse_address: drawerValue('warehouse_address'),
       contact: drawerValue('contact'),
+      ship_threshold_kg: num(drawerValue('ship_threshold_kg')),
       channels: split(drawerValue('channels')),
       tracking_prefixes: split(drawerValue('tracking_prefixes')),
       notes: drawerValue('notes'),
@@ -1599,6 +1699,311 @@
     });
     toast('转运公司已保存');
     closeDrawer();
+  }
+
+  // Paste a supplier chat: paste → AI reads it → check and fix → save → copy the message back
+
+  function findByName(list, name) {
+    const wanted = String(name || '').trim().toLowerCase();
+    if (!wanted) return null;
+    const known = item => String(item.name || '').trim().toLowerCase();
+    return list.find(item => known(item) === wanted)
+      || list.find(item => known(item) && (known(item).includes(wanted) || wanted.includes(known(item))))
+      || null;
+  }
+
+  function openOrdersFor(supplierId) {
+    return state.data.orders
+      .filter(order => !['cancelled', 'complete'].includes(orderStage(order)))
+      .sort((a, b) => (Number(String(b.supplier_id) === String(supplierId)) - Number(String(a.supplier_id) === String(supplierId)))
+        || Number(b.id) - Number(a.id));
+  }
+
+  function openChatDrawer() {
+    const lastForwarder = num(readStorage(FORWARDER_KEY, ''));
+    const draft = {
+      step: 'paste',
+      text: '',
+      images: [],
+      supplier_id: null,
+      forwarder_id: lastForwarder && index.forwarders.has(lastForwarder) ? lastForwarder : null
+    };
+    openDrawer('chat', '粘贴聊天记录', '把供货商群里的下单、报价、快递单号贴进来，AI 整理好，你核对后保存', '', '', draft);
+    renderChat();
+    const area = els.drawerBody.querySelector('[name="chat_text"]');
+    if (area) setTimeout(() => area.focus(), 30);
+  }
+
+  function renderChat() {
+    const draft = state.drawer.draft;
+    const views = { paste: chatPasteView, review: chatReviewView, done: chatDoneView };
+    const [body, foot] = views[draft.step](draft);
+    els.drawerBody.innerHTML = body;
+    els.drawerFoot.innerHTML = foot;
+  }
+
+  function chatPasteView(draft) {
+    const body = `
+      <div class="pa-section">
+        <div class="pa-form">
+          ${field('发往哪个转运', `<select name="chat_forwarder" data-change="chatPasteField">${forwarderOptions(draft.forwarder_id)}</select>`)}
+          ${field('供货商（不选的话 AI 会自己认）', `<select name="chat_supplier" data-change="chatPasteField">${supplierOptions(draft.supplier_id)}</select>`)}
+          ${field('聊天内容', `<textarea name="chat_text" rows="12" placeholder="在微信里多选消息复制，粘贴到这里。下单内容、价格、快递单号都可以，一次贴一单。">${esc(draft.text)}</textarea>`, true)}
+        </div>
+      </div>
+      <div class="pa-section">
+        <div class="pa-section-title">截图（可选，最多 ${MAX_CHAT_IMAGES} 张，可以直接 Ctrl+V 粘贴图片）
+          <label class="pa-btn small"><i class="bi bi-image"></i> 选图片<input type="file" accept="image/*" multiple hidden data-change="chatImages"></label>
+        </div>
+        ${draft.images.length ? `<div class="pa-thumbs">${draft.images.map((image, position) => `<div class="pa-thumb">
+          <img src="data:${image.media_type};base64,${image.data}" alt="截图 ${position + 1}">
+          <button class="pa-close" type="button" data-action="chat-image-remove" data-index="${position}" aria-label="删除这张截图"><i class="bi bi-x-lg"></i></button>
+        </div>`).join('')}</div>` : '<p class="pa-muted pa-small">快递面单照片、供货商发的订单截图都可以。</p>'}
+      </div>`;
+    const foot = `<span class="pa-small pa-muted">识别大约 10–30 秒，保存前都可以改</span>
+      <div class="right"><button class="pa-btn" type="button" data-action="close-drawer">取消</button><button class="pa-btn primary" type="button" data-action="chat-parse"><i class="bi bi-magic"></i> AI 识别</button></div>`;
+    return [body, foot];
+  }
+
+  function chatReviewView(draft) {
+    const attached = draft.order_id ? index.orders.get(Number(draft.order_id)) : null;
+    const known = new Set(state.data.parcels.map(parcel => String(parcel.tracking_no || '').toLowerCase()).filter(Boolean));
+    const hint = !draft.supplier_id && draft.supplier_hint
+      ? `<small class="pa-muted">AI 认出的是「${esc(draft.supplier_hint)}」，列表里没有，可以点 + 新增</small>` : '';
+    const body = `
+      ${draft.warnings.length ? `<div class="pa-callout amber"><strong>AI 提醒你核对：</strong><ul>${draft.warnings.map(warning => `<li>${esc(warning)}</li>`).join('')}</ul></div>` : ''}
+      <div class="pa-section"><div class="pa-section-title">供货商 &amp; 转运</div>
+        <div class="pa-form">
+          ${field('供货商', `<div style="display:flex;gap:6px"><select name="supplier_id" style="flex:1">${supplierOptions(draft.supplier_id)}</select><button class="pa-btn small" type="button" data-action="chat-new-supplier" title="新增供货商"><i class="bi bi-plus-lg"></i></button></div>${hint}`)}
+          ${field('发往哪个转运', `<select name="forwarder_id">${forwarderOptions(draft.forwarder_id)}</select>`)}
+          ${field('采购单', `<select name="order_id" data-change="chatOrder"><option value="">${draft.items.length ? '新建采购单' : '不关联采购单（只登记包裹）'}</option>${openOrdersFor(draft.supplier_id).map(order => `<option value="${order.id}" ${Number(order.id) === Number(draft.order_id) ? 'selected' : ''}>加到 ${esc(order.po_number)} · ${esc(supplierName(order.supplier_id) || '未指定')} · ${esc((itemsSummary(order) || '').slice(0, 24))}</option>`).join('')}</select>`)}
+          ${attached ? '' : field('下单日期', input('order_date', draft.order_date, 'type="date"'))}
+        </div>
+      </div>
+      <div class="pa-section"><div class="pa-section-title">产品明细
+        <span class="pa-row-actions">${attached ? `<label class="pa-check"><input type="checkbox" name="append_items" ${draft.append_items ? 'checked' : ''}> 加进 ${esc(attached.po_number)}</label>` : ''}<button class="pa-btn small" type="button" data-action="chat-item-add"><i class="bi bi-plus-lg"></i> 加一行</button></span></div>
+        ${draft.items.length ? `<table class="pa-items"><thead><tr><th>品名 / 规格</th><th>数量</th><th>单价</th><th></th></tr></thead><tbody>
+          ${draft.items.map((item, position) => `<tr data-chat-item="${position}">
+            <td><input data-f="description" value="${esc(item.description || '')}"></td>
+            <td class="qty"><input data-f="quantity" type="number" min="1" value="${esc(item.quantity == null ? '' : item.quantity)}"></td>
+            <td class="money"><input data-f="unit_cost" type="number" min="0" step="0.01" value="${esc(item.unit_cost == null ? '' : item.unit_cost)}" placeholder="没报价"></td>
+            <td><button class="pa-btn small ghost danger" type="button" data-action="chat-item-remove" data-index="${position}" title="删除"><i class="bi bi-x-lg"></i></button></td>
+          </tr>`).join('')}</tbody></table>` : '<p class="pa-muted pa-small">没有识别到产品明细</p>'}
+      </div>
+      ${attached ? '' : `<div class="pa-section"><div class="pa-section-title">金额</div>
+        <div class="pa-form pa-form-4">
+          ${field('币种', `<select name="currency">${listOptions(CURRENCIES, draft.currency)}</select>`)}
+          ${field('货款合计', input('goods_amount', draft.goods_amount, 'type="number" step="0.01" min="0" placeholder="按明细合计"'))}
+          ${field('国内运费', input('domestic_shipping_amount', draft.domestic_shipping_amount, 'type="number" step="0.01" min="0"'))}
+          ${field('备注', input('notes', draft.notes))}
+        </div>
+      </div>`}
+      <div class="pa-section"><div class="pa-section-title">国内快递 <button class="pa-btn small" type="button" data-action="chat-parcel-add"><i class="bi bi-plus-lg"></i> 加一个单号</button></div>
+        ${draft.parcels.length ? draft.parcels.map((parcel, position) => {
+          const duplicate = parcel.tracking_no && known.has(parcel.tracking_no.toLowerCase());
+          return `<div class="pa-chat-parcel ${duplicate ? 'dup' : ''}" data-chat-parcel="${position}">
+            <div class="pa-form pa-form-4">
+              ${field('快递公司', `<input data-f="courier" value="${esc(parcel.courier || '')}" list="chatCouriers">`)}
+              <label class="pa-field pa-span-2"><span>快递单号${duplicate ? ' · <b class="pa-dup">已经登记过，保存时跳过</b>' : ''}</span><input data-f="tracking_no" value="${esc(parcel.tracking_no || '')}" autocomplete="off"></label>
+              ${field('箱数', `<input data-f="carton_count" type="number" min="1" value="${esc(parcel.carton_count == null ? 1 : parcel.carton_count)}">`)}
+              ${field('内容', `<input data-f="contents" value="${esc(parcel.contents || '')}">`, true)}
+              ${field('重量 kg（估）', `<input data-f="weight_kg" type="number" min="0" step="0.1" value="${esc(parcel.weight_kg == null ? '' : parcel.weight_kg)}">`)}
+              <label class="pa-check"><input type="checkbox" data-f="has_battery" ${parcel.has_battery ? 'checked' : ''}> 带电</label>
+              <label class="pa-check"><input type="checkbox" data-f="has_magnet" ${parcel.has_magnet ? 'checked' : ''}> 带磁</label>
+              <div class="pa-chat-parcel-remove"><button class="pa-btn small ghost danger" type="button" data-action="chat-parcel-remove" data-index="${position}"><i class="bi bi-trash"></i> 删除</button></div>
+            </div>
+          </div>`;
+        }).join('') : '<p class="pa-muted pa-small">没有识别到快递单号。供货商发货后，把单号那段再贴一次就行。</p>'}
+        <datalist id="chatCouriers">${COURIERS.map(courier => `<option value="${esc(courier)}"></option>`).join('')}</datalist>
+      </div>`;
+    const foot = `<button class="pa-btn" type="button" data-action="chat-back"><i class="bi bi-arrow-left"></i> 改聊天内容</button>
+      <div class="right"><button class="pa-btn" type="button" data-action="close-drawer">取消</button><button class="pa-btn primary" type="button" data-action="save-drawer"><i class="bi bi-check2"></i> 保存</button></div>`;
+    return [body, foot];
+  }
+
+  function chatDoneView(draft) {
+    const result = draft.result || {};
+    const order = result.order_id ? index.orders.get(Number(result.order_id)) : null;
+    const created = (result.parcel_ids || []).length;
+    const skipped = result.skipped || [];
+    const forwarder = index.forwarders.get(Number((order && order.forwarder_id) || draft.forwarder_id));
+    const waitingForDispatch = order && !(index.parcelsByOrder.get(Number(order.id)) || []).length;
+    draft.message = waitingForDispatch ? supplierMessage(order, forwarder) : '';
+    const saved = [order ? `采购单 ${order.po_number}` : '', created ? `登记了 ${created} 个国内包裹` : ''].filter(Boolean).join('，');
+    const body = `
+      <div class="pa-callout green"><strong>已保存。</strong>${esc(saved)}${skipped.length ? `<div>${skipped.length} 个单号之前登记过，已跳过：${esc(skipped.join('、'))}</div>` : ''}</div>
+      ${waitingForDispatch ? (draft.message ? `<div class="pa-section"><div class="pa-section-title">发给供货商（转运仓地址）<button class="pa-btn small primary" type="button" data-action="copy-chat-message"><i class="bi bi-clipboard"></i> 复制</button></div>
+          <div class="pa-message">${esc(draft.message)}</div></div>`
+        : `<div class="pa-callout amber">${forwarder ? `「${esc(forwarder.name)}」还没填国内仓地址。` : '这单还没选转运。'}在「设置 → 转运公司」填好地址后，采购单里的「发地址」按钮就能直接复制给供货商。</div>`) : ''}
+      <p class="pa-muted pa-small">包裹到了转运仓，在「国际单」页点「到仓了」。仓里的货够 ${kgText(forwarderThreshold(forwarder))} 时，那一页会提示你发货。</p>`;
+    const foot = `<span></span><div class="right">
+      ${order ? `<button class="pa-btn" type="button" data-action="open-order" data-id="${order.id}">打开采购单</button>` : ''}
+      <button class="pa-btn" type="button" data-action="chat-import">再贴一段</button>
+      <button class="pa-btn primary" type="button" data-action="close-drawer">完成</button></div>`;
+    return [body, foot];
+  }
+
+  function readChatImage(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve({ media_type: 'image/jpeg', data: canvas.toDataURL('image/jpeg', 0.85).split(',')[1] });
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('这张图片读不出来'));
+      };
+      image.src = url;
+    });
+  }
+
+  async function addChatImages(files) {
+    const draft = state.drawer && state.drawer.type === 'chat' ? state.drawer.draft : null;
+    if (!draft || draft.step !== 'paste') return;
+    const images = Array.from(files).filter(file => /^image\//.test(file.type));
+    const room = MAX_CHAT_IMAGES - draft.images.length;
+    if (images.length > room) toast(`最多 ${MAX_CHAT_IMAGES} 张截图`, true);
+    for (const file of images.slice(0, Math.max(0, room))) {
+      try { draft.images.push(await readChatImage(file)); } catch (error) { toast(error.message, true); }
+    }
+    if (state.drawer && state.drawer.draft === draft) renderChat();
+  }
+
+  function applyExtraction(draft, extraction) {
+    if (!draft.supplier_id) {
+      const supplier = findByName(state.data.suppliers, extraction.supplier_name);
+      if (supplier) draft.supplier_id = Number(supplier.id);
+    }
+    draft.supplier_hint = extraction.supplier_name || '';
+    if (!draft.forwarder_id) {
+      const forwarder = findByName(state.data.forwarders, extraction.forwarder_name);
+      if (forwarder) draft.forwarder_id = Number(forwarder.id);
+    }
+    draft.items = (extraction.items || []).map(item => ({
+      description: item.description || '',
+      quantity: item.quantity,
+      unit_cost: item.unit_cost
+    }));
+    draft.parcels = (extraction.parcels || []).map(parcel => ({
+      tracking_no: String(parcel.tracking_no || '').replace(/\s+/g, ''),
+      courier: parcel.courier || '',
+      contents: parcel.contents || '',
+      carton_count: parcel.carton_count || 1,
+      weight_kg: parcel.estimated_weight_kg,
+      has_battery: Boolean(parcel.has_battery),
+      has_magnet: Boolean(parcel.has_magnet)
+    }));
+    draft.currency = CURRENCIES.includes(extraction.currency) ? extraction.currency : 'CNY';
+    draft.goods_amount = extraction.goods_amount;
+    draft.domestic_shipping_amount = extraction.domestic_shipping_amount;
+    draft.order_date = /^\d{4}-\d{2}-\d{2}$/.test(extraction.order_date || '') ? extraction.order_date : todayISO();
+    draft.notes = extraction.notes || '';
+    draft.warnings = extraction.warnings || [];
+    // Only tracking numbers usually means the supplier is replying about an order already on file.
+    const existing = draft.items.length || !draft.supplier_id ? null
+      : openOrdersFor(draft.supplier_id).find(order => String(order.supplier_id) === String(draft.supplier_id));
+    chatAttachOrder(draft, existing ? existing.id : null);
+  }
+
+  function chatAttachOrder(draft, orderId) {
+    const order = orderId ? index.orders.get(Number(orderId)) : null;
+    draft.order_id = order ? Number(order.id) : null;
+    // Lines pasted again for an order that already has lines are most likely the same lines.
+    draft.append_items = !order || !(order.items || []).length;
+    if (order && !draft.forwarder_id && order.forwarder_id) draft.forwarder_id = Number(order.forwarder_id);
+  }
+
+  // Copies what is on screen back into the draft, so a re-render keeps the admin's edits.
+  function captureChatReview() {
+    const draft = state.drawer.draft;
+    if (draft.step !== 'review') return draft;
+    ['supplier_id', 'forwarder_id', 'order_id', 'goods_amount', 'domestic_shipping_amount'].forEach(name => {
+      const value = drawerValue(name);
+      if (value !== undefined) draft[name] = num(value);
+    });
+    ['order_date', 'currency', 'notes', 'append_items'].forEach(name => {
+      const value = drawerValue(name);
+      if (value !== undefined) draft[name] = value;
+    });
+    const rowValues = row => {
+      const values = {};
+      row.querySelectorAll('[data-f]').forEach(element => {
+        values[element.dataset.f] = element.type === 'checkbox' ? element.checked : element.value.trim();
+      });
+      return values;
+    };
+    draft.items = Array.from(els.drawerBody.querySelectorAll('[data-chat-item]')).map(rowValues).map(values => ({
+      description: values.description,
+      quantity: num(values.quantity),
+      unit_cost: num(values.unit_cost)
+    }));
+    draft.parcels = Array.from(els.drawerBody.querySelectorAll('[data-chat-parcel]')).map(rowValues).map(values => ({
+      tracking_no: values.tracking_no.replace(/\s+/g, ''),
+      courier: values.courier,
+      contents: values.contents,
+      carton_count: num(values.carton_count) || 1,
+      weight_kg: num(values.weight_kg),
+      has_battery: values.has_battery,
+      has_magnet: values.has_magnet
+    }));
+    return draft;
+  }
+
+  async function chatParse(button) {
+    const draft = state.drawer.draft;
+    if (!draft.text.trim() && !draft.images.length) { toast('请先粘贴聊天内容或者加截图', true); return; }
+    const label = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-arrow-repeat pa-spin"></i> 识别中…';
+    try {
+      const result = await api('parse_chat', {
+        text: draft.text,
+        images: draft.images.map(image => ({ media_type: image.media_type, data: image.data }))
+      });
+      if (!state.drawer || state.drawer.draft !== draft) return;
+      applyExtraction(draft, result.extraction || {});
+      draft.step = 'review';
+      renderChat();
+    } finally {
+      if (button.isConnected) button.innerHTML = label;
+    }
+  }
+
+  async function saveChatImport() {
+    const draft = captureChatReview();
+    const attached = draft.order_id ? index.orders.get(Number(draft.order_id)) : null;
+    const items = draft.items.filter(item => item.description || item.quantity);
+    if (items.some(item => !item.description || !(item.quantity > 0))) { toast('产品明细每一行都要有品名和数量', true); return; }
+    const parcels = draft.parcels.filter(parcel => parcel.tracking_no || parcel.contents);
+    const sendItems = attached && !draft.append_items ? [] : items;
+    if (!sendItems.length && !parcels.length) { toast('没有可以保存的明细或快递单号', true); return; }
+    if (!draft.forwarder_id && !(attached && attached.forwarder_id)) { toast('请选择发往哪个转运', true); return; }
+    const result = await api('import_chat', {
+      order_id: draft.order_id || null,
+      supplier_id: draft.supplier_id || null,
+      forwarder_id: draft.forwarder_id || null,
+      order_date: draft.order_date || todayISO(),
+      currency: draft.currency || 'CNY',
+      goods_amount: draft.goods_amount,
+      domestic_shipping_amount: draft.domestic_shipping_amount,
+      notes: draft.notes || '',
+      items: sendItems,
+      parcels
+    });
+    if (draft.forwarder_id) writeStorage(FORWARDER_KEY, String(draft.forwarder_id));
+    draft.result = result.result || {};
+    draft.step = 'done';
+    renderChat();
+    toast('已保存');
   }
 
   // Modals (quick supplier, new SKU)
@@ -1800,8 +2205,63 @@
       initReceiving(element.dataset.id);
       render();
     },
+    'chat-import': () => openChatDrawer(),
+    'chat-parse': element => chatParse(element),
+    'chat-back': () => {
+      captureChatReview().step = 'paste';
+      renderChat();
+    },
+    'chat-image-remove': element => {
+      state.drawer.draft.images.splice(Number(element.dataset.index), 1);
+      renderChat();
+    },
+    'chat-item-add': () => {
+      captureChatReview().items.push({ description: '', quantity: null, unit_cost: null });
+      renderChat();
+    },
+    'chat-item-remove': element => {
+      captureChatReview().items.splice(Number(element.dataset.index), 1);
+      renderChat();
+    },
+    'chat-parcel-add': () => {
+      captureChatReview().parcels.push({ tracking_no: '', courier: '', contents: '', carton_count: 1, weight_kg: null, has_battery: false, has_magnet: false });
+      renderChat();
+    },
+    'chat-parcel-remove': element => {
+      captureChatReview().parcels.splice(Number(element.dataset.index), 1);
+      renderChat();
+    },
+    'chat-new-supplier': () => openModal('supplier', '新增供货商', supplierForm({ is_active: true, name: state.drawer.draft.supplier_hint || '' }), {}),
+    'copy-chat-message': () => {
+      copyText(state.drawer.draft.message);
+      toast('已复制，粘贴到供货商群就行');
+    },
+    'copy-supplier-address': () => {
+      const draft = state.drawer.draft;
+      const forwarder = index.forwarders.get(num(drawerValue('forwarder_id')));
+      if (!forwarder) { toast('先选发往哪个转运', true); return; }
+      const message = supplierMessage(Object.assign({}, draft, {
+        items: draft.items.filter(item => String(item.description || '').trim())
+      }), forwarder);
+      if (!message) { toast(`「${forwarder.name}」还没填国内仓地址，去「设置 → 转运公司」填一下`, true); return; }
+      copyText(message);
+      toast('已复制，粘贴到供货商群就行');
+    },
+    'copy-forwarder-request': element => {
+      const load = forwarderLoads().find(entry => entry.id === Number(element.dataset.id));
+      if (!load) return;
+      copyText(forwarderRequest(load));
+      toast(`已复制，发给${load.forwarder.name}。转运报价后点「勾选仓里的货」组成国际单`);
+    },
+    'select-forwarder-parcels': element => {
+      const load = forwarderLoads().find(entry => entry.id === Number(element.dataset.id));
+      if (!load) return;
+      load.atWarehouse.forEach(parcel => state.selectedParcels.add(Number(parcel.id)));
+      render();
+      toast(`已勾选 ${load.atWarehouse.length} 件，点下面的「组成新的国际单」`);
+    },
     'save-drawer': async () => {
-      const savers = { order: saveOrder, parcel: saveParcel, shipment: saveShipment, supplier: saveSupplier, forwarder: saveForwarder };
+      const savers = { order: saveOrder, parcel: saveParcel, shipment: saveShipment, supplier: saveSupplier, forwarder: saveForwarder, chat: saveChatImport };
       await savers[state.drawer.type]();
     },
     'save-modal': () => saveModal(),
@@ -1920,7 +2380,7 @@
     const handler = actions[element.dataset.action];
     if (!handler) return;
     if (element.tagName === 'BUTTON' && element.disabled) return;
-    const busyButton = element.tagName === 'BUTTON' && /save|delete|post|sign|advance|at-forwarder/.test(element.dataset.action) ? element : null;
+    const busyButton = element.tagName === 'BUTTON' && /save|delete|post|sign|advance|at-forwarder|parse/.test(element.dataset.action) ? element : null;
     try {
       if (busyButton) busyButton.disabled = true;
       await handler(element, event);
@@ -1957,6 +2417,10 @@
         if (searching) state.tab = 'items';
         render();
       }, 200);
+      return;
+    }
+    if (target.name === 'chat_text' && state.drawer && state.drawer.type === 'chat') {
+      state.drawer.draft.text = target.value;
       return;
     }
     if (target.name === 'tracking_numbers' && state.drawer && state.drawer.type === 'shipment') {
@@ -2015,6 +2479,18 @@
       document.getElementById('shipmentParcels').innerHTML = renderShipmentParcels(state.drawer.draft);
       toast('已加入，检查后点保存');
     }
+    if (key === 'chatPasteField') {
+      const draftKey = target.name === 'chat_forwarder' ? 'forwarder_id' : 'supplier_id';
+      state.drawer.draft[draftKey] = num(target.value);
+    }
+    if (key === 'chatImages') {
+      addChatImages(target.files || []);
+      target.value = '';
+    }
+    if (key === 'chatOrder') {
+      chatAttachOrder(captureChatReview(), num(target.value));
+      renderChat();
+    }
     if (key === 'parcelForwarderField') {
       document.getElementById('parcelChannelList').innerHTML = channelDatalist('parcelChannels', target.value);
     }
@@ -2022,6 +2498,15 @@
       state.drawer.draft.forwarder_id = num(target.value);
       document.getElementById('shipmentChannelList').innerHTML = channelDatalist('shipmentChannels', target.value);
     }
+  });
+
+  // Screenshots can be pasted straight into the chat drawer.
+  document.addEventListener('paste', event => {
+    if (!state.drawer || state.drawer.type !== 'chat' || state.drawer.draft.step !== 'paste') return;
+    const files = Array.from((event.clipboardData && event.clipboardData.files) || []).filter(file => /^image\//.test(file.type));
+    if (!files.length) return;
+    event.preventDefault();
+    addChatImages(files);
   });
 
   els.tabs.addEventListener('click', event => {

@@ -7,7 +7,7 @@
   <script src="./supabase-config.js"></script>
   <script src="./staff-auth.js?v=20260904.1"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="./purchasing-admin.css?v=20261003.1">
+  <link rel="stylesheet" href="./purchasing-admin.css?v=20261003.2">
 </head>
 <body>
   <div class="pa-app" id="app" data-auth-protected>
@@ -18,7 +18,8 @@
         <input id="globalSearch" type="search" placeholder="输入品名或单号，马上看到货到哪了" autocomplete="off">
       </label>
       <div class="pa-head-actions">
-        <button class="pa-btn primary" type="button" data-action="new-parcel"><i class="bi bi-plus-lg"></i> 登记包裹</button>
+        <button class="pa-btn primary" type="button" data-action="chat-import"><i class="bi bi-chat-dots"></i> 粘贴聊天记录</button>
+        <button class="pa-btn" type="button" data-action="new-parcel"><i class="bi bi-plus-lg"></i> 登记包裹</button>
         <button class="pa-btn ghost" type="button" data-action="refresh" title="刷新"><i class="bi bi-arrow-clockwise"></i></button>
       </div>
     </header>
@@ -50,6 +51,6 @@
   <div class="pa-modal" id="modal" hidden></div>
   <div class="pa-toast" id="toast" hidden></div>
 
-  <script src="./purchasing-admin.js?v=20261003.2"></script>
+  <script src="./purchasing-admin.js?v=20261003.3"></script>
 </body>
 </html>
