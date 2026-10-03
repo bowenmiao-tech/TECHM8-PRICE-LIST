@@ -70,11 +70,10 @@ begin
 
   shipment := (public.purchase_admin_save_shipment(jsonb_build_object(
     'forwarder_id', forwarder, 'channel', '海运普货', 'status', 'declared',
-    'tracking_numbers', jsonb_build_array('RB2', ' ', 'RB1', 'RB2'),
     'parcel_ids', jsonb_build_array(parcel)
   ), 'Purchase test')->>'id')::bigint;
-  if (select tracking_numbers from public.purchase_shipments where id = shipment) <> array['RB2', 'RB1'] then
-    raise exception 'Tracking numbers must keep entry order without blanks or duplicates';
+  if (select status from public.purchase_shipments where id = shipment) <> 'declared' then
+    raise exception 'A batch without an international number stays declared';
   end if;
   if (select declared_at from public.purchase_shipments where id = shipment) is null then
     raise exception 'Declaring a batch must stamp declared_at';
@@ -89,6 +88,18 @@ begin
   exception when others then rejected := sqlerrm like '%shipped or arrived%';
   end;
   if not rejected then raise exception 'A batch still at the forwarder must not be counted into stock'; end if;
+
+  perform public.purchase_admin_save_shipment(jsonb_build_object(
+    'id', shipment, 'forwarder_id', forwarder, 'channel', '海运普货', 'status', 'declared',
+    'tracking_numbers', jsonb_build_array('RB2', ' ', 'RB1', 'RB2')
+  ), 'Purchase test');
+  if (select tracking_numbers from public.purchase_shipments where id = shipment) <> array['RB2', 'RB1'] then
+    raise exception 'Tracking numbers must keep entry order without blanks or duplicates';
+  end if;
+  if (select status from public.purchase_shipments where id = shipment) <> 'shipped'
+    or (select shipped_at from public.purchase_shipments where id = shipment) is null then
+    raise exception 'An international number means the batch has shipped';
+  end if;
 
   perform public.purchase_admin_save_shipment(jsonb_build_object(
     'id', shipment, 'forwarder_id', forwarder, 'channel', '海运普货', 'status', 'arrived',

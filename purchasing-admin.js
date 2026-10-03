@@ -26,7 +26,7 @@
   const SHIPMENT_FLOW = ['draft', 'declared', 'shipped', 'arrived', 'received', 'stocked'];
   const NEXT_STEP = {
     draft: { status: 'declared', label: '标记已出收据' },
-    declared: { status: 'shipped', label: '标记转运发货' },
+    declared: { status: 'shipped', label: '已发货，填国际单号' },
     shipped: { status: 'arrived', label: '标记到达澳洲' }
   };
   const PARCEL_STAGE = Object.assign({
@@ -1506,6 +1506,8 @@
       notes: drawerValue('notes'),
       parcel_ids: draft.parcel_ids
     });
+    // An international number means the forwarder has shipped; the database applies the same rule.
+    if (payload.tracking_numbers.length && ['draft', 'declared'].includes(payload.status)) payload.status = 'shipped';
     if (payload.status === 'shipped' && !payload.tracking_numbers.length && !window.confirm('还没有填国际单号，确定标记为「转运发货」？')) return;
     await api('save_shipment', payload);
     state.selectedParcels.clear();
@@ -1955,6 +1957,11 @@
         if (searching) state.tab = 'items';
         render();
       }, 200);
+      return;
+    }
+    if (target.name === 'tracking_numbers' && state.drawer && state.drawer.type === 'shipment') {
+      const status = els.drawerBody.querySelector('[name="status"]');
+      if (status && target.value.trim() && ['draft', 'declared'].includes(status.value)) status.value = 'shipped';
       return;
     }
     if (target.dataset.itemField && state.drawer && state.drawer.type === 'order') {
