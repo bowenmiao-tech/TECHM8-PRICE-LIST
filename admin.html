@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="techm8-admin-build" content="2026-10-02-sales-by-item-all-stores">
+  <meta name="techm8-admin-build" content="2026-10-04-store-monthly-targets">
   <title>TECHM8 Admin Portal</title>
   <link rel="preconnect" href="https://abkjbhmifswfexpjkval.supabase.co" crossorigin>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -458,6 +458,36 @@
     .used-severity.low { background: #eef3f4; color: #55686f; }
     .value-refund { color: var(--red); }
     .store-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 3px; background: var(--store-color); }
+
+    /* Monthly store targets: one editable row per store. */
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .target-month-picker { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+    .target-month-picker button { width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 8px; color: #55686f; background: #f4f6f7; cursor: pointer; }
+    .target-month-picker button:hover { color: var(--green-dark); background: #eaf7f3; }
+    .target-month-picker strong { min-width: 118px; text-align: center; font-size: 11px; font-weight: 900; }
+    .target-table { min-width: 940px; }
+    .target-input { display: inline-flex; align-items: center; height: 36px; border: 1px solid var(--line-strong); border-radius: 9px; background: #fff; overflow: hidden; }
+    .target-input:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7,137,111,.11); }
+    .target-input span { padding: 0 2px 0 10px; color: #84939a; font-size: 11px; font-weight: 850; }
+    .target-input input { width: 112px; height: 100%; padding: 0 10px 0 2px; border: 0; outline: none; color: var(--ink); background: transparent; font: inherit; font-size: 12px; font-weight: 850; text-align: right; }
+    .target-progress { display: inline-flex; align-items: center; justify-content: flex-end; gap: 9px; }
+    .target-progress-bar { width: 110px; height: 7px; overflow: hidden; border-radius: 999px; background: #e9eef0; }
+    .target-progress-bar span { display: block; height: 100%; border-radius: inherit; background: var(--store-color, var(--green)); }
+    .target-progress strong { min-width: 42px; color: var(--ink); font-weight: 900; }
+    .target-progress.reached strong { color: var(--green-dark); }
+    .target-muted { color: #9aa7ad; }
+    .target-updated { color: #7f8e95; font-size: 9.5px; font-weight: 700; line-height: 1.35; white-space: normal; }
+    .target-save { height: 34px; padding: 0 13px; border: 0; border-radius: 9px; color: #fff; background: var(--green); font: inherit; font-size: 10px; font-weight: 900; cursor: pointer; }
+    .target-save:hover { background: var(--green-dark); }
+    .target-save:disabled { color: #8a989e; background: #e9eef0; cursor: default; }
+    .target-status { min-height: 18px; margin-top: 9px; color: var(--green-dark); font-size: 10.5px; font-weight: 800; }
+    .target-status[data-error="true"] { color: #b22c24; }
+    @media (max-width: 900px) {
+      .responsive-table.target-table td { align-items: center; }
+      .target-progress { justify-content: flex-start; }
+      .target-input input { width: 100%; }
+      .target-input { width: 100%; max-width: 220px; }
+    }
     .store-card[data-sales-store] { cursor: pointer; transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
     .store-card[data-sales-store]:hover { border-color: #b7d8cf; box-shadow: 0 10px 28px rgba(32,52,61,.09); transform: translateY(-1px); }
     .store-card[data-sales-store]:focus-visible { outline: 3px solid #5bbca6; outline-offset: 3px; }
@@ -868,6 +898,24 @@
               </table>
             </div>
           </section>
+
+          <div class="section-bar" id="targetSection">
+            <div><h2>Monthly Store Targets</h2><p id="targetRangeLabel">Each store's sales target for the month. POS shows it on the Today card against the store's sales so far.</p></div>
+            <div class="target-month-picker" role="group" aria-label="Target month">
+              <button type="button" id="targetPrevMonth" aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
+              <strong id="targetMonthLabel">This month</strong>
+              <button type="button" id="targetNextMonth" aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
+            </div>
+          </div>
+          <section class="table-card">
+            <div class="table-scroll">
+              <table class="responsive-table target-table">
+                <thead><tr><th>Store</th><th>Monthly Target</th><th>Sales This Month</th><th>Progress</th><th>Still Needed</th><th>Last Set</th><th><span class="visually-hidden">Save</span></th></tr></thead>
+                <tbody id="targetTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+          <div class="target-status" id="targetStatus" role="status"></div>
         </section>
 
         <section class="content-view overview-view" id="usedDeviceView" aria-labelledby="usedTitle">
@@ -1184,6 +1232,12 @@
         tableFoot: document.getElementById('salesTableFoot'),
         error: document.getElementById('errorPanel'),
         errorMessage: document.getElementById('errorMessage'),
+        targetBody: document.getElementById('targetTableBody'),
+        targetStatus: document.getElementById('targetStatus'),
+        targetMonthLabel: document.getElementById('targetMonthLabel'),
+        targetRangeLabel: document.getElementById('targetRangeLabel'),
+        targetPrev: document.getElementById('targetPrevMonth'),
+        targetNext: document.getElementById('targetNextMonth'),
         salesDrilldown: document.getElementById('salesDrilldown'),
         salesDrilldownBackdrop: document.getElementById('salesDrilldownBackdrop'),
         salesDrilldownClose: document.getElementById('salesDrilldownClose'),
@@ -1225,6 +1279,7 @@
       const salesDrilldownState = { open: false, loading: false, storeCode: '', category: 'all', query: '', rows: [], hasMore: false, summary: {} };
       const REPAIR_STORE_KEY = 'techm8_admin_repair_store';
       let repairReport = { summary: {}, stores: [], tickets: [] };
+      const targetState = { month: '', report: null, request: 0, saving: '' };
 
       function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
@@ -1339,6 +1394,123 @@
           loading = false;
           els.refresh.disabled = false;
           els.refresh.classList.remove('loading');
+        }
+      }
+
+      function targetMonthName(month) {
+        const [year, monthNumber] = String(month || '').split('-').map(Number);
+        if (!year || !monthNumber) return 'This month';
+        return new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
+      }
+      function shiftTargetMonth(step) {
+        const [year, monthNumber] = targetState.month.split('-').map(Number);
+        const date = new Date(Date.UTC(year, monthNumber - 1 + step, 1));
+        targetState.month = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+        loadTargets();
+      }
+      function setTargetStatus(message, isError = false) {
+        els.targetStatus.textContent = message || '';
+        els.targetStatus.dataset.error = String(Boolean(isError));
+      }
+      function renderTargets() {
+        const report = targetState.report;
+        els.targetMonthLabel.textContent = targetMonthName(targetState.month);
+        if (!report) {
+          els.targetBody.innerHTML = `<tr><td colspan="7" style="height:90px;text-align:center;color:#8a989e">Loading targets…</td></tr>`;
+          return;
+        }
+        const daysInMonth = number(report.days_in_month);
+        const daysElapsed = number(report.days_elapsed);
+        els.targetRangeLabel.textContent = !report.sales_to
+          ? `${targetMonthName(report.month)} has not started. Set targets ahead; POS shows them from the 1st.`
+          : daysElapsed >= daysInMonth
+            ? `${targetMonthName(report.month)} · full month of sales. Payments received less refunds, same as This Month above.`
+            : `${targetMonthName(report.month)} · sales to ${readableDate(report.sales_to)} (day ${daysElapsed} of ${daysInMonth}). Payments received less refunds, same as This Month above.`;
+        const stores = Array.isArray(report.stores) ? report.stores : [];
+        if (!stores.length) {
+          els.targetBody.innerHTML = `<tr><td colspan="7" style="height:90px;text-align:center;color:#8a989e">No stores found.</td></tr>`;
+          return;
+        }
+        els.targetBody.innerHTML = stores.map(store => {
+          const meta = STORE_META[store.store_code] || { name: store.store_name, color: '#07896f' };
+          const target = store.sales_target == null ? 0 : number(store.sales_target);
+          const sales = number(store.net_sales);
+          const percent = target > 0 ? sales / target * 100 : 0;
+          const remaining = Math.max(0, target - sales);
+          const saving = targetState.saving === store.store_code;
+          const updated = store.updated_at
+            ? `${escapeHtml(store.updated_by || 'Admin')}<br>${escapeHtml(formatDateTime(store.updated_at))}`
+            : '<span class="target-muted">Not set</span>';
+          return `<tr style="--store-color:${escapeHtml(meta.color)}" data-target-row="${escapeHtml(store.store_code)}"><td data-label="Store"><span><span class="store-dot"></span>${escapeHtml(meta.name)}</span></td><td data-label="Monthly Target"><label class="target-input"><span>$</span><input type="number" min="0" step="100" inputmode="decimal" placeholder="No target" aria-label="${escapeHtml(meta.name)} monthly target" data-target-input="${escapeHtml(store.store_code)}" data-target-saved="${target > 0 ? target : ''}" value="${target > 0 ? target : ''}" ${saving ? 'disabled' : ''}></label></td><td data-label="Sales This Month" class="value-main">${money(sales)}</td><td data-label="Progress">${target > 0 ? `<span class="target-progress ${percent >= 100 ? 'reached' : ''}"><span class="target-progress-bar"><span style="width:${Math.min(100, Math.max(0, percent))}%"></span></span><strong>${Math.floor(percent)}%</strong></span>` : '<span class="target-muted">—</span>'}</td><td data-label="Still Needed">${target > 0 ? (remaining > 0 ? money(remaining) : '<strong style="color:var(--green-dark)">Reached</strong>') : '<span class="target-muted">—</span>'}</td><td data-label="Last Set"><span class="target-updated">${updated}</span></td><td data-label="Save"><button class="target-save" type="button" data-target-save="${escapeHtml(store.store_code)}" disabled>${saving ? 'Saving…' : 'Save'}</button></td></tr>`;
+        }).join('');
+      }
+      async function loadTargets() {
+        const request = ++targetState.request;
+        targetState.report = null;
+        renderTargets();
+        setTargetStatus('');
+        try {
+          const report = await window.Techm8StaffAuth.callRpc('get_admin_store_sales_targets', { session_token: window.Techm8StaffAuth.getToken(), target_month_start: `${targetState.month}-01` });
+          if (request !== targetState.request) return;
+          targetState.report = report || { stores: [] };
+          renderTargets();
+        } catch (error) {
+          if (request !== targetState.request) return;
+          targetState.report = { month: targetState.month, stores: [] };
+          renderTargets();
+          setTargetStatus(error.message || 'Targets could not be loaded.', true);
+        }
+      }
+      function updateTargetSaveButton(input) {
+        const row = input.closest('[data-target-row]');
+        const button = row && row.querySelector('[data-target-save]');
+        if (!button || targetState.saving === button.dataset.targetSave) return;
+        const value = input.value.trim();
+        button.disabled = targetState.saving !== '' || value === input.dataset.targetSaved || (value !== '' && !(Number(value) >= 0));
+        button.textContent = value === '' && input.dataset.targetSaved ? 'Remove' : 'Save';
+      }
+      async function saveTarget(storeCode) {
+        const input = els.targetBody.querySelector(`[data-target-input="${CSS.escape(storeCode)}"]`);
+        if (!input || targetState.saving) return;
+        const raw = input.value.trim();
+        const amount = raw === '' ? 0 : Number(raw);
+        const storeName = (STORE_META[storeCode] || {}).name || storeCode;
+        if (!Number.isFinite(amount) || amount < 0) {
+          setTargetStatus(`Enter a target of $0 or more for ${storeName}.`, true);
+          input.focus();
+          return;
+        }
+        const request = targetState.request;
+        const month = targetState.month;
+        // Other rows keep what was typed but not yet saved.
+        const drafts = new Map(Array.from(els.targetBody.querySelectorAll('[data-target-input]')).map(field => [field.dataset.targetInput, field.value]));
+        const restoreDrafts = () => els.targetBody.querySelectorAll('[data-target-input]').forEach(field => {
+          if (!drafts.has(field.dataset.targetInput)) return;
+          field.value = drafts.get(field.dataset.targetInput);
+          updateTargetSaveButton(field);
+        });
+        let failed = false;
+        targetState.saving = storeCode;
+        renderTargets();
+        restoreDrafts();
+        setTargetStatus('');
+        try {
+          const report = await window.Techm8StaffAuth.callRpc('set_admin_store_sales_target', { session_token: window.Techm8StaffAuth.getToken(), target_store_code: storeCode, target_month_start: `${month}-01`, target_amount: amount });
+          if (request === targetState.request) targetState.report = report || targetState.report;
+          drafts.delete(storeCode);
+          setTargetStatus(amount > 0
+            ? `${storeName} target for ${targetMonthName(month)} saved: ${money(amount)}.`
+            : `${storeName} target for ${targetMonthName(month)} removed.`);
+        } catch (error) {
+          failed = true;
+          setTargetStatus(error.message || 'The target could not be saved.', true);
+        } finally {
+          targetState.saving = '';
+          renderTargets();
+          if (request === targetState.request) {
+            restoreDrafts();
+            if (failed) els.targetBody.querySelector(`[data-target-input="${CSS.escape(storeCode)}"]`)?.focus();
+          }
         }
       }
 
@@ -2522,7 +2694,22 @@
       });
       document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => navigate(button)));
       [els.dateFrom, els.dateTo].forEach(input => input.addEventListener('change', setCustomDates));
-      els.refresh.addEventListener('click', loadSales);
+      els.refresh.addEventListener('click', () => { loadSales(); loadTargets(); });
+      els.targetPrev.addEventListener('click', () => shiftTargetMonth(-1));
+      els.targetNext.addEventListener('click', () => shiftTargetMonth(1));
+      els.targetBody.addEventListener('input', event => {
+        if (event.target.matches('[data-target-input]')) updateTargetSaveButton(event.target);
+      });
+      els.targetBody.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' || !event.target.matches('[data-target-input]')) return;
+        event.preventDefault();
+        const button = event.target.closest('[data-target-row]')?.querySelector('[data-target-save]');
+        if (button && !button.disabled) saveTarget(event.target.dataset.targetInput);
+      });
+      els.targetBody.addEventListener('click', event => {
+        const button = event.target.closest('[data-target-save]');
+        if (button && !button.disabled) saveTarget(button.dataset.targetSave);
+      });
       els.repairRefresh.addEventListener('click', loadRepairs);
       els.repairSearch.addEventListener('input', renderRepairBoard);
       els.repairStore.addEventListener('change', () => {
@@ -2654,6 +2841,8 @@
 
       setPreset('today', false);
       setUsedPreset('month', false);
+      targetState.month = brisbaneToday().slice(0, 7);
+      renderTargets();
       window.Techm8StaffAuth.init({
         rootSelector: '[data-auth-protected]',
         title: 'Admin Login',
@@ -2668,6 +2857,7 @@
       }).then(() => {
         restoreRoute();
         loadSales();
+        loadTargets();
       }).catch(error => {
         console.error(error);
         els.errorMessage.textContent = error.message || 'Admin authentication failed.';
