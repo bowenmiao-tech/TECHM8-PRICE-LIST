@@ -2517,7 +2517,7 @@
           <h3>Repair jobs / Parts</h3>
           <ul class="repair-detail-jobs">
             <li><strong>${escapeHtml(ticket.issue || 'Base repair')}</strong> · ${money(ticket.price)}</li>
-            ${jobs.map(job => `<li><strong>${escapeHtml(job.name || 'Repair job')}</strong> · ${money(job.price)}<small>${escapeHtml(jobStatuses[job.status] || job.status || '')}</small>${job.note ? `<small>${escapeHtml(job.note)}</small>` : ''}</li>`).join('')}
+            ${jobs.map(job => `<li><strong>${escapeHtml(job.name || 'Repair job')}</strong> · ${money(job.price)}<small>${escapeHtml(jobStatuses[job.status] || job.status || '')}</small>${Number(job.inspection_credit) > 0 ? `<small>Inspection fee credit −${money(job.inspection_credit)} · due ${money(Number(job.price) - Number(job.inspection_credit))}</small>` : ''}${job.note ? `<small>${escapeHtml(job.note)}</small>` : ''}</li>`).join('')}
           </ul><div id="adminRepairUpdates"></div>`;
         els.repairDialog.showModal();
         window.Techm8RepairUpdates.mount(document.getElementById('adminRepairUpdates'), {

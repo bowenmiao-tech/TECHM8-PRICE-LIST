@@ -6576,6 +6576,9 @@
       font: inherit;
     }
     .repair-job-fields .wide { grid-column: 1 / -1; }
+    .repair-job-fields #repairJobCreditChoice > span { display: flex; align-items: center; gap: 8px; color: var(--tm-ink); font-size: 13px; }
+    .repair-job-fields #repairJobUseInspectionCredit { width: 18px; min-height: 18px; height: 18px; padding: 0; }
+    .repair-job-fields #repairJobCreditHint { color: var(--tm-muted); line-height: 1.4; }
     .repair-job-fields textarea { min-height: 82px; resize: vertical; }
     .repair-job-error { min-height: 18px; color: var(--tm-red); font-size: 12px; font-weight: 700; }
     .finish-card-blockers {
@@ -9549,9 +9552,17 @@
           <input id="repairJobName" type="text" maxlength="160" list="repairJobSuggestions" autocomplete="off" required>
           <datalist id="repairJobSuggestions"></datalist>
         </label>
-        <label>Price
+        <label>Repair price before any inspection credit
           <input id="repairJobPrice" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" required>
         </label>
+        <label class="wide" id="repairJobCreditChoice" hidden>
+          <span><input id="repairJobUseInspectionCredit" type="checkbox"> Apply inspection fee to this repair</span>
+          <small id="repairJobCreditHint"></small>
+        </label>
+        <label id="repairJobCreditAmountField" hidden>Inspection fee credit
+          <input id="repairJobInspectionCredit" type="number" min="0" step="0.01" inputmode="decimal">
+        </label>
+        <div class="wide ticket-jobs-note" id="repairJobCreditPreview" hidden></div>
         <label>Status
           <select id="repairJobStatus">
             <option value="proposed">Waiting for approval</option>
@@ -10610,6 +10621,12 @@
       repairJobName: document.getElementById('repairJobName'),
       repairJobSuggestions: document.getElementById('repairJobSuggestions'),
       repairJobPrice: document.getElementById('repairJobPrice'),
+      repairJobCreditChoice: document.getElementById('repairJobCreditChoice'),
+      repairJobUseInspectionCredit: document.getElementById('repairJobUseInspectionCredit'),
+      repairJobCreditHint: document.getElementById('repairJobCreditHint'),
+      repairJobCreditAmountField: document.getElementById('repairJobCreditAmountField'),
+      repairJobInspectionCredit: document.getElementById('repairJobInspectionCredit'),
+      repairJobCreditPreview: document.getElementById('repairJobCreditPreview'),
       repairJobStatus: document.getElementById('repairJobStatus'),
       repairJobApproval: document.getElementById('repairJobApproval'),
       repairJobNote: document.getElementById('repairJobNote'),
@@ -15310,6 +15327,7 @@
         note: String(job.note || ''),
         status: String(job.status || 'proposed'),
         approvalMethod: String(job.approvalMethod || ''),
+        inspectionCredit: numberValue(job.inspectionCredit),
         invoiced: Boolean(job.invoiced)
       }));
       ticket.invoiceHistory = Array.isArray(ticket.invoiceHistory) ? ticket.invoiceHistory : [];
@@ -16486,8 +16504,8 @@
             <div class="repair-card-work-list">
               ${snapshot.work_items.map(item => `
                 <div class="repair-card-work-row">
-                  <span>${escapeHtml(item.name || 'Repair service')}${item.note ? `<br><small>${escapeHtml(item.note)}</small>` : ''}</span>
-                  <strong>${money(numberValue(item.price))}</strong>
+                  <span>${escapeHtml(item.name || 'Repair service')}${item.note ? `<br><small>${escapeHtml(item.note)}</small>` : ''}${numberValue(item.inspection_credit) ? `<br><small>Repair price ${money(numberValue(item.price))} · inspection fee credit −${money(numberValue(item.inspection_credit))}</small>` : ''}</span>
+                  <strong>${money(numberValue(item.price) - numberValue(item.inspection_credit))}</strong>
                 </div>
               `).join('')}
               <div class="repair-card-work-row"><strong>Total approved work</strong><strong>${money(numberValue(snapshot.work_total))}</strong></div>
@@ -17288,6 +17306,24 @@
       return !job.invoiced && ['approved', 'in_progress', 'completed'].includes(job.status);
     }
 
+    function repairJobNetPrice(job) {
+      return roundedMoneyValue(numberValue(job.price) - numberValue(job.inspectionCredit));
+    }
+
+    function repairInspectionPrice(ticket) {
+      if (!ticket || ticket.cardKind === 'memo'
+        || !/(inspection|diagnos|check)/i.test(ticket.baseJobName || ticket.issue || '')) return 0;
+      return priceNumber(ticket.basePrice ?? ticket.price);
+    }
+
+    function repairInspectionInvoicePaid(ticket) {
+      if (!ticket || !ticket.baseInvoiced) return false;
+      const invoice = (ticket.invoiceHistory || []).find(row =>
+        String(row.invoiceNumber || '') === String(ticket.invoiceNumber || ''));
+      return invoice ? invoice.paymentStatus === 'paid' && numberValue(invoice.balanceDue) <= 0
+        : ticket.paymentStatus === 'paid';
+    }
+
     function repairJobCartId(ticketId, jobCode) {
       return 'repair-' + ticketId + (jobCode && jobCode !== '__base__' ? '-' + jobCode : '');
     }
@@ -17437,6 +17473,7 @@
         const statusClass = billed ? '' : String(job.status || '').replace('_', '-');
         const approval = !base && job.approvalMethod ? REPAIR_APPROVAL_LABELS[job.approvalMethod] : '';
         const note = [job.note, approval].filter(Boolean).join(' · ');
+        const credit = numberValue(job.inspectionCredit);
         const controls = [];
         if (!locked && canBill) {
           controls.push(`<button class="icon-button" type="button" data-job-cart="${escapeHtml(job.id)}" title="Add this repair to cart" ${carted ? 'disabled' : ''}><i class="bi ${carted ? 'bi-check2' : 'bi-cart-plus'}"></i></button>`);
@@ -17458,6 +17495,7 @@
                 <div class="ticket-job-tag ${escapeHtml(statusClass)}">${escapeHtml(status)}</div>
               </div>
               ${note ? `<div class="ticket-job-note">${escapeHtml(note)}</div>` : ''}
+              ${credit ? `<div class="ticket-job-note">Repair ${money(job.price)} · inspection fee credit −${money(credit)} · due ${money(repairJobNetPrice(job))}</div>` : ''}
             </div>
             <div class="ticket-job-price">${money(job.price)}</div>
             <div class="ticket-job-actions">${controls.join('')}</div>
@@ -17551,6 +17589,24 @@
       els.repairJobSubtitle.textContent = `${ticket.id} · ${ticket.title || ''}`;
       els.repairJobName.value = existing ? existing.name : '';
       els.repairJobPrice.value = existing ? numberValue(existing.price).toFixed(2) : '';
+      const inspectionPrice = repairInspectionPrice(ticket);
+      const alreadyCredited = (ticket.jobs || []).some(job => job.id !== (existing && existing.id)
+        && job.status !== 'cancelled' && numberValue(job.inspectionCredit) > 0);
+      const canOfferCredit = inspectionPrice > 0 && !alreadyCredited;
+      const previousCredit = existing ? numberValue(existing.inspectionCredit) : 0;
+      els.repairJobCreditChoice.hidden = !canOfferCredit;
+      els.repairJobUseInspectionCredit.disabled = ticket.baseInvoiced && !repairInspectionInvoicePaid(ticket);
+      els.repairJobUseInspectionCredit.checked = canOfferCredit && previousCredit > 0;
+      els.repairJobInspectionCredit.value = previousCredit > 0
+        ? previousCredit.toFixed(2) : inspectionPrice.toFixed(2);
+      els.repairJobCreditAmountField.hidden = !els.repairJobUseInspectionCredit.checked;
+      els.repairJobInspectionCredit.max = inspectionPrice.toFixed(2);
+      els.repairJobCreditHint.textContent = ticket.baseInvoiced
+        ? (repairInspectionInvoicePaid(ticket)
+          ? `Paid inspection on invoice #${ticket.invoiceNumber || ''}. This credit can be used once.`
+          : 'Pay the inspection invoice balance before using this credit.')
+        : 'Add the inspection and this repair to the same invoice. This credit can be used once.';
+      updateRepairJobCreditPreview();
       els.repairJobStatus.value = existing ? (existing.status || 'proposed') : 'proposed';
       els.repairJobApproval.value = existing ? (existing.approvalMethod || '') : '';
       els.repairJobNote.value = existing ? (existing.note || '') : '';
@@ -17574,6 +17630,17 @@
       const name = els.repairJobName.value.trim().toLowerCase();
       const match = draft.suggestions.find(row => String(row.issue || '').trim().toLowerCase() === name);
       if (match && validRepairPrice(match.price)) els.repairJobPrice.value = priceNumber(match.price).toFixed(2);
+      updateRepairJobCreditPreview();
+    }
+
+    function updateRepairJobCreditPreview() {
+      const enabled = els.repairJobUseInspectionCredit.checked;
+      els.repairJobCreditAmountField.hidden = !enabled;
+      els.repairJobCreditPreview.hidden = !enabled;
+      if (!enabled) return;
+      const price = numberValue(els.repairJobPrice.value);
+      const credit = numberValue(els.repairJobInspectionCredit.value);
+      els.repairJobCreditPreview.textContent = `Repair ${money(price)} − inspection credit ${money(credit)} = ${money(Math.max(0, roundedMoneyValue(price - credit)))} due for this repair.`;
     }
 
     async function submitRepairJob(event) {
@@ -17587,6 +17654,8 @@
       let status = els.repairJobStatus.value;
       const approvalMethod = els.repairJobApproval.value;
       const note = els.repairJobNote.value.trim();
+      const inspectionCredit = els.repairJobUseInspectionCredit.checked
+        ? numberValue(els.repairJobInspectionCredit.value) : 0;
       els.repairJobError.textContent = '';
 
       if (!name) {
@@ -17597,6 +17666,18 @@
       if (!validRepairPrice(els.repairJobPrice.value)) {
         els.repairJobError.textContent = 'Enter a valid price of $0 or more.';
         els.repairJobPrice.focus();
+        return;
+      }
+      if (inspectionCredit > 0 && (inspectionCredit > price
+        || inspectionCredit > repairInspectionPrice(ticket)
+        || (ticket.baseInvoiced && !repairInspectionInvoicePaid(ticket)))) {
+        els.repairJobError.textContent = 'Inspection credit must be no more than the inspection and repair prices, and the earlier inspection invoice must be paid.';
+        els.repairJobInspectionCredit.focus();
+        return;
+      }
+      if (els.repairJobUseInspectionCredit.checked && inspectionCredit <= 0) {
+        els.repairJobError.textContent = 'Enter an inspection credit above $0.';
+        els.repairJobInspectionCredit.focus();
         return;
       }
       if (status === 'proposed' && approvalMethod) {
@@ -17618,6 +17699,7 @@
         job_code: draft.jobCode,
         name,
         price: price.toFixed(2),
+        inspection_credit: inspectionCredit.toFixed(2),
         note,
         status: signedApproval ? 'proposed' : status,
         approval_method: signedApproval ? '' : approvalMethod
@@ -17637,6 +17719,7 @@
           jobCode: signedJob.id,
           name,
           price,
+          inspectionCredit,
           note,
           status
         });
@@ -17770,6 +17853,7 @@
       }, ...(ticket.jobs || []).filter(job => job.status !== 'cancelled').map(job => ({
         name: job.name,
         price: numberValue(job.price),
+        inspection_credit: numberValue(job.inspectionCredit),
         status: pendingJobApproval && pendingJobApproval.jobCode === job.id ? pendingJobApproval.status : job.status,
         approval_method: pendingJobApproval && pendingJobApproval.jobCode === job.id ? 'signature' : (job.approvalMethod || ''),
         note: job.note || ''
@@ -17784,7 +17868,7 @@
         issue: ticket.issue || '',
         price: ticket.price === '' || ticket.price === null || ticket.price === undefined ? '' : money(ticket.price),
         work_items: workItems,
-        work_total: workItems.reduce((sum, item) => sum + numberValue(item.price), 0),
+        work_total: workItems.reduce((sum, item) => sum + numberValue(item.price) - numberValue(item.inspection_credit), 0),
         device_in_store: Boolean(ticket.deviceInStore),
         test_profile: intake.testProfile === 'computer' ? 'Laptop / Desktop' : 'Phone / Tablet',
         testable: intake.testable || 'yes',
@@ -17924,7 +18008,7 @@
               <span>${money(numberValue(invoice.total))}</span>
             </div>
             <div class="ticket-invoice-lines">
-              ${lines.map(line => `<div class="ticket-invoice-line"><span>${escapeHtml(line.name || 'Repair')}</span><span>${money(numberValue(line.amount))}</span></div>`).join('')}
+              ${lines.map(line => `<div class="ticket-invoice-line"><span>${escapeHtml(line.name || 'Repair')}${numberValue(line.inspectionCredit) ? ` · ${money(numberValue(line.grossPrice))} less ${money(numberValue(line.inspectionCredit))} inspection credit` : ''}</span><span>${money(numberValue(line.amount))}</span></div>`).join('')}
               ${balance > 0 ? `<div class="ticket-invoice-line"><strong>Balance owing</strong><strong>${money(balance)}</strong></div>` : ''}
             </div>
             <div class="ticket-invoice-actions">
@@ -21402,6 +21486,7 @@
         buyer_address: item.buyer_address || '',
         ticket_id: item.ticket_id || '',
         repair_job_id: item.repair_job_id || '',
+        ...(numberValue(item.inspection_credit) > 0 ? { inspection_credit: roundedMoneyValue(item.inspection_credit) } : {}),
         qty: item.qty,
         unit_price: item.sale_price,
         original_unit_price: cartOriginalUnitPrice(item),
@@ -21453,8 +21538,10 @@
       // The database refuses a used-device line whose price differs from the
       // saved sale price, and it refuses it while the order is being written.
       // Blocking the edit here keeps that from surfacing as a failed checkout.
-      if (item.is_used_device) {
-        showToast('Change a used device price in Used Devices, not in the cart.');
+      if (item.is_used_device || numberValue(item.inspection_credit) > 0) {
+        showToast(item.is_used_device
+          ? 'Change a used device price in Used Devices, not in the cart.'
+          : 'Change this repair price or inspection credit on the repair card.');
         renderCart();
         return false;
       }
@@ -21542,8 +21629,8 @@
                   <div class="cart-control-row">
                     <label class="cart-price-editor">
                       <span>Price</span>
-                      ${item.is_used_device ? `
-                        <span class="cart-price-input-wrap locked" title="A used device sells at the price saved on the device record.">
+                      ${item.is_used_device || numberValue(item.inspection_credit) > 0 ? `
+                        <span class="cart-price-input-wrap locked" title="Change this price on its source record.">
                           <span>$</span>
                           <span class="cart-price-locked">${roundedMoneyValue(item.sale_price).toFixed(2)}</span>
                         </span>
@@ -21566,6 +21653,7 @@
                   </div>
                   ${overrideText ? `<div class="cart-price-override">${escapeHtml(overrideText)}</div>` : ''}
                   ${item.is_used_device ? '<div class="cart-repair-hint"><i class="bi bi-lock"></i> A used device sells at the price saved on its record. Change it in Used Devices, where the change is logged against the device.</div>' : ''}
+                  ${numberValue(item.inspection_credit) > 0 ? `<div class="cart-repair-hint"><i class="bi bi-info-circle"></i> Repair ${money(cartOriginalUnitPrice(item))} · inspection fee credit −${money(item.inspection_credit)} · due ${money(item.sale_price)}${item.inspection_credit_source_invoice ? ` · from invoice #${escapeHtml(String(item.inspection_credit_source_invoice))}` : ''}</div>` : ''}
                   ${item.is_repair ? '<div class="cart-repair-hint"><i class="bi bi-info-circle"></i> Add every repair for this device to the card before payment. One added afterwards becomes a second invoice and a second card charge.</div>' : ''}
                   <button class="cart-note-trigger${hasNote ? ' has-note' : ''}" type="button" data-open-cart-note="${escapeHtml(item.id)}" title="${hasNote ? 'Note added — click to edit' : 'Add a note to this item'}">
                     <i class="bi bi-chat-left-text"></i>
@@ -22687,7 +22775,8 @@
         });
       }
       ticket.jobs.filter(repairJobCanBill).forEach(job => {
-        pending.push({ jobCode: job.id, name: job.name, price: job.price, note: job.note || '' });
+        pending.push({ jobCode: job.id, name: job.name, price: repairJobNetPrice(job),
+          grossPrice: job.price, inspectionCredit: job.inspectionCredit, note: job.note || '' });
       });
 
       if (!pending.length) {
@@ -22730,6 +22819,10 @@
         category: 'Repair',
         cost_price: 0,
         sale_price: priceNumber(selected.price),
+        original_unit_price: priceNumber(selected.grossPrice ?? selected.price),
+        inspection_credit: numberValue(selected.inspectionCredit),
+        inspection_credit_source_invoice: numberValue(selected.inspectionCredit) && ticket.baseInvoiced
+          ? ticket.invoiceNumber : '',
         barcode: '',
         image_url: '',
         qty: 1,
@@ -24328,6 +24421,7 @@
           <div class="receipt-item-name">${escapeHtml(receiptItemDisplayName(item))}</div>
           ${usableSku(item.sku) ? `<div class="receipt-item-sku">SKU: ${escapeHtml(usableSku(item.sku))}</div>` : ''}
           ${item.note ? `<div class="receipt-item-note">Note: ${escapeHtml(noteText(item.note, 500).trim())}</div>` : ''}
+          ${numberValue(item.inspection_credit) ? `<div class="receipt-item-note">Repair price ${money(numberValue(item.original_unit_price))} · inspection fee credit −${money(numberValue(item.inspection_credit))}${item.inspection_credit_source && item.inspection_credit_source.invoice_number ? ` (invoice #${escapeHtml(String(item.inspection_credit_source.invoice_number))})` : ''}</div>` : ''}
           <div class="receipt-item-line">
             <span>${Math.max(1, Number(item.qty || 1))} x ${money(item.unit_price)}</span>
             <strong>${money(item.line_total)}</strong>
@@ -24814,6 +24908,7 @@
                 <div>
                   <strong>${escapeHtml(item.name || 'Item')}</strong>
                   <div class="invoice-line-meta">${escapeHtml(usableSku(item.sku) ? `SKU ${usableSku(item.sku)} · ` : '')}${escapeHtml(`${qty} × ${money(unitPrice)}`)}${item.category ? ` · ${escapeHtml(item.category)}` : ''}</div>
+                  ${numberValue(item.inspection_credit) ? `<div class="invoice-line-meta">Repair price ${money(numberValue(item.original_unit_price))} · inspection fee credit −${money(numberValue(item.inspection_credit))}${item.inspection_credit_source && item.inspection_credit_source.invoice_number ? ` from invoice #${escapeHtml(String(item.inspection_credit_source.invoice_number))}` : ''}</div>` : ''}
                   ${note ? `<div class="invoice-line-note">${escapeHtml(note)}</div>` : ''}
                   ${refunded > 0 ? `<div class="invoice-line-meta">Refunded ${money(refunded)}${numberValue(item.refunded_quantity) ? ` · ${numberValue(item.refunded_quantity)} returned` : ''}</div>` : ''}
                 </div>
@@ -25192,7 +25287,7 @@
           remaining.push({ name: ticket.baseJobName || ticket.issue || 'Repair service', price: priceNumber(ticket.basePrice ?? ticket.price) });
         }
         (ticket.jobs || []).forEach(job => {
-          if (!job.invoiced && job.status !== 'cancelled') remaining.push(job);
+          if (!job.invoiced && job.status !== 'cancelled') remaining.push({ ...job, price: repairJobNetPrice(job) });
         });
         const finishBlocked = !ticket.canClose;
         const finishBlockers = repairFinishBlockers(ticket);
@@ -25208,7 +25303,7 @@
             <div class="finish-card-ticket-head">${escapeHtml(ticket.title || '')} · ${escapeHtml(ticket.customerName || '')}</div>
             <div class="finish-card-label">Paid on this invoice</div>
             ${billing.length ? billing.map(item => `
-              <div class="finish-card-line"><span>${escapeHtml(item.name || 'Repair')}</span><span>${money(numberValue(item.sale_price ?? item.unit_price ?? item.line_total))}</span></div>
+              <div class="finish-card-line"><span>${escapeHtml(item.name || 'Repair')}${numberValue(item.inspection_credit) ? ` · ${money(cartOriginalUnitPrice(item))} less ${money(item.inspection_credit)} inspection credit` : ''}</span><span>${money(numberValue(item.sale_price ?? item.unit_price ?? item.line_total))}</span></div>
             `).join('') : '<div class="finish-card-line"><span>Repair invoice balance</span><span>Paid</span></div>'}
             ${remaining.length ? `
               <div class="finish-card-label is-warn">Still unbilled</div>
@@ -25376,9 +25471,21 @@
         if (!ticket) return true;
         if (!item.repair_job_id) return ticket.baseInvoiced;
         const job = (ticket.jobs || []).find(entry => entry.id === item.repair_job_id);
-        return !job || !repairJobCanBill(job);
+        return !job || !repairJobCanBill(job)
+          || roundedMoneyValue(item.sale_price) !== repairJobNetPrice(job)
+          || roundedMoneyValue(item.inspection_credit) !== roundedMoneyValue(job.inspectionCredit);
       })) {
-        showToast('A repair in this cart is no longer approved for checkout or has already been invoiced.');
+        showToast('A repair in this cart changed or is no longer approved. Remove it and add it again from the repair card.');
+        return;
+      }
+      if (repairCartItems.some(item => {
+        if (numberValue(item.inspection_credit) <= 0) return false;
+        const ticket = repairTickets.find(entry => entry.id === item.ticket_id);
+        return !ticket || (ticket.baseInvoiced
+          ? !repairInspectionInvoicePaid(ticket)
+          : !repairCartItems.some(base => base.ticket_id === ticket.id && !base.repair_job_id));
+      })) {
+        showToast('Pay or add the inspection before applying its fee to the repair.');
         return;
       }
       if (repairTickets.some(ticket => !ticket.customerName || ticket.customerName.toLowerCase() === 'walk-in customer' || !ticket.customerPhone)) {
@@ -25408,7 +25515,7 @@
         }
         (ticket.jobs || []).forEach(job => {
           if (repairJobCanBill(job) && !billing.has(job.id)) {
-            rows.push(`${job.name} ${money(priceNumber(job.price))}`);
+            rows.push(`${job.name} ${money(repairJobNetPrice(job))}${numberValue(job.inspectionCredit) ? ` after ${money(job.inspectionCredit)} inspection credit` : ''}`);
           }
         });
         return rows;
@@ -27168,6 +27275,11 @@
       }
     });
     els.repairJobForm.addEventListener('submit', submitRepairJob);
+    els.repairJobUseInspectionCredit.addEventListener('change', () => {
+      updateRepairJobCreditPreview();
+    });
+    els.repairJobPrice.addEventListener('input', updateRepairJobCreditPreview);
+    els.repairJobInspectionCredit.addEventListener('input', updateRepairJobCreditPreview);
     els.repairJobModal.addEventListener('click', event => {
       if (event.target === els.repairJobModal) closeRepairJobModal();
     });
