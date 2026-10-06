@@ -251,6 +251,20 @@ async function discoverModels(page, config) {
     timeout: config.navigationTimeoutMs,
   });
 
+  // The navigation menu is hydrated after DOMContentLoaded. Reading it
+  // immediately can intermittently return an empty shell, especially just
+  // after login, and incorrectly report that the Crazy Parts layout changed.
+  await page.waitForFunction(() => [...document.querySelectorAll('div.hidden')].some((element) => {
+    const navs = [...element.children].filter((child) => child.tagName === 'NAV');
+    return navs.length >= 4
+      && /apple/i.test(`${navs[0].getAttribute('aria-label') || ''} ${navs[0].innerText || ''}`)
+      && /samsung/i.test(`${navs[1].getAttribute('aria-label') || ''} ${navs[1].innerText || ''}`);
+  }), undefined, {
+    timeout: config.navigationTimeoutMs,
+  }).catch(() => {
+    throw new Error('The Crazy Parts model navigation did not finish loading. Run the update again after checking the site connection or verification page.');
+  });
+
   const result = await page.locator('div.hidden').evaluateAll((elements) => {
     const host = elements.find((element) => {
       const navs = [...element.children].filter((child) => child.tagName === 'NAV');
@@ -262,7 +276,8 @@ async function discoverModels(page, config) {
     if (!host) return null;
 
     const navBrands = ['Apple', 'Samsung', 'Google', 'Other Models'];
-    return [...host.children].slice(0, 4).flatMap((nav, navIndex) => {
+    const navs = [...host.children].slice(0, 4);
+    const nestedResults = navs.flatMap((nav, navIndex) => {
       const brand = nav.getAttribute('aria-label') || navBrands[navIndex];
       if (navIndex === 3) {
         const root = nav.querySelector(':scope > div');
@@ -312,6 +327,66 @@ async function discoverModels(page, config) {
         }));
       });
     });
+
+    if (nestedResults.length) return nestedResults;
+
+    // Crazy Parts also serves a flattened menu where every section heading
+    // and model is a direct child of the nav. Keep the nested parser above for
+    // the earlier layout and reconstruct the supported sections here.
+    const flattenedResults = [];
+    const addModel = (brand, family, anchor) => {
+      const href = anchor.getAttribute('href') || '';
+      if (!family || !(href.startsWith('/products/') || href.startsWith('/collection/'))) return;
+      flattenedResults.push({
+        brand,
+        family,
+        name: (anchor.textContent || '').trim(),
+        href: href.split('?')[0],
+      });
+    };
+
+    const samsungNav = navs.find((nav) => /samsung/i.test(nav.getAttribute('aria-label') || ''));
+    let samsungFamily = '';
+    for (const anchor of samsungNav?.querySelectorAll(':scope > a') || []) {
+      const name = (anchor.textContent || '').trim();
+      if (/series$/i.test(name) || /^tab other$/i.test(name)) {
+        samsungFamily = name;
+        continue;
+      }
+      addModel('Samsung', samsungFamily, anchor);
+    }
+
+    const otherNav = navs.find((nav) => /other models/i.test(nav.getAttribute('aria-label') || ''));
+    let otherFamily = '';
+    for (const anchor of otherNav?.querySelectorAll(':scope > a') || []) {
+      const name = (anchor.textContent || '').trim();
+      if (/^all nintendo$/i.test(name)) {
+        otherFamily = 'Oppo';
+        continue;
+      }
+      if (otherFamily === 'Oppo' && /^(?:pura\b|p\d)/i.test(name)) otherFamily = 'Huawei';
+      if (/^xiaomi$/i.test(name)) {
+        otherFamily = 'Xiaomi';
+        continue;
+      }
+      if (/^redmi\b/i.test(name) && otherFamily === 'Xiaomi') otherFamily = 'Redmi';
+      if (/^razr\b/i.test(name) && otherFamily === 'Redmi') otherFamily = 'Motorola';
+      if (/^nokia\b/i.test(name)) otherFamily = 'Nokia';
+      if (/^oneplus\b/i.test(name)) otherFamily = 'Oneplus';
+      if (/^realme series$/i.test(name)) {
+        otherFamily = 'Realme';
+        continue;
+      }
+      if (/^vivo\b/i.test(name) && otherFamily === 'Realme') otherFamily = 'Vivo';
+      if (/^xperia series$/i.test(name)) {
+        otherFamily = 'Sony';
+        continue;
+      }
+      if (/^honor\b/i.test(name) && otherFamily === 'Sony') otherFamily = '';
+      addModel('Other Models', otherFamily, anchor);
+    }
+
+    return flattenedResults;
   });
 
   if (!result?.length) {

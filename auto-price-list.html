@@ -300,7 +300,7 @@
           <div class="panel-head">
             <div>
               <h2 id="progressTitle">Monthly Update Progress</h2>
-              <p>One brand runs at 5:00 AM on each scheduled day. This page refreshes every 30 seconds.</p>
+              <p>One brand runs at 5:00 AM on each scheduled day. This page refreshes every 5 seconds while it is open.</p>
             </div>
             <span class="refresh-time" id="refreshTime">Loading…</span>
           </div>
@@ -513,7 +513,7 @@
           target_family: family
         });
         if (!result || !result.ok) throw new Error((result && result.message) || 'The update could not be queued.');
-        showActionNotice(family + (result.already_active ? ' is already queued or running.' : ' has been queued. It will start within about one minute.'), false);
+        showActionNotice(family + (result.already_active ? ' is already queued or running.' : ' has been queued. This computer normally starts it within one minute.'), false);
         await loadProgress();
       } catch (error) {
         button.disabled = false;
@@ -524,7 +524,7 @@
 
     authReady.then(function () {
       loadProgress();
-      window.setInterval(loadProgress, 30000);
+      window.setInterval(loadProgress, 5000);
     });
 
     document.getElementById('refreshButton').addEventListener('click', loadProgress);
