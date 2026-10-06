@@ -1,7 +1,7 @@
 param(
     [string[]]$Family = @(
         'A Series', 'Oppo', 'Huawei', 'Xiaomi', 'Redmi', 'Motorola',
-        'Nokia', 'Oneplus', 'Realme', 'Vivo', 'Sony'
+        'Nokia', 'Oneplus', 'Realme', 'Vivo', 'Sony', 'Apple Mac'
     ),
     [string]$FamilyCsv = '',
     [ValidateRange(1, 2)]

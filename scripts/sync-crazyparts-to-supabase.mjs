@@ -25,6 +25,10 @@ const familyConfig = new Map([
   ['realme', { dbBrand: 'REALME', displayBrand: 'Realme', statusFamily: 'Realme', mode: 'replace' }],
   ['vivo', { dbBrand: 'VIVO', displayBrand: 'Vivo', statusFamily: 'Vivo', mode: 'replace' }],
   ['sony', { dbBrand: 'SONY', displayBrand: 'Sony', statusFamily: 'Sony', mode: 'replace' }],
+  ['imac', { dbBrand: 'iMac', displayBrand: 'iMac', statusFamily: 'Apple Mac', mode: 'replace', labourCharge: 130, directIssues: true }],
+  ['macbook pro', { dbBrand: 'MacBook', displayBrand: 'MacBook', statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
+  ['macbook air', { dbBrand: 'MacBook', displayBrand: 'MacBook', statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
+  ['macbook', { dbBrand: 'MacBook', displayBrand: 'MacBook', statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
 ]);
 
 let activeStatusFamilies = [];
@@ -69,12 +73,18 @@ function repairTypeForIssue(issue) {
   return null;
 }
 
-function issuesForRepairType(repairType) {
+function issuesForRepairType(repairType, directIssues = false) {
+  if (directIssues && repairType) return [repairType];
   if (repairType === 'Screen') return ['Screen Replacement'];
   if (repairType === 'Battery') return ['Battery (ORIGINAL )'];
   if (repairType === 'Charging Port') return ['Charging Socket/Microphone'];
   if (repairType === 'Camera') return ['Front Camera', 'Rear Camera'];
   return [];
+}
+
+function labourForRepairType(config, repairType) {
+  if (config.screenLabourCharge && /screen/i.test(repairType || '')) return config.screenLabourCharge;
+  return config.labourCharge;
 }
 
 function canonicalModelName(sourceModel, candidates) {
@@ -296,13 +306,14 @@ function makeReplacementPlan(rawData, siteRows, configs) {
     const config = byFamily.get(String(row.family || '').toLowerCase());
     if (!config) continue;
     const model = canonicalOtherModelName(row.model, config.displayBrand);
-    if (!model || !issuesForRepairType(row.repairType).length) continue;
+    if (!model || !issuesForRepairType(row.repairType, config.directIssues).length) continue;
     const key = `${config.dbBrand}|${model}|${row.repairType}`;
     if (!groups.has(key)) groups.set(key, {
       brand: config.dbBrand,
       model,
       repairType: row.repairType,
-      labourCharge: config.labourCharge,
+      labourCharge: labourForRepairType(config, row.repairType),
+      directIssues: config.directIssues,
       sources: [],
     });
     groups.get(key).sources.push(row);
@@ -320,7 +331,7 @@ function makeReplacementPlan(rawData, siteRows, configs) {
       group.labourCharge,
     );
     const newPrice = minimum === maximum ? String(minimum) : `${minimum} - ${maximum}`;
-    for (const issue of issuesForRepairType(group.repairType)) {
+    for (const issue of issuesForRepairType(group.repairType, group.directIssues)) {
       const existing = siteMap.get(`${group.brand}|${group.model}|${issue}`);
       updates.push({
         brand: group.brand,
@@ -334,7 +345,7 @@ function makeReplacementPlan(rawData, siteRows, configs) {
     }
   }
 
-  const replaceBrands = configs.map((config) => config.dbBrand);
+  const replaceBrands = [...new Set(configs.map((config) => config.dbBrand))];
   for (const brand of replaceBrands) {
     const existingBrandRows = siteRows.filter((row) => row.brand === brand);
     const replacementBrandRows = updates.filter((row) => row.brand === brand);

@@ -30,7 +30,7 @@ $env:CRAZYPARTS_TRACK_STATUS = if ($SyncSupabase) { '1' } else { '0' }
 $nodeArgs = @((Join-Path $PSScriptRoot 'crazyparts-price-monitor.mjs'))
 $supportedFamilies = @(
     'A Series', 'Oppo', 'Huawei', 'Xiaomi', 'Redmi', 'Motorola',
-    'Nokia', 'Oneplus', 'Realme', 'Vivo', 'Sony'
+    'Nokia', 'Oneplus', 'Realme', 'Vivo', 'Sony', 'Apple Mac'
 )
 
 if ($All) {
@@ -50,6 +50,11 @@ if ($SupportedBrands) {
 
 if (@($familyValues | Where-Object { $_ -eq 'A Series' }).Count -gt 0) {
     $familyValues += @('Tab A Series', 'Tab S Series')
+}
+
+if (@($familyValues | Where-Object { $_ -eq 'Apple Mac' }).Count -gt 0) {
+    $familyValues = @($familyValues | Where-Object { $_ -ne 'Apple Mac' })
+    $familyValues += @('iMac', 'Macbook Pro', 'Macbook Air', 'Macbook')
 }
 
 foreach ($familyValue in @($familyValues | Select-Object -Unique)) {

@@ -6,12 +6,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $runScript = Join-Path $PSScriptRoot 'run-crazyparts-price-monitor.ps1'
+$day3Script = Join-Path $PSScriptRoot 'run-crazyparts-day3.ps1'
 $credentialPath = Join-Path $projectRoot '.secrets\crazyparts-credential.xml'
 $legacyTaskName = 'TECHM8 Crazy Parts Monthly Price Update'
 $schedule = @(
     @{ Day = 1; Family = 'A Series'; Label = 'Samsung A Series' },
     @{ Day = 2; Family = 'Oppo'; Label = 'OPPO' },
-    @{ Day = 3; Family = 'Huawei'; Label = 'HUAWEI' },
+    @{ Day = 3; Label = 'HUAWEI + APPLE MAC'; TaskLabel = 'HUAWEI'; Script = $day3Script },
     @{ Day = 4; Family = 'Xiaomi'; Label = 'XIAOMI' },
     @{ Day = 5; Family = 'Redmi'; Label = 'REDMI' },
     @{ Day = 6; Family = 'Motorola'; Label = 'MOTOROLA' },
@@ -38,7 +39,8 @@ $taskService.Connect()
 $taskFolder = $taskService.GetFolder('\')
 
 foreach ($item in $schedule) {
-    $taskName = 'TECHM8 Crazy Parts {0:D2} {1}' -f $item.Day, $item.Label
+    $taskLabel = if ($item.TaskLabel) { $item.TaskLabel } else { $item.Label }
+    $taskName = 'TECHM8 Crazy Parts {0:D2} {1}' -f $item.Day, $taskLabel
     $startBoundary = Get-Date -Year $now.Year -Month $now.Month -Day $item.Day `
         -Hour ([int]$timeParts[0]) -Minute ([int]$timeParts[1]) -Second 0
     if ($startBoundary -le $now) {
@@ -62,7 +64,11 @@ foreach ($item in $schedule) {
 
     $action = $definition.Actions.Create(0)
     $action.Path = 'powershell.exe'
-    $action.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScript`" -Family `"$($item.Family)`" -Concurrency 1 -SyncSupabase"
+    if ($item.Script) {
+        $action.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$($item.Script)`""
+    } else {
+        $action.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runScript`" -Family `"$($item.Family)`" -Concurrency 1 -SyncSupabase"
+    }
     $action.WorkingDirectory = $projectRoot
 
     # TASK_CREATE_OR_UPDATE = 6; TASK_LOGON_INTERACTIVE_TOKEN = 3.

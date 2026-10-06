@@ -105,17 +105,89 @@ function isEligibleRepairModel(model) {
   return true;
 }
 
+const macbookFamilies = new Set(['macbook pro', 'macbook air', 'macbook']);
+
+function isMacbookFamily(family) {
+  return macbookFamilies.has(String(family || '').trim().toLowerCase());
+}
+
 function categoryLabel(category) {
-  return {
+  const labels = {
     screen: 'Screen',
+    screen_aftermarket: 'Aftermarket Screen',
+    screen_premium_aftermarket: 'Premium Aftermarket Screen',
+    screen_original: 'Original Screen',
     battery: 'Battery',
     charging_port: 'Charging Port',
     camera: 'Camera',
-  }[category];
+    speaker: 'Speaker',
+    back_cover: 'Back Cover',
+    fan: 'Fan',
+  };
+  if (labels[category]) return labels[category];
+  if (String(category || '').startsWith('imac:')) return String(category).slice(5);
+  return '';
 }
 
-function classifyProduct(name) {
-  const value = String(name || '').toLowerCase().replace(/[–—]/g, '-');
+function imacPartCategory(name) {
+  const original = String(name || '').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
+  const value = original.toLowerCase();
+  if (!original || /keyboard|keycap|backlight connector/i.test(original)) return null;
+  if (/lcd display assembly|complete (?:lcd|display|screen)|screen assembly|display assembly/i.test(original)) return 'imac:Screen';
+  if (/display flex cable|lcd flex cable|screen flex cable/i.test(original)) return 'imac:Display Cable';
+  if (/screen adhesive|adhesive tape/i.test(original)) return 'imac:Screen Adhesive';
+  if (/power supply/i.test(original)) return 'imac:Power Supply';
+  if (/backlight board/i.test(original)) return 'imac:Backlight Board';
+  if (/\bfan\b/i.test(original)) return 'imac:Fan';
+  if (/speaker/i.test(original)) return 'imac:Speaker';
+  if (/camera|facetime/i.test(original)) return 'imac:Camera';
+  if (/stand|hinge/i.test(original)) return 'imac:Stand / Hinge';
+  if (/logic board|motherboard/i.test(original)) return 'imac:Logic Board';
+  if (/ssd|solid state/i.test(original)) return 'imac:SSD';
+  if (/hard (?:drive|disk)|\bhdd\b/i.test(original)) return 'imac:Hard Drive';
+  if (/wi-?fi|bluetooth/i.test(original)) return 'imac:Wi-Fi / Bluetooth';
+
+  const generic = original
+    .replace(/^(?:AMPLUS|BQ7)\s+/i, '')
+    .replace(/\s+\(PULL-A\).*$/i, '')
+    .split(/\s+(?:for|compatible (?:with|for))\s+iMac\b/i)[0]
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!generic || value === 'imac') return null;
+  return `imac:${generic.slice(0, 80)}`;
+}
+
+function classifyProduct(name, family) {
+  const original = String(name || '').replace(/[–—]/g, '-');
+  const value = original.toLowerCase();
+  const normalizedFamily = String(family || '').trim().toLowerCase();
+
+  if (normalizedFamily === 'imac') return imacPartCategory(original);
+
+  if (isMacbookFamily(normalizedFamily)) {
+    if (/keyboard|keycap|keyboard backlight|top case with keyboard/i.test(original)) return null;
+
+    const screenExcluded = /(screen protector|tempered glass|front glass|glass only|display flex|lcd flex|screen flex|flex cable|connector|adhesive|tape|tester|frame only|housing)/i;
+    const screenAssembly = /(complete\s+(?:lcd|display|screen)|lcd display assembly|screen assembly|display assembly)/i;
+    if (!screenExcluded.test(original) && screenAssembly.test(original)) {
+      if (/\b(?:AMPLUS|AMP)\b/i.test(original)) return 'screen_aftermarket';
+      if (/\bBQ7\b/i.test(original)) return 'screen_premium_aftermarket';
+      if (/\bPULL[- ]?A\b/i.test(original)) return 'screen_original';
+      return null;
+    }
+
+    const batteryExcluded = /(battery adhesive|battery sticker|battery connector|battery tester|power bank)/i;
+    if (/\bbattery\b/i.test(original) && !batteryExcluded.test(original)) return 'battery';
+
+    const portExcluded = /(fpc connector|on the motherboard|test cable|adapter|wall charger|car charger)/i;
+    const portTerms = /(usb[- ]?c board|charging port|charge port|magsafe (?:board|port)|i\/o board)/i;
+    if (portTerms.test(original) && !portExcluded.test(original)) return 'charging_port';
+
+    if (/(?:loud\s*)?speaker/i.test(original) && !/(speaker mesh|speaker flex|speaker connector)/i.test(original)) return 'speaker';
+    if (/(bottom case|bottom cover|back cover|rear cover)/i.test(original) && !/(screw|keyboard)/i.test(original)) return 'back_cover';
+    if (/\bfan\b/i.test(original) && !/(fan connector|fan cable)/i.test(original)) return 'fan';
+    return null;
+  }
 
   const screenExcluded = /(screen protector|tempered glass|protective glass|rear cover|back glass|tester|testing|test cable|fpc connector|lcd connector|screen connector|display connector|screen flex|lcd flex|digitizer flex|frame only|middle frame|housing|front glass|screen glass only)/i;
   const screenTerms = /(\blcd\b|\boled\b|screen replacement|screen assembly|display assembly|digitizer)/i;
@@ -345,6 +417,28 @@ async function discoverModels(page, config) {
       });
     };
 
+    const appleNav = navs.find((nav) => /apple/i.test(nav.getAttribute('aria-label') || ''));
+    const appleFamilyNames = new Map([
+      ['imac', 'iMac'],
+      ['macbook pro', 'Macbook Pro'],
+      ['macbook air', 'Macbook Air'],
+      ['macbook', 'Macbook'],
+    ]);
+    let appleFamily = '';
+    for (const anchor of appleNav?.querySelectorAll(':scope > a') || []) {
+      const name = (anchor.textContent || '').trim();
+      const family = appleFamilyNames.get(name.toLowerCase());
+      if (family) {
+        appleFamily = family;
+        continue;
+      }
+      if (appleFamily === 'Macbook' && /^(?:AMP|BQ7|REFURB|PULL|Service Pack) Screen$|^(?:Battery|Camera|Housing|Charging Port)$/i.test(name)) {
+        appleFamily = '';
+        continue;
+      }
+      addModel('Apple', appleFamily, anchor);
+    }
+
     const samsungNav = navs.find((nav) => /samsung/i.test(nav.getAttribute('aria-label') || ''));
     let samsungFamily = '';
     for (const anchor of samsungNav?.querySelectorAll(':scope > a') || []) {
@@ -514,7 +608,7 @@ async function scrapeModel(page, model, config) {
       }
       const price = parseMoney(card.memberPriceLine);
       if (price == null) continue;
-      const category = classifyProduct(card.title);
+      const category = classifyProduct(card.title, model.family);
       const stock = [card.syd, card.mel].filter(Boolean).join(' | ');
       productMap.set(card.href, {
         category,
@@ -556,8 +650,6 @@ function summariseModels(models, capturedAt) {
   const repairRows = [];
   const sourceRows = [];
   const exceptions = [];
-  const categories = ['screen', 'battery', 'charging_port', 'camera'];
-
   for (const model of models) {
     if (!isEligibleRepairModel({ ...model, name: model.heading || model.name })) continue;
     const relevant = model.products.filter((product) => (
@@ -575,6 +667,18 @@ function summariseModels(models, capturedAt) {
       });
     }
 
+    const categoryOrder = [
+      'screen_aftermarket', 'screen_premium_aftermarket', 'screen_original', 'screen',
+      'speaker', 'battery', 'charging_port', 'back_cover', 'fan', 'camera',
+    ];
+    const categories = [...new Set(relevant.map((product) => product.category))].sort((left, right) => {
+      const leftIndex = categoryOrder.indexOf(left);
+      const rightIndex = categoryOrder.indexOf(right);
+      if (leftIndex === -1 && rightIndex === -1) return categoryLabel(left).localeCompare(categoryLabel(right));
+      if (leftIndex === -1) return 1;
+      if (rightIndex === -1) return -1;
+      return leftIndex - rightIndex;
+    });
     for (const category of categories) {
       const matching = relevant.filter((product) => product.category === category);
       const active = matching.filter((product) => product.available).sort((a, b) => a.price - b.price);
@@ -752,11 +856,14 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
 
   for (const sheet of [prices, source, exceptions, settings]) sheet.showGridLines = false;
 
-  settings.getRange('A1:B9').values = safeWorkbookRows([
+  settings.getRange('A1:B12').values = safeWorkbookRows([
     ['Setting', 'Value'],
     ['GST rate', config.gstRate],
     ['Phone labour charge', config.labourCharge],
     ['Samsung tablet labour charge', config.tabletLabourCharge],
+    ['iMac labour charge', config.imacLabourCharge],
+    ['MacBook screen labour charge', config.macbookScreenLabourCharge],
+    ['MacBook other labour charge', config.macbookOtherLabourCharge],
     ['Round up increment', config.roundingIncrement],
     ['Member tier', config.expectedMemberTier],
     ['Captured at', capturedDisplay],
@@ -765,10 +872,10 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
   ]);
   settings.getRange('A1:B1').format = { fill: '#123B5D', font: { bold: true, color: '#FFFFFF' } };
   settings.getRange('B2').format.numberFormat = '0%';
-  settings.getRange('B3:B5').format.numberFormat = '"$"#,##0.00';
-  setWidths(settings, 9, [30, 72]);
+  settings.getRange('B3:B8').format.numberFormat = '"$"#,##0.00';
+  setWidths(settings, 12, [30, 72]);
   settings.freezePanes.freezeRows(1);
-  const settingsTable = settings.tables.add('A1:B9', true, 'SettingsTable');
+  const settingsTable = settings.tables.add('A1:B12', true, 'SettingsTable');
   settingsTable.style = 'TableStyleMedium2';
 
   const priceHeaders = [
@@ -783,7 +890,7 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     rowHeight: 30,
   };
   prices.getRange('A2:L2').merge();
-  prices.getRange('A2').values = [[`Formula: round up to nearest $${config.roundingIncrement} after part price + GST + $${config.labourCharge} phone labour or $${config.tabletLabourCharge} Samsung tablet labour. Cameras use the lowest and highest eligible camera modules.`]];
+  prices.getRange('A2').values = [[`Formula: round up to nearest $${config.roundingIncrement} after part price + GST, then add the configured labour: $${config.labourCharge} phone, $${config.tabletLabourCharge} Samsung tablet, $${config.imacLabourCharge} iMac, $${config.macbookScreenLabourCharge} MacBook screen, or $${config.macbookOtherLabourCharge} other MacBook repairs.`]];
   prices.getRange('A2:L2').format = { fill: '#EAF2F8', font: { color: '#234E6F' }, wrapText: true, rowHeight: 34 };
   prices.getRange('A4:L4').merge();
   prices.getRange('A4').values = [[
@@ -801,10 +908,10 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     ]));
     const priceEndRow = priceStartRow + values.length - 1;
     prices.getRange(`A${priceStartRow}:L${priceEndRow}`).values = values;
-    const labourFormula = `IF(OR($B${priceStartRow}="Tab A Series",$B${priceStartRow}="Tab S Series"),'Settings'!$B$4,'Settings'!$B$3)`;
-    prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$5,0)*'Settings'!$B$5`]];
+    const labourFormula = `IF($B${priceStartRow}="iMac",'Settings'!$B$5,IF(OR($B${priceStartRow}="Macbook Pro",$B${priceStartRow}="Macbook Air",$B${priceStartRow}="Macbook"),IF(ISNUMBER(SEARCH("Screen",$D${priceStartRow})),'Settings'!$B$6,'Settings'!$B$7),IF(OR($B${priceStartRow}="Tab A Series",$B${priceStartRow}="Tab S Series"),'Settings'!$B$4,'Settings'!$B$3)))`;
+    prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];
     prices.getRange(`G${priceStartRow}:G${priceEndRow}`).fillDown();
-    prices.getRange(`H${priceStartRow}`).formulas = [[`=ROUNDUP((F${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$5,0)*'Settings'!$B$5`]];
+    prices.getRange(`H${priceStartRow}`).formulas = [[`=ROUNDUP((F${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];
     prices.getRange(`H${priceStartRow}:H${priceEndRow}`).fillDown();
     prices.getRange(`E${priceStartRow}:F${priceEndRow}`).format.numberFormat = '"$"#,##0.00';
     prices.getRange(`G${priceStartRow}:H${priceEndRow}`).format.numberFormat = '"$"#,##0';

@@ -1,15 +1,17 @@
 # Crazy Parts Monthly Repair Price Monitor
 
-This tool logs into Crazy Parts, reads the account's member prices, keeps only screens, batteries, charging ports and camera modules, and creates an internal Excel repair price list.
+This tool logs into Crazy Parts, reads the account's member prices, and creates an internal Excel repair price list for the supported phone, Samsung tablet, iMac, and MacBook families.
 
 ## Pricing rule
 
 ```text
-raw repair price = part price excluding GST × 1.10 + 110
+raw repair price = part price excluding GST × 1.10 + the repair-category labour charge
 internal repair price = round the raw repair price up to the nearest $5
 ```
 
 For every model and repair type, the workbook uses the lowest and highest eligible in-stock or low-stock part price. All genuine camera modules are combined into one camera range. Camera glass, lenses, frames, covers and protectors are excluded.
+
+iMac keeps every available repair part, adds GST and $130 labour, then rounds up to the nearest $5. MacBook combines Macbook Pro, Macbook Air and Macbook under the `MacBook` Admin brand. It keeps screens, speakers, batteries, charging ports, back covers and fans; keyboards are excluded. AMPLUS/AMP screens are `Aftermarket Screen`, BQ7 screens are `Premium Aftermarket Screen`, and PULL-A screens are `Original Screen`. MacBook screens add $150 labour and the other MacBook repairs add $120.
 
 ## Files
 
@@ -17,8 +19,8 @@ For every model and repair type, the workbook uses the lowest and highest eligib
 - `scripts/crazyparts-price-monitor.mjs` performs the login, model discovery, scraping, classification and workbook build.
 - `scripts/setup-crazyparts-credential.ps1` stores the login using Windows user encryption.
 - `scripts/run-crazyparts-price-monitor.ps1` safely loads the encrypted login and starts the monitor.
-- `scripts/sync-crazyparts-to-supabase.mjs` backs up the old values, updates only the four approved repair categories, and verifies every write. A Series keeps its variant-aware matching; the supported non-Samsung brands are fully replaced from a complete supplier run so stale models are removed.
-- `scripts/install-crazyparts-daily-brand-tasks.ps1` creates eleven monthly Windows tasks: one brand per day from the 1st to the 11th.
+- `scripts/sync-crazyparts-to-supabase.mjs` backs up the old values and verifies every write. A Series keeps its variant-aware matching; the supported replacement brands are rebuilt from a complete supplier run so stale models are removed.
+- `scripts/install-crazyparts-daily-brand-tasks.ps1` creates the monthly Windows tasks. On day 3, HUAWEI finishes first and Apple Mac runs immediately afterward.
 - `outputs/crazyparts-price-monitor/TECHM8_CrazyParts_Repair_Prices.xlsx` is the current internal workbook.
 - `outputs/crazyparts-price-monitor/history/` keeps raw JSON history for auditing and recovery.
 
@@ -58,7 +60,7 @@ Run every supported phone brand and sync the verified result:
 .\scripts\run-crazyparts-supported-brands.ps1 -Concurrency 1
 ```
 
-Supported scope: Samsung A Series, OPPO, HUAWEI, XIAOMI, REDMI, MOTOROLA, NOKIA, ONEPLUS, REALME, VIVO and SONY. SONY game-console and generic category pages are excluded.
+Supported scope: Samsung A Series and Tab A/Tab S, OPPO, HUAWEI, XIAOMI, REDMI, MOTOROLA, NOKIA, ONEPLUS, REALME, VIVO, SONY, iMac and MacBook. SONY game-console and generic category pages are excluded.
 
 ## Full manual update
 
@@ -70,7 +72,7 @@ The full run intentionally waits between pages and may take 30–60 minutes depe
 
 ## Install the monthly brand sequence
 
-The default schedule runs one brand at 5:00 AM on each day from the 1st through the 11th:
+The default schedule starts the assigned work at 5:00 AM on each day from the 1st through the 11th:
 
 ```powershell
 .\scripts\install-crazyparts-daily-brand-tasks.ps1
@@ -82,7 +84,7 @@ To choose a different start time for every brand:
 .\scripts\install-crazyparts-daily-brand-tasks.ps1 -StartTime '04:30'
 ```
 
-The order is Samsung A Series, OPPO, HUAWEI, XIAOMI, REDMI, MOTOROLA, NOKIA, ONEPLUS, REALME, VIVO and SONY. Each run publishes live progress to the Admin Portal, then backs up, replaces and verifies that brand before marking it complete. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
+The order is Samsung A Series, OPPO, HUAWEI followed by Apple Mac on day 3, XIAOMI, REDMI, MOTOROLA, NOKIA, ONEPLUS, REALME, VIVO and SONY. Each run publishes live progress to the Admin Portal, then backs up, replaces and verifies that brand before marking it complete. It runs under the same Windows user that owns the encrypted credential. If the computer is off or that user is signed out at the scheduled time, Windows is asked to run it as soon as possible after that user signs in again.
 
 ## Safety behaviour
 

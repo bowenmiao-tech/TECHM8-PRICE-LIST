@@ -21,6 +21,11 @@ const canonicalFamilies = new Map([
   ['realme', 'Realme'],
   ['vivo', 'Vivo'],
   ['sony', 'Sony'],
+  ['apple mac', 'Apple Mac'],
+  ['imac', 'Apple Mac'],
+  ['macbook pro', 'Apple Mac'],
+  ['macbook air', 'Apple Mac'],
+  ['macbook', 'Apple Mac'],
 ]);
 
 function quote(value) {
@@ -44,6 +49,10 @@ export function trackedFamilyFromArgs(argv) {
   const samsungBundle = ['a series', 'tab a series', 'tab s series'];
   if (requested.size === samsungBundle.length && samsungBundle.every((family) => requested.has(family))) {
     return 'A Series';
+  }
+  const appleMacBundle = ['imac', 'macbook pro', 'macbook air', 'macbook'];
+  if (requested.size === appleMacBundle.length && appleMacBundle.every((family) => requested.has(family))) {
+    return 'Apple Mac';
   }
   return '';
 }
