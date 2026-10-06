@@ -562,12 +562,12 @@
           <div><span>Device bundles</span><strong>${Number(row.device_points || 0)} pts</strong></div>
           <div><span>Total</span><strong>${Number(row.total_points || 0)} pts</strong></div>
         </div>
-        <h3>Device bundle invoices</h3>
+        <h3>Device points history</h3>
         ${bundles.length ? bundles.map(item => `
           <div class="device-event">
             <span>${escapeHtml(reviewDateText(item.business_date))} · ${escapeHtml(item.order_code)}</span>
-            <span>${escapeHtml(item.store_name)} · ${Number(item.device_count)} device${Number(item.device_count) === 1 ? '' : 's'} + ${Number(item.accessory_count)} accessor${Number(item.accessory_count) === 1 ? 'y' : 'ies'}</span>
-            <strong>+${Number(item.points)} pts</strong>
+            <span>${escapeHtml(item.store_name)} · ${item.event_type === 'manual_adjustment' ? escapeHtml(item.reason || 'Manual adjustment') : `${Number(item.device_count)} device${Number(item.device_count) === 1 ? '' : 's'} + ${Number(item.accessory_count)} accessor${Number(item.accessory_count) === 1 ? 'y' : 'ies'}`}</span>
+            <strong>${Number(item.points) >= 0 ? '+' : ''}${Number(item.points)} pts</strong>
           </div>`).join('') : '<div class="empty">No device bundles this month.</div>'}
       `;
     }
