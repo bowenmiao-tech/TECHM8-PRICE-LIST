@@ -89,17 +89,22 @@ export function reportCrazyPartsStatus(familyValue, fields = {}) {
   fs.writeFileSync(sqlPath, `update public.crazyparts_update_status set ${assignments.join(', ')} where family = ${quote(family)};`, 'utf8');
   try {
     const executable = process.platform === 'win32' ? 'supabase.exe' : 'supabase';
-    const result = spawnSync(executable, ['db', 'query', '--linked', '--file', sqlPath, '--output', 'json'], {
-      cwd: projectRoot,
-      encoding: 'utf8',
-      windowsHide: true,
-      timeout: 30000,
-    });
-    if (result.status !== 0) {
-      console.warn(`Could not publish Crazy Parts progress: ${result.stderr || result.stdout || 'unknown error'}`);
-      return false;
+    let finalDetail = '';
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const result = spawnSync(executable, ['db', 'query', '--linked', '--file', sqlPath, '--output', 'json', '--agent=no'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        windowsHide: true,
+        timeout: 30000,
+      });
+      if (result.status === 0) return true;
+      finalDetail = result.stderr || result.stdout || 'unknown error';
+      if (attempt < 3) {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, attempt * 1500);
+      }
     }
-    return true;
+    console.warn(`Could not publish Crazy Parts progress after 3 attempts: ${finalDetail}`);
+    return false;
   } finally {
     fs.rmSync(sqlPath, { force: true });
   }

@@ -25,10 +25,10 @@ const familyConfig = new Map([
   ['realme', { dbBrand: 'REALME', displayBrand: 'Realme', statusFamily: 'Realme', mode: 'replace' }],
   ['vivo', { dbBrand: 'VIVO', displayBrand: 'Vivo', statusFamily: 'Vivo', mode: 'replace' }],
   ['sony', { dbBrand: 'SONY', displayBrand: 'Sony', statusFamily: 'Sony', mode: 'replace' }],
-  ['imac', { dbBrand: 'iMac', displayBrand: 'iMac', statusFamily: 'Apple Mac', mode: 'replace', labourCharge: 130, directIssues: true }],
-  ['macbook pro', { dbBrand: 'MacBook', displayBrand: 'MacBook', statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
-  ['macbook air', { dbBrand: 'MacBook', displayBrand: 'MacBook', statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
-  ['macbook', { dbBrand: 'MacBook', displayBrand: 'MacBook', statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
+  ['imac', { dbBrand: 'Apple iMac', displayBrand: 'iMac', aliasBrands: ['iMac'], statusFamily: 'Apple Mac', mode: 'replace', labourCharge: 130, directIssues: true }],
+  ['macbook pro', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
+  ['macbook air', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
+  ['macbook', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
 ]);
 
 let activeStatusFamilies = [];
@@ -370,6 +370,7 @@ function makeReplacementPlan(rawData, siteRows, configs) {
     unmatched: [],
     obsoleteModels: [],
     replaceBrands,
+    cleanupBrands: [...new Set(configs.flatMap((config) => config.aliasBrands || []))],
     supplierModels: new Set(updates.map((row) => `${row.brand}|${row.model}`)).size,
   };
 }
@@ -392,7 +393,10 @@ function sqlForUpdates(plan) {
     new_price: item.newPrice,
   })));
   const obsoletePayload = JSON.stringify(plan.obsoleteModels);
-  const replacementPayload = JSON.stringify(plan.replaceBrands || []);
+  const replacementPayload = JSON.stringify([
+    ...(plan.replaceBrands || []),
+    ...(plan.cleanupBrands || []),
+  ]);
   const statusPayload = JSON.stringify(plan.statusRows || []);
   return `begin;
 delete from public.repair_prices
@@ -440,12 +444,22 @@ async function applyPlan(plan, stamp) {
   await fs.writeFile(sqlPath, sqlForUpdates(plan), 'utf8');
   try {
     const executable = process.platform === 'win32' ? 'supabase.exe' : 'supabase';
-    const result = spawnSync(executable, ['db', 'query', '--linked', '--file', sqlPath, '--output', 'json'], {
-      cwd: projectRoot,
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-    if (result.status !== 0) throw new Error(result.stderr || result.stdout || 'Supabase update failed.');
+    let finalDetail = '';
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const result = spawnSync(executable, ['db', 'query', '--linked', '--file', sqlPath, '--output', 'json', '--agent=no'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        windowsHide: true,
+        timeout: 60000,
+      });
+      if (result.status === 0) return;
+      finalDetail = result.stderr || result.stdout || 'Supabase update failed.';
+      if (attempt < 3) {
+        console.warn(`Supabase save attempt ${attempt}/3 failed; retrying in ${attempt * 3} seconds.`);
+        await new Promise((resolve) => setTimeout(resolve, attempt * 3000));
+      }
+    }
+    throw new Error(finalDetail);
   } finally {
     await fs.rm(sqlPath, { force: true });
   }
@@ -453,12 +467,18 @@ async function applyPlan(plan, stamp) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.apply && !args.history) {
+    throw new Error('Applying prices requires the exact --history file produced by the current capture.');
+  }
   const historyPath = await latestHistory(args.history);
   const rawData = JSON.parse(await fs.readFile(historyPath, 'utf8'));
   const configs = configsInHistory(rawData);
   if (!configs.length) throw new Error('The selected history does not contain a supported model family.');
   activeStatusFamilies = [...new Set(configs.map((config) => config.statusFamily))];
-  const affectedBrands = [...new Set(configs.map((config) => config.dbBrand))];
+  const affectedBrands = [...new Set(configs.flatMap((config) => [
+    config.dbBrand,
+    ...(config.aliasBrands || []),
+  ]))];
   const config = await supabaseConfig();
   const beforeRows = await readSiteRows(config, affectedBrands);
   const samsungConfig = configs.find((item) => item.mode === 'samsung');
@@ -478,6 +498,7 @@ async function main() {
     unmatched: samsungPlan?.unmatched || [],
     obsoleteModels: samsungPlan?.obsoleteModels || [],
     replaceBrands: replacementPlan?.replaceBrands || [],
+    cleanupBrands: replacementPlan?.cleanupBrands || [],
     supplierModels: (samsungPlan?.supplierModels || 0) + (replacementPlan?.supplierModels || 0),
     statusRows: [...new Set(configs.map((config) => config.statusFamily))].map((statusFamily) => {
       const statusBrands = new Set(configs
@@ -499,6 +520,7 @@ async function main() {
   const targetModels = new Set(plan.updates.map((item) => item.model)).size;
   console.log(`Prepared ${plan.updates.length} Admin price row(s) across ${targetModels} Admin model(s) for ${affectedBrands.join(', ')}: ${newRows} new row(s), ${plan.unmatched.length} unmatched existing row(s).`);
   if (plan.replaceBrands.length) console.log(`Full brand replacement: ${plan.replaceBrands.join(', ')}`);
+  if (plan.cleanupBrands.length) console.log(`Old duplicate brand names to remove: ${plan.cleanupBrands.join(', ')}`);
   const newModels = [...new Set(plan.updates.filter((item) => item.oldPrice === null).map((item) => item.model))];
   if (newModels.length) console.log(`New/expanded models: ${newModels.join(', ')}`);
   if (plan.obsoleteModels.length) console.log(`Obsolete generic/duplicate models to remove: ${plan.obsoleteModels.join(', ')}`);
@@ -532,6 +554,10 @@ async function main() {
     if (actual.length !== expected.length || unexpected.length) {
       throw new Error(`${brand} replacement verification failed: expected ${expected.length} rows, found ${actual.length}.`);
     }
+  }
+  const staleAliasRows = afterRows.filter((row) => plan.cleanupBrands.includes(row.brand));
+  if (staleAliasRows.length) {
+    throw new Error(`${staleAliasRows.length} row(s) remained under old duplicate Apple brand names.`);
   }
 
   const changed = plan.updates.filter((item) => item.oldPrice !== item.newPrice).length;

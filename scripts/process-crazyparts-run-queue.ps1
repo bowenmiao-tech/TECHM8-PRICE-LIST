@@ -8,13 +8,19 @@ $scheduledTaskPrefix = 'TECHM8 Crazy Parts '
 function Invoke-LinkedQueryJson {
     param([Parameter(Mandatory = $true)][string]$Sql)
 
-    $previousErrorPreference = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $output = & supabase db query --linked $Sql --output json --agent=no 2>$null | Out-String
-    $queryExitCode = $LASTEXITCODE
-    $ErrorActionPreference = $previousErrorPreference
+    $output = ''
+    $queryExitCode = 1
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        $previousErrorPreference = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $output = & supabase db query --linked $Sql --output json --agent=no 2>$null | Out-String
+        $queryExitCode = $LASTEXITCODE
+        $ErrorActionPreference = $previousErrorPreference
+        if ($queryExitCode -eq 0) { break }
+        if ($attempt -lt 3) { Start-Sleep -Seconds ($attempt * 3) }
+    }
     if ($queryExitCode -ne 0) {
-        throw 'Could not contact the price update queue.'
+        throw 'Could not contact the price update queue after three attempts.'
     }
     if ([string]::IsNullOrWhiteSpace($output)) {
         return @()

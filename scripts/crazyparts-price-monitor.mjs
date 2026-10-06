@@ -19,6 +19,7 @@ function parseArgs(argv) {
     models: [],
     rebuildLatest: false,
     listFamilies: false,
+    historyPathFile: '',
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -31,6 +32,7 @@ function parseArgs(argv) {
     else if (arg === '--concurrency') options.concurrency = Number(argv[++index] || 1);
     else if (arg === '--rebuild-latest') options.rebuildLatest = true;
     else if (arg === '--list-families') options.listFamilies = true;
+    else if (arg === '--history-path-file') options.historyPathFile = argv[++index];
     else if (arg === '--help') options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -55,6 +57,7 @@ Options:
   --headful            Show the browser window
   --rebuild-latest     Rebuild the workbook from the latest saved raw run
   --list-families      Log in and list the currently available model families
+  --history-path-file  Save the exact successful history path for the sync step
 `);
 }
 
@@ -132,7 +135,7 @@ function categoryLabel(category) {
 function imacPartCategory(name) {
   const original = String(name || '').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
   const value = original.toLowerCase();
-  if (!original || /keyboard|keycap|backlight connector/i.test(original)) return null;
+  if (!original) return null;
   if (/lcd display assembly|complete (?:lcd|display|screen)|screen assembly|display assembly/i.test(original)) return 'imac:Screen';
   if (/display flex cable|lcd flex cable|screen flex cable/i.test(original)) return 'imac:Display Cable';
   if (/screen adhesive|adhesive tape/i.test(original)) return 'imac:Screen Adhesive';
@@ -157,9 +160,10 @@ function imacPartCategory(name) {
   return `imac:${generic.slice(0, 80)}`;
 }
 
-function classifyProduct(name, family) {
+function classifyProduct(name, family, productReference = '') {
   const original = String(name || '').replace(/[–—]/g, '-');
   const value = original.toLowerCase();
+  const qualityMarker = `${original} ${String(productReference || '')}`;
   const normalizedFamily = String(family || '').trim().toLowerCase();
 
   if (normalizedFamily === 'imac') return imacPartCategory(original);
@@ -170,20 +174,20 @@ function classifyProduct(name, family) {
     const screenExcluded = /(screen protector|tempered glass|front glass|glass only|display flex|lcd flex|screen flex|flex cable|connector|adhesive|tape|tester|frame only|housing)/i;
     const screenAssembly = /(complete\s+(?:lcd|display|screen)|lcd display assembly|screen assembly|display assembly)/i;
     if (!screenExcluded.test(original) && screenAssembly.test(original)) {
-      if (/\b(?:AMPLUS|AMP)\b/i.test(original)) return 'screen_aftermarket';
-      if (/\bBQ7\b/i.test(original)) return 'screen_premium_aftermarket';
-      if (/\bPULL[- ]?A\b/i.test(original)) return 'screen_original';
+      if (/\b(?:AMPLUS|AMP)\b/i.test(qualityMarker)) return 'screen_aftermarket';
+      if (/\bBQ7\b/i.test(qualityMarker)) return 'screen_premium_aftermarket';
+      if (/\bPULL[- ]?A\b/i.test(qualityMarker)) return 'screen_original';
       return null;
     }
 
-    const batteryExcluded = /(battery adhesive|battery sticker|battery connector|battery tester|power bank)/i;
+    const batteryExcluded = /(battery adhesive|battery sticker|battery connector|battery connect|battery indicator|battery tester|battery flex|battery cable|battery board|power bank)/i;
     if (/\bbattery\b/i.test(original) && !batteryExcluded.test(original)) return 'battery';
 
-    const portExcluded = /(fpc connector|on the motherboard|test cable|adapter|wall charger|car charger)/i;
-    const portTerms = /(usb[- ]?c board|charging port|charge port|magsafe (?:board|port)|i\/o board)/i;
+    const portExcluded = /(fpc connector|on the motherboard|test cable|flex cable|controller ic|adapter|wall charger|car charger)/i;
+    const portTerms = /(usb[- ]?c board|charging port|charge port|magsafe (?:dc-?in )?(?:board|port)|dc-?in board|i\/o board)/i;
     if (portTerms.test(original) && !portExcluded.test(original)) return 'charging_port';
 
-    if (/(?:loud\s*)?speaker/i.test(original) && !/(speaker mesh|speaker flex|speaker connector)/i.test(original)) return 'speaker';
+    if (/(?:loud\s*)?speaker/i.test(original) && !/(speaker adhesive|speaker mesh|speaker grill|speaker cable|speaker flex|speaker connector)/i.test(original)) return 'speaker';
     if (/(bottom case|bottom cover|back cover|rear cover)/i.test(original) && !/(screw|keyboard)/i.test(original)) return 'back_cover';
     if (/\bfan\b/i.test(original) && !/(fan connector|fan cable)/i.test(original)) return 'fan';
     return null;
@@ -227,6 +231,20 @@ function productMatchesModel(productName, modelHeading, model) {
 function parseMoney(value) {
   const number = Number(String(value || '').replace(/[^0-9.]/g, ''));
   return Number.isFinite(number) ? number : null;
+}
+
+function productCountFromPageText(value) {
+  const text = String(value || '').replace(/,/g, '').replace(/\s+/g, ' ');
+  const patterns = [
+    /\b\d+\s*-\s*\d+\s+of\s+(\d+)\b/i,
+    /\bshowing\s+\d+\s+(?:to|-)\s+\d+\s+of\s+(\d+)\b/i,
+    /(\d+)\s+items?\b/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return Number(match[1]);
+  }
+  return 0;
 }
 
 function isAvailableStock(stock) {
@@ -563,10 +581,24 @@ async function waitForMemberPrices(page, config) {
   }, config.expectedMemberTier, { timeout }).catch(() => {});
 }
 
+async function waitForProductList(page, expectedCount, config) {
+  if (!expectedCount) return;
+  const timeout = Math.max(1000, Number(config.productListWaitMs || 8000));
+  await page.waitForFunction((expected) => {
+    const links = new Set(
+      [...document.querySelectorAll('a[href^="/products/detail/"], a[href^="/product/"]')]
+        .map((anchor) => (anchor.getAttribute('href') || '').split('&')[0])
+        .filter(Boolean),
+    );
+    return links.size >= expected;
+  }, expectedCount, { timeout }).catch(() => {});
+}
+
 async function scrapeModel(page, model, config) {
   const productMap = new Map();
   let pageNumber = 1;
   let totalPages = 1;
+  let itemCount = 0;
   let heading = model.name;
 
   do {
@@ -579,10 +611,12 @@ async function scrapeModel(page, model, config) {
     await waitForMemberPrices(page, config);
 
     if (page.url().includes('/account/login')) {
-      throw new Error('The Crazy Parts session expired during the run.');
+      const error = new Error('The Crazy Parts session expired during the run.');
+      error.code = 'CRAZYPARTS_SESSION_EXPIRED';
+      throw error;
     }
 
-    const bodyText = await page.locator('body').innerText();
+    let bodyText = await page.locator('body').innerText();
     const documentTitle = await page.title();
     if (/Error 1015|rate.?limit|you are being rate limited/i.test(`${documentTitle}\n${bodyText}`)) {
       const error = new Error('Crazy Parts rate limit (Error 1015)');
@@ -592,23 +626,46 @@ async function scrapeModel(page, model, config) {
 
     heading = cleanMenuText(await page.locator('h1').first().innerText().catch(() => model.name));
     if (/Login to see price/i.test(bodyText)) {
-      throw new Error('Member pricing is no longer available in the current session.');
+      const error = new Error('Member pricing is no longer available in the current session.');
+      error.code = 'CRAZYPARTS_SESSION_EXPIRED';
+      throw error;
     }
 
     if (pageNumber === 1) {
-      const itemMatch = bodyText.match(/(\d+)\s+items/i);
-      const itemCount = itemMatch ? Number(itemMatch[1]) : 0;
+      await page.waitForFunction(() => {
+        const text = (document.body?.innerText || '').replace(/,/g, '').replace(/\s+/g, ' ');
+        return /\b\d+\s*-\s*\d+\s+of\s+\d+\b/i.test(text)
+          || /\bshowing\s+\d+\s+(?:to|-)\s+\d+\s+of\s+\d+\b/i.test(text);
+      }, undefined, { timeout: Math.max(1000, Number(config.productListWaitMs || 8000)) }).catch(() => {});
+      bodyText = await page.locator('body').innerText();
+      itemCount = productCountFromPageText(bodyText);
       totalPages = Math.max(1, Math.ceil(itemCount / config.pageSize));
+      // A page-size selector can itself say "36 items" before the real
+      // "1-36 of 41" counter hydrates. Probe page 2 when the count equals the
+      // page size so that late counters cannot silently hide the final page.
+      if (itemCount === config.pageSize) totalPages = 2;
+      if (process.env.CRAZYPARTS_DEBUG_PAGINATION === '1') {
+        console.log(`${model.name}: supplier count ${itemCount || 'unknown'}, calculated pages ${totalPages}.`);
+      }
     }
 
+    const expectedCards = itemCount
+      ? Math.min(config.pageSize, Math.max(0, itemCount - ((pageNumber - 1) * config.pageSize)))
+      : 0;
+    await waitForProductList(page, expectedCards, config);
+    await waitForMemberPrices(page, config);
+
     const cards = await extractProductCards(page, config);
+    if (process.env.CRAZYPARTS_DEBUG_PAGINATION === '1') {
+      console.log(`${model.name}: page ${pageNumber} yielded ${cards.length} priced product card(s).`);
+    }
     for (const card of cards) {
       if (process.env.CRAZYPARTS_DEBUG_PRICES === '1') {
         console.log(`Price debug: ${card.title} | ${card.priceText} | ${card.memberPriceLine}`);
       }
       const price = parseMoney(card.memberPriceLine);
       if (price == null) continue;
-      const category = classifyProduct(card.title, model.family);
+      const category = classifyProduct(card.title, model.family, card.href);
       const stock = [card.syd, card.mel].filter(Boolean).join(' | ');
       productMap.set(card.href, {
         category,
@@ -628,12 +685,25 @@ async function scrapeModel(page, model, config) {
   return { ...model, heading, products: [...productMap.values()] };
 }
 
-async function scrapeModelWithNetworkRetries(page, model, config) {
+async function scrapeModelWithNetworkRetries(page, model, config, recoverSession) {
   const attempts = Math.max(1, config.modelRetryAttempts || 1);
+  const sessionAttempts = Math.max(1, config.sessionRecoveryAttempts || 1);
+  let sessionRecoveries = 0;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       return await scrapeModel(page, model, config);
     } catch (error) {
+      if (error.code === 'CRAZYPARTS_SESSION_EXPIRED' && sessionRecoveries < sessionAttempts) {
+        sessionRecoveries += 1;
+        const waitMs = Math.max(1000, Number(config.sessionRecoveryDelayMs || 5000)) * sessionRecoveries;
+        console.warn(
+          `${model.name}: member session expired; signing in again before retry ${sessionRecoveries}/${sessionAttempts}.`,
+        );
+        await sleep(waitMs);
+        await recoverSession(page);
+        attempt -= 1;
+        continue;
+      }
       const transient = /ERR_NETWORK|ERR_CONNECTION|ERR_INTERNET_DISCONNECTED|Timeout/i.test(error.message || '');
       if (!transient || attempt === attempts) throw error;
       const waitMs = Math.max(1000, config.modelRetryDelayMs || 5000) * attempt;
@@ -1032,6 +1102,9 @@ async function main() {
   const previewDir = path.join(outputDir, '.runtime', runId, 'previews');
   const workbookPath = path.join(outputDir, 'TECHM8_CrazyParts_Repair_Prices.xlsx');
   await fs.mkdir(historyDir, { recursive: true });
+  if (args.historyPathFile) {
+    await fs.rm(path.resolve(projectRoot, args.historyPathFile), { force: true }).catch(() => {});
+  }
 
   if (args.rebuildLatest) {
     const latest = await loadLatestSavedRun(historyDir);
@@ -1087,7 +1160,19 @@ async function main() {
     await login(page, config, email, password);
     console.log(`Logged in with ${config.expectedMemberTier} member pricing.`);
 
-    const discovered = await discoverModels(page, config);
+    let discovered;
+    const discoveryAttempts = Math.max(1, Number(config.navigationDiscoveryAttempts || 1));
+    for (let attempt = 1; attempt <= discoveryAttempts; attempt += 1) {
+      try {
+        discovered = await discoverModels(page, config);
+        break;
+      } catch (error) {
+        if (attempt === discoveryAttempts) throw error;
+        console.warn(`Model menu was not ready; signing in again before retry ${attempt + 1}/${discoveryAttempts}.`);
+        await sleep(Math.max(1000, Number(config.loginRetryDelayMs || 5000)) * attempt);
+        await login(page, config, email, password);
+      }
+    }
     if (args.listFamilies) {
       const familyCounts = new Map();
       for (const model of discovered) {
@@ -1138,6 +1223,15 @@ async function main() {
     let nextIndex = 0;
     let completed = 0;
     let fatalError = null;
+    let sessionRecoveryPromise = null;
+    const recoverSession = async (workerPage) => {
+      if (!sessionRecoveryPromise) {
+        sessionRecoveryPromise = login(workerPage, config, email, password)
+          .then(() => console.log('Crazy Parts member session restored.'))
+          .finally(() => { sessionRecoveryPromise = null; });
+      }
+      await sessionRecoveryPromise;
+    };
     const concurrency = Math.max(1, Math.min(8, Math.floor(args.concurrency || 1), selectedModels.length || 1));
     console.log(`Using ${concurrency} concurrent model page worker(s).`);
     const workers = Array.from({ length: concurrency }, async (_, workerIndex) => {
@@ -1153,7 +1247,7 @@ async function main() {
           const rateLimitAttempts = Math.max(1, config.rateLimitRetryAttempts || 1);
           for (let attempt = 1; attempt <= rateLimitAttempts; attempt += 1) {
             try {
-              result = await scrapeModelWithNetworkRetries(workerPage, model, config);
+              result = await scrapeModelWithNetworkRetries(workerPage, model, config, recoverSession);
               break;
             } catch (error) {
               if (error.code !== 'CRAZYPARTS_RATE_LIMIT' || attempt === rateLimitAttempts) throw error;
@@ -1253,6 +1347,10 @@ async function main() {
   };
   const historyPath = path.join(historyDir, `${runId}.json`);
   await fs.writeFile(historyPath, JSON.stringify(rawData, null, 2));
+  if (args.historyPathFile) {
+    await fs.mkdir(path.dirname(path.resolve(projectRoot, args.historyPathFile)), { recursive: true });
+    await fs.writeFile(path.resolve(projectRoot, args.historyPathFile), historyPath, 'utf8');
+  }
 
   if (trackedFamily) {
     reportCrazyPartsStatus(trackedFamily, {

@@ -28,6 +28,8 @@ $env:CRAZYPARTS_PASSWORD = $credential.GetNetworkCredential().Password
 $env:CRAZYPARTS_TRACK_STATUS = if ($SyncSupabase) { '1' } else { '0' }
 
 $nodeArgs = @((Join-Path $PSScriptRoot 'crazyparts-price-monitor.mjs'))
+$historyPathFile = Join-Path $projectRoot "outputs\crazyparts-price-monitor\.run-history-$PID.txt"
+$nodeArgs += @('--history-path-file', $historyPathFile)
 $supportedFamilies = @(
     'A Series', 'Oppo', 'Huawei', 'Xiaomi', 'Redmi', 'Motorola',
     'Nokia', 'Oneplus', 'Realme', 'Vivo', 'Sony', 'Apple Mac'
@@ -78,7 +80,14 @@ try {
     & node @nodeArgs
     $exitCode = $LASTEXITCODE
     if ($exitCode -eq 0 -and $SyncSupabase) {
-        & node (Join-Path $PSScriptRoot 'sync-crazyparts-to-supabase.mjs') --apply
+        if (-not (Test-Path -LiteralPath $historyPathFile)) {
+            throw 'The price capture completed without returning its exact history file.'
+        }
+        $capturedHistoryPath = (Get-Content -LiteralPath $historyPathFile -Raw).Trim()
+        if ([string]::IsNullOrWhiteSpace($capturedHistoryPath) -or -not (Test-Path -LiteralPath $capturedHistoryPath)) {
+            throw 'The captured price history file could not be verified.'
+        }
+        & node (Join-Path $PSScriptRoot 'sync-crazyparts-to-supabase.mjs') --apply --history $capturedHistoryPath
         $exitCode = $LASTEXITCODE
     }
 }
@@ -86,6 +95,7 @@ finally {
     Remove-Item Env:CRAZYPARTS_EMAIL -ErrorAction SilentlyContinue
     Remove-Item Env:CRAZYPARTS_PASSWORD -ErrorAction SilentlyContinue
     Remove-Item Env:CRAZYPARTS_TRACK_STATUS -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $historyPathFile -Force -ErrorAction SilentlyContinue
     Pop-Location
 }
 
