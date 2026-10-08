@@ -45,6 +45,18 @@
     cancelled: { label: '已取消', tone: 'red' }
   };
   const DONE = new Set(['stocked', 'closed']);
+  const BOT_STATES = {
+    ui_changed: '微信界面变了，助手程序需要更新',
+    wechat_closed: '微信没打开，或者小号没登录',
+    error: '助手出错了，看那台电脑上的 bot.log'
+  };
+  const BOT_EVENT = {
+    saved: { label: '已登记', tone: 'green' },
+    nothing_new: { label: '没有新单号', tone: '' },
+    not_watched: { label: '没开监听', tone: '' },
+    error: { label: '出错', tone: 'red' }
+  };
+  const SOURCE_LABEL = { sheet_import: '从表格导入', chat: '粘贴聊天记录', wechat_bot: '微信自动登记' };
 
   const ERROR_TEXT = [
     [/Supplier name is required/i, '请填写供货商名称'],
@@ -78,6 +90,9 @@
     [/Images must be JPEG/i, '截图只支持 JPG、PNG、WebP、GIF'],
     [/Each image must be under/i, '每张截图要小于 3MB'],
     [/Order lines or tracking numbers are required/i, '没有可以保存的明细或快递单号'],
+    [/WeChat group not found/i, '找不到这个微信群，请刷新'],
+    [/helper fingerprint must be/i, '令牌指纹应该是 64 位的字母和数字，请从助手窗口完整复制'],
+    [/Helper PC not found/i, '找不到这台助手电脑，请刷新'],
     [/Admin session/i, '登录已过期，请重新登录'],
     [/Failed to fetch|NetworkError/i, '网络连接失败，请检查网络后重试']
   ];
@@ -284,7 +299,11 @@
       orders: snapshot.orders || [],
       parcels: snapshot.parcels || [],
       shipments: snapshot.shipments || [],
-      receipt_lines: snapshot.receipt_lines || []
+      receipt_lines: snapshot.receipt_lines || [],
+      wechat_groups: snapshot.wechat_groups || [],
+      bot_status: snapshot.bot_status || null,
+      bot_tokens: snapshot.bot_tokens || [],
+      bot_events: snapshot.bot_events || []
     };
     const byId = list => new Map(list.map(item => [Number(item.id), item]));
     state.data = data;
@@ -749,7 +768,7 @@
     const loose = state.data.parcels.filter(parcel => !parcel.shipment_id);
     const atForwarder = loose.filter(parcel => parcel.forwarder_received_at);
     const domestic = loose.filter(parcel => !parcel.forwarder_received_at);
-    return `<div class="pa-toolbar">
+    return `${botWarning()}<div class="pa-toolbar">
         ${filterChips('shipmentView', view, [
           ['active', '在途', active.length],
           ['sea', '海运', active.filter(shipment => shipmentMode(shipment) === 'sea').length],
@@ -789,6 +808,7 @@
           ${supplier ? `<span>${esc(supplier)}</span>` : ''}
           ${parcel.carton_count > 1 ? `<span>${parcel.carton_count} 箱</span>` : ''}
           ${num(parcel.weight_kg) ? `<span>${kgText(parcel.weight_kg)}</span>` : ''}
+          ${parcel.source === 'wechat_bot' ? chip('微信自动', 'blue', 'bi-robot') : ''}
         </div>
       </div>
       <div class="pa-item-where">${journeyBar(where.step, true)}<span class="pa-where-text tone-${where.tone}">${esc(where.text)}</span>
@@ -897,7 +917,7 @@
           const parcels = index.parcelsByOrder.get(Number(order.id)) || [];
           const total = orderTotal(order);
           return `<tr data-action="open-order" data-id="${order.id}">
-            <td><strong>${esc(order.po_number)}</strong>${order.supplier_order_ref ? `<div class="pa-small pa-muted">${esc(order.supplier_order_ref)}</div>` : ''}</td>
+            <td><strong>${esc(order.po_number)}</strong>${order.supplier_order_ref ? `<div class="pa-small pa-muted">${esc(order.supplier_order_ref)}</div>` : ''}${SOURCE_LABEL[order.source] ? `<div class="pa-small pa-muted">${SOURCE_LABEL[order.source]}</div>` : ''}</td>
             <td>${fmtDate(order.order_date)}</td>
             <td>${esc(supplierName(order.supplier_id) || '—')}</td>
             <td class="wrap">${esc(itemsSummary(order) || order.notes || '')}</td>
@@ -910,10 +930,114 @@
     </section>`;
   }
 
+  // ---------- WeChat helper ----------
+
+  function botHealth() {
+    const status = state.data.bot_status;
+    if (!status || !status.last_seen_at) return { online: false, text: '助手还没连上', tone: 'red' };
+    const minutes = (Date.now() - new Date(status.last_seen_at).getTime()) / 60000;
+    if (minutes > 15) return { online: false, text: `助手离线（最后在线 ${fmtDateTime(status.last_seen_at)}）`, tone: 'red' };
+    if (status.state && status.state !== 'ok') return { online: true, text: BOT_STATES[status.state] || status.state, tone: 'orange' };
+    return { online: true, text: `助手在线 · ${Math.max(0, Math.round(minutes))} 分钟前`, tone: 'green' };
+  }
+
+  function botWarning() {
+    if (!state.data.wechat_groups.some(group => group.watch)) return '';
+    const health = botHealth();
+    if (health.tone === 'green') return '';
+    return `<div class="pa-callout amber"><i class="bi bi-exclamation-triangle"></i> 微信自动登记：${esc(health.text)}。这段时间供货商发的单号不会自动登记，可以先用「粘贴聊天记录」。</div>`;
+  }
+
+  function wechatPanel() {
+    const groups = state.data.wechat_groups;
+    const health = botHealth();
+    const missing = ((state.data.bot_status || {}).detail || {}).watch_missing || [];
+    return `<section class="pa-panel">
+      <div class="pa-panel-head"><h2>微信自动登记</h2>${chip(health.text, health.tone, health.online ? 'bi-wifi' : 'bi-wifi-off')}</div>
+      <div class="pa-panel-body">
+        <p class="pa-muted pa-small">店里电脑上的助手读小号所在的微信群（只读，不发消息）。打开某个供货商群的「自动登记」后，供货商在群里发快递单号，系统会自动登记包裹，挂到这个供货商还没完成的采购单上，没有就按聊天内容新建一张。</p>
+        ${missing.length ? `<div class="pa-callout amber">这些群现在不在微信会话列表里看得到的位置：${esc(missing.join('、'))}。在小号里把它们「置顶」，助手就一直看得到。</div>` : ''}
+        ${groups.length ? `<div class="pa-table-wrap"><table class="pa-table">
+          <thead><tr><th>微信群 / 会话</th><th>自动登记</th><th>对应供货商</th><th>最后看到</th></tr></thead>
+          <tbody>${groups.map(group => `<tr>
+            <td><strong>${esc(group.group_name)}</strong></td>
+            <td><label class="pa-check"><input type="checkbox" data-change="wechatWatch" data-id="${group.id}" ${group.watch ? 'checked' : ''}> ${group.watch ? '开' : '关'}</label></td>
+            <td><select class="pa-select-inline" data-change="wechatSupplier" data-id="${group.id}" aria-label="对应供货商">${supplierOptions(group.supplier_id)}</select></td>
+            <td class="pa-small pa-muted">${fmtDateTime(group.last_seen_at)}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>` : '<div class="pa-empty">助手连上之后，这里会列出小号能看到的微信群</div>'}
+        ${botPcSection()}
+      </div>
+    </section>
+    ${botEventsPanel()}`;
+  }
+
+  function botPcSection() {
+    const tokens = state.data.bot_tokens;
+    return `<div class="pa-section" style="margin-top:16px">
+      <div class="pa-section-title">助手电脑</div>
+      ${tokens.length ? `<div class="pa-mini-list">${tokens.map(token => `<div class="pa-mini">
+        <div class="pa-mini-main"><strong>${esc(token.label)}</strong>
+          <span class="pa-small pa-muted">指纹 ${esc(token.token_hash.slice(0, 12))}… · 登记于 ${fmtDate(token.created_at)}${token.last_used_at ? ` · 最后连上 ${fmtDateTime(token.last_used_at)}` : ' · 还没连上过'}</span></div>
+        ${token.revoked_at ? chip('已停用', 'red') : `<button class="pa-btn small ghost danger" type="button" data-action="revoke-bot-token" data-hash="${esc(token.token_hash)}">停用</button>`}
+      </div>`).join('')}</div>` : '<p class="pa-muted pa-small">还没有登记助手电脑。</p>'}
+      <p class="pa-small pa-muted" style="margin:10px 0 6px">在专用电脑上第一次运行 start-bot.bat，会显示一串「令牌指纹」，复制到这里登记，那台电脑就能连上。</p>
+      <div class="pa-form">
+        ${field('令牌指纹', input('bot_token_hash', '', 'autocomplete="off" spellcheck="false" placeholder="64 位字母和数字"'))}
+        ${field('电脑名称', input('bot_token_label', '', 'placeholder="例如 店里专用电脑"'))}
+      </div>
+      <div style="margin-top:8px"><button class="pa-btn small primary" type="button" data-action="register-bot-token"><i class="bi bi-plus-lg"></i> 登记这台电脑</button></div>
+    </div>`;
+  }
+
+  function botEventsPanel() {
+    const events = state.data.bot_events;
+    if (!events.length) return '';
+    return `<section class="pa-panel">
+      <div class="pa-panel-head"><h2>自动登记记录</h2><span class="pa-muted pa-small">最近 30 条</span></div>
+      <div class="pa-table-wrap"><table class="pa-table">
+        <thead><tr><th>时间</th><th>群</th><th>结果</th><th>详情</th></tr></thead>
+        <tbody>${events.map(event => {
+          const result = event.result || {};
+          const created = (result.parcel_ids || []).length;
+          const skipped = (result.skipped || []).length;
+          let detail = (result.warnings || []).map(esc).join('；');
+          if (event.status === 'saved') {
+            detail = `${result.po_number ? esc(result.po_number) : '未关联采购单'} · 新登记 ${created} 个单号${skipped ? `，${skipped} 个之前已有` : ''}${detail ? `<div class="pa-muted">${detail}</div>` : ''}`;
+          } else if (event.status === 'error') {
+            detail = esc(translateError(event.error || ''));
+          }
+          return `<tr>
+            <td class="pa-small">${fmtDateTime(event.created_at)}</td>
+            <td>${esc(event.group_name)}</td>
+            <td>${stageChip(BOT_EVENT, event.status)}</td>
+            <td class="wrap pa-small">${detail}${result.order_id ? ` <button class="pa-link" type="button" data-action="open-order" data-id="${result.order_id}">打开采购单</button>` : ''}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </section>`;
+  }
+
+  async function saveWechatGroup(id, changes) {
+    const group = state.data.wechat_groups.find(item => Number(item.id) === Number(id));
+    if (!group) return;
+    const supplierId = changes.supplier_id !== undefined ? changes.supplier_id : group.supplier_id;
+    const watch = changes.watch !== undefined ? changes.watch : group.watch;
+    const createSupplier = Boolean(watch && !supplierId);
+    try {
+      await api('save_wechat_group', { id: group.id, watch, supplier_id: supplierId || null, create_supplier: createSupplier });
+      toast(createSupplier ? `已开启，并用群名新建了供货商「${group.group_name}」` : '已保存');
+    } catch (error) {
+      toast(translateError(error.message), true);
+      render();
+    }
+  }
+
   function renderSettings() {
     const suppliers = state.data.suppliers;
     const forwarders = state.data.forwarders;
-    return `<section class="pa-panel">
+    return `${wechatPanel()}
+    <section class="pa-panel">
       <div class="pa-panel-head"><h2>转运公司</h2><button class="pa-btn small primary" type="button" data-action="new-forwarder"><i class="bi bi-plus-lg"></i> 新增转运</button></div>
       <div class="pa-panel-body"><div class="pa-grid">${forwarders.map(forwarder => `
         <div class="pa-card" role="button" tabindex="0" data-action="open-forwarder" data-id="${forwarder.id}">
@@ -1441,7 +1565,7 @@
           ${field('备注', `<textarea name="notes">${esc(draft.notes || '')}</textarea>`, true)}
         </div>
       </div>`;
-    openDrawer('parcel', existing ? '国内包裹' : '登记包裹', existing ? `${stageLabel(PARCEL_STAGE, stage)}${existing.source === 'sheet_import' ? ' · 从表格导入' : ''}` : '供货商发货后登记快递单号', body, drawerFoot('delete-parcel', Boolean(existing)), draft);
+    openDrawer('parcel', existing ? '国内包裹' : '登记包裹', existing ? `${stageLabel(PARCEL_STAGE, stage)}${SOURCE_LABEL[existing.source] ? ` · ${SOURCE_LABEL[existing.source]}` : ''}` : '供货商发货后登记快递单号', body, drawerFoot('delete-parcel', Boolean(existing)), draft);
   }
 
   async function saveParcel() {
@@ -2205,6 +2329,18 @@
       initReceiving(element.dataset.id);
       render();
     },
+    'register-bot-token': async () => {
+      const hash = els.view.querySelector('[name="bot_token_hash"]').value.trim();
+      const label = els.view.querySelector('[name="bot_token_label"]').value.trim();
+      if (!hash) { toast('先粘贴助手显示的令牌指纹', true); return; }
+      await api('register_bot_token', { token_hash: hash, label });
+      toast('已登记，那台电脑上的助手现在可以连上了');
+    },
+    'revoke-bot-token': async element => {
+      if (!window.confirm('停用这台助手电脑？停用后它就连不上了，需要重新登记才能再用。')) return;
+      await api('revoke_bot_token', { token_hash: element.dataset.hash });
+      toast('已停用');
+    },
     'chat-import': () => openChatDrawer(),
     'chat-parse': element => chatParse(element),
     'chat-back': () => {
@@ -2380,7 +2516,7 @@
     const handler = actions[element.dataset.action];
     if (!handler) return;
     if (element.tagName === 'BUTTON' && element.disabled) return;
-    const busyButton = element.tagName === 'BUTTON' && /save|delete|post|sign|advance|at-forwarder|parse/.test(element.dataset.action) ? element : null;
+    const busyButton = element.tagName === 'BUTTON' && /save|delete|post|sign|advance|at-forwarder|parse|bot-token/.test(element.dataset.action) ? element : null;
     try {
       if (busyButton) busyButton.disabled = true;
       await handler(element, event);
@@ -2479,6 +2615,8 @@
       document.getElementById('shipmentParcels').innerHTML = renderShipmentParcels(state.drawer.draft);
       toast('已加入，检查后点保存');
     }
+    if (key === 'wechatWatch') saveWechatGroup(target.dataset.id, { watch: target.checked });
+    if (key === 'wechatSupplier') saveWechatGroup(target.dataset.id, { supplier_id: num(target.value) });
     if (key === 'chatPasteField') {
       const draftKey = target.name === 'chat_forwarder' ? 'forwarder_id' : 'supplier_id';
       state.drawer.draft[draftKey] = num(target.value);

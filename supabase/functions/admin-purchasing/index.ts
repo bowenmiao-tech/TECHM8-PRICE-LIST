@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { parseChat, validateChatInput } from "./chat-parse.ts";
+import { botTokenValid, handleBotAction } from "./wechat-bot.ts";
 
 // Admin-only API for the China purchasing page. The admin session lives in the
 // staff/price-list project; the purchase tables and stock live here in the
@@ -20,6 +21,9 @@ const PAYLOAD_ACTIONS: Record<string, string> = {
   save_parcel: "purchase_admin_save_parcel",
   save_shipment: "purchase_admin_save_shipment",
   import_chat: "purchase_admin_import_chat",
+  save_wechat_group: "purchase_admin_save_wechat_group",
+  register_bot_token: "purchase_admin_register_bot_token",
+  revoke_bot_token: "purchase_admin_revoke_bot_token",
   create_product: "purchase_admin_create_product",
   post_receipt: "purchase_admin_post_receipt",
 };
@@ -46,11 +50,11 @@ function errorMessage(error: unknown, fallback: string): string {
 }
 
 function errorStatus(message: string): number {
-  if (/admin session|sign in/i.test(message)) return 401;
+  if (/admin session|sign in|helper token/i.test(message)) return 401;
   if (/ANTHROPIC_API_KEY|AI is busy|reach the AI/.test(message)) return 503;
   if (/not found/i.test(message)) return 404;
   if (/already|cannot|different operation/i.test(message)) return 409;
-  if (/required|invalid|must|choose|needs|list|above zero/i.test(message)) return 400;
+  if (/required|invalid|must|choose|needs|list|above zero|unknown/i.test(message)) return 400;
   return 500;
 }
 
@@ -92,6 +96,15 @@ Deno.serve(async (request) => {
   if (request.method !== "POST") return jsonResponse({ ok: false, message: "Method not allowed." }, 405);
 
   try {
+    const botToken = request.headers.get("x-bot-token") || "";
+    if (botToken) {
+      const admin = productAdminClient();
+      if (!(await botTokenValid(admin, botToken))) throw new Error("Helper token is not valid.");
+      const body = await request.json().catch(() => ({})) as JsonRecord;
+      const payload = (body.payload && typeof body.payload === "object") ? body.payload as JsonRecord : {};
+      return jsonResponse({ ok: true, result: await handleBotAction(admin, String(body.action || ""), payload) });
+    }
+
     await verifyAdminSession(request.headers.get("x-admin-session") || "", request);
 
     const body = await request.json().catch(() => ({})) as JsonRecord;

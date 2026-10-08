@@ -9,3 +9,7 @@ outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Final_Revi
 outputs/phone-case-catalog-reconciliation-20260819/TECHM8_Phone_Cases_Migration_Preview.sql
 
 node_modules/
+
+# WeChat purchasing helper: token, chat state and logs stay on the shop PC
+scripts/wechat-purchase-bot/local/
+scripts/wechat-purchase-bot/.venv/
