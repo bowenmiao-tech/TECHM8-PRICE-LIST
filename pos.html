@@ -11767,6 +11767,8 @@
 
     async function syncCurrentShiftWithDatabase(options = {}) {
       if (!state.selectedStaffName || !state.storeId) return readActiveShift();
+      const requestedStore = state.storeId;
+      const requestedStaff = state.selectedStaffName;
       let localShift = readActiveShift();
       if (localShift && localShift.storeId !== state.storeId) {
         clearActiveShiftCache();
@@ -11779,6 +11781,9 @@
       const localOpening = localShift && loadOpeningRecords()[localShift.id];
       try {
         const currentPayload = await getSharedState('shift');
+        if (state.storeId !== requestedStore || state.selectedStaffName !== requestedStaff) {
+          throw new Error('The store or staff member changed. Please try again.');
+        }
         const currentRemoteShift = currentPayload && currentPayload.shift;
         if (currentRemoteShift) {
           const currentShift = localShiftFromRemote(currentRemoteShift);
@@ -11788,7 +11793,8 @@
           return readActiveShift();
         }
 
-        const shouldCreate = options.createIfMissing === true || Boolean(localShift && localOpening);
+        const shouldCreate = !options.requireRemote
+          && (options.createIfMissing === true || Boolean(localShift && localOpening));
         if (!shouldCreate) {
           clearActiveShiftCache();
           return null;
@@ -11820,6 +11826,7 @@
         return readActiveShift();
       } catch (error) {
         console.error(error);
+        if (options.requireRemote) throw error;
         if (options.createIfMissing === true) {
           localShift = localShift || ensureActiveShiftRecord();
         }
@@ -14003,9 +14010,23 @@
     }
 
     async function transferApiRequest(url, options = {}) {
+      // Never send an inventory request using an offline or previous shift ID.
+      const requestedStore = state.storeId;
+      const requestedStaff = state.selectedStaffName;
+      if (!requestedStore || !requestedStaff) throw new Error('Select your staff account and store before using stock transfers.');
+      const shift = await syncCurrentShiftWithDatabase({ requireRemote: true });
+      if (state.storeId !== requestedStore || state.selectedStaffName !== requestedStaff) {
+        throw new Error('The store or staff member changed. Please try again.');
+      }
+      if (!shift || shift.date !== brisbaneDateIso() || shift.status !== 'open') {
+        throw new Error('Start today’s shift for this store before using stock transfers.');
+      }
+      const headers = new Headers(options.headers || {});
+      Object.entries(transferApiHeaders(false)).forEach(([key, value]) => headers.set(key, value));
       const response = await fetch(url, {
         cache: 'no-store',
-        ...options
+        ...options,
+        headers
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.ok === false) {
@@ -15087,7 +15108,7 @@
       }
       if (view === 'transfers') {
         if (typeof localTransferTestMode !== 'undefined' && localTransferTestMode) renderTransfers();
-        else syncCurrentShiftWithDatabase().then(() => loadTransfers({ silent: state.transferLoaded }));
+        else loadTransfers({ silent: state.transferLoaded });
         // A device sent here does not appear in the stock-transfer list, so the
         // count is surfaced on this page rather than left to be discovered.
         loadUsedDeviceTransfers({ render: false }).then(refreshDeviceTransferBadge);
