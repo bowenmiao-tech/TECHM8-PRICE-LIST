@@ -1622,7 +1622,10 @@
             <div class="section-banner">PARTS STOCK REDUCTION</div>
             <div class="section-head">
               <div class="hint">Choose the screen or battery item and action. Battery is one row per model and does not use colour.</div>
-              <el-button type="warning" plain icon="el-icon-plus" @click="addLcdLine">Add Parts Row</el-button>
+              <div class="toolbar">
+                <el-button plain icon="el-icon-refresh" @click="refreshInventory(true)" :loading="stockRefreshing">Refresh Stock</el-button>
+                <el-button type="warning" plain icon="el-icon-plus" @click="addLcdLine">Add Parts Row</el-button>
+              </div>
             </div>
             <div class="line-stack" v-if="lcdLines.length">
               <div class="line-card" v-for="(line, index) in lcdLines" :key="'lcd-' + index">
@@ -1869,6 +1872,7 @@
 
   <script>
     const SUPABASE = window.TECHM8_SUPABASE || null;
+    const INVENTORY_CHANGE_KEY = 'techm8-lcd-inventory-changed';
 
     window.Techm8StaffAuth.init({
       rootSelector: '[data-auth-protected]',
@@ -1881,6 +1885,7 @@
           return {
             stage: 'setup',
             setupLoading: false,
+            stockRefreshing: false,
             submitting: false,
             draftSaving: false,
             reportReadOnly: false,
@@ -2032,6 +2037,30 @@
         },
         mounted() {
           this.loadSetup();
+          this._inventoryRefreshTimer = window.setInterval(() => {
+            if (this.stage === 'report' && !document.hidden && !this.submitting) this.refreshInventory(false);
+          }, 30000);
+          this._onInventoryResume = () => {
+            if (this.stage === 'report' && !document.hidden && !this.submitting) this.refreshInventory(false);
+          };
+          this._onInventoryStorage = event => {
+            if (event.key !== INVENTORY_CHANGE_KEY || !event.newValue || this.stage !== 'report') return;
+            try {
+              const change = JSON.parse(event.newValue);
+              if (change.store_code === this.selectedStoreCode) this.refreshInventory(false);
+            } catch (error) {
+              console.error(error);
+            }
+          };
+          window.addEventListener('focus', this._onInventoryResume);
+          document.addEventListener('visibilitychange', this._onInventoryResume);
+          window.addEventListener('storage', this._onInventoryStorage);
+        },
+        beforeDestroy() {
+          window.clearInterval(this._inventoryRefreshTimer);
+          window.removeEventListener('focus', this._onInventoryResume);
+          document.removeEventListener('visibilitychange', this._onInventoryResume);
+          window.removeEventListener('storage', this._onInventoryStorage);
         },
         methods: {
           makeRepairLine() {
@@ -2287,6 +2316,36 @@
               this.setupLoading = false;
             }
           },
+          async refreshInventory(showError) {
+            const storeCode = this.selectedStoreCode;
+            if (!storeCode || this.stage !== 'report') return false;
+            if (!this._stockRefreshPromise) {
+              this.stockRefreshing = true;
+              this._stockRefreshPromise = (async () => {
+                try {
+                  const result = await window.Techm8StaffAuth.callRpc('get_daily_report_setup', {
+                    session_token: window.Techm8StaffAuth.getToken(),
+                    target_store_code: storeCode
+                  });
+                  if (!result || !Array.isArray(result.lcd_items)) throw new Error('Could not refresh stock.');
+                  if (this.selectedStoreCode !== storeCode || this.stage !== 'report') return false;
+                  this.lcdItems = result.lcd_items.slice().sort((a, b) => this.compareLcdRows(a, b));
+                  this.loadError = '';
+                  return true;
+                } catch (error) {
+                  console.error(error);
+                  this.loadError = error.message || 'Could not refresh stock.';
+                  return false;
+                } finally {
+                  this.stockRefreshing = false;
+                  this._stockRefreshPromise = null;
+                }
+              })();
+            }
+            const refreshed = await this._stockRefreshPromise;
+            if (!refreshed && showError) this.$message.error(this.loadError || 'Could not refresh stock.');
+            return refreshed;
+          },
           async enterReport() {
             if (!this.selectedStoreCode) return this.$message.error('Please choose a store.');
             if (!this.selectedStaffName) return this.$message.error('Please choose your name.');
@@ -2438,6 +2497,14 @@
                 throw new Error((result && result.message) || 'Could not confirm transfer.');
               }
               this.$message.success('Warehouse transfer received. Store inventory has been updated.');
+              try {
+                window.localStorage.setItem(INVENTORY_CHANGE_KEY, JSON.stringify({
+                  store_code: this.selectedStoreCode,
+                  received_at: Date.now()
+                }));
+              } catch (error) {
+                console.error(error);
+              }
               await this.loadPendingTransfers();
               await this.loadSetup(this.selectedStoreCode);
             } catch (error) {
@@ -2709,11 +2776,14 @@
               this.$message.warning('This report is read-only. Only its owner or Bowen can submit it.');
               return;
             }
-            const payload = this.buildPayload();
-            if (!this.validateBeforeSubmit(payload)) return;
-
             this.submitting = true;
             try {
+              if (!await this.refreshInventory(true)) {
+                return;
+              }
+              const payload = this.buildPayload();
+              if (!this.validateBeforeSubmit(payload)) return;
+
               const result = await window.Techm8StaffAuth.callRpc('submit_daily_report', {
                 session_token: window.Techm8StaffAuth.getToken(),
                 payload
