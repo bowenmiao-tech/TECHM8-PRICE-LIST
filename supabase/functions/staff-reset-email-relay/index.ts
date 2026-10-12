@@ -62,12 +62,14 @@ Deno.serve(async (request) => {
   const to = String(record.to || "").trim().toLowerCase();
   const staffName = String(record.staffName || "").trim().slice(0, 120);
   const link = String(record.link || "").trim();
+  const purpose = String(record.purpose || "reset").trim();
   const requestedMinutes = Number(record.minutes || 30);
   const minutes = Number.isFinite(requestedMinutes)
     ? Math.min(60, Math.max(1, Math.round(requestedMinutes)))
     : 30;
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) || !isValidResetLink(link)) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) || !isValidResetLink(link)
+    || !["reset", "invite"].includes(purpose)) {
     return jsonResponse({ ok: false, message: "Invalid reset email request." }, 400);
   }
 
@@ -83,23 +85,31 @@ Deno.serve(async (request) => {
 
   const safeName = escapeHtml(staffName || "there");
   const safeLink = escapeHtml(link);
+  const isInvite = purpose === "invite";
+  const introduction = isInvite
+    ? "You have been invited to join TECHM8. Use the secure link below to create your account password and four-digit POS PIN."
+    : "We received a request to reset the password for your TECHM8 staff account.";
+  const buttonText = isInvite ? "Set up your account" : "Set a new password";
+  const footer = isInvite
+    ? "If you were not expecting this invitation, you can ignore this email."
+    : "If you did not request this, you can ignore this email — your current password stays active.";
   const html = `<div style="font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:15px;color:#12262b;line-height:1.6">
   <p>Hi ${safeName},</p>
-  <p>We received a request to reset the password for your TECHM8 staff account.</p>
-  <p style="margin:26px 0"><a href="${safeLink}" style="background:#0b4f58;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;display:inline-block;font-weight:600">Set a new password</a></p>
-  <p>This link works once and expires in ${minutes} minutes. Signing in again on your other devices will be required afterwards.</p>
-  <p>If you did not request this, you can ignore this email — your current password stays active.</p>
+  <p>${introduction}</p>
+  <p style="margin:26px 0"><a href="${safeLink}" style="background:#0b4f58;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;display:inline-block;font-weight:600">${buttonText}</a></p>
+  <p>This link works once and expires in ${minutes} minutes.</p>
+  <p>${footer}</p>
   <p style="color:#5d7176;font-size:13px">If the button does not open, paste this address into your browser:<br>${safeLink}</p>
 </div>`;
   const text = [
     `Hi ${staffName || "there"},`,
     "",
-    "We received a request to reset the password for your TECHM8 staff account.",
+    introduction,
     "",
     link,
     "",
     `This link works once and expires in ${minutes} minutes.`,
-    "If you did not request this, you can ignore this email - your current password stays active.",
+    footer,
   ].join("\n");
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -111,7 +121,7 @@ Deno.serve(async (request) => {
     body: JSON.stringify({
       from,
       to: [to],
-      subject: "Reset your TECHM8 staff password",
+      subject: isInvite ? "Set up your TECHM8 staff account" : "Reset your TECHM8 staff password",
       html,
       text,
     }),
