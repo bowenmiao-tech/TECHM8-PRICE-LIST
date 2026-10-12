@@ -70,6 +70,7 @@
       gap: 12px;
       margin-top: 14px;
     }
+    .points-panel > .summary { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .summary-item {
       min-height: 92px;
       display: grid;
@@ -219,7 +220,7 @@
     }
     .save-button:disabled { cursor: wait; opacity: .55; }
     .admin-row { background: #f6fbf9; }
-    .review-staff-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+    .review-staff-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 10px; }
     .review-staff-card {
       display: grid; gap: 8px; padding: 13px 14px; text-align: left;
       border: 1px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer;
@@ -228,7 +229,7 @@
     .review-staff-card.active { border-color: var(--green); background: #eef8f4; box-shadow: 0 0 0 3px rgba(7,137,111,.12); }
     .review-staff-card.is-idle { opacity: .62; }
     .review-staff-name { font-size: 15px; font-weight: 950; }
-    .review-staff-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .review-staff-figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
     .review-figure { display: grid; gap: 2px; }
     .review-figure span { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
     .review-figure strong { font-size: 18px; font-weight: 950; }
@@ -238,7 +239,7 @@
     .score-detail { margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbfa; }
     .score-detail[hidden] { display: none; }
     .score-detail h3 { margin: 0 0 8px; font-size: 16px; }
-    .score-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .score-detail-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
     .score-detail-grid div { padding: 12px; border-radius: 9px; background: #fff; border: 1px solid var(--line); }
     .score-detail-grid span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; }
     .score-detail-grid strong { display: block; margin-top: 4px; font-size: 20px; }
@@ -287,12 +288,14 @@
       .topbar { align-items: stretch; flex-direction: column; }
       .actions { justify-content: flex-start; }
       .summary { grid-template-columns: 1fr; }
+      .points-panel > .summary { grid-template-columns: 1fr 1fr; }
       .panel-head { align-items: stretch; flex-direction: column; }
       .search-input { width: 100%; }
       .review-event { grid-template-columns: minmax(0, 1fr) auto; }
       .review-event-date { grid-column: 1 / -1; }
       .review-event-meta { grid-column: 1 / -1; }
-      .score-detail-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .score-detail-grid { grid-template-columns: 1fr 1fr; }
+      .review-staff-figures { grid-template-columns: 1fr 1fr; }
       .device-event { grid-template-columns: 1fr auto; }
       .device-event span:first-child { grid-column: 1 / -1; }
       .staff-row { grid-template-columns: 42px minmax(0, 1fr) auto; }
@@ -338,7 +341,7 @@
       <div class="panel-head">
         <div>
           <h2>Staff Points · This Month</h2>
-          <p class="subtitle">Google reviews + device bundles. Click a staff member for details.</p>
+          <p class="subtitle">Google reviews + device bundles + 1% of personal sales. Click a staff member for details.</p>
         </div>
         <input id="reviewSearch" class="search-input" type="search" placeholder="Search staff" aria-label="Search staff points">
       </div>
@@ -346,6 +349,7 @@
       <div class="summary" style="margin-bottom:16px;">
         <div class="summary-item"><span>Google reviews</span><strong id="reviewThisMonthPoints">0 pts</strong></div>
         <div class="summary-item"><span>Device bundles</span><strong id="deviceThisMonthPoints">0 pts</strong></div>
+        <div class="summary-item"><span>Sales commission · 1%</span><strong id="commissionThisMonthPoints">0.00 pts</strong></div>
         <div class="summary-item"><span>Total points</span><strong id="combinedThisMonthPoints">0 pts</strong></div>
         <div class="summary-item"><span>Period</span><strong id="scorePeriod" style="font-size:18px;">This month</strong></div>
       </div>
@@ -382,6 +386,7 @@
       reviewSearch: document.getElementById('reviewSearch'),
       reviewThisMonthPoints: document.getElementById('reviewThisMonthPoints'),
       deviceThisMonthPoints: document.getElementById('deviceThisMonthPoints'),
+      commissionThisMonthPoints: document.getElementById('commissionThisMonthPoints'),
       combinedThisMonthPoints: document.getElementById('combinedThisMonthPoints'),
       scorePeriod: document.getElementById('scorePeriod'),
       scoreDetail: document.getElementById('scoreDetail'),
@@ -526,11 +531,19 @@
       return parsed.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
+    function scoreMoney(value) {
+      return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value) || 0);
+    }
+
+    function scorePoints(value) {
+      return `${(Number(value) || 0).toFixed(2)} pts`;
+    }
+
     function renderReviewStaff() {
       if (!reviewReport) return;
       const query = String(els.reviewSearch.value || '').trim().toLowerCase();
       const rows = (reviewReport.staff || []).filter(row =>
-        (row.total_reviews > 0 || Number(row.device_points || 0) > 0 || row.active)
+        (row.total_reviews > 0 || Number(row.device_points || 0) !== 0 || Number(row.personal_sales || 0) !== 0 || row.active)
         && (!query || String(row.staff_name || '').toLowerCase().includes(query)));
       if (!rows.length) {
         els.reviewStaffList.innerHTML = '<div class="empty">No staff yet.</div>';
@@ -543,9 +556,10 @@
           <span class="review-staff-figures">
             <span class="review-figure"><span>GG</span><strong>${Number(row.this_month_points || 0)} pts</strong></span>
             <span class="review-figure"><span>Device</span><strong>${Number(row.device_points || 0)} pts</strong></span>
-            <span class="review-figure total"><span>Total</span><strong>${Number(row.total_points || 0)} pts</strong></span>
+            <span class="review-figure"><span>Sales 1%</span><strong>${scorePoints(row.commission_points)}</strong></span>
+            <span class="review-figure total"><span>Total</span><strong>${scorePoints(row.total_points)}</strong></span>
           </span>
-          <span class="review-staff-foot">${Number(row.this_month_reviews || 0)} reviews · ${Number(row.device_bundle_count || 0)} device bundles this month</span>
+          <span class="review-staff-foot">${scoreMoney(row.personal_sales)} personal sales · ${Number(row.this_month_reviews || 0)} reviews · ${Number(row.device_bundle_count || 0)} device bundles</span>
         </button>
       `).join('');
     }
@@ -560,7 +574,12 @@
         <div class="score-detail-grid">
           <div><span>Google reviews</span><strong>${Number(row.this_month_points || 0)} pts</strong></div>
           <div><span>Device bundles</span><strong>${Number(row.device_points || 0)} pts</strong></div>
-          <div><span>Total</span><strong>${Number(row.total_points || 0)} pts</strong></div>
+          <div><span>Sales commission · 1%</span><strong>${scorePoints(row.commission_points)}</strong></div>
+          <div><span>Total</span><strong>${scorePoints(row.total_points)}</strong></div>
+          <div><span>Personal sales</span><strong>${scoreMoney(row.personal_sales)}</strong></div>
+          <div><span>Products per transaction</span><strong>${(Number(row.products_per_transaction) || 0).toFixed(2)}</strong></div>
+          <div><span>Paid transactions</span><strong>${Number(row.transaction_count || 0)}</strong></div>
+          <div><span>Product units</span><strong>${Number(row.product_units || 0)}</strong></div>
         </div>
         <h3>Device points history</h3>
         ${bundles.length ? bundles.map(item => `
@@ -617,7 +636,8 @@
       const totals = reviewReport.totals || {};
       els.reviewThisMonthPoints.textContent = `${Number(totals.this_month_points || 0)} pts`;
       els.deviceThisMonthPoints.textContent = `${Number(totals.device_points || 0)} pts`;
-      els.combinedThisMonthPoints.textContent = `${Number(totals.combined_points || 0)} pts`;
+      els.commissionThisMonthPoints.textContent = scorePoints(totals.commission_points);
+      els.combinedThisMonthPoints.textContent = scorePoints(totals.combined_points);
       els.scorePeriod.textContent = reviewDateText(reviewReport.this_month_start).replace(/^\d{2} /, '');
       renderReviewStaff();
       renderScoreDetail();

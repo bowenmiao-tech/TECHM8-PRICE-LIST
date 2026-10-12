@@ -67,16 +67,32 @@ begin
   points_report := public.get_staff_points_report(admin_token, 10);
   select s into report_staff from jsonb_array_elements(points_report->'staff') s
   where s->>'normalized_staff_name' = lower(trim(staff_row.display_name));
-  assert (progress#>>'{staff_month_points,total_points}')::integer = coalesce((report_staff->>'total_points')::integer, 0),
+  assert (progress#>>'{staff_month_points,total_points}')::numeric = coalesce((report_staff->>'total_points')::numeric, 0),
     format('POS month points %s did not equal the admin report %s', progress#>>'{staff_month_points,total_points}', report_staff->>'total_points');
-  assert (progress#>>'{staff_month_points,total_points}')::integer
-    = (progress#>>'{staff_month_points,google_review_points}')::integer + (progress#>>'{staff_month_points,bundle_points}')::integer,
-    'Month total is not reviews plus bundles';
+  assert (progress#>>'{staff_month_points,commission_points}')::numeric
+    = round((progress#>>'{monthly_hourly_sales,net_sales}')::numeric * 0.01, 2),
+    'Sales commission is not 1% of personal net sales';
+  assert (progress#>>'{staff_month_points,total_points}')::numeric
+    = (progress#>>'{staff_month_points,google_review_points}')::numeric
+      + (progress#>>'{staff_month_points,bundle_points}')::numeric
+      + (progress#>>'{staff_month_points,commission_points}')::numeric,
+    'Month total does not include all point sources';
   assert not exists (
     select 1 from jsonb_array_elements(points_report->'staff') s
-    where (public.pos_staff_month_points(s->>'staff_name', today_value)->>'total_points')::integer
-      <> coalesce((s->>'total_points')::integer, 0)
+    where (public.pos_today_progress_month_figures(store_row.id, s->>'staff_name', today_value)
+      #>>'{staff_month_points,total_points}')::numeric
+      <> coalesce((s->>'total_points')::numeric, 0)
   ), 'A staff member''s POS month points differ from the admin report';
+  assert (report_staff->>'personal_sales')::numeric
+    = (progress#>>'{monthly_hourly_sales,net_sales}')::numeric,
+    'Admin and POS personal sales differ';
+  assert (report_staff->>'commission_points')::numeric
+    = (progress#>>'{staff_month_points,commission_points}')::numeric,
+    'Admin and POS commission points differ';
+  assert (report_staff->>'products_per_transaction')::numeric
+    = case when (report_staff->>'transaction_count')::integer > 0 then
+        round((report_staff->>'product_units')::numeric / (report_staff->>'transaction_count')::numeric, 2)
+      else 0 end, 'Products per transaction does not match units divided by paid transactions';
 
   -- Zero clears it.
   perform public.set_admin_store_sales_target(admin_token, 'toowong', today_value, 0);

@@ -944,7 +944,7 @@
 
     .target-month-points {
       display: grid;
-      grid-template-columns: minmax(130px, .8fr) repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(130px, .8fr) repeat(3, minmax(0, 1fr));
       gap: 10px;
       margin-top: 20px;
     }
@@ -12917,7 +12917,8 @@
       const monthReviewCount = Number(staffMonth?.google_review_count || 0);
       const monthBundlePoints = Number(staffMonth?.bundle_points || 0);
       const monthBundleOrders = Number(staffMonth?.bundle_order_count || 0);
-      const monthPoints = staffMonth ? Number(staffMonth.total_points ?? monthReviewPoints + monthBundlePoints) : null;
+      const monthCommissionPoints = Number(staffMonth?.commission_points || 0);
+      const monthPoints = staffMonth ? Number(staffMonth.total_points ?? monthReviewPoints + monthBundlePoints + monthCommissionPoints) : null;
       const hourly = progress.monthly_hourly_sales || null;
       const hourlyHours = numberValue(hourly?.hours);
       const hourlyTimesheetHours = numberValue(hourly?.timesheet_hours);
@@ -12930,14 +12931,16 @@
         : hourlyTimesheetHours > 0
           ? `Sales by payment date. Hours from POS shift open and close times; ${hourlyTimesheetHours.toFixed(1)} h taken from daily report timesheets on days the shift was not closed.`
           : 'Sales by payment date. Hours from POS shift open and close times.';
+      const personalSales = numberValue(staffMonth?.personal_sales ?? hourly?.net_sales);
       const hourlyHtml = hourly ? `
         <div class="target-hourly">
           <div>
             <div class="target-hourly-kicker">${escapeHtml(hourlyMonthLabel)}</div>
             <div class="target-hourly-value"><span>Sale:</span>${hourly.sales_per_hour == null ? '—' : escapeHtml(money(hourly.sales_per_hour))}<span>/ per hour</span></div>
+            <div class="target-hourly-note">My sales: ${escapeHtml(money(personalSales))} · Commission (1%): ${escapeHtml(monthCommissionPoints.toFixed(2))} pts</div>
           </div>
           <div class="target-hourly-stats">
-            <div><strong>${escapeHtml(money(hourly.net_sales))}</strong>sales</div>
+            <div><strong>${escapeHtml(money(personalSales))}</strong>my sales</div>
             <div><strong>${escapeHtml(hourlyHours.toFixed(1))} h</strong>worked</div>
             <div><strong>${escapeHtml(String(numberValue(hourly.days_worked)))}</strong>days</div>
           </div>
@@ -13009,10 +13012,11 @@
             <div class="target-month-points" aria-label="My points this month">
               <div class="target-month-points-total">
                 <span>My points · ${escapeHtml(targetMonthLabel)}</span>
-                <strong>${monthPoints == null ? '—' : monthPoints}<small>pts</small></strong>
+                <strong>${monthPoints == null ? '—' : monthPoints.toFixed(2)}<small>pts</small></strong>
               </div>
               <div class="target-score-chip"><span>Google reviews</span><strong>+${monthReviewPoints} pts</strong><em>${monthReviewCount} review${monthReviewCount === 1 ? '' : 's'}</em></div>
               <div class="target-score-chip"><span>Device + accessories</span><strong>+${monthBundlePoints} pts</strong><em>${monthBundleOrders} bundle${monthBundleOrders === 1 ? '' : 's'}</em></div>
+              <div class="target-score-chip"><span>Sales commission · 1%</span><strong>${monthCommissionPoints.toFixed(2)} pts</strong><em>${escapeHtml(money(personalSales))} personal sales</em></div>
             </div>
             <div class="target-score-footer">
               <span><i class="bi bi-shop"></i> Store sales = payments received less refunds this month</span>
@@ -27606,7 +27610,9 @@
           bundle_device_count: 2,
           bundle_accessory_count: 3,
           bundle_points: 25,
-          total_points: 55
+          personal_sales: 6120,
+          commission_points: 61.20,
+          total_points: 116.20
         },
         monthly_hourly_sales: {
           month: brisbaneDateIso().slice(0, 7),
