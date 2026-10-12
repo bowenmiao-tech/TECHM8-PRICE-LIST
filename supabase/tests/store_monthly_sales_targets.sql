@@ -93,6 +93,15 @@ begin
     = case when (report_staff->>'transaction_count')::integer > 0 then
         round((report_staff->>'product_units')::numeric / (report_staff->>'transaction_count')::numeric, 2)
       else 0 end, 'Products per transaction does not match units divided by paid transactions';
+  assert (progress#>>'{staff_month_points,products_per_transaction}')::numeric
+    = (report_staff->>'products_per_transaction')::numeric,
+    'POS and admin products per transaction differ';
+  assert (progress#>>'{staff_month_points,transaction_count}')::integer
+    = (report_staff->>'transaction_count')::integer,
+    'POS and admin paid transaction counts differ';
+  assert (progress#>>'{staff_month_points,product_units}')::integer
+    = (report_staff->>'product_units')::integer,
+    'POS and admin product unit counts differ';
 
   -- Zero clears it.
   perform public.set_admin_store_sales_target(admin_token, 'toowong', today_value, 0);
