@@ -156,6 +156,47 @@ Deno.serve(async (request) => {
       }
 
       await requireStoreAccess(sessionToken, storeCode);
+
+      // An earlier invoice's balance checked out together with new cart items:
+      // one payment, the balance on the old invoice, the items on a new one.
+      if ((url.searchParams.get("mode") || "") === "balance-checkout") {
+        if (!Array.isArray(record.balances) || record.balances.length === 0) {
+          return jsonResponse({ ok: false, message: "At least one invoice balance is required." }, 400);
+        }
+        const sale = record.order && typeof record.order === "object" && !Array.isArray(record.order)
+          ? record.order as JsonRecord
+          : null;
+        if (sale?.exchange_refund) {
+          return jsonResponse({ ok: false, message: "An exchange cannot be checked out with an invoice balance." }, 400);
+        }
+        if (String(sale?.order_note || "").length > 1000) {
+          return jsonResponse({ ok: false, message: "Order note cannot exceed 1000 characters." }, 400);
+        }
+        const saleItems = sale && Array.isArray(sale.items) ? sale.items as JsonRecord[] : [];
+        if (saleItems.some((item) => String(item?.note || "").length > 500)) {
+          return jsonResponse({ ok: false, message: "Item note cannot exceed 500 characters." }, 400);
+        }
+        const result = await callRpc("checkout_pos_cart_with_balances_for_store", {
+          session_token: sessionToken,
+          payload: record,
+        });
+        if (result.status >= 400 || !result.body.ok) return jsonResponse(result.body, result.status);
+        const order = result.body.order && typeof result.body.order === "object"
+          ? result.body.order as JsonRecord
+          : null;
+        const inventory = order ? await syncSavedOrder(sessionToken, storeCode, order) : { ok: true };
+        const balanceInventory: JsonRecord[] = [];
+        for (const paid of Array.isArray(result.body.balance_orders) ? result.body.balance_orders as JsonRecord[] : []) {
+          balanceInventory.push(await syncSavedOrder(sessionToken, storeCode, paid));
+        }
+        return jsonResponse({
+          ...result.body,
+          inventory,
+          balance_inventory: balanceInventory,
+          inventory_sync_pending: !inventory.ok || balanceInventory.some((entry) => !entry.ok),
+        });
+      }
+
       if (String(record.order_note || "").length > 1000) {
         return jsonResponse({ ok: false, message: "Order note cannot exceed 1000 characters." }, 400);
       }
