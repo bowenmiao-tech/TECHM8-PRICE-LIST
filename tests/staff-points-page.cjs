@@ -43,7 +43,7 @@ const path = require('path');
   await page.locator('[data-review-staff="fiona"]').click();
   if (!await page.locator('#scoreDetail').isVisible()) throw new Error('Staff detail did not open');
   const detail = await page.locator('#scoreDetail').innerText();
-  if (!detail.includes('2.00') || !detail.includes('100') || !detail.includes('200') || !detail.includes('$1,000.00')) throw new Error('Sales and average product metrics are missing');
+  if (!detail.includes('2.00') || !detail.includes('100') || !detail.includes('200') || !detail.includes('Products & repairs') || !detail.includes('$1,000.00')) throw new Error('Sales and average product metrics are missing');
   if (!await page.locator('#reviewHistory').isVisible()) throw new Error('Review history did not open');
   await page.setViewportSize({ width: 390, height: 844 });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

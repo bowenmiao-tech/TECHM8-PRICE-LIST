@@ -46,7 +46,7 @@ const { chromium } = require('playwright');
     assert.match(text, /\$6,120\.00/);
     assert.match(text, /Sales points \(1%\): 61\.20 pts/);
     assert.match(text, /Products per transaction\s*2\.00/i);
-    assert.match(text, /100 paid transactions · 200 products/);
+    assert.match(text, /100 paid transactions · 200 products & repairs/);
     assert.doesNotMatch(text, /per hour|worked|days\s*$/im, 'The lower card must not show hourly performance');
     assert.doesNotMatch(text, /today's score/i, 'The daily score should no longer be shown');
     assert.doesNotMatch(text, /default target/i, 'The daily target source should no longer be shown');
