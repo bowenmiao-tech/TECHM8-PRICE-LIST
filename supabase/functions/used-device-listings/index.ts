@@ -83,6 +83,25 @@ Deno.serve(async request => {
       return reply(await rpc('get_used_device_order_holds', {device_codes: deviceCodes}));
     }
 
+    if (action === 'cancel-unpaid-reservation') {
+      const deviceCode = String(input.device_code || '').trim();
+      const orderCode = String(input.order_code || '').trim();
+      const storeCode = String(input.store_code || '').trim();
+      const actor = String(input.actor || '').trim();
+      if (!/^USED-[A-Z0-9]{6,32}$/.test(deviceCode) || !/^TM8-[A-Z0-9-]{6,40}$/.test(orderCode)) {
+        throw new Error('Invalid device or order code.');
+      }
+      if (!/^[a-z0-9_-]{2,40}$/.test(storeCode) || !actor || actor.length > 120) {
+        throw new Error('Store and staff are required.');
+      }
+      return reply(await rpc('cancel_unpaid_used_device_reservation', {
+        target_device_code: deviceCode,
+        target_order_code: orderCode,
+        target_store_code: storeCode,
+        target_actor: actor,
+      }));
+    }
+
     const deviceCode = String(input.device_code || '').trim();
     if (!/^USED-[A-Z0-9]{6,32}$/.test(deviceCode)) throw new Error('Invalid device code.');
 

@@ -16,13 +16,15 @@ const path = require('path');
     const points = route.request().url().includes('mode=points');
     return route.fulfill({ contentType: 'application/json', body: JSON.stringify(points ? {
       ok: true, this_month_start: '2026-10-01',
-      totals: { this_month_points: 15, device_points: 20, combined_points: 35 },
+      totals: { this_month_points: 15, device_points: 20, commission_points: 15, combined_points: 50 },
       staff: [
         { staff_name: 'Fiona', normalized_staff_name: 'fiona', active: true,
-          this_month_points: 0, device_points: 20, total_points: 20,
+          this_month_points: 0, device_points: 20, personal_sales: 1000, commission_points: 10,
+          transaction_count: 100, product_units: 200, products_per_transaction: 2, total_points: 30,
           this_month_reviews: 0, device_bundle_count: 2, total_reviews: 5 },
         { staff_name: 'Bowen', normalized_staff_name: 'bowen', active: true,
-          this_month_points: 15, device_points: 0, total_points: 15,
+          this_month_points: 15, device_points: 0, personal_sales: 500, commission_points: 5,
+          transaction_count: 10, product_units: 15, products_per_transaction: 1.5, total_points: 20,
           this_month_reviews: 3, device_bundle_count: 0, total_reviews: 4 }
       ],
       device_events: [{ normalized_staff_name: 'fiona', order_code: 'POS-TEST',
@@ -33,11 +35,13 @@ const path = require('path');
   await page.goto(pathToFileURL(path.resolve(__dirname, '..', 'stocktake-admin.html')).href);
   await page.locator('.review-staff-card').first().waitFor();
   const summary = await page.locator('.points-panel').innerText();
-  if (!summary.includes('35 pts') || !summary.includes('Fiona')) throw new Error('Score overview is missing');
+  if (!summary.includes('50.00 pts') || !summary.includes('Fiona') || !summary.includes('15.00 pts')) throw new Error('Score overview is missing');
   if (await page.locator('#reviewHistory').isVisible()) throw new Error('Review history should start collapsed');
   if (process.env.SCORE_SCREENSHOT) await page.screenshot({ path: process.env.SCORE_SCREENSHOT });
   await page.locator('[data-review-staff="fiona"]').click();
   if (!await page.locator('#scoreDetail').isVisible()) throw new Error('Staff detail did not open');
+  const detail = await page.locator('#scoreDetail').innerText();
+  if (!detail.includes('2.00') || !detail.includes('100') || !detail.includes('200') || !detail.includes('$1,000.00')) throw new Error('Sales and average product metrics are missing');
   if (!await page.locator('#reviewHistory').isVisible()) throw new Error('Review history did not open');
   await browser.close();
   console.log('Staff points page: overview and drilldown passed');

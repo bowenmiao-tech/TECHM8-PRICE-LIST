@@ -38,11 +38,13 @@ const { chromium } = require('playwright');
     assert.match(text, /35%/);
     assert.match(text, /\$25,750 to go/);
     assert.match(text, /about \$954 a day/);
-    assert.match(text, /55\s*pts/);
+    assert.match(text, /116\.20\s*pts/);
     assert.match(text, /\+30 pts/);
     assert.match(text, /6 reviews/);
     assert.match(text, /\+25 pts/);
     assert.match(text, /2 bundles/);
+    assert.match(text, /\$6,120\.00 personal sales/);
+    assert.match(text, /Commission \(1%\): 61\.20 pts/);
     assert.doesNotMatch(text, /today's score/i, 'The daily score should no longer be shown');
     assert.doesNotMatch(text, /default target/i, 'The daily target source should no longer be shown');
     await pos.screenshot({ path: path.join(screenshotDir, 'pos-store-month-target-desktop.png') });
@@ -51,9 +53,9 @@ const { chromium } = require('playwright');
     await pos.locator('[data-google-review-add]').click();
     await pos.locator('#googleReviewCustomer').fill('Month Points Customer');
     await pos.locator('#googleReviewForm button[type=submit]').click();
-    await pos.waitForFunction(() => state.todayProgress.staff_month_points.total_points === 60);
+    await pos.waitForFunction(() => state.todayProgress.staff_month_points.total_points === 121.2);
     text = await card.innerText();
-    assert.match(text, /60\s*pts/);
+    assert.match(text, /121\.20\s*pts/);
     assert.match(text, /\+35 pts/);
 
     // No target yet, then a target that has been passed.

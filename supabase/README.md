@@ -437,6 +437,12 @@ Intake photos use this same update path after the ticket and customer signature 
 
 `index.html` provides a `Forgot password?` flow for active staff accounts. The public response is deliberately identical for known and unknown email addresses, so the form cannot be used to enumerate staff. A valid request creates a random one-time token, stores only its SHA-256 digest, and emails a link that expires after 30 minutes. Completing the reset updates the password, optionally updates the four-digit PIN, and revokes all existing sessions for that staff member.
 
+## Staff invitations and deletion
+
+`stocktake-admin.html` lets an administrator add a staff name, email and one or more stores. The staff management edge function creates an account without a usable password, issues a single-use 30-minute setup link and sends it through the existing protected email relay. The employee must set both a password and four-digit POS PIN through that link before signing in. If delivery fails, the account appears as pending and the administrator can use **Resend invite**. The resend action is throttled by the existing password-reset token limit.
+
+**Delete staff** archives the account, revokes sessions and outstanding setup links, and removes store and inventory access. Historical report references retain the staff ID and name. Administrator accounts cannot be deleted. The database changes are in `20261012135843_staff_invites_and_archive.sql`; deploy that migration before updating `pos-staff-management` and `staff-reset-email-relay`, then publish the updated `stocktake-admin.html` and `index.html`. The staff management function uses `STAFF_RESET_RELAY_URL` and `STAFF_RESET_RELAY_SECRET` from the existing password reset setup.
+
 Database objects are installed by:
 
 ```text

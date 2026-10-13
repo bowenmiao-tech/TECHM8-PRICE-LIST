@@ -360,6 +360,65 @@ async function authorize(
   return result;
 }
 
+async function restoreUnpaidOnlineReservation(actor: JsonRecord, data: JsonRecord): Promise<Response> {
+  const deviceCode = textValue(data.device_code);
+  const orderCode = textValue(data.order_code);
+  if (!/^USED-[A-Z0-9]{6,32}$/.test(deviceCode) || !/^TM8-[A-Z0-9-]{6,40}$/.test(orderCode)) {
+    return jsonResponse({ ok: false, message: "Invalid device or website order code." }, 400);
+  }
+
+  const { url, serviceKey } = supabaseConfig();
+  const lookup = new URL(`${url}/rest/v1/pos_used_devices`);
+  lookup.searchParams.set("select", "device_code,store_id,status,online_order_code,online_hold_kind");
+  lookup.searchParams.set("device_code", `eq.${deviceCode}`);
+  lookup.searchParams.set("limit", "1");
+  const stockResponse = await fetch(lookup.toString(), {
+    headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+  });
+  if (!stockResponse.ok) return jsonResponse({ ok: false, message: "Could not verify the device." }, 503);
+  const stockRows = await stockResponse.json().catch(() => []) as JsonRecord[];
+  const device = stockRows[0];
+  if (!device || String(device.store_id) !== String(actor.store_id)) {
+    return jsonResponse({ ok: false, message: "This device is not at your store." }, 403);
+  }
+  if (device.status !== "ready_for_sale" || device.online_hold_kind !== "reserved"
+    || device.online_order_code !== orderCode) {
+    return jsonResponse({ ok: false, message: "This unpaid website reservation has changed. Refresh the device first." }, 409);
+  }
+
+  const websiteUrl = Deno.env.get("WEBSITE_FUNCTIONS_URL") || "";
+  const secret = Deno.env.get("USED_DEVICE_PUBLISH_SECRET") || "";
+  if (!websiteUrl || !secret) {
+    return jsonResponse({ ok: false, message: "Website order cancellation is not configured." }, 503);
+  }
+  const cancelResponse = await fetch(`${websiteUrl.replace(/\/$/, "")}/used-device-listings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-publish-secret": secret },
+    body: JSON.stringify({
+      action: "cancel-unpaid-reservation",
+      device_code: deviceCode,
+      order_code: orderCode,
+      store_code: String(actor.store_code),
+      actor: String(actor.staff_name),
+    }),
+  });
+  const cancelled = await cancelResponse.json().catch(() => ({})) as JsonRecord;
+  if (!cancelResponse.ok || cancelled.ok !== true) {
+    return jsonResponse({ ok: false, message: String(cancelled.message || "The website order could not be cancelled.") }, 409);
+  }
+
+  const released = await rpcJson("release_pos_used_devices_online", {
+    payload: {
+      order_code: orderCode,
+      reason: `Unpaid pickup order cancelled by ${String(actor.staff_name)} at ${String(actor.store_code)}`,
+    },
+  });
+  if (released.status >= 400 || released.body.ok !== true) {
+    return jsonResponse({ ok: false, message: "The website order was cancelled, but POS stock has not refreshed yet. Retry or wait for the automatic sync." }, 503);
+  }
+  return jsonResponse({ ok: true, device_code: deviceCode, order_code: orderCode, restored: true });
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
@@ -581,6 +640,9 @@ Deno.serve(async (request) => {
           session_token: sessionToken,
           payload: safeData,
         });
+      }
+      if (action === "restore-online-reservation") {
+        return await restoreUnpaidOnlineReservation(actor, safeData);
       }
       if (action === "add-cost") {
         const deviceCode = String(data.device_code || "").trim();

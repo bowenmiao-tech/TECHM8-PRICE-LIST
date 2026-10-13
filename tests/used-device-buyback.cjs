@@ -366,7 +366,7 @@ const { chromium } = require('playwright');
       const reserved = {
         id: 'USED-WEB', device_code: 'USED-WEB', category: 'Phone', brand: 'Apple', model: 'iPhone 14',
         status: 'ready_for_sale', condition_grade: 'Good', sale_price: 599, inspection: {}, seller: {}, acquisition: {},
-        online_order: { order_code: 'TM8-20260921-ABC123', kind: 'reserved', until: null }
+        online_order: { order_code: 'TM8-20260921-ABC123', kind: 'reserved', until: null, fulfillment_method: 'pickup' }
       };
       const soldOnline = {
         id: 'USED-WEBSOLD', device_code: 'USED-WEBSOLD', category: 'Phone', brand: 'Apple', model: 'iPhone 13',
@@ -382,16 +382,39 @@ const { chromium } = require('playwright');
       sell.click();
       openUsedDeviceDetail('USED-WEB');
       const reservedDetail = els.usedDeviceDetailBody.innerText;
+      const restoreAvailable = !!els.usedDeviceDetailBody.querySelector('[data-used-restore-online="USED-WEB"]');
       closeUsedDeviceDetail();
       openUsedDeviceDetail('USED-WEBSOLD');
       const soldDetail = els.usedDeviceDetailBody.innerText;
+      const soldRestoreAvailable = !!els.usedDeviceDetailBody.querySelector('[data-used-restore-online]');
       closeUsedDeviceDetail();
-      return { rowText, sellWasDisabled: row.querySelector('[data-used-sell]').title, cart: state.cart.length, reservedDetail, soldDetail };
+      return { rowText, sellWasDisabled: row.querySelector('[data-used-sell]').title, cart: state.cart.length, reservedDetail, soldDetail, restoreAvailable, soldRestoreAvailable };
     });
     assert.match(onlineOrder.rowText, /Reserved online/, 'The row does not say the device is reserved online');
     assert.equal(onlineOrder.cart, 0, 'A device reserved online went into the counter cart');
     assert.match(onlineOrder.reservedDetail, /website order TM8-20260921-ABC123, to be paid in store/);
     assert.match(onlineOrder.soldDetail, /Sold online on website order TM8-20260921-DEF456/);
+    assert.equal(onlineOrder.restoreAvailable, true, 'An unpaid reserved device has no restore button');
+    assert.equal(onlineOrder.soldRestoreAvailable, false, 'A sold device has a restore button');
+    await page.evaluate(() => {
+      state.usedDevices = [{
+        id: 'USED-WEB', device_code: 'USED-WEB', category: 'Phone', brand: 'Apple', model: 'iPhone 14',
+        status: 'ready_for_sale', condition_grade: 'Good', sale_price: 599, inspection: {}, seller: {}, acquisition: {},
+        online_order: { order_code: 'TM8-20260921-ABC123', kind: 'reserved', until: null, fulfillment_method: 'pickup' }
+      }];
+      window.savedRestore = null;
+      usedDeviceApiPost = async (action, payload) => {
+        window.savedRestore = { action, payload };
+        return { ok: true };
+      };
+      openUsedDeviceDetail('USED-WEB');
+    });
+    assert.equal(await page.locator('#usedDeviceDetailModal.show').count(), 1);
+    await page.locator('[data-used-restore-online="USED-WEB"]').click();
+    await page.waitForFunction(() => !document.getElementById('usedDeviceDetailModal').classList.contains('show'));
+    assert.deepEqual(await page.evaluate(() => window.savedRestore), { action: 'restore-online-reservation', payload: {
+      store_code: 'toowong', staff_name: 'Tester', device_code: 'USED-WEB', order_code: 'TM8-20260921-ABC123'
+    } });
 
     // Staff see what was repaired, never what it cost.
     await page.evaluate(async () => {
@@ -431,7 +454,7 @@ const { chromium } = require('playwright');
     assert.equal(websitePanel.readyDisabled, false, 'A finished device could not be published');
     assert.match(websitePanel.readyLabel, /Put on Sale & Website/);
     assert.deepEqual(errors, [], `Page errors: ${errors.join(', ')}`);
-    console.log('PASS: signed buyback review, seller signature, immutable agreement links and seller-ID retrieval, devices reserved or sold online are shown and not sold at the counter, Sell adds straight to Checkout, repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, required device and seller-ID evidence, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
+    console.log('PASS: signed buyback review, seller signature, immutable agreement links and seller-ID retrieval, devices reserved or sold online are shown and not sold at the counter, unpaid online reservations offer restore, Sell adds straight to Checkout, repairs listed without amounts, one-press publish panel with what is missing, optional seller phone and email, draft photo deletion on the buy form, locked purchase inspection on the device detail with the pre-sale test mounted, device-first intake layout, unpriced purchase, payout destination rules, required device and seller-ID evidence, form preservation, direct inspection choices, cart price lock, external buyer verification with optional address, zero-photo and blocked-device gates.');
   } finally {
     await browser.close();
     server.close();

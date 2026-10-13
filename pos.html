@@ -944,7 +944,7 @@
 
     .target-month-points {
       display: grid;
-      grid-template-columns: minmax(130px, .8fr) repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(130px, .8fr) repeat(3, minmax(0, 1fr));
       gap: 10px;
       margin-top: 20px;
     }
@@ -7181,6 +7181,12 @@
     .cart-return-credit-amount { color: #8a4300; font-size: 18px; font-weight: 950; }
     .cart-return-credit-meta { color: #6a5848; font-size: 11px; font-weight: 750; line-height: 1.35; }
     .cart-return-credit .icon-action { flex: 0 0 auto; }
+    .cart-balance-line { display: grid; gap: 7px; padding: 13px; border: 1px solid #9cc3ea; border-left: 4px solid #2f6fb3; border-radius: 8px; background: #f1f7fe; }
+    .cart-balance-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .cart-balance-title { display: flex; align-items: center; gap: 7px; color: #1d4f86; font-weight: 950; }
+    .cart-balance-amount { color: #1d4f86; font-size: 18px; font-weight: 950; white-space: nowrap; }
+    .cart-balance-meta { color: #4a5d72; font-size: 11px; font-weight: 750; line-height: 1.35; }
+    .cart-balance-line .icon-action { flex: 0 0 auto; }
     @media (max-width: 620px) { .refund-credit-create { grid-template-columns: 1fr 1fr; } .refund-credit-create button { grid-column: 1 / -1; } }
 
     .ticket-detail-modal {
@@ -9328,6 +9334,7 @@
         <div class="summary-box">
           <div class="summary-line"><span>Items</span><strong id="summaryItems">0</strong></div>
           <div class="summary-line"><span>Subtotal</span><strong id="summarySubtotal">$0.00</strong></div>
+          <div id="summaryBalanceRow" class="summary-line" hidden><span>Earlier invoice balance</span><strong id="summaryBalance">$0.00</strong></div>
           <div id="summaryReturnCreditRow" class="summary-line" hidden><span>Return credit</span><strong id="summaryReturnCredit">-$0.00</strong></div>
           <div class="summary-line"><span>GST Included</span><strong id="summaryGst">$0.00</strong></div>
           <div class="summary-line total"><span>Total</span><strong id="summaryTotal">$0.00</strong></div>
@@ -10673,6 +10680,8 @@
       itemNoteCancel: document.getElementById('itemNoteCancel'),
       summaryItems: document.getElementById('summaryItems'),
       summarySubtotal: document.getElementById('summarySubtotal'),
+      summaryBalanceRow: document.getElementById('summaryBalanceRow'),
+      summaryBalance: document.getElementById('summaryBalance'),
       summaryReturnCreditRow: document.getElementById('summaryReturnCreditRow'),
       summaryReturnCredit: document.getElementById('summaryReturnCredit'),
       summaryGst: document.getElementById('summaryGst'),
@@ -12917,7 +12926,8 @@
       const monthReviewCount = Number(staffMonth?.google_review_count || 0);
       const monthBundlePoints = Number(staffMonth?.bundle_points || 0);
       const monthBundleOrders = Number(staffMonth?.bundle_order_count || 0);
-      const monthPoints = staffMonth ? Number(staffMonth.total_points ?? monthReviewPoints + monthBundlePoints) : null;
+      const monthCommissionPoints = Number(staffMonth?.commission_points || 0);
+      const monthPoints = staffMonth ? Number(staffMonth.total_points ?? monthReviewPoints + monthBundlePoints + monthCommissionPoints) : null;
       const hourly = progress.monthly_hourly_sales || null;
       const hourlyHours = numberValue(hourly?.hours);
       const hourlyTimesheetHours = numberValue(hourly?.timesheet_hours);
@@ -12930,14 +12940,16 @@
         : hourlyTimesheetHours > 0
           ? `Sales by payment date. Hours from POS shift open and close times; ${hourlyTimesheetHours.toFixed(1)} h taken from daily report timesheets on days the shift was not closed.`
           : 'Sales by payment date. Hours from POS shift open and close times.';
+      const personalSales = numberValue(staffMonth?.personal_sales ?? hourly?.net_sales);
       const hourlyHtml = hourly ? `
         <div class="target-hourly">
           <div>
             <div class="target-hourly-kicker">${escapeHtml(hourlyMonthLabel)}</div>
             <div class="target-hourly-value"><span>Sale:</span>${hourly.sales_per_hour == null ? '—' : escapeHtml(money(hourly.sales_per_hour))}<span>/ per hour</span></div>
+            <div class="target-hourly-note">My sales: ${escapeHtml(money(personalSales))} · Commission (1%): ${escapeHtml(monthCommissionPoints.toFixed(2))} pts</div>
           </div>
           <div class="target-hourly-stats">
-            <div><strong>${escapeHtml(money(hourly.net_sales))}</strong>sales</div>
+            <div><strong>${escapeHtml(money(personalSales))}</strong>my sales</div>
             <div><strong>${escapeHtml(hourlyHours.toFixed(1))} h</strong>worked</div>
             <div><strong>${escapeHtml(String(numberValue(hourly.days_worked)))}</strong>days</div>
           </div>
@@ -13009,10 +13021,11 @@
             <div class="target-month-points" aria-label="My points this month">
               <div class="target-month-points-total">
                 <span>My points · ${escapeHtml(targetMonthLabel)}</span>
-                <strong>${monthPoints == null ? '—' : monthPoints}<small>pts</small></strong>
+                <strong>${monthPoints == null ? '—' : monthPoints.toFixed(2)}<small>pts</small></strong>
               </div>
               <div class="target-score-chip"><span>Google reviews</span><strong>+${monthReviewPoints} pts</strong><em>${monthReviewCount} review${monthReviewCount === 1 ? '' : 's'}</em></div>
               <div class="target-score-chip"><span>Device + accessories</span><strong>+${monthBundlePoints} pts</strong><em>${monthBundleOrders} bundle${monthBundleOrders === 1 ? '' : 's'}</em></div>
+              <div class="target-score-chip"><span>Sales commission · 1%</span><strong>${monthCommissionPoints.toFixed(2)} pts</strong><em>${escapeHtml(money(personalSales))} personal sales</em></div>
             </div>
             <div class="target-score-footer">
               <span><i class="bi bi-shop"></i> Store sales = payments received less refunds this month</span>
@@ -21032,6 +21045,12 @@
         ${device.online_order ? `
           <div class="used-online-notice"><i class="bi bi-globe2" aria-hidden="true"></i><span>${escapeHtml(usedDeviceOnlineOrderText(device))}</span></div>
         ` : ''}
+        ${device.status === 'ready_for_sale' && device.online_order?.kind === 'reserved' && device.online_order?.fulfillment_method === 'pickup' ? `
+          <div class="used-detail-actions">
+            <button class="repair-action" type="button" data-used-restore-online="${escapeHtml(device.id)}"><i class="bi bi-arrow-counterclockwise"></i> Restore for sale</button>
+            <div class="used-form-error" role="alert" id="usedDeviceRestoreError"></div>
+          </div>
+        ` : ''}
         ${device.status === 'sold' && device.sold_online_order_code ? `
           <div class="used-online-notice sold"><i class="bi bi-bag-check" aria-hidden="true"></i><span>Sold online on website order ${escapeHtml(device.sold_online_order_code)}. The website admin has the order and payment.</span></div>
         ` : ''}
@@ -21374,6 +21393,33 @@
       state.selectedUsedDeviceId = '';
     }
 
+    async function restoreUnpaidOnlineDevice(deviceId, button) {
+      const device = state.usedDevices.find(item => item.id === deviceId);
+      const orderCode = device?.online_order?.order_code;
+      if (!device || device.status !== 'ready_for_sale' || device.online_order?.kind !== 'reserved'
+        || device.online_order?.fulfillment_method !== 'pickup' || !orderCode) return;
+      if (!window.confirm(`Cancel unpaid website order ${orderCode} and restore this device for sale? Confirm the customer has not paid or collected it.`)) return;
+      const error = els.usedDeviceDetailBody.querySelector('#usedDeviceRestoreError');
+      if (error) error.textContent = '';
+      button.disabled = true;
+      try {
+        await usedDeviceApiPost('restore-online-reservation', {
+          store_code: repairTicketStoreCode(),
+          staff_name: state.selectedStaffName,
+          device_code: device.id,
+          order_code: orderCode
+        });
+        closeUsedDeviceDetail();
+        await loadUsedDevices();
+        showToast('Unpaid website order cancelled. Device restored for sale.');
+      } catch (requestError) {
+        console.error(requestError);
+        if (error) error.textContent = requestError.message || 'The device could not be restored.';
+      } finally {
+        button.disabled = false;
+      }
+    }
+
     async function updateUsedDevice(form) {
       const device = selectedUsedDevice();
       if (!device) return;
@@ -21527,7 +21573,7 @@
 
     function openItemNoteModal(productId) {
       const item = state.cart.find(cartItem => String(cartItem.id) === String(productId));
-      if (!item) return;
+      if (!item || isBalanceCartItem(item)) return;
       state.itemNoteProductId = String(item.id);
       els.itemNoteTitle.textContent = noteText(item.note, 500).trim() ? 'Edit Note' : 'Add Note';
       els.itemNoteProduct.textContent = item.name || item.sku || 'Selected item';
@@ -21555,7 +21601,7 @@
 
     function updateCartItemPrice(productId, rawValue) {
       const item = state.cart.find(cartItem => String(cartItem.id) === String(productId));
-      if (!item) return false;
+      if (!item || isBalanceCartItem(item)) return false;
       // The database refuses a used-device line whose price differs from the
       // saved sale price, and it refuses it while the order is being written.
       // Blocking the edit here keeps that from surfacing as a failed checkout.
@@ -21634,6 +21680,21 @@
               </div>
             ` : ''}
             ${state.cart.map(item => {
+              if (isBalanceCartItem(item)) return `
+                <div class="cart-balance-line">
+                  <div class="cart-balance-head">
+                    <div>
+                      <div class="cart-balance-title"><i class="bi bi-cash-coin"></i>Balance · Invoice #${escapeHtml(String(item.balance_invoice_number || ''))}</div>
+                      <div class="cart-balance-meta">${escapeHtml(item.balance_customer_name || 'Walk-in Customer')}${item.balance_customer_phone ? ` · ${escapeHtml(item.balance_customer_phone)}` : ''}</div>
+                    </div>
+                    <button class="icon-action" type="button" data-remove="${escapeHtml(item.id)}" title="Remove balance from cart" aria-label="Remove balance for invoice ${escapeHtml(String(item.balance_invoice_number || ''))}"><i class="bi bi-x-lg"></i></button>
+                  </div>
+                  <div class="cart-balance-head">
+                    <div class="cart-balance-meta">Invoice total ${money(item.balance_order_total || 0)} · already paid ${money(item.balance_already_paid || 0)}</div>
+                    <div class="cart-balance-amount">${money(item.sale_price)}</div>
+                  </div>
+                </div>
+              `;
               const overrideText = cartPriceOverrideText(item);
               const hasNote = Boolean(noteText(item.note, 500).trim());
               return `
@@ -21687,13 +21748,18 @@
         `;
       }
 
-      const itemCount = state.cart.reduce((sum, item) => sum + item.qty, 0);
-      const subtotal = state.cart.reduce((sum, item) => sum + item.sale_price * item.qty, 0);
+      const saleItems = cartSaleItems();
+      const itemCount = saleItems.reduce((sum, item) => sum + item.qty, 0);
+      const itemSubtotal = cartSaleTotal();
+      const balanceTotal = cartBalanceTotal();
+      const subtotal = itemSubtotal + balanceTotal;
       const returnCredit = exchangeReturn ? numberValue(exchangeReturn.total) : 0;
       const amountDue = Math.max(0, roundedMoneyValue(subtotal - returnCredit));
       const gst = subtotal / 11;
       els.summaryItems.textContent = itemCount;
-      els.summarySubtotal.textContent = money(subtotal);
+      els.summarySubtotal.textContent = money(itemSubtotal);
+      els.summaryBalanceRow.hidden = balanceTotal <= 0;
+      els.summaryBalance.textContent = money(balanceTotal);
       els.summaryReturnCreditRow.hidden = returnCredit <= 0;
       els.summaryReturnCredit.textContent = `-${money(returnCredit)}`;
       els.summaryGst.textContent = money(gst);
@@ -22765,6 +22831,13 @@
         return;
       }
       if (ticket.paymentStatus === 'deposit') {
+        const owingInvoice = (Array.isArray(ticket.invoiceHistory) ? ticket.invoiceHistory : [])
+          .find(invoice => numberValue(invoice.balanceDue) > 0);
+        const owingOrderId = (owingInvoice && owingInvoice.orderId) || ticket.invoiceOrderId;
+        if (owingOrderId) {
+          addBalanceToCart(owingOrderId);
+          return;
+        }
         showToast('This card has a deposit owing. Take the balance from the ticket first.');
         return;
       }
@@ -22862,7 +22935,7 @@
     function changeQty(productId, dir) {
       const item = state.cart.find(cartItem => cartItem.id === productId);
       if (!item) return;
-      if (item.is_used_device || item.is_repair) return;
+      if (item.is_used_device || item.is_repair || isBalanceCartItem(item)) return;
       const nextQty = item.qty + Number(dir);
       if (nextQty <= 0) {
         state.cart = state.cart.filter(cartItem => cartItem.id !== productId);
@@ -22939,6 +23012,33 @@
       return roundedMoneyValue(state.cart.reduce((sum, item) => sum + item.sale_price * item.qty, 0));
     }
 
+    // A balance line is money owed on an earlier invoice, not something being
+    // sold: it never becomes an order line. The id prefix still identifies it
+    // if a held cart comes back without its flags.
+    function isBalanceCartItem(item) {
+      return Boolean(item) && (item.is_balance === true || String(item.id || '').startsWith('balance-'));
+    }
+
+    function balanceCartOrderId(item) {
+      return String(item.balance_order_id || String(item.id || '').replace(/^balance-/, ''));
+    }
+
+    function cartBalanceItems() {
+      return state.cart.filter(isBalanceCartItem);
+    }
+
+    function cartSaleItems() {
+      return state.cart.filter(item => !isBalanceCartItem(item));
+    }
+
+    function cartBalanceTotal() {
+      return roundedMoneyValue(cartBalanceItems().reduce((sum, item) => sum + numberValue(item.sale_price), 0));
+    }
+
+    function cartSaleTotal() {
+      return roundedMoneyValue(cartSaleItems().reduce((sum, item) => sum + item.sale_price * item.qty, 0));
+    }
+
     function exchangeReturnTotal() {
       return state.exchangeReturn ? roundedMoneyValue(state.exchangeReturn.total) : 0;
     }
@@ -22952,7 +23052,7 @@
     }
 
     function cartItemCount() {
-      return state.cart.reduce((sum, item) => sum + item.qty, 0);
+      return cartSaleItems().reduce((sum, item) => sum + item.qty, 0);
     }
 
     function paymentPaidTotal() {
@@ -22960,8 +23060,6 @@
     }
 
     function paymentSessionTotal() {
-      const balanceTotal = numberValue(state.paymentSession && state.paymentSession.balanceTotal);
-      if (state.paymentSession && state.paymentSession.balanceOrderId && balanceTotal > 0) return roundedMoneyValue(balanceTotal);
       return cartTotal();
     }
 
@@ -23006,6 +23104,17 @@
       return !name || name === 'walk-in customer' || customerSearchName(customer).toLowerCase() === name;
     }
 
+    // Store Credit on a balance must come from the invoice's own customer, so
+    // the earlier invoice's contact details stand in for the order record.
+    function cartBalanceCustomerOrder() {
+      const item = cartBalanceItems()[0];
+      return item ? {
+        customer_code: item.balance_customer_code || '',
+        customer_phone: item.balance_customer_phone || '',
+        customer_name: item.balance_customer_name || 'Walk-in Customer'
+      } : null;
+    }
+
     async function loadStoreCreditForPayment() {
       const session = state.paymentSession;
       session.creditLoading = true;
@@ -23013,8 +23122,9 @@
       renderPaymentModal();
       try {
         let customer = null;
-        if (session.balanceOrderId) {
-          const order = session.balanceOrder;
+        const balanceOrder = cartBalanceCustomerOrder();
+        if (balanceOrder) {
+          const order = balanceOrder;
           const selected = selectedCustomerRecord();
           if (selected && paymentCreditCustomerMatchesOrder(selected, order)) customer = selected;
           if (!customer && order && order.customer_code) {
@@ -23034,7 +23144,7 @@
           customer = selectedCustomerRecord();
         }
         if (!customer || !customer.id) throw new Error('Select a customer account in POS before using Store Credit.');
-        if (session.balanceOrderId && !paymentCreditCustomerMatchesOrder(customer, session.balanceOrder)) {
+        if (balanceOrder && !paymentCreditCustomerMatchesOrder(customer, balanceOrder)) {
           throw new Error('The selected customer does not match this invoice.');
         }
         const url = new URL(POS_SALES_ORDERS_ENDPOINT);
@@ -23112,26 +23222,6 @@
       const gst = total / 11;
       const paid = paymentPaidTotal();
       const remaining = paymentRemaining();
-      if (state.paymentSession.balanceOrderId) {
-        const paidLines = state.paymentSession.payments.length
-          ? state.paymentSession.payments.map(payment => `
-            <div class="paid-line">
-              <span>${escapeHtml(paymentMethodLabel(payment.method))}</span>
-              <strong>${money(payment.amount)}</strong>
-            </div>
-          `).join('')
-          : '<div class="paid-empty">No payment confirmed yet.</div>';
-        els.paymentSummaryCard.innerHTML = `
-          <div class="payment-summary-line"><span>Invoice</span><strong>#${escapeHtml(state.paymentSession.balanceInvoiceNumber || '')}</strong></div>
-          <div class="payment-summary-line"><span>Order total</span><strong>${money(state.paymentSession.balanceOrderTotal || 0)}</strong></div>
-          <div class="payment-summary-line"><span>Deposit already paid</span><strong>${money(state.paymentSession.balanceAlreadyPaid || 0)}</strong></div>
-          <div class="payment-summary-line total"><span>Balance due</span><strong>${money(total)}</strong></div>
-          <div class="paid-list">${paidLines}</div>
-          <div class="payment-summary-line"><span>Paying now</span><strong>${money(paid)}</strong></div>
-          <div class="payment-summary-line due"><span>Still owing</span><strong>${money(remaining)}</strong></div>
-        `;
-        return;
-      }
       const paidLines = state.paymentSession.payments.length
         ? state.paymentSession.payments.map(payment => `
           <div class="paid-line">
@@ -23141,8 +23231,14 @@
         `).join('')
         : '<div class="paid-empty">No payment confirmed yet.</div>';
 
+      // Payment covers the new items first; whatever is left goes to the
+      // earlier invoice balances in cart order.
+      const balanceRows = cartBalanceItems().map(item => `
+        <div class="payment-summary-line"><span>Invoice #${escapeHtml(String(item.balance_invoice_number || ''))} balance</span><strong>${money(item.sale_price)}</strong></div>
+      `).join('');
       els.paymentSummaryCard.innerHTML = `
         <div class="payment-summary-line"><span>Total Items</span><strong>${cartItemCount()}</strong></div>
+        ${balanceRows ? `<div class="payment-summary-line"><span>New items</span><strong>${money(cartSaleTotal())}</strong></div>${balanceRows}` : ''}
         <div class="payment-summary-line"><span>Subtotal</span><strong>${money(total)}</strong></div>
         <div class="payment-summary-line"><span>GST Included</span><strong>${money(gst)}</strong></div>
         <div class="payment-summary-line total"><span>Total</span><strong>${money(total)}</strong></div>
@@ -23191,7 +23287,7 @@
       const canDeposit = paid > 0 && remaining > 0;
       els.paymentDepositBtn.hidden = !canDeposit;
       if (canDeposit && els.paymentDepositLabel) {
-        els.paymentDepositLabel.textContent = state.paymentSession.balanceOrderId
+        els.paymentDepositLabel.textContent = cartBalanceItems().length
           ? `Finish as Part Payment · ${money(remaining)} owing`
           : `Finish as Deposit · ${money(remaining)} owing`;
       }
@@ -23209,7 +23305,6 @@
           ? [{ method: 'Exchange Credit', amount: exchangeCreditApplied() }]
           : [],
         amount: '',
-        balanceOrderId: '',
         creditCustomerCode: state.exchangeReturn ? state.exchangeReturn.customer_code : '',
         creditCustomerName: state.exchangeReturn ? state.exchangeReturn.customer_name : ''
       };
@@ -23280,11 +23375,9 @@
 
       if (paymentRemaining() <= 0) {
         const payments = state.paymentSession.payments.slice();
-        const balanceOrderId = state.paymentSession.balanceOrderId;
         closePaymentModal();
-        showToast(balanceOrderId ? 'Processing balance payment...' : 'Processing full payment...');
-        if (balanceOrderId) submitBalancePayment(balanceOrderId, payments);
-        else checkout(payments);
+        showToast('Processing full payment...');
+        checkout(payments);
         return;
       }
 
@@ -23298,10 +23391,8 @@
         els.paymentError.textContent = 'Confirm the deposit amount first.';
         return;
       }
-      const balanceOrderId = state.paymentSession.balanceOrderId;
       closePaymentModal();
-      if (balanceOrderId) submitBalancePayment(balanceOrderId, payments);
-      else checkout(payments, { deposit: true });
+      checkout(payments, { deposit: true });
     }
 
     function posOrderApiHeaders() {
@@ -24213,6 +24304,10 @@
           els.refundError.textContent = 'This cart already contains a return. Remove it before adding another invoice.';
           return;
         }
+        if (cartBalanceItems().length) {
+          els.refundError.textContent = 'This cart has an invoice balance. Check it out or remove it before starting an exchange.';
+          return;
+        }
         const selectedCustomer = selectedCustomerRecord();
         if (state.cart.length && selectedCustomer
           && String(selectedCustomer.id) !== String(refundCreditCustomer.id)) {
@@ -24427,11 +24522,17 @@
         : rawName.replace(/\bCASETiFY(?:\s+Cases)?\b/gi, 'CTFY');
     }
 
+    function balanceSettlementsOf(order) {
+      return (Array.isArray(order && order.balance_settlements) ? order.balance_settlements : [])
+        .filter(entry => entry && numberValue(entry.amount) > 0);
+    }
+
     function thermalReceiptContent(order) {
       const profile = receiptProfileForOrder(order);
       const items = Array.isArray(order.items) ? order.items : [];
       const payments = Array.isArray(order.payments) ? order.payments : [];
-      const hasRepair = items.some(item => item && item.is_repair);
+      const settlements = balanceSettlementsOf(order);
+      const hasRepair = items.some(item => item && item.is_repair) || settlements.some(entry => entry.has_repair);
       const invoiceNumber = invoiceNumberText(order);
       const total = roundedMoneyValue(order.total);
       const refundTotal = roundedMoneyValue(order.refund_total || 0);
@@ -24507,6 +24608,23 @@
           <div class="receipt-total-row receipt-grand-total"><span>BALANCE DUE</span><strong>${money(orderBalanceDue(order))}</strong></div>
           ${orderBalanceDue(order) > 0 ? '<div class="receipt-section-label">DEPOSIT ONLY - BALANCE PAYABLE ON PICKUP</div>' : ''}
         </section>
+        ${settlements.length ? `
+          <div class="receipt-rule"></div>
+          <section class="receipt-totals">
+            <div class="receipt-section-label">EARLIER INVOICE BALANCE</div>
+            ${settlements.map(entry => `
+              <div class="receipt-total-row"><span>Invoice #${escapeHtml(String(entry.invoice_number || ''))} owing</span><strong>${money(entry.balance_before)}</strong></div>
+              ${(Array.isArray(entry.payments) ? entry.payments : []).map(payment => `
+                <div class="receipt-total-row"><span>${escapeHtml(paymentMethodLabel(payment.method))}</span><strong>${money(payment.amount)}</strong></div>
+              `).join('')}
+              <div class="receipt-total-row"><span>Still owing on #${escapeHtml(String(entry.invoice_number || ''))}</span><strong>${money(entry.balance_after)}</strong></div>
+            `).join('')}
+            <div class="receipt-total-row receipt-grand-total"><span>TOTAL PAID TODAY</span><strong>${money(
+              payments.reduce((sum, payment) => sum + numberValue(payment.amount), 0)
+              + settlements.reduce((sum, entry) => sum + numberValue(entry.amount), 0)
+            )}</strong></div>
+          </section>
+        ` : ''}
         <div class="receipt-rule"></div>
         <section class="receipt-terms">
           <div class="receipt-terms-title">Terms &amp; Condition</div>
@@ -24995,13 +25113,18 @@
       let amountPaid = numberValue(order.amount_paid);
       if (amountPaid <= 0 && !isDeposit) amountPaid = total;
       const invoiceLabel = invoiceNumber === 'Pending' ? order.id : `Invoice #${invoiceNumber}`;
+      const settlements = historyView ? [] : balanceSettlementsOf(order);
+      const settledToday = roundedMoneyValue(settlements.reduce((sum, entry) => sum + numberValue(entry.amount), 0));
+      const settledLabel = settlements.length
+        ? ` + balance on ${settlements.map(entry => `#${entry.invoice_number}`).join(', ')}`
+        : '';
       els.receiptCompleteTitle.textContent = historyView ? invoiceLabel : isDeposit ? 'Deposit Taken' : 'Payment Complete';
       els.receiptCompleteTotal.textContent = isDeposit
         ? `${money(amountPaid)} deposit paid`
-        : `${money(amountPaid)} paid`;
+        : `${money(amountPaid + settledToday)} paid`;
       els.receiptCompleteMeta.textContent = isDeposit
         ? `${invoiceLabel} · ${money(balance)} balance due · ${profile.name}`
-        : `${invoiceLabel} - ${profile.name}`;
+        : `${invoiceLabel}${settledLabel} - ${profile.name}`;
       const syncPending = Boolean(order.sync_pending || invoiceNumber === 'Pending');
       els.receiptSyncNote.textContent = syncPending
         ? 'Saved locally. Database sync is pending and will retry automatically.'
@@ -25458,11 +25581,26 @@
         showToast('Payment is not complete.');
         return;
       }
-      if (isDeposit && state.cart.some(item => item.is_used_device)) {
+      const balanceItems = cartBalanceItems();
+      const saleItems = cartSaleItems();
+      const saleTotal = cartSaleTotal();
+      if (balanceItems.length && state.exchangeReturn) {
+        showToast('An exchange cannot be checked out with an invoice balance. Remove one of them first.');
+        return;
+      }
+      // Part payment with a balance in the cart: today's items are paid in
+      // full and only the earlier invoice is left owing.
+      if (isDeposit && balanceItems.length && paymentTotal <= saleTotal) {
+        showToast(`A part payment must be more than the new items (${money(saleTotal)}). They are paid first; the rest goes to the invoice balance.`);
+        return;
+      }
+      if (isDeposit && !balanceItems.length && state.cart.some(item => item.is_used_device)) {
         showToast('Used devices must be paid in full. Remove the device to take a deposit.');
         return;
       }
-      const paymentSummary = total === 0 ? 'No Charge' : summarizePayments(normalizedPayments);
+      const allocation = balanceItems.length ? allocateBalanceCheckoutPayments(normalizedPayments, saleTotal, balanceItems) : null;
+      const salePayments = allocation ? allocation.sale : normalizedPayments;
+      const paymentSummary = (allocation ? saleTotal : total) === 0 ? 'No Charge' : summarizePayments(salePayments);
       const usesStoreCredit = normalizedPayments.some(payment => ['Store Credit', 'Exchange Credit'].includes(payment.method));
       const creditCustomerCode = state.paymentSession.creditCustomerCode
         || (state.exchangeReturn && state.exchangeReturn.customer_code)
@@ -25579,17 +25717,34 @@
         item.buyer_address = usedDeviceCustomerAddress;
       });
 
+      const balanceCustomer = balanceItems[0] || null;
       const customerName = state.exchangeReturn
         ? state.exchangeReturn.customer_name
         : repairTickets.length
         ? repairTickets[0].customerName
-        : (usedDeviceItems.length ? usedDeviceCustomer.name : (els.customerInput.value.trim() || 'Walk-in Customer'));
+        : (usedDeviceItems.length
+          ? usedDeviceCustomer.name
+          : (els.customerInput.value.trim() || (balanceCustomer && balanceCustomer.balance_customer_name) || 'Walk-in Customer'));
       const customer = customerDetailsForOrder(customerName);
+      const isBalanceCustomer = Boolean(balanceCustomer)
+        && customerName.toLowerCase() === String(balanceCustomer.balance_customer_name || '').toLowerCase();
       const customerPhone = state.exchangeReturn
         ? state.exchangeReturn.customer_phone
         : repairTickets.length
         ? repairTickets[0].customerPhone
-        : (usedDeviceItems.length ? usedDeviceCustomer.phone : (customer ? (customer.phone || customer.phone_number || '') : ''));
+        : (usedDeviceItems.length
+          ? usedDeviceCustomer.phone
+          : (customer ? (customer.phone || customer.phone_number || '') : (isBalanceCustomer ? balanceCustomer.balance_customer_phone || '' : '')));
+      if (balanceCustomer && balanceCustomer.balance_customer_phone && (repairTickets.length || usedDeviceItems.length)
+        && balanceCustomerKey(customerName, customerPhone)
+          !== balanceCustomerKey(balanceCustomer.balance_customer_name, balanceCustomer.balance_customer_phone)) {
+        showToast('The invoice balance belongs to a different customer from the repair or device in this cart. Check them out separately.');
+        return;
+      }
+      // With a balance in the cart the new invoice holds only today's items,
+      // always paid in full; the payment beyond them goes to the balance.
+      const orderTotal = allocation ? saleTotal : total;
+      const orderIsDeposit = !allocation && isDeposit;
 
       const order = {
         id: 'POS-' + Date.now(),
@@ -25602,20 +25757,22 @@
         shift_started_at: activeShift && activeShift.startedAt,
         customer_name: customerName,
         customer_phone: customerPhone,
-        customer_code: usesStoreCredit ? creditCustomerCode : (customer && customer.id || ''),
+        customer_code: usesStoreCredit
+          ? creditCustomerCode
+          : (customer && customer.id || (isBalanceCustomer ? balanceCustomer.balance_customer_code || '' : '')),
         customer_address: usedDeviceItems.length ? usedDeviceCustomerAddress : '',
         customer_email: receiptCustomerEmail({
           customer_email: customer ? (customer.email || '') : '',
           customer_phone: customerPhone
         }, [...state.customers, ...readLocalArray(POS_CUSTOMERS_KEY)]),
         payment_method: paymentSummary,
-        payments: normalizedPayments,
-        total,
-        payment_status: isDeposit ? 'deposit' : 'paid',
+        payments: salePayments,
+        total: orderTotal,
+        payment_status: orderIsDeposit ? 'deposit' : 'paid',
         close_repair_tickets: false,
-        amount_paid: Math.min(paymentTotal, total),
-        balance_due: isDeposit ? roundedMoneyValue(total - paymentTotal) : 0,
-        items: state.cart.map(posOrderLineFromCartItem),
+        amount_paid: allocation ? orderTotal : Math.min(paymentTotal, total),
+        balance_due: orderIsDeposit ? roundedMoneyValue(total - paymentTotal) : 0,
+        items: saleItems.map(posOrderLineFromCartItem),
         exchange_refund: state.exchangeReturn ? {
           order_id: state.exchangeReturn.order_id,
           customer_code: state.exchangeReturn.customer_code,
@@ -25630,17 +25787,26 @@
         sync_pending: true
       };
 
-      const databaseSaved = await persistPosOrder(order, true);
-      if (!databaseSaved) {
-        removeStoredOrder(order.id);
-        showToast(`Checkout was not completed. ${order.save_error || 'The order could not be saved.'} The cart is unchanged.`);
-        return;
+      let saleOrder = order;
+      let balanceOrders = [];
+      if (allocation) {
+        const result = await submitBalanceCheckout(saleItems.length ? order : null, allocation, activeShift, creditCustomerCode);
+        if (!result) return;
+        saleOrder = result.order;
+        balanceOrders = result.balanceOrders;
+      } else {
+        const databaseSaved = await persistPosOrder(order, true);
+        if (!databaseSaved) {
+          removeStoredOrder(order.id);
+          showToast(`Checkout was not completed. ${order.save_error || 'The order could not be saved.'} The cart is unchanged.`);
+          return;
+        }
       }
       state.shiftPaymentTotals = null;
 
       // The database is authoritative. Mirror its successful stock movement in
       // the current screen so the next scan cannot oversell before a reload.
-      if (!order.inventory_sync_pending) state.cart.filter(usesTrackedProductStock).forEach(item => {
+      if (saleOrder && !saleOrder.inventory_sync_pending) saleItems.filter(usesTrackedProductStock).forEach(item => {
         const product = state.products.find(productItem => productItem.id === item.id);
         if (!product) return;
         if (product.store_stock) {
@@ -25685,23 +25851,42 @@
       els.customerInput.value = '';
       // Repair completion needs the newly invoiced jobs; unrelated refreshes
       // must not delay the customer's receipt after the sale is saved.
-      if (repairCartItems.length) await loadRepairTickets();
-      if (repairCartItems.length && !isDeposit) {
+      const balanceRepairTickets = balanceOrders.map(paid => ({ paid, ticketIds: repairTicketIdsFromOrder(paid) }))
+        .filter(entry => entry.ticketIds.length);
+      if (repairCartItems.length || balanceRepairTickets.length) await loadRepairTickets();
+      if (saleOrder && repairCartItems.length && !orderIsDeposit) {
         await finalizeRepairCardsAfterPayment(
-          order,
+          saleOrder,
           repairCartItems.map(item => item.ticket_id),
           repairCartItems
         );
       }
+      for (const entry of balanceRepairTickets) {
+        if (orderBalanceDue(entry.paid) > 0) continue;
+        await finalizeRepairCardsAfterPayment(entry.paid, entry.ticketIds, Array.isArray(entry.paid.items) ? entry.paid.items : []);
+      }
       renderProducts();
       renderRepairWorkspace();
       renderCart();
-      openReceiptCompleteModal(order);
+      if (balanceOrders.length) renderInvoiceHistory();
+      openReceiptCompleteModal(saleOrder || balanceOrders[balanceOrders.length - 1]);
       refreshAfterCheckout({
         products: Boolean(completedExchange),
         usedDevices: Boolean(usedDeviceItems.length)
       });
-      if (completedExchange) {
+      if (balanceOrders.length) {
+        // A short part payment may not reach every balance in the cart; those
+        // invoices are untouched and still owe their full balance.
+        const owing = [
+          ...balanceOrders.filter(paid => orderBalanceDue(paid) > 0)
+            .map(paid => `${money(orderBalanceDue(paid))} still owing on invoice ${invoiceNumberText(paid)}`),
+          ...balanceItems.filter(item => !allocation.balances.some(target => target.item === item))
+            .map(item => `${money(item.sale_price)} still owing on invoice ${item.balance_invoice_number}`)
+        ];
+        showToast(owing.length
+          ? `${money(paymentTotal)} paid. ${owing.join('; ')}.`
+          : `${money(paymentTotal)} paid. ${balanceOrders.map(paid => `Invoice ${invoiceNumberText(paid)}`).join(', ')} paid in full${saleOrder ? `; new items on invoice ${invoiceNumberText(saleOrder)}` : ''}.`);
+      } else if (completedExchange) {
         const remainingCredit = roundedMoneyValue(order.store_credit_remaining);
         showToast(remainingCredit > 0
           ? `Exchange completed. ${money(remainingCredit)} from this return remains as Store Credit.`
@@ -25744,8 +25929,25 @@
       return Math.max(0, roundedMoneyValue(total - paid));
     }
 
-    async function openBalancePaymentModal(orderId) {
+    function balanceCustomerKey(name, phone) {
+      const digits = String(phone || '').replace(/\D/g, '');
+      return digits || String(name || '').trim().toLowerCase();
+    }
+
+    // Taking a balance puts it in the cart rather than charging it on its own,
+    // so a screen protector or case bought at pickup goes on the same payment.
+    async function addBalanceToCart(orderId) {
       if (!orderId) return;
+      const cartId = `balance-${orderId}`;
+      if (state.cart.some(item => item.id === cartId)) {
+        setActiveView('products');
+        showToast('This invoice balance is already in the cart.');
+        return;
+      }
+      if (state.exchangeReturn) {
+        showToast('Finish or remove the exchange in the cart before taking an invoice balance.');
+        return;
+      }
       let order = state.invoiceOrders.find(item => item.id === orderId)
         || state.customerHistoryOrders.find(item => item.id === orderId);
       if (!order) {
@@ -25761,104 +25963,126 @@
         showToast('Invoice could not be loaded.');
         return;
       }
-      if (!state.selectedStaffName) {
-        openStaffModal({ canCancel: false });
-        return;
-      }
       const balance = orderBalanceDue(order);
       if (balance <= 0) {
         showToast('This invoice is already fully paid.');
         return;
       }
-      const activeShift = await resolveCheckoutShift();
-      if (!activeShift || activeShift.status !== 'open' || activeShift.date !== brisbaneDateIso() || !state.openingConfirmed) {
-        showToast('Start today\'s shift before taking a payment.');
-        ensureOpeningCash();
+      const customerName = String(order.customer_name || '').trim() || 'Walk-in Customer';
+      const customerPhone = String(order.customer_phone || '').trim();
+      const otherBalance = cartBalanceItems()[0];
+      if (otherBalance && balanceCustomerKey(otherBalance.balance_customer_name, otherBalance.balance_customer_phone)
+        !== balanceCustomerKey(customerName, customerPhone)) {
+        showToast('Balances for different customers must be paid separately.');
         return;
       }
-      state.paymentSession = {
-        method: 'Card',
-        payments: [],
-        amount: '',
-        balanceOrderId: order.id,
-        balanceTotal: balance,
-        balanceOrderTotal: numberValue(order.total),
-        balanceAlreadyPaid: numberValue(order.amount_paid),
-        balanceInvoiceNumber: invoiceNumberText(order),
-        balanceOrder: order
-      };
-      setPaymentAmountToRemaining();
-      els.paymentModal.classList.add('show');
-      els.paymentModal.setAttribute('aria-hidden', 'false');
-      renderPaymentModal();
-      setTimeout(() => {
-        els.paymentAmountInput.focus();
-        els.paymentAmountInput.select();
-      }, 0);
+      if (state.cart.some(item => item.id === cartId)) return;
+      const invoiceNumber = invoiceNumberText(order);
+      state.cart.push({
+        id: cartId,
+        sku: 'BALANCE',
+        name: `Balance · Invoice #${invoiceNumber}`,
+        category: 'Invoice balance',
+        cost_price: 0,
+        sale_price: balance,
+        barcode: '',
+        image_url: '',
+        qty: 1,
+        is_balance: true,
+        balance_order_id: order.id,
+        balance_invoice_number: invoiceNumber,
+        balance_order_total: numberValue(order.total),
+        balance_already_paid: numberValue(order.amount_paid),
+        balance_customer_name: customerName,
+        balance_customer_phone: customerPhone,
+        balance_customer_code: String(order.customer_code || '')
+      });
+      const typedCustomer = els.customerInput.value.trim();
+      if ((!typedCustomer || typedCustomer.toLowerCase() === 'walk-in customer')
+        && customerName.toLowerCase() !== 'walk-in customer') {
+        els.customerInput.value = customerName;
+      }
+      setActiveView('products');
+      renderCart();
+      showToast(`Invoice #${invoiceNumber} balance ${money(balance)} added to the cart. Add any extra items, then check out.`);
     }
 
-    async function submitBalancePayment(orderId, payments) {
-      const activeShift = await resolveCheckoutShift();
-      if (!activeShift) {
-        showToast('Start today\'s shift before taking a payment.');
-        ensureOpeningCash();
-        return;
-      }
-      const normalizedPayments = (Array.isArray(payments) ? payments : [])
-        .map(payment => ({ method: paymentMethodLabel(payment.method), amount: roundedMoneyValue(payment.amount) }))
-        .filter(payment => payment.amount > 0);
-      if (!normalizedPayments.length) return;
-      const usesStoreCredit = normalizedPayments.some(payment => payment.method === 'Store Credit');
-      const creditCustomerCode = state.paymentSession.creditCustomerCode || '';
-      if (usesStoreCredit && !creditCustomerCode) {
-        showToast('Select a customer account before using Store Credit.');
-        return;
-      }
+    // Payment fills today's items first, then each balance in cart order, so a
+    // short payment always leaves the shortfall on the earlier invoice. One
+    // card tap may be split across invoices; shift totals by method are the
+    // same either way.
+    function allocateBalanceCheckoutPayments(payments, saleTotal, balanceItems) {
+      const targets = [
+        { item: null, due: roundedMoneyValue(saleTotal), paid: 0, payments: [] },
+        ...balanceItems.map(item => ({ item, due: roundedMoneyValue(item.sale_price), paid: 0, payments: [] }))
+      ];
+      let index = 0;
+      payments.forEach(payment => {
+        let left = roundedMoneyValue(payment.amount);
+        while (left > 0 && index < targets.length) {
+          const target = targets[index];
+          const room = roundedMoneyValue(target.due - target.paid);
+          if (room <= 0) {
+            index += 1;
+            continue;
+          }
+          const amount = roundedMoneyValue(Math.min(room, left));
+          target.payments.push({ method: payment.method, amount });
+          target.paid = roundedMoneyValue(target.paid + amount);
+          left = roundedMoneyValue(left - amount);
+        }
+      });
+      return {
+        sale: targets[0].payments,
+        balances: targets.slice(1).filter(target => target.paid > 0)
+      };
+    }
+
+    async function submitBalanceCheckout(order, allocation, activeShift, creditCustomerCode) {
       try {
-        const response = await fetch(`${POS_SALES_ORDERS_ENDPOINT}?mode=balance-payment`, {
-          method: 'PUT',
+        const response = await fetch(`${POS_SALES_ORDERS_ENDPOINT}?mode=balance-checkout`, {
+          method: 'POST',
           headers: posOrderApiHeaders(),
           body: JSON.stringify({
-            order_id: orderId,
             store_code: repairTicketStoreCode(),
             staff_name: state.selectedStaffName,
             shift_id: activeShift && activeShift.id,
             business_date: brisbaneDateIso(),
-            customer_code: usesStoreCredit ? creditCustomerCode : undefined,
-            payments: normalizedPayments
+            order,
+            balances: allocation.balances.map(target => ({
+              order_id: balanceCartOrderId(target.item),
+              expected_balance: roundedMoneyValue(target.item.sale_price),
+              customer_code: target.payments.some(payment => payment.method === 'Store Credit') ? creditCustomerCode : undefined,
+              payments: target.payments
+            }))
           })
         });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload.ok === false || !payload.order) {
+        if (!response.ok || payload.ok === false) {
           throw new Error(payload.message || 'The payment could not be saved.');
         }
-        const index = state.invoiceOrders.findIndex(item => item.id === payload.order.id);
-        if (index >= 0) state.invoiceOrders[index] = payload.order;
-        const customerHistoryIndex = state.customerHistoryOrders.findIndex(item => item.id === payload.order.id);
-        if (customerHistoryIndex >= 0) state.customerHistoryOrders[customerHistoryIndex] = payload.order;
-        updateStoredOrder(payload.order);
-        state.shiftPaymentTotals = null;
-        const balance = orderBalanceDue(payload.order);
-        const repairTicketIds = repairTicketIdsFromOrder(payload.order);
-        if (repairTicketIds.length) await loadRepairTickets();
-        if (balance <= 0 && repairTicketIds.length) {
-          await finalizeRepairCardsAfterPayment(
-            payload.order,
-            repairTicketIds,
-            Array.isArray(payload.order.items) ? payload.order.items : []
-          );
+        const savedOrder = order && payload.order && typeof payload.order === 'object' ? payload.order : null;
+        if (savedOrder) {
+          Object.assign(order, savedOrder);
+          const inventoryPending = Boolean(payload.inventory && payload.inventory.ok === false);
+          order.sync_pending = inventoryPending;
+          order.inventory_sync_pending = inventoryPending;
+          order.database_saved_at = new Date().toISOString();
+          updateStoredOrder(order);
         }
-        renderRepairWorkspace();
-        renderInvoiceHistory();
-        state.lastCompletedOrder = payload.order;
-        openReceiptCompleteModal(payload.order);
-        refreshAfterCheckout();
-        showToast(balance > 0
-          ? `Payment recorded. ${money(balance)} still owing.`
-          : `Invoice ${invoiceNumberText(payload.order)} is now paid in full.`);
+        const balanceOrders = Array.isArray(payload.balance_orders) ? payload.balance_orders : [];
+        balanceOrders.forEach(paid => {
+          const index = state.invoiceOrders.findIndex(item => item.id === paid.id);
+          if (index >= 0) state.invoiceOrders[index] = paid;
+          const historyIndex = state.customerHistoryOrders.findIndex(item => item.id === paid.id);
+          if (historyIndex >= 0) state.customerHistoryOrders[historyIndex] = paid;
+          updateStoredOrder(paid);
+        });
+        return { order: savedOrder ? order : null, balanceOrders };
       } catch (error) {
         console.error(error);
-        showToast(error.message || 'The payment could not be saved.');
+        showToast(`Checkout was not completed. ${error.message || 'The payment could not be saved.'} The cart is unchanged.`);
+        return null;
       }
     }
 
@@ -26530,6 +26754,11 @@
     els.usedDeviceDetailBody.addEventListener('click', event => {
       const publishButton = event.target.closest('[data-used-publish]');
       if (publishButton) submitUsedDevicePublish(publishButton.dataset.usedPublish, publishButton);
+      const restoreButton = event.target.closest('[data-used-restore-online]');
+      if (restoreButton) {
+        restoreUnpaidOnlineDevice(restoreButton.dataset.usedRestoreOnline, restoreButton);
+        return;
+      }
       const invoiceButton = event.target.closest('[data-used-view-invoice]');
       if (!invoiceButton) return;
       closeUsedDeviceDetail();
@@ -26588,7 +26817,7 @@
       const viewButton = event.target.closest('[data-view-invoice]');
       const refundButton = event.target.closest('[data-refund-invoice]');
       const balanceButton = event.target.closest('[data-balance-invoice]');
-      if (balanceButton) openBalancePaymentModal(balanceButton.dataset.balanceInvoice);
+      if (balanceButton) addBalanceToCart(balanceButton.dataset.balanceInvoice);
       if (viewButton) viewInvoiceById(viewButton.dataset.viewInvoice);
       if (refundButton) openRefundModalById(refundButton.dataset.refundInvoice);
     });
@@ -26980,7 +27209,7 @@
       const balanceButton = event.target.closest('[data-history-balance]');
       if (balanceButton) {
         closeCustomerHistory();
-        openBalancePaymentModal(balanceButton.dataset.historyBalance);
+        addBalanceToCart(balanceButton.dataset.historyBalance);
         return;
       }
       const row = event.target.closest('[data-history-invoice]');
@@ -27283,7 +27512,7 @@
       const balanceInvoiceButton = event.target.closest('[data-ticket-balance-invoice]');
       if (balanceInvoiceButton) {
         closeTicketDetailModal();
-        openBalancePaymentModal(balanceInvoiceButton.dataset.ticketBalanceInvoice);
+        addBalanceToCart(balanceInvoiceButton.dataset.ticketBalanceInvoice);
         return;
       }
       if (viewInvoiceButton) {
@@ -27606,7 +27835,9 @@
           bundle_device_count: 2,
           bundle_accessory_count: 3,
           bundle_points: 25,
-          total_points: 55
+          personal_sales: 6120,
+          commission_points: 61.20,
+          total_points: 116.20
         },
         monthly_hourly_sales: {
           month: brisbaneDateIso().slice(0, 7),

@@ -30,6 +30,7 @@
       letter-spacing: 0;
     }
     button, a, input, select { font: inherit; }
+    [hidden] { display: none !important; }
     .shell { width: min(1280px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 48px; display: flex; flex-direction: column; }
     .topbar { order: 0; }
     .points-panel { order: 1; }
@@ -70,6 +71,7 @@
       gap: 12px;
       margin-top: 14px;
     }
+    .points-panel > .summary { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .summary-item {
       min-height: 92px;
       display: grid;
@@ -90,7 +92,16 @@
       background: #fff;
     }
     .panel-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .accounts-panel .panel-head > div:first-child { min-width: 0; }
     .panel-head h2 { font-size: 18px; font-weight: 950; }
+    .panel-head-tools { display: flex; align-items: center; gap: 8px; justify-content: flex-end; flex: none; }
+    .add-button { color: #fff; background: var(--green); border-color: var(--green); white-space: nowrap; }
+    .new-staff-form { display: grid; gap: 12px; padding: 16px; margin-bottom: 14px; border: 1px solid #bee5d9; border-radius: 10px; background: #f6fbf9; }
+    .new-staff-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .new-staff-form label.field-label { display: grid; gap: 6px; font-size: 12px; font-weight: 850; }
+    .new-staff-form input[type="text"], .new-staff-form input[type="email"] { min-height: 42px; width: 100%; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .new-staff-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .new-staff-note { color: var(--muted); font-size: 12px; font-weight: 650; }
     .search-input {
       width: min(330px, 100%);
       min-height: 42px;
@@ -218,8 +229,12 @@
       cursor: pointer;
     }
     .save-button:disabled { cursor: wait; opacity: .55; }
+    .row-actions { display: grid; gap: 6px; justify-items: stretch; }
+    .delete-button, .resend-button { min-height: 32px; padding: 0 9px; border: 1px solid #e7c5c2; border-radius: 8px; color: #a3332b; background: #fff; font-size: 11px; font-weight: 850; cursor: pointer; }
+    .resend-button { color: var(--green-dark); border-color: #bee5d9; }
+    .delete-button:disabled, .resend-button:disabled { opacity: .55; cursor: wait; }
     .admin-row { background: #f6fbf9; }
-    .review-staff-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+    .review-staff-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 10px; }
     .review-staff-card {
       display: grid; gap: 8px; padding: 13px 14px; text-align: left;
       border: 1px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer;
@@ -228,7 +243,7 @@
     .review-staff-card.active { border-color: var(--green); background: #eef8f4; box-shadow: 0 0 0 3px rgba(7,137,111,.12); }
     .review-staff-card.is-idle { opacity: .62; }
     .review-staff-name { font-size: 15px; font-weight: 950; }
-    .review-staff-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .review-staff-figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
     .review-figure { display: grid; gap: 2px; }
     .review-figure span { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
     .review-figure strong { font-size: 18px; font-weight: 950; }
@@ -238,7 +253,7 @@
     .score-detail { margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbfa; }
     .score-detail[hidden] { display: none; }
     .score-detail h3 { margin: 0 0 8px; font-size: 16px; }
-    .score-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .score-detail-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
     .score-detail-grid div { padding: 12px; border-radius: 9px; background: #fff; border: 1px solid var(--line); }
     .score-detail-grid span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; }
     .score-detail-grid strong { display: block; margin-top: 4px; font-size: 20px; }
@@ -276,6 +291,10 @@
       font-weight: 800;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 1200px) {
+      .accounts-panel .panel-head { align-items: stretch; flex-direction: column; }
+      .accounts-panel .panel-head-tools { justify-content: flex-start; }
+    }
     @media (max-width: 1050px) {
       .staff-row { grid-template-columns: 46px minmax(0, 1fr) auto; }
       .store-field { grid-column: 1 / -1; }
@@ -287,17 +306,24 @@
       .topbar { align-items: stretch; flex-direction: column; }
       .actions { justify-content: flex-start; }
       .summary { grid-template-columns: 1fr; }
+      .points-panel > .summary { grid-template-columns: 1fr 1fr; }
       .panel-head { align-items: stretch; flex-direction: column; }
+      .panel-head-tools { justify-content: stretch; flex-wrap: wrap; }
+      .accounts-panel .search-input { flex: 1 1 210px; width: auto; }
+      .accounts-panel .add-button { flex: 0 0 auto; }
+      .new-staff-fields { grid-template-columns: 1fr; }
       .search-input { width: 100%; }
       .review-event { grid-template-columns: minmax(0, 1fr) auto; }
       .review-event-date { grid-column: 1 / -1; }
       .review-event-meta { grid-column: 1 / -1; }
-      .score-detail-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .score-detail-grid { grid-template-columns: 1fr 1fr; }
+      .review-staff-figures { grid-template-columns: 1fr 1fr; }
       .device-event { grid-template-columns: 1fr auto; }
       .device-event span:first-child { grid-column: 1 / -1; }
       .staff-row { grid-template-columns: 42px minmax(0, 1fr) auto; }
       .store-field, .control-field { grid-column: 1 / -1; }
-      .save-button { grid-column: 1 / -1; width: 100%; }
+      .row-actions { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .save-button { width: 100%; }
       .status { display: inline-block; }
     }
   </style>
@@ -328,8 +354,27 @@
           <h2>Staff Accounts, Stores And Inventory</h2>
           <p class="subtitle">Select every store this employee can use. Inventory Management controls whether the Stocktake button appears inside POS.</p>
         </div>
-        <input id="searchInput" class="search-input" type="search" placeholder="Search staff name or email" aria-label="Search staff">
+        <div class="panel-head-tools">
+          <input id="searchInput" class="search-input" type="search" placeholder="Search staff name or email" aria-label="Search staff">
+          <button id="addStaffBtn" class="button add-button" type="button"><i class="bi bi-person-plus"></i> Add staff</button>
+        </div>
       </div>
+      <form id="newStaffForm" class="new-staff-form" hidden>
+        <h3>Add staff member</h3>
+        <div class="new-staff-fields">
+          <label class="field-label">Name<input id="newStaffName" type="text" maxlength="100" autocomplete="name" required></label>
+          <label class="field-label">Email<input id="newStaffEmail" type="email" maxlength="254" autocomplete="email" required></label>
+        </div>
+        <div class="field-label">Store access</div>
+        <div id="newStaffStores" class="store-options"></div>
+        <label><input id="newStaffInventory" type="checkbox"> Enable inventory management</label>
+        <div class="new-staff-actions">
+          <button id="createStaffBtn" class="save-button" type="submit">Add staff & send invite</button>
+          <button id="cancelStaffBtn" class="button" type="button">Cancel</button>
+          <span class="new-staff-note">The employee receives a one-time email link to set their password and POS PIN.</span>
+        </div>
+        <div id="newStaffError" class="error" role="alert"></div>
+      </form>
       <div id="staffList" class="staff-list"><div class="empty">Loading staff...</div></div>
       <div id="pageError" class="error" role="alert"></div>
     </section>
@@ -338,7 +383,7 @@
       <div class="panel-head">
         <div>
           <h2>Staff Points · This Month</h2>
-          <p class="subtitle">Google reviews + device bundles. Click a staff member for details.</p>
+          <p class="subtitle">Google reviews + device bundles + 1% of personal sales. Click a staff member for details.</p>
         </div>
         <input id="reviewSearch" class="search-input" type="search" placeholder="Search staff" aria-label="Search staff points">
       </div>
@@ -346,6 +391,7 @@
       <div class="summary" style="margin-bottom:16px;">
         <div class="summary-item"><span>Google reviews</span><strong id="reviewThisMonthPoints">0 pts</strong></div>
         <div class="summary-item"><span>Device bundles</span><strong id="deviceThisMonthPoints">0 pts</strong></div>
+        <div class="summary-item"><span>Sales commission · 1%</span><strong id="commissionThisMonthPoints">0.00 pts</strong></div>
         <div class="summary-item"><span>Total points</span><strong id="combinedThisMonthPoints">0 pts</strong></div>
         <div class="summary-item"><span>Period</span><strong id="scorePeriod" style="font-size:18px;">This month</strong></div>
       </div>
@@ -372,6 +418,15 @@
     const els = {
       refreshBtn: document.getElementById('refreshBtn'),
       searchInput: document.getElementById('searchInput'),
+      addStaffBtn: document.getElementById('addStaffBtn'),
+      newStaffForm: document.getElementById('newStaffForm'),
+      newStaffName: document.getElementById('newStaffName'),
+      newStaffEmail: document.getElementById('newStaffEmail'),
+      newStaffStores: document.getElementById('newStaffStores'),
+      newStaffInventory: document.getElementById('newStaffInventory'),
+      createStaffBtn: document.getElementById('createStaffBtn'),
+      cancelStaffBtn: document.getElementById('cancelStaffBtn'),
+      newStaffError: document.getElementById('newStaffError'),
       staffList: document.getElementById('staffList'),
       staffCount: document.getElementById('staffCount'),
       enabledCount: document.getElementById('enabledCount'),
@@ -382,6 +437,7 @@
       reviewSearch: document.getElementById('reviewSearch'),
       reviewThisMonthPoints: document.getElementById('reviewThisMonthPoints'),
       deviceThisMonthPoints: document.getElementById('deviceThisMonthPoints'),
+      commissionThisMonthPoints: document.getElementById('commissionThisMonthPoints'),
       combinedThisMonthPoints: document.getElementById('combinedThisMonthPoints'),
       scorePeriod: document.getElementById('scorePeriod'),
       scoreDetail: document.getElementById('scoreDetail'),
@@ -424,14 +480,17 @@
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.ok) {
-        throw new Error(result.message || 'Staff management request failed.');
+        const error = new Error(result.message || 'Staff management request failed.');
+        error.created = result.created === true;
+        throw error;
       }
       return result;
     }
 
     function isBowenAdmin(row) {
       return String(row.email || '').trim().toLowerCase() === 'techm8contact@gmail.com'
-        || (String(row.display_name || '').trim().toLowerCase() === 'bowen' && String(row.job_role || '').toLowerCase() === 'admin');
+        || String(row.job_role || '').toLowerCase() === 'admin'
+        || String(row.display_name || '').trim().toLowerCase() === 'bowen';
     }
 
     function assignedStores(row) {
@@ -513,7 +572,11 @@
                 <span class="control-state ${row.stocktake_enabled ? 'enabled' : ''}">${row.stocktake_enabled ? 'Enabled' : 'Disabled'}</span>
               </div>
             </div>
-            <button class="save-button" type="button" data-save-staff="${staffId}" ${pending ? 'disabled' : ''}>${pending ? 'Saving...' : 'Save'}</button>
+            <div class="row-actions">
+              <button class="save-button" type="button" data-save-staff="${staffId}" ${pending ? 'disabled' : ''}>${pending ? 'Saving...' : 'Save'}</button>
+              ${!admin && row.active && !row.credentials_ready ? `<button class="resend-button" type="button" data-resend-staff="${staffId}" ${pending ? 'disabled' : ''}>Resend invite</button>` : ''}
+              ${!admin ? `<button class="delete-button" type="button" data-delete-staff="${staffId}" ${pending ? 'disabled' : ''}>Delete staff</button>` : ''}
+            </div>
           </div>
         `;
       }).join('');
@@ -526,11 +589,19 @@
       return parsed.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
+    function scoreMoney(value) {
+      return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(Number(value) || 0);
+    }
+
+    function scorePoints(value) {
+      return `${(Number(value) || 0).toFixed(2)} pts`;
+    }
+
     function renderReviewStaff() {
       if (!reviewReport) return;
       const query = String(els.reviewSearch.value || '').trim().toLowerCase();
       const rows = (reviewReport.staff || []).filter(row =>
-        (row.total_reviews > 0 || Number(row.device_points || 0) > 0 || row.active)
+        (row.total_reviews > 0 || Number(row.device_points || 0) !== 0 || Number(row.personal_sales || 0) !== 0 || row.active)
         && (!query || String(row.staff_name || '').toLowerCase().includes(query)));
       if (!rows.length) {
         els.reviewStaffList.innerHTML = '<div class="empty">No staff yet.</div>';
@@ -543,9 +614,10 @@
           <span class="review-staff-figures">
             <span class="review-figure"><span>GG</span><strong>${Number(row.this_month_points || 0)} pts</strong></span>
             <span class="review-figure"><span>Device</span><strong>${Number(row.device_points || 0)} pts</strong></span>
-            <span class="review-figure total"><span>Total</span><strong>${Number(row.total_points || 0)} pts</strong></span>
+            <span class="review-figure"><span>Sales 1%</span><strong>${scorePoints(row.commission_points)}</strong></span>
+            <span class="review-figure total"><span>Total</span><strong>${scorePoints(row.total_points)}</strong></span>
           </span>
-          <span class="review-staff-foot">${Number(row.this_month_reviews || 0)} reviews · ${Number(row.device_bundle_count || 0)} device bundles this month</span>
+          <span class="review-staff-foot">${scoreMoney(row.personal_sales)} personal sales · ${Number(row.this_month_reviews || 0)} reviews · ${Number(row.device_bundle_count || 0)} device bundles</span>
         </button>
       `).join('');
     }
@@ -560,7 +632,12 @@
         <div class="score-detail-grid">
           <div><span>Google reviews</span><strong>${Number(row.this_month_points || 0)} pts</strong></div>
           <div><span>Device bundles</span><strong>${Number(row.device_points || 0)} pts</strong></div>
-          <div><span>Total</span><strong>${Number(row.total_points || 0)} pts</strong></div>
+          <div><span>Sales commission · 1%</span><strong>${scorePoints(row.commission_points)}</strong></div>
+          <div><span>Total</span><strong>${scorePoints(row.total_points)}</strong></div>
+          <div><span>Personal sales</span><strong>${scoreMoney(row.personal_sales)}</strong></div>
+          <div><span>Products per transaction</span><strong>${(Number(row.products_per_transaction) || 0).toFixed(2)}</strong></div>
+          <div><span>Paid transactions</span><strong>${Number(row.transaction_count || 0)}</strong></div>
+          <div><span>Product units</span><strong>${Number(row.product_units || 0)}</strong></div>
         </div>
         <h3>Device points history</h3>
         ${bundles.length ? bundles.map(item => `
@@ -617,7 +694,8 @@
       const totals = reviewReport.totals || {};
       els.reviewThisMonthPoints.textContent = `${Number(totals.this_month_points || 0)} pts`;
       els.deviceThisMonthPoints.textContent = `${Number(totals.device_points || 0)} pts`;
-      els.combinedThisMonthPoints.textContent = `${Number(totals.combined_points || 0)} pts`;
+      els.commissionThisMonthPoints.textContent = scorePoints(totals.commission_points);
+      els.combinedThisMonthPoints.textContent = scorePoints(totals.combined_points);
       els.scorePeriod.textContent = reviewDateText(reviewReport.this_month_start).replace(/^\d{2} /, '');
       renderReviewStaff();
       renderScoreDetail();
@@ -651,6 +729,11 @@
         const result = await managementRequest('GET');
         staffRows = Array.isArray(result.staff) ? result.staff : [];
         stores = Array.isArray(result.stores) ? result.stores : [];
+        els.newStaffStores.innerHTML = stores.map(store => `
+          <label class="store-chip" title="Allow access to ${escapeHtml(store.store_name)}">
+            <input type="checkbox" name="newStaffStore" value="${escapeHtml(store.store_code)}">
+            <span>${escapeHtml(store.store_name)}</span>
+          </label>`).join('');
         renderStaff();
       } catch (error) {
         console.error(error);
@@ -706,7 +789,87 @@
       }
     }
 
+    async function createStaff(event) {
+      event.preventDefault();
+      const storeCodes = Array.from(els.newStaffStores.querySelectorAll('input:checked'))
+        .map(input => input.value);
+      els.newStaffError.textContent = '';
+      if (!storeCodes.length) {
+        els.newStaffError.textContent = 'Select at least one store.';
+        els.newStaffStores.querySelector('input')?.focus();
+        return;
+      }
+      els.createStaffBtn.disabled = true;
+      els.createStaffBtn.textContent = 'Sending invite...';
+      try {
+        await managementRequest('POST', {
+          action: 'create', display_name: els.newStaffName.value.trim(),
+          email: els.newStaffEmail.value.trim(), store_codes: storeCodes,
+          stocktake_enabled: els.newStaffInventory.checked
+        });
+        els.newStaffForm.reset();
+        els.newStaffForm.hidden = true;
+        await loadStaff();
+        showToast('Staff member added. Setup invitation sent by email.');
+      } catch (error) {
+        els.newStaffError.textContent = error.message || 'Staff member could not be added.';
+        if (error.created) {
+          els.newStaffForm.hidden = true;
+          await loadStaff();
+          els.pageError.textContent = 'Staff account was created, but the invite email failed. Use Resend invite on their row.';
+        }
+      } finally {
+        els.createStaffBtn.disabled = false;
+        els.createStaffBtn.textContent = 'Add staff & send invite';
+      }
+    }
+
+    async function resendInvite(button) {
+      const staffId = Number(button.dataset.resendStaff);
+      const row = staffRows.find(item => Number(item.staff_id) === staffId);
+      if (!row || isBowenAdmin(row) || !row.active || row.credentials_ready) return;
+      pendingStaff.add(staffId);
+      els.pageError.textContent = '';
+      renderStaff();
+      try {
+        await managementRequest('POST', { action: 'invite', staff_id: staffId });
+        showToast(`Invitation sent to ${row.email}.`);
+      } catch (error) {
+        els.pageError.textContent = error.message || 'Invitation could not be sent.';
+      } finally {
+        pendingStaff.delete(staffId);
+        renderStaff();
+      }
+    }
+
+    async function deleteStaff(button) {
+      const staffId = Number(button.dataset.deleteStaff);
+      const row = staffRows.find(item => Number(item.staff_id) === staffId);
+      if (!row || isBowenAdmin(row)) return;
+      if (!window.confirm(`Delete ${row.display_name} (${row.email})? Their access will end immediately. Past reports will be kept.`)) return;
+      pendingStaff.add(staffId);
+      els.pageError.textContent = '';
+      renderStaff();
+      try {
+        await managementRequest('DELETE', { staff_id: staffId });
+        staffRows = staffRows.filter(item => Number(item.staff_id) !== staffId);
+        renderStaff();
+        showToast(`${row.display_name} has been deleted.`);
+      } catch (error) {
+        els.pageError.textContent = error.message || 'Staff member could not be deleted.';
+      } finally {
+        pendingStaff.delete(staffId);
+        renderStaff();
+      }
+    }
+
     els.refreshBtn.addEventListener('click', () => { loadStaff(); loadReviews(); });
+    els.addStaffBtn.addEventListener('click', () => {
+      els.newStaffForm.hidden = !els.newStaffForm.hidden;
+      if (!els.newStaffForm.hidden) els.newStaffName.focus();
+    });
+    els.cancelStaffBtn.addEventListener('click', () => { els.newStaffForm.hidden = true; });
+    els.newStaffForm.addEventListener('submit', createStaff);
     els.searchInput.addEventListener('input', renderStaff);
     els.reviewSearch.addEventListener('input', () => { renderReviewStaff(); renderReviewEvents(); });
     els.reviewClearFilter.addEventListener('click', () => {
@@ -727,6 +890,10 @@
     els.staffList.addEventListener('click', event => {
       const button = event.target.closest('[data-save-staff]');
       if (button) saveStaff(button);
+      const resend = event.target.closest('[data-resend-staff]');
+      if (resend) resendInvite(resend);
+      const deletion = event.target.closest('[data-delete-staff]');
+      if (deletion) deleteStaff(deletion);
     });
     els.staffList.addEventListener('change', event => {
       const toggle = event.target.closest('[data-account-toggle], [data-stocktake-toggle]');

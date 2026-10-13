@@ -351,13 +351,13 @@
           </form>
         </section>
         <section id="resetStep" hidden>
-          <h1>Set New Password</h1>
+          <h1 id="resetHeading">Set New Password</h1>
           <p id="resetIntro" class="intro">Checking your reset link...</p>
           <form id="resetForm" class="form-stack" hidden>
-            <div class="first-login-note"><i class="bi bi-shield-lock"></i><span>This link works once and expires 30 minutes after it was sent. Saving signs you out on every device.</span></div>
+            <div class="first-login-note"><i class="bi bi-shield-lock"></i><span id="resetLinkNote">This link works once and expires 30 minutes after it was sent. Saving signs you out on every device.</span></div>
             <label class="field">New account password<input id="resetPassword" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required></label>
             <label class="field">Confirm account password<input id="resetConfirmPassword" type="password" minlength="8" autocomplete="new-password" placeholder="Repeat your password" required></label>
-            <label class="field">New 4-digit PIN <span style="font-weight:600;color:#7b8c92">(optional)</span><input id="resetPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="new-password" placeholder="Leave blank to keep your current PIN"></label>
+            <label class="field">New 4-digit PIN <span id="resetPinOptional" style="font-weight:600;color:#7b8c92">(optional)</span><input id="resetPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="new-password" placeholder="Leave blank to keep your current PIN"></label>
             <button id="resetButton" class="login-button" type="submit">Save & Continue</button>
             <div id="resetError" class="form-error" role="alert"></div>
           </form>
@@ -427,6 +427,7 @@
     const resetStep = document.getElementById('resetStep');
     const resetToken = (new URLSearchParams(window.location.search).get('reset') || '').trim();
     let resetStaffEmail = '';
+    let resetIsFirstSetup = false;
 
     function openPos() { window.location.replace('./pos.html'); }
     function showStep(step) {
@@ -511,6 +512,7 @@
       if (password.length < 8) { resetError.textContent = 'Password must be at least 8 characters.'; return; }
       if (password === '123456') { resetError.textContent = 'Choose a password different from the temporary password.'; return; }
       if (password !== confirmedPassword) { resetError.textContent = 'The account passwords do not match.'; return; }
+      if (resetIsFirstSetup && !pin) { resetError.textContent = 'Create your four-digit POS PIN.'; return; }
       if (pin && !/^\d{4}$/.test(pin)) { resetError.textContent = 'PIN must contain exactly four digits.'; return; }
       if (pin && pin === password) { resetError.textContent = 'Password and PIN must be different.'; return; }
       resetButton.disabled = true;
@@ -518,7 +520,9 @@
       try {
         await callReset({ action: 'complete', token: resetToken, password, pin });
         window.history.replaceState({}, '', window.location.pathname);
-        loginNotice.textContent = 'Your password has been updated. Sign in with your new password.';
+        loginNotice.textContent = resetIsFirstSetup
+          ? 'Your account is ready. Sign in with your new password.'
+          : 'Your password has been updated. Sign in with your new password.';
         loginNotice.hidden = false;
         if (resetStaffEmail) loginEmail.value = resetStaffEmail;
         showStep(loginStep);
@@ -593,7 +597,17 @@
       callReset({ action: 'verify', token: resetToken }).then(body => {
         if (!body || !body.valid) { showInvalidResetLink(); return; }
         resetStaffEmail = body.staff_email || '';
-        resetIntro.textContent = `${body.staff_name || 'Staff'}, choose a new password for your account.`;
+        resetIsFirstSetup = body.first_setup === true;
+        document.getElementById('resetHeading').textContent = resetIsFirstSetup ? 'Set Up Your Account' : 'Set New Password';
+        document.getElementById('resetLinkNote').textContent = resetIsFirstSetup
+          ? 'This link works once and expires 30 minutes after it was sent. Your PIN is used in POS.'
+          : 'This link works once and expires 30 minutes after it was sent. Saving signs you out on every device.';
+        resetIntro.textContent = resetIsFirstSetup
+          ? `${body.staff_name || 'Staff'}, create your password and four-digit POS PIN.`
+          : `${body.staff_name || 'Staff'}, choose a new password for your account.`;
+        document.getElementById('resetPin').required = resetIsFirstSetup;
+        document.getElementById('resetPin').placeholder = resetIsFirstSetup ? 'Choose a 4-digit PIN' : 'Leave blank to keep your current PIN';
+        document.getElementById('resetPinOptional').hidden = resetIsFirstSetup;
         resetForm.hidden = false;
         document.getElementById('resetPassword').focus();
       }).catch(() => showInvalidResetLink());
