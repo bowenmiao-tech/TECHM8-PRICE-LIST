@@ -19,6 +19,9 @@ declare
   target_store jsonb;
   overview_store jsonb;
   report_staff jsonb;
+  before_product_metrics jsonb;
+  after_product_metrics jsonb;
+  repair_order_id bigint;
   rejected boolean;
 begin
   select id into admin_id from public.admin_users where active order by id limit 1;
@@ -93,6 +96,50 @@ begin
     = case when (report_staff->>'transaction_count')::integer > 0 then
         round((report_staff->>'product_units')::numeric / (report_staff->>'transaction_count')::numeric, 2)
       else 0 end, 'Products per transaction does not match units divided by paid transactions';
+  assert (progress#>>'{staff_month_points,products_per_transaction}')::numeric
+    = (report_staff->>'products_per_transaction')::numeric,
+    'POS and admin products per transaction differ';
+  assert (progress#>>'{staff_month_points,transaction_count}')::integer
+    = (report_staff->>'transaction_count')::integer,
+    'POS and admin paid transaction counts differ';
+  assert (progress#>>'{staff_month_points,product_units}')::integer
+    = (report_staff->>'product_units')::integer,
+    'POS and admin product unit counts differ';
+
+  -- A paid repair line contributes its quantity to both surfaces.
+  before_product_metrics := public.pos_staff_month_product_metrics(staff_row.display_name, today_value);
+  insert into public.pos_sales_orders (
+    order_code, invoice_number, store_id, business_date, staff_name,
+    customer_name, payment_method, total, amount_paid, order_payload
+  ) values (
+    'TEST-STAFF-REPAIR-' || extensions.gen_random_uuid(),
+    920000000000 + floor(random() * 100000000)::bigint,
+    store_row.id, today_value, staff_row.display_name,
+    'Staff metrics test', 'Card', 50, 50, '{}'::jsonb
+  ) returning id into repair_order_id;
+  insert into public.pos_sales_order_lines (
+    sales_order_id, line_number, line_type, name, category,
+    quantity, unit_price, line_total
+  ) values (
+    repair_order_id, 1, 'repair', 'Staff metrics repair', 'Repair',
+    2, 25, 50
+  );
+  after_product_metrics := public.pos_staff_month_product_metrics(staff_row.display_name, today_value);
+  assert (after_product_metrics->>'transaction_count')::integer
+    = (before_product_metrics->>'transaction_count')::integer + 1,
+    'Paid repair invoice was not counted as a transaction';
+  assert (after_product_metrics->>'product_units')::integer
+    = (before_product_metrics->>'product_units')::integer + 2,
+    'Repair quantity was not counted as product units';
+  points_report := public.get_staff_points_report(admin_token, 10);
+  select s into report_staff from jsonb_array_elements(points_report->'staff') s
+  where s->>'normalized_staff_name' = lower(trim(staff_row.display_name));
+  assert (report_staff->>'product_units')::integer
+    = (after_product_metrics->>'product_units')::integer,
+    'Admin and POS repair unit totals differ';
+  assert (report_staff->>'products_per_transaction')::numeric
+    = (after_product_metrics->>'products_per_transaction')::numeric,
+    'Admin and POS repair averages differ';
 
   -- Zero clears it.
   perform public.set_admin_store_sales_target(admin_token, 'toowong', today_value, 0);

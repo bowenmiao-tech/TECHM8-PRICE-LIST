@@ -992,14 +992,11 @@
       .target-month-points-total { grid-column: 1 / -1; }
     }
 
-    /* Flex rather than grid so the stats drop below the rate as one row
-       whenever the card is too narrow for both, at any viewport width. */
-    .target-hourly {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 10px 18px;
+    .target-month-performance {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(130px, .42fr);
+      align-items: center;
+      gap: 16px;
       margin-top: 16px;
       padding: 14px 16px;
       border: 1px solid rgba(255,255,255,.13);
@@ -1007,7 +1004,7 @@
       background: rgba(255,255,255,.07);
     }
 
-    .target-hourly-kicker {
+    .target-performance-kicker {
       color: rgba(255,255,255,.66);
       font-size: 10px;
       font-weight: 900;
@@ -1015,43 +1012,36 @@
       text-transform: uppercase;
     }
 
-    .target-hourly-value {
+    .target-performance-value {
       margin-top: 6px;
       font-size: 32px;
       font-weight: 950;
       line-height: 1;
     }
 
-    .target-hourly-value span {
-      color: rgba(255,255,255,.66);
-      font-size: 15px;
-      font-weight: 850;
-    }
-
-    .target-hourly-value span:first-child { margin-right: 6px; }
-    .target-hourly-value span:last-child { margin-left: 3px; }
-
-    .target-hourly-stats {
-      display: flex;
-      gap: 8px 20px;
-      color: rgba(255,255,255,.66);
-      font-size: 11px;
-      font-weight: 800;
-      text-align: right;
-    }
-
-    .target-hourly-stats strong {
-      display: block;
-      color: #fff;
-      font-size: 15px;
-      font-weight: 900;
-    }
-
-    .target-hourly-note {
-      flex-basis: 100%;
+    .target-performance-note {
+      margin-top: 7px;
       color: rgba(255,255,255,.6);
       font-size: 11px;
       font-weight: 750;
+    }
+
+    .target-performance-note strong { color: #ffe3a7; font-size: 14px; }
+
+    .target-performance-average {
+      padding-left: 16px;
+      border-left: 1px solid rgba(255,255,255,.16);
+      text-align: right;
+    }
+
+    @media (max-width: 560px) {
+      .target-month-performance { grid-template-columns: 1fr; }
+      .target-performance-average {
+        padding: 12px 0 0;
+        border-left: 0;
+        border-top: 1px solid rgba(255,255,255,.16);
+        text-align: left;
+      }
     }
 
 
@@ -12929,31 +12919,21 @@
       const monthCommissionPoints = Number(staffMonth?.commission_points || 0);
       const monthPoints = staffMonth ? Number(staffMonth.total_points ?? monthReviewPoints + monthBundlePoints + monthCommissionPoints) : null;
       const hourly = progress.monthly_hourly_sales || null;
-      const hourlyHours = numberValue(hourly?.hours);
-      const hourlyTimesheetHours = numberValue(hourly?.timesheet_hours);
-      const [hourlyYear, hourlyMonth] = String(hourly?.month || '').split('-').map(Number);
-      const hourlyMonthLabel = hourlyYear && hourlyMonth
-        ? new Date(hourlyYear, hourlyMonth - 1, 1).toLocaleString('en-AU', { month: 'long' })
-        : 'This month';
-      const hourlyNote = hourlyHours <= 0
-        ? 'No hours yet this month. Hours come from opening and closing your shift in POS.'
-        : hourlyTimesheetHours > 0
-          ? `Sales by payment date. Hours from POS shift open and close times; ${hourlyTimesheetHours.toFixed(1)} h taken from daily report timesheets on days the shift was not closed.`
-          : 'Sales by payment date. Hours from POS shift open and close times.';
       const personalSales = numberValue(staffMonth?.personal_sales ?? hourly?.net_sales);
-      const hourlyHtml = hourly ? `
-        <div class="target-hourly">
+      const productsPerTransaction = staffMonth?.products_per_transaction == null
+        ? null : numberValue(staffMonth.products_per_transaction);
+      const performanceHtml = staffMonth ? `
+        <div class="target-month-performance" aria-label="Personal monthly sales and average products per transaction">
           <div>
-            <div class="target-hourly-kicker">${escapeHtml(hourlyMonthLabel)}</div>
-            <div class="target-hourly-value"><span>Sale:</span>${hourly.sales_per_hour == null ? '—' : escapeHtml(money(hourly.sales_per_hour))}<span>/ per hour</span></div>
-            <div class="target-hourly-note">My sales: ${escapeHtml(money(personalSales))} · Commission (1%): ${escapeHtml(monthCommissionPoints.toFixed(2))} pts</div>
+            <div class="target-performance-kicker">${escapeHtml(targetMonthLabel)} · My sales</div>
+            <div class="target-performance-value">${escapeHtml(money(personalSales))}</div>
+            <div class="target-performance-note">Sales points (1%): <strong>${monthCommissionPoints.toFixed(2)} pts</strong></div>
           </div>
-          <div class="target-hourly-stats">
-            <div><strong>${escapeHtml(money(personalSales))}</strong>my sales</div>
-            <div><strong>${escapeHtml(hourlyHours.toFixed(1))} h</strong>worked</div>
-            <div><strong>${escapeHtml(String(numberValue(hourly.days_worked)))}</strong>days</div>
+          <div class="target-performance-average">
+            <div class="target-performance-kicker">Products per transaction</div>
+            <div class="target-performance-value">${productsPerTransaction == null ? '—' : productsPerTransaction.toFixed(2)}</div>
+            <div class="target-performance-note">${productsPerTransaction == null ? 'Updating monthly transaction data' : `${numberValue(staffMonth.transaction_count)} paid transactions · ${numberValue(staffMonth.product_units)} products & repairs`}</div>
           </div>
-          <div class="target-hourly-note">${escapeHtml(hourlyNote)}</div>
         </div>
       ` : '';
 
@@ -13031,7 +13011,7 @@
               <span><i class="bi bi-shop"></i> Store sales = payments received less refunds this month</span>
               <span>Updated ${escapeHtml(syncTime)}</span>
             </div>
-            ${hourlyHtml}
+            ${performanceHtml}
           </article>
 
           <div class="target-action-stack">
@@ -27837,6 +27817,9 @@
           bundle_points: 25,
           personal_sales: 6120,
           commission_points: 61.20,
+          transaction_count: 100,
+          product_units: 200,
+          products_per_transaction: 2,
           total_points: 116.20
         },
         monthly_hourly_sales: {

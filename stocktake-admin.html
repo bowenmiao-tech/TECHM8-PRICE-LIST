@@ -250,6 +250,12 @@
     .review-figure.last strong { color: var(--muted); font-size: 15px; }
     .review-figure.total strong { color: var(--green-dark); }
     .review-staff-foot { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .review-staff-average {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+      padding-top: 9px; border-top: 1px solid var(--line);
+    }
+    .review-staff-average span { color: var(--muted); font-size: 11px; font-weight: 850; }
+    .review-staff-average strong { color: var(--green-dark); font-size: 17px; font-weight: 950; }
     .score-detail { margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbfa; }
     .score-detail[hidden] { display: none; }
     .score-detail h3 { margin: 0 0 8px; font-size: 16px; }
@@ -618,6 +624,7 @@
             <span class="review-figure total"><span>Total</span><strong>${scorePoints(row.total_points)}</strong></span>
           </span>
           <span class="review-staff-foot">${scoreMoney(row.personal_sales)} personal sales · ${Number(row.this_month_reviews || 0)} reviews · ${Number(row.device_bundle_count || 0)} device bundles</span>
+          <span class="review-staff-average"><span>Products per transaction</span><strong>${(Number(row.products_per_transaction) || 0).toFixed(2)}</strong></span>
         </button>
       `).join('');
     }
@@ -637,7 +644,7 @@
           <div><span>Personal sales</span><strong>${scoreMoney(row.personal_sales)}</strong></div>
           <div><span>Products per transaction</span><strong>${(Number(row.products_per_transaction) || 0).toFixed(2)}</strong></div>
           <div><span>Paid transactions</span><strong>${Number(row.transaction_count || 0)}</strong></div>
-          <div><span>Product units</span><strong>${Number(row.product_units || 0)}</strong></div>
+          <div><span>Products & repairs</span><strong>${Number(row.product_units || 0)}</strong></div>
         </div>
         <h3>Device points history</h3>
         ${bundles.length ? bundles.map(item => `
