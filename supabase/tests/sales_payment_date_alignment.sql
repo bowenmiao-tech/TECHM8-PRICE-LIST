@@ -11,7 +11,7 @@ declare
   code text := 'REPORT-TEST-'||gen_random_uuid();
   customer_code text := 'REPORT-CUSTOMER-'||gen_random_uuid();
   from_day date; to_day date;
-  overview jsonb; pos_report jsonb; admin_store jsonb; detail jsonb; previous jsonb;
+  overview jsonb; pos_report jsonb; admin_store jsonb; detail jsonb; previous jsonb; invoice_payload jsonb;
   item jsonb; category text; expected numeric; denied boolean;
 begin
   begin
@@ -33,7 +33,7 @@ begin
       values(code,store_row.id,'2099-01-01',staff_row.display_name,'Cash',200,60.01,'deposit','{}',
         800000000000+floor(random()*1000000000)::bigint) returning id into order_id;
     insert into public.pos_sales_order_lines(sales_order_id,line_number,line_type,name,quantity,unit_price,line_total,line_payload)
-      values(order_id,1,'repair','Report test repair',1,100,100,'{}'),
+      values(order_id,1,'repair','Report test repair',1,100,100,jsonb_build_object('source_device','Test iPhone 16')),
         (order_id,2,'retail','Report test product',1,60,60,'{}'),
         (order_id,3,'special','Report test special',1,40,40,'{}');
     select id into line_id from public.pos_sales_order_lines where sales_order_id=order_id and line_number=1;
@@ -67,6 +67,29 @@ begin
       values(refund_id,line_id,5,0);
 
     pos_report:=public.get_pos_performance_report(staff_token,'toowong','2099-01-02','2099-01-02',1);
+    select public.pos_sales_order_payload(sales_order) into invoice_payload
+    from public.pos_sales_orders sales_order where sales_order.id=order_id;
+    assert (select invoice_line->>'repair_device' from jsonb_array_elements(invoice_payload->'items') invoice_line
+      where invoice_line->>'line_type'='repair')='Test iPhone 16',
+      'Invoice repair device was not included';
+    assert (select report_line->>'device' from jsonb_array_elements(pos_report->'categories') report_category
+      cross join lateral jsonb_array_elements(report_category->'orders') order_row
+      cross join lateral jsonb_array_elements(order_row->'items') report_line
+      where report_category->>'type'='repair' and order_row->>'order_code'=code
+        and report_line->>'name'='Report test repair')='Test iPhone 16',
+      'Performance repair device was not included';
+    assert (select count(*) from jsonb_array_elements(pos_report->'categories') report_category
+      cross join lateral jsonb_array_elements(report_category->'orders') order_row
+      cross join lateral jsonb_array_elements(order_row->'items') report_line
+      where report_category->>'type'='retail' and order_row->>'order_code'=code
+        and report_line->>'name'='Report test product')=1,
+      'Product list omitted the sold product';
+    assert not exists (select 1 from jsonb_array_elements(pos_report->'categories') report_category
+      cross join lateral jsonb_array_elements(report_category->'orders') order_row
+      cross join lateral jsonb_array_elements(order_row->'items') report_line
+      where report_category->>'type'='retail' and order_row->>'order_code'=code
+        and report_line->>'name'='Report test repair'),
+      'Repair leaked into the product list';
     assert (pos_report#>>'{totals,received}')::numeric=139.99, 'Old balance missing or credit counted as cash';
     assert (pos_report#>>'{totals,net}')::numeric=119.99, 'Cash refund/credit exclusion wrong';
     assert (pos_report#>>'{totals,store_credit_redeemed}')::numeric=30, 'Credit tender disclosure missing';
