@@ -222,4 +222,3 @@ revoke all on function public.get_pos_performance_report(text, text, date, date,
   from public, anon, authenticated;
 grant execute on function public.get_pos_performance_report(text, text, date, date, integer)
   to service_role;
-
