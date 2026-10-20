@@ -38,6 +38,29 @@ const { chromium } = require('playwright');
         payment_status: 'paid', created_at: '2026-10-19T00:00:00Z',
         items: [repair, product], total: 299, amount_paid: 299
       });
+      const paymentOrder = {
+        id: 'POS-PAYMENT-TEST', invoice_number: 4341, store_id: 'north-lakes',
+        customer_name: 'Test Customer', staff_name: 'Bowen',
+        payment_status: 'deposit', created_at: '2026-10-19T00:00:00Z',
+        items: [repair], total: 119, amount_paid: 19,
+        payments: [{ payment_number: 1, method: 'Card', amount: 19, staff_name: 'Bowen' }]
+      };
+      openReceiptCompleteModal(paymentOrder);
+      const quickPaymentEdit = !els.receiptInvoiceDetails.hidden
+        && !!els.receiptInvoiceDetails.querySelector('[data-correct-payment="1"]')
+        && els.receiptInvoiceDetails.textContent.includes('Edit method');
+      let correctionPromptOpened = false;
+      window.prompt = () => { correctionPromptOpened = true; return null; };
+      els.receiptInvoiceDetails.querySelector('[data-correct-payment="1"]')?.click();
+      openReceiptCompleteModal(paymentOrder, { history: true });
+      const historyPaymentEdit = !!els.receiptInvoiceDetails.querySelector('[data-correct-payment="1"]');
+      openReceiptCompleteModal({ ...paymentOrder, invoice_number: null });
+      const pendingPaymentEdit = !!els.receiptInvoiceDetails.querySelector('[data-correct-payment]');
+      openReceiptCompleteModal({
+        ...paymentOrder, payments: [{ payment_number: 1, method: 'Tyro, Cash', amount: 19 }]
+      }, { history: true });
+      const importedPaymentEdit = !!els.receiptInvoiceDetails.querySelector('[data-correct-payment]');
+      closeReceiptCompleteModal();
       state.performanceError = '';
       state.performanceLoading = false;
       state.performanceOpen = { repair: true, retail: true };
@@ -60,6 +83,7 @@ const { chromium } = require('playwright');
       renderPerformanceReport();
       return {
         invoice,
+        quickPaymentEdit, correctionPromptOpened, historyPaymentEdit, pendingPaymentEdit, importedPaymentEdit,
         repairRow: document.querySelector('[data-perf-category="repair"] .perf-order').textContent,
         productRow: document.querySelector('[data-perf-category="retail"] .perf-order').textContent
       };
@@ -68,6 +92,11 @@ const { chromium } = require('playwright');
     assert.match(result.invoice, /Repair work<\/span><strong>Screen Replacement \(OLED\)/);
     assert.ok(result.invoice.indexOf('invoice-repair-overview') < result.invoice.indexOf('invoice-detail-grid'));
     assert.doesNotMatch(result.invoice, /Checkout staff|Order reference|Payment status|SKU REPAIR/);
+    assert.equal(result.quickPaymentEdit, true, 'Saved receipt should offer payment method correction');
+    assert.equal(result.correctionPromptOpened, true, 'The correction button should open its workflow');
+    assert.equal(result.historyPaymentEdit, true, 'Invoice history should offer payment method correction');
+    assert.equal(result.pendingPaymentEdit, false, 'Unsaved receipt must not offer payment method correction');
+    assert.equal(result.importedPaymentEdit, false, 'Unsupported imported payment must not offer correction');
     assert.match(result.repairRow, /Apple iPhone 16 — Screen Replacement \(OLED\)/);
     assert.doesNotMatch(result.repairRow, /Wall Charger|Collected by/);
     assert.match(result.productRow, /2 × 30W Type C Wall Charger/);

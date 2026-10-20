@@ -3945,6 +3945,24 @@
       flex: none;
     }
 
+    .invoice-detail-payment > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+    .invoice-payment-correct {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 7px;
+      border: 1px solid var(--tm-line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--tm-green-dark);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .invoice-payment-correct:hover,
+    .invoice-payment-correct:focus-visible { border-color: var(--tm-green); background: #eef8f4; }
+
     .invoice-repair-record {
       display: grid;
       gap: 12px;
@@ -24988,6 +25006,13 @@
       return POS_TENDER_METHODS.some(entry => entry.label === String(method || '').trim());
     }
 
+    function canCorrectInvoicePayment(order, payment) {
+      const paymentNumber = Number(payment?.payment_number);
+      return invoiceNumberText(order) !== 'Pending'
+        && Number.isInteger(paymentNumber) && paymentNumber > 0
+        && correctablePaymentMethod(payment.method);
+    }
+
     async function correctPaymentMethod(paymentNumber) {
       const order = state.lastCompletedOrder;
       if (!order || !paymentNumber) return;
@@ -25107,7 +25132,7 @@
           <section class="invoice-detail-section">
             <div class="invoice-detail-section-title">Payments and refunds</div>
             <div class="invoice-detail-payments">
-              ${fallbackPayments.map(payment => `<div class="invoice-detail-payment"><span>${escapeHtml(payment.method || 'Payment')}${payment.staff_name ? ` · ${escapeHtml(payment.staff_name)}` : ''}</span><span class="invoice-detail-payment-right"><strong>${money(numberValue(payment.amount))}</strong>${!compact && payment.payment_number && correctablePaymentMethod(payment.method) ? `<button class="icon-button" type="button" data-correct-payment="${Number(payment.payment_number)}" title="Correct the payment method"><i class="bi bi-pencil"></i></button>` : ''}</span></div>`).join('')}
+              ${fallbackPayments.map(payment => `<div class="invoice-detail-payment"><span>${escapeHtml(payment.method || 'Payment')}${payment.staff_name ? ` · ${escapeHtml(payment.staff_name)}` : ''}</span><span class="invoice-detail-payment-right"><strong>${money(numberValue(payment.amount))}</strong>${canCorrectInvoicePayment(order, payment) ? `<button class="invoice-payment-correct" type="button" data-correct-payment="${Number(payment.payment_number)}" title="Correct the payment method" aria-label="Change payment method for ${money(numberValue(payment.amount))}"><i class="bi bi-pencil" aria-hidden="true"></i> Edit method</button>` : ''}</span></div>`).join('')}
               ${refunds.map(refund => `<div class="invoice-detail-payment"><span>Refund · ${escapeHtml(refund.method || '')}${refund.staff_name ? ` · ${escapeHtml(refund.staff_name)}` : ''}</span><strong>-${money(numberValue(refund.amount))}</strong></div>`).join('')}
             </div>
           </section>
@@ -25177,7 +25202,9 @@
       els.receiptSyncNote.hidden = !syncPending;
       const modal = els.receiptCompleteModal.querySelector('.receipt-complete-modal');
       if (modal) modal.classList.toggle('invoice-history-view', historyView);
-      const showDetails = historyView || (order.items || []).some(item => item.warranty?.eligible);
+      const showDetails = historyView
+        || (order.items || []).some(item => item.warranty?.eligible)
+        || (order.payments || []).some(payment => canCorrectInvoicePayment(order, payment));
       if (!els.receiptInvoiceDetails.dataset.correctionBound) {
         els.receiptInvoiceDetails.dataset.correctionBound = '1';
         els.receiptInvoiceDetails.addEventListener('click', event => {
