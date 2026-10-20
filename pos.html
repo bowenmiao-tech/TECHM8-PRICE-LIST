@@ -828,6 +828,22 @@
 
     .target-score-card .target-card-head { align-items: flex-start; }
 
+    .target-score-head-actions { display: flex; align-items: center; gap: 8px; }
+    .target-score-visibility {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(255,255,255,.45);
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(255,255,255,.12);
+      cursor: pointer;
+    }
+    .target-score-visibility:hover { background: rgba(255,255,255,.23); }
+    .target-score-visibility svg { width: 19px; height: 19px; }
+
     .target-score-kicker {
       margin-bottom: 7px;
       color: rgba(255,255,255,.68);
@@ -944,7 +960,7 @@
 
     .target-month-points {
       display: grid;
-      grid-template-columns: minmax(130px, .8fr) repeat(3, minmax(0, 1fr));
+      grid-template-columns: minmax(130px, .8fr) repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin-top: 20px;
     }
@@ -10495,6 +10511,7 @@
       todayProgressLoading: false,
       todayProgressError: '',
       todayProgressLastLoaded: '',
+      targetNumbersVisible: false,
       googleReviewSaving: false,
       dashboardQuote: {
         rows: [],
@@ -11731,6 +11748,7 @@
       localStorage.removeItem(POS_STAFF_KEY);
       sessionStorage.removeItem(POS_STAFF_KEY);
       state.selectedStaffName = '';
+      state.targetNumbersVisible = false;
       state.allowedStoreIds = [];
       state.scheduledStoreId = '';
       state.todayProgress = null;
@@ -11986,6 +12004,7 @@
       }
       const storeChanged = state.storeId !== storeId;
       if (storeChanged) {
+        state.targetNumbersVisible = false;
         closeStocktakeEditor();
         closeProductVariantModal();
         clearActiveShiftCache();
@@ -12163,6 +12182,7 @@
     }
 
     function setStaffContext(context, options = {}) {
+      if (state.selectedStaffName !== context.selectedName) state.targetNumbersVisible = false;
       state.selectedStaffName = context.selectedName;
       state.scheduledStoreId = context.scheduledStoreId;
       state.allowedStoreIds = context.allowedStoreIds;
@@ -12958,6 +12978,8 @@
       const staffMonth = progress.staff_month_points || null;
       const [targetYear, targetMonth] = String(storeMonth?.month || staffMonth?.month || brisbaneDateIso().slice(0, 7)).split('-').map(Number);
       const targetMonthLabel = new Date(targetYear, targetMonth - 1, 1).toLocaleString('en-AU', { month: 'long' });
+      const showTargetNumbers = state.targetNumbersVisible;
+      const targetValue = value => showTargetNumbers ? escapeHtml(String(value)) : '*****';
       const salesTarget = storeMonth && storeMonth.target != null ? numberValue(storeMonth.target) : 0;
       const monthSales = numberValue(storeMonth?.net_sales);
       const salesPercent = salesTarget > 0 ? monthSales / salesTarget * 100 : 0;
@@ -12967,10 +12989,10 @@
       const salesProgressHtml = !storeMonth ? `
         <div class="target-score-progress-copy target-month-empty"><span>${state.todayProgressLoading ? 'Loading this month&rsquo;s store sales...' : 'Store sales for this month will appear after the next refresh.'}</span></div>
       ` : salesTarget > 0 ? `
-        <div class="target-score-track" aria-label="${Math.floor(salesPercent)} percent of the ${escapeHtml(targetMonthLabel)} store target"><span style="width:${Math.max(0, Math.min(100, salesPercent))}%"></span></div>
-        <div class="target-score-progress-copy"><span>${salesRemaining > 0
+        <div class="target-score-track" aria-label="${showTargetNumbers ? `${Math.floor(salesPercent)} percent of the ${escapeHtml(targetMonthLabel)} store target` : 'Store target progress hidden'}"><span style="width:${showTargetNumbers ? Math.max(0, Math.min(100, salesPercent)) : 0}%"></span></div>
+        <div class="target-score-progress-copy"><span>${!showTargetNumbers ? '***** to go · ***** days left · about ***** a day' : salesRemaining > 0
           ? `${escapeHtml(wholeMoney(salesRemaining))} to go · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left · about ${escapeHtml(wholeMoney(dailyNeeded))} a day`
-          : `${escapeHtml(targetMonthLabel)} target reached`}</span><strong>${Math.floor(salesPercent)}%</strong></div>
+          : `${escapeHtml(targetMonthLabel)} target reached`}</span><strong>${targetValue(`${Math.floor(salesPercent)}%`)}</strong></div>
       ` : `
         <div class="target-score-progress-copy target-month-empty"><span><i class="bi bi-info-circle"></i> No ${escapeHtml(targetMonthLabel)} target has been set for this store yet.</span></div>
       `;
@@ -12978,8 +13000,7 @@
       const monthReviewCount = Number(staffMonth?.google_review_count || 0);
       const monthBundlePoints = Number(staffMonth?.bundle_points || 0);
       const monthBundleOrders = Number(staffMonth?.bundle_order_count || 0);
-      const monthCommissionPoints = Number(staffMonth?.commission_points || 0);
-      const monthPoints = staffMonth ? Number(staffMonth.total_points ?? monthReviewPoints + monthBundlePoints + monthCommissionPoints) : null;
+      const monthPoints = staffMonth ? monthReviewPoints + monthBundlePoints : null;
       const hourly = progress.monthly_hourly_sales || null;
       const personalSales = numberValue(staffMonth?.personal_sales ?? hourly?.net_sales);
       const productsPerTransaction = staffMonth?.products_per_transaction == null
@@ -12988,13 +13009,12 @@
         <div class="target-month-performance" aria-label="Personal monthly sales and average products per transaction">
           <div>
             <div class="target-performance-kicker">${escapeHtml(targetMonthLabel)} · My sales</div>
-            <div class="target-performance-value">${escapeHtml(money(personalSales))}</div>
-            <div class="target-performance-note">Sales points (1%): <strong>${monthCommissionPoints.toFixed(2)} pts</strong></div>
+            <div class="target-performance-value">${targetValue(money(personalSales))}</div>
           </div>
           <div class="target-performance-average">
             <div class="target-performance-kicker">Products per transaction</div>
-            <div class="target-performance-value">${productsPerTransaction == null ? '—' : productsPerTransaction.toFixed(2)}</div>
-            <div class="target-performance-note">${productsPerTransaction == null ? 'Updating monthly transaction data' : `${numberValue(staffMonth.transaction_count)} paid transactions · ${numberValue(staffMonth.product_units)} products & repairs`}</div>
+            <div class="target-performance-value">${productsPerTransaction == null ? '—' : targetValue(productsPerTransaction.toFixed(2))}</div>
+            <div class="target-performance-note">${productsPerTransaction == null ? 'Updating monthly transaction data' : `${targetValue(numberValue(staffMonth.transaction_count))} paid transactions · ${targetValue(numberValue(staffMonth.product_units))} products & repairs`}</div>
           </div>
         </div>
       ` : '';
@@ -13055,19 +13075,21 @@
             <div class="target-card-head">
               <div>
                 <div class="target-score-kicker">${escapeHtml(targetMonthLabel)} store target</div>
-                <div class="target-score-number target-month-number">${storeMonth ? escapeHtml(wholeMoney(monthSales)) : '—'}<span>${salesTarget > 0 ? `/ ${escapeHtml(wholeMoney(salesTarget))}` : 'sales this month'}</span></div>
+                <div class="target-score-number target-month-number">${storeMonth ? targetValue(wholeMoney(monthSales)) : '—'}<span>${salesTarget > 0 ? `/ ${targetValue(wholeMoney(salesTarget))}` : 'sales this month'}</span></div>
               </div>
-              <span class="target-status-pill"><i class="bi ${state.todayProgressLoading ? 'bi-arrow-repeat' : 'bi-broadcast'}"></i>${state.todayProgressLoading ? 'Updating' : 'Live'}</span>
+              <div class="target-score-head-actions">
+                <button class="target-score-visibility" type="button" data-target-visibility aria-label="${showTargetNumbers ? 'Hide performance numbers' : 'Show performance numbers'}" aria-pressed="${showTargetNumbers}" title="${showTargetNumbers ? 'Hide numbers' : 'Show numbers'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>${showTargetNumbers ? '' : '<path d="M3 3 21 21"/>'}</svg></button>
+                <span class="target-status-pill"><i class="bi ${state.todayProgressLoading ? 'bi-arrow-repeat' : 'bi-broadcast'}"></i>${state.todayProgressLoading ? 'Updating' : 'Live'}</span>
+              </div>
             </div>
             ${salesProgressHtml}
             <div class="target-month-points" aria-label="My points this month">
               <div class="target-month-points-total">
                 <span>My points · ${escapeHtml(targetMonthLabel)}</span>
-                <strong>${monthPoints == null ? '—' : monthPoints.toFixed(2)}<small>pts</small></strong>
+                <strong>${monthPoints == null ? '—' : targetValue(monthPoints.toFixed(2))}<small>pts</small></strong>
               </div>
-              <div class="target-score-chip"><span>Google reviews</span><strong>+${monthReviewPoints} pts</strong><em>${monthReviewCount} review${monthReviewCount === 1 ? '' : 's'}</em></div>
-              <div class="target-score-chip"><span>Device + accessories</span><strong>+${monthBundlePoints} pts</strong><em>${monthBundleOrders} bundle${monthBundleOrders === 1 ? '' : 's'}</em></div>
-              <div class="target-score-chip"><span>Sales commission · 1%</span><strong>${monthCommissionPoints.toFixed(2)} pts</strong><em>${escapeHtml(money(personalSales))} personal sales</em></div>
+              <div class="target-score-chip"><span>Google reviews</span><strong>+${targetValue(monthReviewPoints)} pts</strong><em>${targetValue(monthReviewCount)} reviews</em></div>
+              <div class="target-score-chip"><span>Device + accessories</span><strong>+${targetValue(monthBundlePoints)} pts</strong><em>${targetValue(monthBundleOrders)} bundles</em></div>
             </div>
             <div class="target-score-footer">
               <span><i class="bi bi-shop"></i> Store sales = payments received less refunds this month</span>
@@ -27166,6 +27188,12 @@
     els.syncStatus.addEventListener('click', () => loadProducts({ force: true }));
 
     els.targetDashboard.addEventListener('click', event => {
+      const visibilityButton = event.target.closest('[data-target-visibility]');
+      if (visibilityButton) {
+        state.targetNumbersVisible = !state.targetNumbersVisible;
+        renderLiveTargetDashboard();
+        return;
+      }
       const refreshButton = event.target.closest('[data-target-refresh]');
       if (refreshButton) {
         loadTodayProgress();
