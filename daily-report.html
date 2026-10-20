@@ -295,6 +295,19 @@
     }
 
     .grid-repair { grid-template-columns: 1.2fr 1.5fr .7fr .7fr .6fr auto; }
+    .repair-row-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #526471;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .repair-row-actions { display: flex; align-items: center; gap: 8px; }
+    .repair-row-warning { color: #c45a29; }
+    .repair-row-confirmed { border-color: #61b66e; background: #f7fff8; }
     .grid-faulty { grid-template-columns: 1.2fr 1fr 1.4fr .7fr auto; }
     .grid-device-sales { grid-template-columns: 1.2fr 1fr .8fr .7fr .7fr .6fr auto; }
     .grid-device-buyback { grid-template-columns: 1.35fr .9fr .7fr .7fr .7fr .6fr auto; }
@@ -1261,31 +1274,46 @@
           <div class="panel">
             <div class="section-banner">DAILY REPORTING</div>
             <div class="section-head">
-              <div class="hint">Add one row for each completed repair or related repair charge for the day.</div>
-              <el-button type="primary" plain icon="el-icon-plus" @click="addRepairLine">Add Repair Row</el-button>
+              <div class="hint">Today's completed repairs appear automatically. Check every row and click Confirm. Amount is filled only for a paid POS invoice dated today.</div>
+              <div class="toolbar" style="margin-top:0;">
+                <span v-if="repairSuggestionsLoading">Checking completed repairs...</span>
+                <span v-else>{{ confirmedRepairCount }} / {{ activeRepairCount }} rows confirmed</span>
+                <el-button plain icon="el-icon-refresh" @click="refreshRepairSuggestions(true)" :loading="repairSuggestionsLoading">Refresh Repairs</el-button>
+                <el-button type="primary" plain icon="el-icon-plus" @click="addRepairLine">Add Repair Row</el-button>
+              </div>
             </div>
             <div class="line-stack" v-if="repairLines.length">
-              <div class="line-card" v-for="(line, index) in repairLines" :key="'repair-' + index">
+              <div class="line-card" :class="{ 'repair-row-confirmed': line.confirmed }" v-for="(line, index) in repairLines" :key="line.source_key || 'manual-' + index">
+                <div class="repair-row-head">
+                  <span :class="{ 'repair-row-warning': line.source_missing }">
+                    {{ line.source_key ? ('Repair card ' + (line.ticket_code || '')) : 'Manual repair row' }}
+                    <template v-if="line.source_missing"> — no longer listed as completed; remove or refresh</template>
+                  </span>
+                  <div class="repair-row-actions">
+                    <el-tag v-if="line.confirmed" type="success" size="small">Confirmed</el-tag>
+                    <el-button v-else type="success" size="mini" @click="confirmRepairLine(line)">Confirm</el-button>
+                  </div>
+                </div>
                 <div class="grid-repair">
                   <div>
                     <label class="field-label">Model And Color</label>
-                    <el-input v-model="line.model_and_color" placeholder="e.g. Samsung S23 Black"></el-input>
+                    <el-input v-model="line.model_and_color" @input="line.confirmed = false" placeholder="e.g. Samsung S23 Black"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Problem And Parts Used</label>
-                    <el-input v-model="line.problem_and_parts_used" placeholder="e.g. LCD / Battery / Balance / Inspection"></el-input>
+                    <el-input v-model="line.problem_and_parts_used" @input="line.confirmed = false" placeholder="e.g. LCD / Battery / Balance / Inspection"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Tech Name</label>
-                    <el-input v-model="line.tech_name" placeholder="Tech name"></el-input>
+                    <el-input v-model="line.tech_name" @input="line.confirmed = false" placeholder="Tech name"></el-input>
                   </div>
                   <div>
                     <label class="field-label">Invoice Number</label>
-                    <el-input v-model="line.invoice_number" placeholder="POS number"></el-input>
+                    <el-input v-model="line.invoice_number" @input="line.confirmed = false" placeholder="POS number"></el-input>
                   </div>
                   <div>
-                    <label class="field-label">Amount</label>
-                    <el-input v-model="line.amount" placeholder="339.00"></el-input>
+                    <label class="field-label">Amount (today's paid sales)</label>
+                    <el-input v-model="line.amount" @input="line.confirmed = false" placeholder="0.00"></el-input>
                   </div>
                   <div>
                     <el-button type="danger" plain icon="el-icon-delete" @click="removeRepairLine(index)"></el-button>
@@ -1921,6 +1949,7 @@
             transferLoading: false,
             transferConfirmingId: null,
             repairLines: [],
+            repairSuggestionsLoading: false,
             faultyBrokenLines: [],
             deviceSalesLines: [],
             deviceBuybackLines: [],
@@ -1966,6 +1995,12 @@
           },
           repairSalesTotal() {
             return this.repairLines.reduce((sum, line) => sum + this.moneyValue(line.amount), 0);
+          },
+          activeRepairCount() {
+            return this.repairLines.filter(line => this.repairLineHasContent(line)).length;
+          },
+          confirmedRepairCount() {
+            return this.repairLines.filter(line => this.repairLineHasContent(line) && line.confirmed).length;
           },
           deviceSalesTotal() {
             return this.deviceSalesLines.reduce((sum, line) => sum + this.moneyValue(line.amount), 0);
@@ -2038,10 +2073,16 @@
         mounted() {
           this.loadSetup();
           this._inventoryRefreshTimer = window.setInterval(() => {
-            if (this.stage === 'report' && !document.hidden && !this.submitting) this.refreshInventory(false);
+            if (this.stage === 'report' && !document.hidden && !this.submitting) {
+              this.refreshInventory(false);
+              if (Date.now() - (this._lastRepairSuggestionsRefreshAt || 0) > 60000) this.refreshRepairSuggestions(false);
+            }
           }, 30000);
           this._onInventoryResume = () => {
-            if (this.stage === 'report' && !document.hidden && !this.submitting) this.refreshInventory(false);
+            if (this.stage === 'report' && !document.hidden && !this.submitting) {
+              this.refreshInventory(false);
+              this.refreshRepairSuggestions(false);
+            }
           };
           this._onInventoryStorage = event => {
             if (event.key !== INVENTORY_CHANGE_KEY || !event.newValue || this.stage !== 'report') return;
@@ -2064,7 +2105,71 @@
         },
         methods: {
           makeRepairLine() {
-            return { model_and_color: '', problem_and_parts_used: '', tech_name: this.selectedStaffName || '', invoice_number: '', amount: '' };
+            return { model_and_color: '', problem_and_parts_used: '', tech_name: this.selectedStaffName || '', invoice_number: '', amount: '', confirmed: false, source_key: '', source_signature: '', source_missing: false, ticket_code: '' };
+          },
+          repairLineHasContent(line) {
+            return this.hasText([line.model_and_color, line.problem_and_parts_used, line.invoice_number, line.amount]);
+          },
+          confirmRepairLine(line) {
+            if (line.source_missing) return this.$message.error('This repair is no longer marked complete. Refresh or remove this row.');
+            if (!String(line.model_and_color || '').trim() || !String(line.problem_and_parts_used || '').trim()) {
+              return this.$message.error('Check the model and problem / parts before confirming.');
+            }
+            line.confirmed = true;
+          },
+          async refreshRepairSuggestions(showError) {
+            const storeCode = this.selectedStoreCode;
+            const reportDate = this.todayIso;
+            if (!storeCode || this.stage !== 'report' || this.reportReadOnly) return true;
+            if (this._repairSuggestionsPromise) return this._repairSuggestionsPromise;
+            this.repairSuggestionsLoading = true;
+            this._repairSuggestionsPromise = (async () => {
+              try {
+                const result = await window.Techm8StaffAuth.callRpc('get_daily_report_repair_suggestions', {
+                  session_token: window.Techm8StaffAuth.getToken(),
+                  target_store_code: storeCode,
+                  target_date: reportDate
+                });
+                if (!result || !Array.isArray(result.repair_lines)) throw new Error('Could not load completed repairs.');
+                if (this.selectedStoreCode !== storeCode || this.stage !== 'report' || this.todayIso !== reportDate) return false;
+                const bySource = new Map(result.repair_lines.map(item => [item.source_key, item]));
+                const existingSources = new Set();
+                this.repairLines.forEach(line => {
+                  if (!line.source_key) return;
+                  const suggestion = bySource.get(line.source_key);
+                  if (!suggestion) {
+                    line.source_missing = true;
+                    line.confirmed = false;
+                    return;
+                  }
+                  existingSources.add(line.source_key);
+                  line.source_missing = false;
+                  if (line.source_signature !== suggestion.source_signature) {
+                    Object.assign(line, suggestion, { confirmed: false, source_missing: false });
+                  }
+                });
+                const newLines = result.repair_lines
+                  .filter(item => !existingSources.has(item.source_key))
+                  .map(item => Object.assign(this.makeRepairLine(), item, { confirmed: false }));
+                if (newLines.length) {
+                  if (this.repairLines.length === 1 && !this.repairLines[0].source_key && !this.repairLineHasContent(this.repairLines[0])) {
+                    this.repairLines = [];
+                  }
+                  this.repairLines.push(...newLines);
+                }
+                if (!this.repairLines.length) this.addRepairLine();
+                this._lastRepairSuggestionsRefreshAt = Date.now();
+                return true;
+              } catch (error) {
+                console.error(error);
+                if (showError) this.$message.error(error.message || 'Could not load completed repairs.');
+                return false;
+              } finally {
+                this.repairSuggestionsLoading = false;
+                this._repairSuggestionsPromise = null;
+              }
+            })();
+            return this._repairSuggestionsPromise;
           },
           makeFaultyBrokenLine() {
             return { model_no_color: '', faulty_part_name: '', mention_issue: '', tech_name: this.selectedStaffName || '' };
@@ -2351,12 +2456,15 @@
             if (!this.selectedStaffName) return this.$message.error('Please choose your name.');
 
             this.reportReadOnly = false;
+            if (this._reportStoreCode && this._reportStoreCode !== this.selectedStoreCode) this.resetForm();
+            this._reportStoreCode = this.selectedStoreCode;
 
             await this.loadSetup(this.selectedStoreCode);
             this.stage = 'report';
             if (!this.repairLines.length) this.addRepairLine();
             if (!this.timesheetLines.length) this.addTimesheetLine();
             await this.loadDraft();
+            await this.refreshRepairSuggestions(true);
           },
           async enterInventoryCount() {
             if (!this.selectedStoreCode) return this.$message.error('Please choose a store.');
@@ -2517,11 +2625,13 @@
           async resumeDraftFromSetup(draft) {
             this.selectedStoreCode = this.stores.find(store => store.store_name === draft.store_name)?.store_code || this.selectedStoreCode;
             this.selectedStaffName = draft.staff_name || '';
+            this._reportStoreCode = this.selectedStoreCode;
             await this.loadSetup(this.selectedStoreCode);
             this.stage = 'report';
             this.reportReadOnly = Boolean(draft.read_only);
             this.applyDraft(draft.payload || {});
             this.draftLoadedAt = draft.updated_at || new Date().toISOString();
+            await this.refreshRepairSuggestions(true);
           },
           backToSetup() {
             this.stage = 'setup';
@@ -2649,7 +2759,7 @@
               staff_name: this.selectedStaffName,
               report_date: this.todayIso,
               notes: this.notes,
-              repair_lines: this.repairLines.filter(line => this.hasText([line.model_and_color, line.problem_and_parts_used, line.invoice_number, line.amount])),
+              repair_lines: this.repairLines.filter(line => this.repairLineHasContent(line)),
               faulty_broken_lines: this.faultyBrokenLines.filter(line => this.hasText([line.model_no_color, line.faulty_part_name, line.mention_issue, line.tech_name])),
               device_sales_lines: this.deviceSalesLines.filter(line => this.hasText([line.model_color_gb, line.imei_no, line.new_or_used, line.staff_name, line.invoice_number, line.amount])),
               device_buyback_lines: this.deviceBuybackLines.filter(line => this.hasText([line.model_color_gb_condition, line.imei, line.buy_back_form_done, line.staff_name, line.phone_tracker_done, line.amount])),
@@ -2691,7 +2801,9 @@
           applyDraft(draft) {
             if (!draft || typeof draft !== 'object') return;
             this.notes = draft.notes || '';
-            this.repairLines = Array.isArray(draft.repair_lines) && draft.repair_lines.length ? draft.repair_lines : [this.makeRepairLine()];
+            this.repairLines = Array.isArray(draft.repair_lines) && draft.repair_lines.length
+              ? draft.repair_lines.map(line => Object.assign(this.makeRepairLine(), line, { confirmed: line.confirmed === true, source_missing: false }))
+              : [this.makeRepairLine()];
             this.faultyBrokenLines = Array.isArray(draft.faulty_broken_lines) ? draft.faulty_broken_lines : [];
             this.deviceSalesLines = Array.isArray(draft.device_sales_lines) ? draft.device_sales_lines : [];
             this.deviceBuybackLines = Array.isArray(draft.device_buyback_lines) ? draft.device_buyback_lines : [];
@@ -2755,6 +2867,10 @@
                 this.$message.error('Each repair row needs model and problem / parts.');
                 return false;
               }
+              if (line.source_missing || !line.confirmed) {
+                this.$message.error('Check and confirm every repair row before submitting.');
+                return false;
+              }
             }
 
             for (const line of payload.lcd_lines) {
@@ -2781,6 +2897,7 @@
               if (!await this.refreshInventory(true)) {
                 return;
               }
+              if (!await this.refreshRepairSuggestions(true)) return;
               const payload = this.buildPayload();
               if (!this.validateBeforeSubmit(payload)) return;
 

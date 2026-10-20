@@ -505,9 +505,12 @@ Data source:
 - weekly LCD inventory count entry
 
 General report rules:
-- A daily report may be submitted even if there are zero repair lines.
-- Do not require at least one repair row.
+- A daily report may have zero repair lines when the store has no completed repairs that day.
+- Do not require a manually added repair row.
 - If a row is present, that row still needs valid field content.
+- The report preloads each repair card when it first reaches ready for pickup or closes on that Brisbane date. Added repair jobs use their own completion date. Invoices alone do not create a completed-repair row, and memo cards are excluded.
+- Staff must confirm every populated repair row, including manual rows. Editing a row or changing its source data clears confirmation. Submission reloads completed repairs and rejects missing, duplicate, stale, or unconfirmed source rows.
+- Invoice references are shown when available. Amount is prefilled only from paid POS repair lines whose invoice business date matches the report date; staff should check later payments and corrections before confirming.
 
 Draft rules:
 - Drafts are saved per `store + staff + report_date`.
