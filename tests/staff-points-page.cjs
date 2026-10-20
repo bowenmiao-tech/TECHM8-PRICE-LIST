@@ -29,7 +29,11 @@ const path = require('path');
       ],
       device_events: [{ normalized_staff_name: 'fiona', order_code: 'POS-TEST',
         business_date: '2026-10-03', store_name: 'Toowong', device_count: 1,
-        accessory_count: 1, points: 10 }], events: []
+        accessory_count: 1, devices: [{ name: 'iPhone 16', quantity: 1 }],
+        accessories: [{ name: 'MagSafe case', quantity: 2 }], points: 10 },
+        { normalized_staff_name: 'fiona', event_type: 'manual_adjustment',
+          business_date: '2026-10-21', store_name: 'Toowong', points: 10,
+          reason: 'Owner-requested device points credit' }], events: []
     } : { ok: true, staff: [], stores: [] }) });
   });
   await page.goto(pathToFileURL(path.resolve(__dirname, '..', 'stocktake-admin.html')).href);
@@ -44,6 +48,7 @@ const path = require('path');
   if (!await page.locator('#scoreDetail').isVisible()) throw new Error('Staff detail did not open');
   const detail = await page.locator('#scoreDetail').innerText();
   if (!detail.includes('2.00') || !detail.includes('100') || !detail.includes('200') || !detail.includes('Products & repairs') || !detail.includes('$1,000.00')) throw new Error('Sales and average product metrics are missing');
+  if (!detail.includes('Toowong') || !detail.includes('iPhone 16') || !detail.includes('MagSafe case ×2') || !detail.includes('Owner-requested device points credit')) throw new Error('Device history item names or adjustment are missing');
   if (!await page.locator('#reviewHistory').isVisible()) throw new Error('Review history did not open');
   await page.setViewportSize({ width: 390, height: 844 });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
