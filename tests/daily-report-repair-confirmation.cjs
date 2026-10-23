@@ -72,8 +72,41 @@ const { chromium } = require('playwright');
     });
     assert.equal(await page.locator('.line-card.repair-row-confirmed').count(), 0, 'Source changes must require a fresh confirmation');
     assert.equal(await page.locator('.grid-repair input').last().inputValue(), '169.00');
+    await page.evaluate(async () => {
+      const app = document.querySelector('#app').__vue__;
+      app.removeRepairLine(0);
+      await app.refreshRepairSuggestions(true);
+    });
+    assert.equal(await page.locator('.repair-row-head').count(), 1, 'Removing a suggestion must not add it back on refresh');
+    assert.doesNotMatch(await page.locator('.repair-row-head').innerText(), /RPR-1/);
+    const removedDraft = await page.evaluate(() => document.querySelector('#app').__vue__.buildPayload());
+    assert.equal(removedDraft.dismissed_repair_sources[0].source_key, 'ticket:1');
+    await page.evaluate(async draft => {
+      const app = document.querySelector('#app').__vue__;
+      app.applyDraft(draft);
+      await app.refreshRepairSuggestions(true);
+    }, removedDraft);
+    assert.doesNotMatch(await page.locator('.repair-row-head').innerText(), /RPR-1/, 'Removed suggestion must stay removed after loading a draft');
+    await page.getByText('Restore removed repairs').click();
+    assert.match(await page.locator('.repair-row-head').innerText(), /RPR-1/);
+    await page.evaluate(async () => {
+      const app = document.querySelector('#app').__vue__;
+      const manual = app.makeRepairLine();
+      Object.assign(manual, { model_and_color: 'Xbox', problem_and_parts_used: 'Inspection', invoice_number: '4378', amount: '59.00', confirmed: true });
+      app.repairLines.push(manual);
+      window.__repairSuggestions.push({ source_key: 'inspection:2', source_signature: 'inspection-first', ticket_code: 'RPR-2', model_and_color: 'Xbox', problem_and_parts_used: 'Inspection', tech_name: 'Sam', invoice_number: '4378', amount: '59.00' });
+      await app.refreshRepairSuggestions(true);
+    });
+    const inspectionState = await page.evaluate(() => {
+      const app = document.querySelector('#app').__vue__;
+      return { rows: app.repairLines.filter(line => line.invoice_number === '4378'), total: app.repairSalesTotal };
+    });
+    assert.equal(inspectionState.rows.length, 1, 'Paid inspection must attach to the confirmed manual row, not duplicate it');
+    assert.equal(inspectionState.rows[0].source_key, 'inspection:2');
+    assert.equal(inspectionState.rows[0].confirmed, true);
+    assert.equal(inspectionState.total, 228, 'Inspection fee must count in repair sales');
     assert.deepEqual(errors, [], errors.join('\n'));
-    console.log('PASS: completed repair prefill, row confirmation, edit invalidation, submission gate, source update invalidation');
+    console.log('PASS: completed repair confirmation, removal persistence, restore, paid inspection counting without duplication');
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));

@@ -1274,13 +1274,17 @@
           <div class="panel">
             <div class="section-banner">DAILY REPORTING</div>
             <div class="section-head">
-              <div class="hint">Today's completed repairs appear automatically. Check every row and click Confirm. Amount is filled only for a paid POS invoice dated today.</div>
+              <div class="hint">Today's completed repairs and paid inspections appear automatically. Check every row and click Confirm. Amount is filled only for a paid POS invoice dated today.</div>
               <div class="toolbar" style="margin-top:0;">
                 <span v-if="repairSuggestionsLoading">Checking completed repairs...</span>
                 <span v-else>{{ confirmedRepairCount }} / {{ activeRepairCount }} rows confirmed</span>
                 <el-button plain icon="el-icon-refresh" @click="refreshRepairSuggestions(true)" :loading="repairSuggestionsLoading">Refresh Repairs</el-button>
                 <el-button type="primary" plain icon="el-icon-plus" @click="addRepairLine">Add Repair Row</el-button>
               </div>
+            </div>
+            <div class="hint" v-if="dismissedRepairSources.length">
+              {{ dismissedRepairSources.length }} repair suggestion(s) removed from this report.
+              <el-button type="text" @click="restoreRemovedRepairs">Restore removed repairs</el-button>
             </div>
             <div class="line-stack" v-if="repairLines.length">
               <div class="line-card" :class="{ 'repair-row-confirmed': line.confirmed }" v-for="(line, index) in repairLines" :key="line.source_key || 'manual-' + index">
@@ -1949,6 +1953,7 @@
             transferLoading: false,
             transferConfirmingId: null,
             repairLines: [],
+            dismissedRepairSources: [],
             repairSuggestionsLoading: false,
             faultyBrokenLines: [],
             deviceSalesLines: [],
@@ -2133,6 +2138,10 @@
                 if (!result || !Array.isArray(result.repair_lines)) throw new Error('Could not load completed repairs.');
                 if (this.selectedStoreCode !== storeCode || this.stage !== 'report' || this.todayIso !== reportDate) return false;
                 const bySource = new Map(result.repair_lines.map(item => [item.source_key, item]));
+                this.dismissedRepairSources = this.dismissedRepairSources.filter(item =>
+                  bySource.get(item.source_key)?.source_signature === item.source_signature
+                );
+                const dismissed = new Set(this.dismissedRepairSources.map(item => item.source_key));
                 const existingSources = new Set();
                 this.repairLines.forEach(line => {
                   if (!line.source_key) return;
@@ -2149,7 +2158,24 @@
                   }
                 });
                 const newLines = result.repair_lines
-                  .filter(item => !existingSources.has(item.source_key))
+                  .filter(item => !existingSources.has(item.source_key) && !dismissed.has(item.source_key))
+                  .filter(item => {
+                    if (!item.source_key.startsWith('inspection:')) return true;
+                    const matchingManual = this.repairLines.find(line =>
+                      !line.source_key && this.repairLineHasContent(line)
+                      && String(line.invoice_number || '').trim() === String(item.invoice_number || '').trim()
+                      && this.moneyValue(line.amount) === this.moneyValue(item.amount)
+                      && /inspection/i.test(String(line.problem_and_parts_used || ''))
+                    );
+                    if (!matchingManual) return true;
+                    Object.assign(matchingManual, {
+                      source_key: item.source_key,
+                      source_signature: item.source_signature,
+                      ticket_code: item.ticket_code,
+                      source_missing: false
+                    });
+                    return false;
+                  })
                   .map(item => Object.assign(this.makeRepairLine(), item, { confirmed: false }));
                 if (newLines.length) {
                   if (this.repairLines.length === 1 && !this.repairLines[0].source_key && !this.repairLineHasContent(this.repairLines[0])) {
@@ -2663,7 +2689,21 @@
             this.inventoryCountNotes = '';
           },
           addRepairLine() { this.repairLines.push(this.makeRepairLine()); },
-          removeRepairLine(index) { this.repairLines.splice(index, 1); },
+          removeRepairLine(index) {
+            const line = this.repairLines[index];
+            if (line && line.source_key && line.source_signature) {
+              this.dismissedRepairSources.push({
+                source_key: line.source_key,
+                source_signature: line.source_signature,
+                ticket_code: line.ticket_code || ''
+              });
+            }
+            this.repairLines.splice(index, 1);
+          },
+          async restoreRemovedRepairs() {
+            this.dismissedRepairSources = [];
+            await this.refreshRepairSuggestions(true);
+          },
           addFaultyBrokenLine() { this.faultyBrokenLines.push(this.makeFaultyBrokenLine()); },
           removeFaultyBrokenLine(index) { this.faultyBrokenLines.splice(index, 1); },
           addDeviceSaleLine() { this.deviceSalesLines.push(this.makeDeviceSaleLine()); },
@@ -2680,6 +2720,7 @@
           removeTimesheetLine(index) { this.timesheetLines.splice(index, 1); },
           resetForm() {
             this.repairLines = [this.makeRepairLine()];
+            this.dismissedRepairSources = [];
             this.faultyBrokenLines = [];
             this.deviceSalesLines = [];
             this.deviceBuybackLines = [];
@@ -2760,6 +2801,7 @@
               report_date: this.todayIso,
               notes: this.notes,
               repair_lines: this.repairLines.filter(line => this.repairLineHasContent(line)),
+              dismissed_repair_sources: this.dismissedRepairSources,
               faulty_broken_lines: this.faultyBrokenLines.filter(line => this.hasText([line.model_no_color, line.faulty_part_name, line.mention_issue, line.tech_name])),
               device_sales_lines: this.deviceSalesLines.filter(line => this.hasText([line.model_color_gb, line.imei_no, line.new_or_used, line.staff_name, line.invoice_number, line.amount])),
               device_buyback_lines: this.deviceBuybackLines.filter(line => this.hasText([line.model_color_gb_condition, line.imei, line.buy_back_form_done, line.staff_name, line.phone_tracker_done, line.amount])),
@@ -2804,6 +2846,9 @@
             this.repairLines = Array.isArray(draft.repair_lines) && draft.repair_lines.length
               ? draft.repair_lines.map(line => Object.assign(this.makeRepairLine(), line, { confirmed: line.confirmed === true, source_missing: false }))
               : [this.makeRepairLine()];
+            this.dismissedRepairSources = Array.isArray(draft.dismissed_repair_sources)
+              ? draft.dismissed_repair_sources.filter(item => item && item.source_key && item.source_signature)
+              : [];
             this.faultyBrokenLines = Array.isArray(draft.faulty_broken_lines) ? draft.faulty_broken_lines : [];
             this.deviceSalesLines = Array.isArray(draft.device_sales_lines) ? draft.device_sales_lines : [];
             this.deviceBuybackLines = Array.isArray(draft.device_buyback_lines) ? draft.device_buyback_lines : [];
