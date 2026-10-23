@@ -22,7 +22,7 @@ const { chromium } = require('playwright');
     await page.route('**/supabase-config.js', route => route.fulfill({ body: 'window.TECHM8_SUPABASE = null;' }));
     await page.route('**/staff-auth.js*', route => route.fulfill({ body: `
       window.__repairSuggestions = [{
-        source_key: 'ticket:1', source_signature: 'first', ticket_code: 'RPR-1',
+        source_key: 'sale-line:1', source_signature: 'first', ticket_code: 'RPR-1',
         model_and_color: 'iPhone 14 Black', problem_and_parts_used: 'Screen replacement',
         tech_name: 'Sam', invoice_number: '123', amount: '159.00'
       }];
@@ -49,7 +49,7 @@ const { chromium } = require('playwright');
       await app.enterReport();
     });
     assert.equal(await page.locator('.line-card.repair-row-confirmed').count(), 0);
-    assert.equal(await page.locator('.repair-row-head').count(), 1, 'Completed repair should replace the blank row');
+    assert.equal(await page.locator('.repair-row-head').count(), 1, 'Paid repair should replace the blank row');
     assert.match(await page.locator('.repair-row-head').innerText(), /RPR-1/);
     await page.locator('.repair-row-actions button').click();
     assert.equal(await page.locator('.line-card.repair-row-confirmed').count(), 1);
@@ -80,7 +80,7 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('.repair-row-head').count(), 1, 'Removing a suggestion must not add it back on refresh');
     assert.doesNotMatch(await page.locator('.repair-row-head').innerText(), /RPR-1/);
     const removedDraft = await page.evaluate(() => document.querySelector('#app').__vue__.buildPayload());
-    assert.equal(removedDraft.dismissed_repair_sources[0].source_key, 'ticket:1');
+    assert.equal(removedDraft.dismissed_repair_sources[0].source_key, 'sale-line:1');
     await page.evaluate(async draft => {
       const app = document.querySelector('#app').__vue__;
       app.applyDraft(draft);
@@ -94,7 +94,7 @@ const { chromium } = require('playwright');
       const manual = app.makeRepairLine();
       Object.assign(manual, { model_and_color: 'Xbox', problem_and_parts_used: 'Inspection', invoice_number: '4378', amount: '59.00', confirmed: true });
       app.repairLines.push(manual);
-      window.__repairSuggestions.push({ source_key: 'inspection:2', source_signature: 'inspection-first', ticket_code: 'RPR-2', model_and_color: 'Xbox', problem_and_parts_used: 'Inspection', tech_name: 'Sam', invoice_number: '4378', amount: '59.00' });
+      window.__repairSuggestions.push({ source_key: 'sale-line:2', source_signature: 'inspection-first', ticket_code: 'RPR-2', model_and_color: 'Xbox', problem_and_parts_used: 'Inspection', tech_name: 'Sam', invoice_number: '4378', amount: '59.00' });
       await app.refreshRepairSuggestions(true);
     });
     const inspectionState = await page.evaluate(() => {
@@ -102,11 +102,36 @@ const { chromium } = require('playwright');
       return { rows: app.repairLines.filter(line => line.invoice_number === '4378'), total: app.repairSalesTotal };
     });
     assert.equal(inspectionState.rows.length, 1, 'Paid inspection must attach to the confirmed manual row, not duplicate it');
-    assert.equal(inspectionState.rows[0].source_key, 'inspection:2');
+    assert.equal(inspectionState.rows[0].source_key, 'sale-line:2');
     assert.equal(inspectionState.rows[0].confirmed, true);
     assert.equal(inspectionState.total, 228, 'Inspection fee must count in repair sales');
+    await page.evaluate(async () => {
+      const app = document.querySelector('#app').__vue__;
+      const deposit = app.makeRepairLine();
+      Object.assign(deposit, { model_and_color: 'OPPO A5X', problem_and_parts_used: 'Screen deposit', invoice_number: '12228', amount: '59.00', confirmed: true });
+      app.repairLines.push(deposit);
+      app.repairLines.push(Object.assign(app.makeRepairLine(), { source_key: 'ticket:old', source_signature: 'old', ticket_code: 'RPR-OLD', model_and_color: 'Old inspection', problem_and_parts_used: 'Inspection', invoice_number: '12148', amount: '', confirmed: false }));
+      app.repairLines.push(Object.assign(app.makeRepairLine(), { source_key: 'job:55', source_signature: 'old', ticket_code: 'RPR-55', model_and_color: 'Laptop', problem_and_parts_used: 'Screen', invoice_number: '12231', amount: '250.00', confirmed: true }));
+      window.__repairSuggestions.push({ source_key: 'sale-line:3', source_signature: 'deposit-first', ticket_code: 'RPR-3', model_and_color: 'OPPO A5X', problem_and_parts_used: 'Screen Replacement', tech_name: 'Sam', invoice_number: '12228', amount: '59.00' });
+      window.__repairSuggestions.push({ source_key: 'sale-line:55', source_signature: 'paid-job', ticket_code: 'RPR-55', model_and_color: 'Laptop', problem_and_parts_used: 'Screen', tech_name: 'Sam', invoice_number: '12231', amount: '250.00' });
+      await app.refreshRepairSuggestions(true);
+    });
+    const paymentState = await page.evaluate(() => {
+      const app = document.querySelector('#app').__vue__;
+      return { rows: app.repairLines, total: app.repairSalesTotal };
+    });
+    assert.equal(paymentState.rows.filter(line => line.invoice_number === '12228').length, 1, 'A paid deposit must reuse its manual row');
+    assert.equal(paymentState.rows.find(line => line.invoice_number === '12228').source_key, 'sale-line:3');
+    assert.equal(paymentState.rows.find(line => line.invoice_number === '12231').source_key, 'sale-line:55', 'Old completion source should relink to today\'s paid invoice');
+    assert.equal(paymentState.rows.some(line => line.invoice_number === '12148'), false, 'Old paid invoice must disappear when its card moved today');
+    assert.equal(paymentState.total, 537, 'Only payments in the current suggestions count');
+    await page.evaluate(async () => {
+      window.__repairSuggestions = [];
+      await document.querySelector('#app').__vue__.refreshRepairSuggestions(true);
+    });
+    assert.equal(await page.evaluate(() => document.querySelector('#app').__vue__.repairSalesTotal), 0, 'Rows must disappear when no repair payment exists today');
     assert.deepEqual(errors, [], errors.join('\n'));
-    console.log('PASS: completed repair confirmation, removal persistence, restore, paid inspection counting without duplication');
+    console.log('PASS: paid repair confirmation, removal persistence, inspection and deposit counting, stale card cleanup');
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));

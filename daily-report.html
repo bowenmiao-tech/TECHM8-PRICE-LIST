@@ -1274,9 +1274,9 @@
           <div class="panel">
             <div class="section-banner">DAILY REPORTING</div>
             <div class="section-head">
-              <div class="hint">Today's completed repairs and paid inspections appear automatically. Check every row and click Confirm. Amount is filled only for a paid POS invoice dated today.</div>
+              <div class="hint">Repair invoices with a payment taken today appear automatically, including deposits and inspections. Moving or finishing a repair card does not add a row. Check each row and click Confirm.</div>
               <div class="toolbar" style="margin-top:0;">
-                <span v-if="repairSuggestionsLoading">Checking completed repairs...</span>
+                <span v-if="repairSuggestionsLoading">Checking today's repair payments...</span>
                 <span v-else>{{ confirmedRepairCount }} / {{ activeRepairCount }} rows confirmed</span>
                 <el-button plain icon="el-icon-refresh" @click="refreshRepairSuggestions(true)" :loading="repairSuggestionsLoading">Refresh Repairs</el-button>
                 <el-button type="primary" plain icon="el-icon-plus" @click="addRepairLine">Add Repair Row</el-button>
@@ -1290,8 +1290,8 @@
               <div class="line-card" :class="{ 'repair-row-confirmed': line.confirmed }" v-for="(line, index) in repairLines" :key="line.source_key || 'manual-' + index">
                 <div class="repair-row-head">
                   <span :class="{ 'repair-row-warning': line.source_missing }">
-                    {{ line.source_key ? ('Repair card ' + (line.ticket_code || '')) : 'Manual repair row' }}
-                    <template v-if="line.source_missing"> — no longer listed as completed; remove or refresh</template>
+                    {{ line.source_key ? ('Paid invoice #' + (line.invoice_number || '') + (line.ticket_code ? ' · repair card ' + line.ticket_code : '')) : 'Manual repair row' }}
+                    <template v-if="line.source_missing"> — payment changed; remove or refresh</template>
                   </span>
                   <div class="repair-row-actions">
                     <el-tag v-if="line.confirmed" type="success" size="small">Confirmed</el-tag>
@@ -2135,7 +2135,7 @@
                   target_store_code: storeCode,
                   target_date: reportDate
                 });
-                if (!result || !Array.isArray(result.repair_lines)) throw new Error('Could not load completed repairs.');
+                if (!result || !Array.isArray(result.repair_lines)) throw new Error('Could not load today\'s repair payments.');
                 if (this.selectedStoreCode !== storeCode || this.stage !== 'report' || this.todayIso !== reportDate) return false;
                 const bySource = new Map(result.repair_lines.map(item => [item.source_key, item]));
                 this.dismissedRepairSources = this.dismissedRepairSources.filter(item =>
@@ -2143,29 +2143,43 @@
                 );
                 const dismissed = new Set(this.dismissedRepairSources.map(item => item.source_key));
                 const existingSources = new Set();
-                this.repairLines.forEach(line => {
-                  if (!line.source_key) return;
+                this.repairLines = this.repairLines.filter(line => {
+                  if (!line.source_key) return true;
                   const suggestion = bySource.get(line.source_key);
                   if (!suggestion) {
-                    line.source_missing = true;
-                    line.confirmed = false;
-                    return;
+                    const replacement = result.repair_lines.find(item =>
+                      !existingSources.has(item.source_key) && !dismissed.has(item.source_key)
+                      && String(line.invoice_number || '').trim() === String(item.invoice_number || '').trim()
+                      && (!line.ticket_code || !item.ticket_code || line.ticket_code === item.ticket_code)
+                      && this.moneyValue(line.amount) > 0
+                      && this.moneyValue(line.amount) === this.moneyValue(item.amount)
+                    );
+                    if (replacement) {
+                      Object.assign(line, {
+                        source_key: replacement.source_key,
+                        source_signature: replacement.source_signature,
+                        ticket_code: replacement.ticket_code,
+                        source_missing: false
+                      });
+                      existingSources.add(replacement.source_key);
+                      return true;
+                    }
+                    return false;
                   }
                   existingSources.add(line.source_key);
                   line.source_missing = false;
                   if (line.source_signature !== suggestion.source_signature) {
                     Object.assign(line, suggestion, { confirmed: false, source_missing: false });
                   }
+                  return true;
                 });
                 const newLines = result.repair_lines
                   .filter(item => !existingSources.has(item.source_key) && !dismissed.has(item.source_key))
                   .filter(item => {
-                    if (!item.source_key.startsWith('inspection:')) return true;
                     const matchingManual = this.repairLines.find(line =>
                       !line.source_key && this.repairLineHasContent(line)
                       && String(line.invoice_number || '').trim() === String(item.invoice_number || '').trim()
                       && this.moneyValue(line.amount) === this.moneyValue(item.amount)
-                      && /inspection/i.test(String(line.problem_and_parts_used || ''))
                     );
                     if (!matchingManual) return true;
                     Object.assign(matchingManual, {
@@ -2188,7 +2202,7 @@
                 return true;
               } catch (error) {
                 console.error(error);
-                if (showError) this.$message.error(error.message || 'Could not load completed repairs.');
+                if (showError) this.$message.error(error.message || 'Could not load today\'s repair payments.');
                 return false;
               } finally {
                 this.repairSuggestionsLoading = false;
