@@ -96,6 +96,52 @@ async function afterpayFeeFor(amount: number): Promise<number | null> {
   return Number(fee.toFixed(2));
 }
 
+// What this payment is: a deposit or the whole amount, and for what.
+function paymentPurpose(link: JsonRecord, order: JsonRecord | null) {
+  const items = order && Array.isArray(order.items) ? order.items as JsonRecord[] : [];
+  const amount = Number(link.amount) || 0;
+  const paid = Number(order?.amount_paid) || 0;
+  const due = order ? Number(order.balance_due) || amount : amount;
+  const total = order ? Number(order.total) || amount : amount;
+  const hasRepair = items.some((item) => item.line_type === "repair");
+  const hasProduct = items.some((item) => item.line_type !== "repair");
+  const what = hasRepair && hasProduct ? "Repair & product" : hasRepair ? "Repair" : "Product";
+  const partial = amount < due - 0.004;
+  const title = partial
+    ? (paid > 0 ? "Part payment" : `${what} deposit`)
+    : (paid > 0 ? "Balance payment" : "Full payment");
+  return { items, amount, paid, total, remainingAfter: Math.max(0, Number((due - amount).toFixed(2))), title };
+}
+
+function itemLabel(item: JsonRecord): string {
+  const name = String(item.name || "Item").trim();
+  const device = String(item.repair_device || "").trim();
+  return item.line_type === "repair" && device && !name.toLowerCase().includes(device.toLowerCase())
+    ? `${device} · ${name}`
+    : name;
+}
+
+function orderSummaryHtml(purpose: ReturnType<typeof paymentPurpose>): string {
+  if (!purpose.items.length) return "";
+  const row = (label: string, value: string, strong = false) => `
+    <tr><td style="padding:5px 0;color:${strong ? "#14231e" : "#52625b"};${strong ? "font-weight:900;" : ""}">${label}</td>
+    <td style="padding:5px 0;text-align:right;font-weight:${strong ? 900 : 700};color:#14231e;">${value}</td></tr>`;
+  const itemRows = purpose.items.map((item) => `
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid #e2e8e6;font-weight:700;color:#14231e;">${escapeHtml(itemLabel(item))}${Number(item.qty) > 1 ? ` <span style="color:#708078;font-weight:400;">× ${escapeHtml(item.qty)}</span>` : ""}</td>
+      <td style="padding:10px 0;border-bottom:1px solid #e2e8e6;text-align:right;font-weight:700;color:#14231e;">${money(item.line_total)}</td>
+    </tr>`).join("");
+  return `
+        <h2 style="margin:0 0 6px;font-size:16px;">Your order</h2>
+        <table role="presentation" style="width:100%;border-collapse:collapse;font-size:14px;">${itemRows}</table>
+        <table role="presentation" style="width:100%;margin:12px 0 24px;border-collapse:collapse;font-size:14px;">
+          ${row("Order total", money(purpose.total), true)}
+          ${purpose.paid > 0 ? row("Already paid", money(purpose.paid)) : ""}
+          ${row(`This payment (${escapeHtml(purpose.title.toLowerCase())})`, money(purpose.amount))}
+          ${purpose.remainingAfter > 0 ? row("Remaining after this payment", money(purpose.remainingAfter)) : ""}
+        </table>`;
+}
+
 function paymentButtonHtml(url: string, label: string, primary: boolean): string {
   const colours = primary ? "background:#07896f;color:#ffffff;" : "background:#b2fce4;color:#000000;";
   return `<a href="${escapeHtml(url)}" style="display:block;margin:0 0 12px;padding:14px 20px;border-radius:8px;${colours}font-weight:800;font-size:16px;text-align:center;text-decoration:none;">${label}</a>`;
@@ -103,6 +149,7 @@ function paymentButtonHtml(url: string, label: string, primary: boolean): string
 
 function paymentRequestHtml(
   link: JsonRecord,
+  purpose: ReturnType<typeof paymentPurpose>,
   url: string,
   expiresAt: number,
   afterpay: { url: string; fee: number } | null,
@@ -125,9 +172,12 @@ function paymentRequestHtml(
         <p style="margin:0 0 14px;line-height:1.6;">${greeting}</p>
         <p style="margin:0 0 22px;color:#43564e;line-height:1.6;">Here is your secure payment link for invoice #${escapeHtml(invoiceNumber)}.</p>
         <div style="margin:0 0 24px;padding:18px;border-radius:8px;background:#f5f8f7;text-align:center;">
-          <div style="color:#708078;font-size:13px;">Amount due</div>
+          <div style="display:inline-block;padding:4px 12px;border-radius:999px;background:#07896f;color:#ffffff;font-size:12px;font-weight:800;">${escapeHtml(purpose.title)}</div>
+          <div style="margin-top:8px;color:#708078;font-size:13px;">Amount due now</div>
           <div style="margin-top:4px;font-size:30px;font-weight:900;">${money(link.amount)}</div>
+          ${purpose.remainingAfter > 0 ? `<div style="margin-top:4px;color:#708078;font-size:13px;">${money(purpose.remainingAfter)} remains to be paid later</div>` : ""}
         </div>
+        ${orderSummaryHtml(purpose)}
         ${paymentButtonHtml(url, `Pay by card ${money(link.amount)}`, true)}
         ${afterpay ? `
         ${paymentButtonHtml(afterpay.url, `Pay with Afterpay ${money(Number(link.amount) + afterpay.fee)}`, false)}
@@ -146,7 +196,10 @@ function paymentRequestHtml(
 </html>`;
 }
 
-async function createLink(link: JsonRecord): Promise<JsonRecord> {
+async function createLink(link: JsonRecord, order: JsonRecord | null): Promise<JsonRecord> {
+  const purpose = paymentPurpose(link, order);
+  const productName = `${purpose.title} - Invoice #${invoiceNumberText(link)} - ${String(link.store_name || "TechM8")}`;
+  const productDescription = purpose.items.map(itemLabel).join(", ").slice(0, 300) || undefined;
   const linkCode = String(link.link_code || "");
   const email = String(link.customer_email || "").trim().toLowerCase();
   const cents = Math.round(Number(link.amount) * 100);
@@ -182,7 +235,7 @@ async function createLink(link: JsonRecord): Promise<JsonRecord> {
       price_data: {
         currency: "aud",
         unit_amount: cents,
-        product_data: { name: `Invoice #${invoiceNumberText(link)} - ${String(link.store_name || "TechM8")}` },
+        product_data: { name: productName, description: productDescription },
       },
     }],
     metadata,
@@ -207,7 +260,7 @@ async function createLink(link: JsonRecord): Promise<JsonRecord> {
             price_data: {
               currency: "aud",
               unit_amount: cents,
-              product_data: { name: `Invoice #${invoiceNumberText(link)} - ${String(link.store_name || "TechM8")}` },
+                product_data: { name: productName, description: productDescription },
             },
           },
           ...(fee > 0
@@ -239,9 +292,10 @@ async function createLink(link: JsonRecord): Promise<JsonRecord> {
     await sendEmail(
       email,
       profile.email,
-      `Payment request for invoice #${invoiceNumberText(link)} from ${profile.name}`,
+      `${purpose.title} request for invoice #${invoiceNumberText(link)} from ${profile.name}`,
       paymentRequestHtml(
         link,
+        purpose,
         String(session.url),
         session.expires_at || expiresAt,
         afterpay ? { url: String(afterpay.session.url), fee: afterpay.fee } : null,
@@ -337,7 +391,8 @@ Deno.serve(async (request) => {
     }
     const body = await request.json().catch(() => ({})) as JsonRecord;
     if (body.action === "create" && body.link && typeof body.link === "object") {
-      return reply(await createLink(body.link as JsonRecord));
+      const order = body.order && typeof body.order === "object" ? body.order as JsonRecord : null;
+      return reply(await createLink(body.link as JsonRecord, order));
     }
     if (body.action === "stripe-event") {
       return reply(await stripeEvent(String(body.type || ""), String(body.session_id || "")));

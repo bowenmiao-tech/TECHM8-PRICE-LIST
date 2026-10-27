@@ -105,7 +105,25 @@ async function syncSavedOrder(
 
 // The website project holds the Stripe keys and the mailer, so it opens the
 // Checkout session and emails the customer; this project only keeps the record.
-async function sendPaymentLink(link: JsonRecord): Promise<JsonRecord> {
+// What the customer is paying for, so the email can say so.
+function paymentLinkOrderSummary(order: JsonRecord | null): JsonRecord | null {
+  if (!order) return null;
+  const items = Array.isArray(order.items) ? order.items as JsonRecord[] : [];
+  return {
+    total: order.total,
+    amount_paid: order.amount_paid,
+    balance_due: order.balance_due,
+    items: items.map((item) => ({
+      name: item.name,
+      qty: item.qty,
+      line_total: item.line_total,
+      line_type: item.line_type,
+      repair_device: item.repair_device,
+    })),
+  };
+}
+
+async function sendPaymentLink(link: JsonRecord, order: JsonRecord | null): Promise<JsonRecord> {
   const websiteUrl = (Deno.env.get("WEBSITE_FUNCTIONS_URL") || "https://fwlronvmgqzkleofriis.supabase.co/functions/v1")
     .replace(/\/+$/, "");
   const secret = Deno.env.get("USED_DEVICE_PUBLISH_SECRET") || "";
@@ -115,7 +133,7 @@ async function sendPaymentLink(link: JsonRecord): Promise<JsonRecord> {
     const response = await fetch(`${websiteUrl}/pos-payment-link`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-publish-secret": secret },
-      body: JSON.stringify({ action: "create", link }),
+      body: JSON.stringify({ action: "create", link, order: paymentLinkOrderSummary(order) }),
     });
     answer = await response.json().catch(() => ({})) as JsonRecord;
     if (!response.ok || answer.ok === false) {
@@ -207,7 +225,10 @@ Deno.serve(async (request) => {
           payload: record,
         });
         if (result.status >= 400 || !result.body.ok) return jsonResponse(result.body, result.status);
-        const link = await sendPaymentLink(result.body.payment_link as JsonRecord);
+        const link = await sendPaymentLink(
+          result.body.payment_link as JsonRecord,
+          (result.body.order as JsonRecord | undefined) || null,
+        );
         return jsonResponse({ ...result.body, payment_link: link });
       }
 
@@ -231,7 +252,7 @@ Deno.serve(async (request) => {
           : {};
         const inventory = await syncSavedOrder(sessionToken, storeCode, order);
         const link = saved.body.payment_link && typeof saved.body.payment_link === "object"
-          ? await sendPaymentLink(saved.body.payment_link as JsonRecord)
+          ? await sendPaymentLink(saved.body.payment_link as JsonRecord, order)
           : null;
         return jsonResponse({
           ...saved.body,
