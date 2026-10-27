@@ -416,6 +416,8 @@
     .used-detail-block { margin: 18px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
     .used-detail-block h3 { margin: 0 0 10px; font-size: 13px; font-weight: 950; }
     .used-listing-card { border-color: #bfe0d7; background: #f5fbf9; }
+    .used-restore-panel { border-color: #d8cdf5; background: #f8f5ff; }
+    .used-restore-panel p { margin: 0 0 12px; color: #5d5273; font-size: 12px; line-height: 1.5; }
     .used-listing-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
     .used-price-field { display: grid; gap: 6px; min-width: 190px; color: #4a5d66; font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
     .used-price-field input { height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; color: var(--ink); font: inherit; font-size: 18px; font-weight: 900; }
@@ -2006,6 +2008,14 @@
               ${device.status === 'sold' && device.sold_online_order_code ? fact('Website order', escapeHtml(device.sold_online_order_code)) : ''}
               ${device.online_order_code ? fact('Website order', `${escapeHtml(device.online_order_code)} · ${device.online_hold_kind === 'reserved' ? 'to be paid in store' : 'customer paying'}`) : ''}
             </div>
+            ${device.status === 'ready_for_sale' && device.online_hold_kind === 'reserved' && device.online_order_code ? `
+              <section class="used-detail-block used-restore-panel">
+                <h3>Unpaid website pickup</h3>
+                <p>Order ${escapeHtml(device.online_order_code)} is holding this device. If the customer has not paid or collected it, cancel the order and put the device back on sale.</p>
+                <button type="button" class="used-secondary-button" id="usedDeviceRestoreOnline"><i class="bi bi-arrow-counterclockwise"></i> Restore for sale</button>
+                <div class="used-listing-status" id="usedDeviceRestoreStatus" role="status" aria-live="polite"></div>
+              </section>
+            ` : ''}
             ${inStock ? `
               <section class="used-detail-block used-listing-card">
                 <h3>Price it and put it online</h3>
@@ -2261,6 +2271,49 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || data.ok === false) throw new Error(data.message || 'The website push did not go through.');
+      }
+
+      async function restoreAdminUsedDevice() {
+        const device = usedStock.detail?.device;
+        const button = document.getElementById('usedDeviceRestoreOnline');
+        const status = document.getElementById('usedDeviceRestoreStatus');
+        if (!device || !button || !status || button.disabled || device.status !== 'ready_for_sale'
+          || device.online_hold_kind !== 'reserved' || !device.online_order_code) return;
+        const orderCode = device.online_order_code;
+        if (!window.confirm(`Cancel unpaid website order ${orderCode} and restore this device for sale? Confirm the customer has not paid or collected it.`)) return;
+
+        button.disabled = true;
+        status.dataset.error = 'false';
+        status.textContent = 'Checking the order and restoring the device…';
+        try {
+          const config = window.TECHM8_SUPABASE || {};
+          const response = await fetch(`${config.url}/functions/v1/pos-used-devices`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: config.anonKey || '',
+              'x-staff-session': window.Techm8StaffAuth.getToken()
+            },
+            body: JSON.stringify({
+              action: 'restore-online-reservation',
+              payload: {
+                store_code: device.store_code,
+                device_code: device.device_code,
+                order_code: orderCode
+              }
+            })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.ok !== true) throw new Error(result.message || 'The device could not be restored.');
+          await loadUsedStock();
+          await openUsedDeviceDetail(device.device_code, true);
+          const refreshedStatus = document.getElementById('usedListingStatus');
+          if (refreshedStatus) refreshedStatus.textContent = 'Website order cancelled. Device restored for sale.';
+        } catch (error) {
+          status.dataset.error = 'true';
+          status.textContent = error.message || 'The device could not be restored.';
+          button.disabled = false;
+        }
       }
 
       async function deleteUsedDevice() {
@@ -2671,6 +2724,7 @@
       els.usedDeviceDialogClose.addEventListener('click', () => els.usedDeviceDialog.close());
       els.usedDeviceDialogBody.addEventListener('click', event => {
         if (event.target.closest('#usedDeviceDelete')) { deleteUsedDevice(); return; }
+        if (event.target.closest('#usedDeviceRestoreOnline')) { restoreAdminUsedDevice(); return; }
         const tabButton = event.target.closest('[data-used-detail-tab]');
         if (tabButton) {
           setUsedDetailTab(tabButton.dataset.usedDetailTab);

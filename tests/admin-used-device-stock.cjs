@@ -28,6 +28,8 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
 
   const staffAuthStub = `
     window.__rpcCalls = [];
+    window.__restoreCalls = [];
+    window.__restoreFail = false;
     const checklist = [{key:'touch',label:'Touch working'},{key:'wireless_charging',label:'Wireless charging working'}];
     const base = {category:'Phone', condition_grade:'Good', website_status:'not_published', sale_price:null,
       ready_at:null, sold_at:null, sold_invoice_number:null, sold_amount:0, margin:null, status:'inspection'};
@@ -158,6 +160,19 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
         const url = route.request().url();
         if (url.includes('/rest/v1/rpc/')) return route.fallback();
         if (url.includes('/pos-used-device-publish')) return route.fulfill({json: {ok: true, results: [{ok: true}]}});
+        if (url.includes('/pos-used-devices') && route.request().method() === 'POST') {
+          const body = route.request().postDataJSON();
+          return page.evaluate(payload => {
+            window.__restoreCalls.push(payload);
+            if (window.__restoreFail) return false;
+            const device = window.__findDevice(payload.payload.device_code);
+            device.online_order_code = null;
+            device.online_hold_kind = null;
+            return true;
+          }, body).then(restored => route.fulfill(restored
+            ? {json: {ok: true, restored: true}}
+            : {status: 409, json: {ok: false, message: 'This order may have a payment.'}}));
+        }
         if (url.includes('/pos-used-device-updates')) {
           if (route.request().method() === 'POST') {
             const body = route.request().postDataJSON();
@@ -293,6 +308,32 @@ const SIZES = [['desktop', 1440, 1000], ['ipad-landscape', 1024, 768], ['ipad-po
       assert.equal(listingCall.params.payload.publish, true, 'Confirm did not ask to publish');
       await page.waitForFunction(() => document.querySelector('#usedStockBody').innerText.includes('$0.00'));
       assert.match(await page.locator('#usedStockBody').innerText(), /Going online|Live on the site/);
+
+      // Only an unpaid website pickup hold gets the restore action. The admin
+      // must confirm, and the same protected POS endpoint cancels the order.
+      await page.evaluate(() => {
+        const device = window.__findDevice('USED-READY');
+        device.online_order_code = 'TM8-20261004-468AFF';
+        device.online_hold_kind = 'reserved';
+      });
+      await page.locator('#usedDeviceDialogClose').click();
+      await page.locator('#usedStockRefresh').click();
+      await page.locator('[data-used-device="USED-READY"]').click();
+      await page.locator('#usedDeviceRestoreOnline').waitFor();
+      await page.evaluate(() => { window.confirm = () => false; });
+      await page.locator('#usedDeviceRestoreOnline').click();
+      assert.equal(await page.evaluate(() => window.__restoreCalls.length), 0, 'Cancel still called the restore endpoint');
+      await page.evaluate(() => { window.confirm = () => true; window.__restoreFail = true; });
+      await page.locator('#usedDeviceRestoreOnline').click();
+      await page.waitForFunction(() => document.querySelector('#usedDeviceRestoreStatus').textContent.includes('may have a payment'));
+      assert.equal(await page.locator('#usedDeviceRestoreOnline').isEnabled(), true, 'A rejected restore cannot be retried');
+      await page.evaluate(() => { window.__restoreFail = false; });
+      await page.locator('#usedDeviceRestoreOnline').click();
+      await page.waitForFunction(() => !document.querySelector('#usedDeviceRestoreOnline'));
+      const restore = await page.evaluate(() => window.__restoreCalls.at(-1));
+      assert.equal(restore.action, 'restore-online-reservation');
+      assert.deepEqual(restore.payload, {store_code:'toowong', device_code:'USED-READY', order_code:'TM8-20261004-468AFF'});
+      assert.match(await page.locator('#usedListingStatus').innerText(), /Device restored for sale/);
 
       // Cancelling sends nothing. An error keeps the record open; retry removes it.
       await page.evaluate(() => { window.confirm = () => false; });
