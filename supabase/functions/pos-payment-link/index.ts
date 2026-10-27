@@ -72,7 +72,41 @@ function expiryText(unixSeconds: number): string {
   }).format(new Date(unixSeconds * 1000));
 }
 
-function paymentRequestHtml(link: JsonRecord, url: string, expiresAt: number): string {
+// The website's own Afterpay fee profile, so the shop and the till charge the
+// same fee. Null when Afterpay is switched off there.
+async function afterpayFeeFor(amount: number): Promise<number | null> {
+  const url = Deno.env.get("SUPABASE_URL") || "";
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const response = await fetch(
+    `${url}/rest/v1/payment_fee_profiles?code=eq.afterpay_clearpay&provider=eq.stripe&is_enabled=eq.true&select=fee_type,percentage,fixed_amount`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+  );
+  const rows = await response.json().catch(() => []) as JsonRecord[];
+  const profile = Array.isArray(rows) ? rows[0] : null;
+  if (!response.ok || !profile) return null;
+  const percentage = Number(profile.percentage) || 0;
+  const fixed = Number(profile.fixed_amount) || 0;
+  const fee = profile.fee_type === "fixed"
+    ? fixed
+    : profile.fee_type === "percentage"
+    ? amount * (percentage / 100)
+    : profile.fee_type === "combined"
+    ? amount * (percentage / 100) + fixed
+    : 0;
+  return Number(fee.toFixed(2));
+}
+
+function paymentButtonHtml(url: string, label: string, primary: boolean): string {
+  const colours = primary ? "background:#07896f;color:#ffffff;" : "background:#b2fce4;color:#000000;";
+  return `<a href="${escapeHtml(url)}" style="display:block;margin:0 0 12px;padding:14px 20px;border-radius:8px;${colours}font-weight:800;font-size:16px;text-align:center;text-decoration:none;">${label}</a>`;
+}
+
+function paymentRequestHtml(
+  link: JsonRecord,
+  url: string,
+  expiresAt: number,
+  afterpay: { url: string; fee: number } | null,
+): string {
   const profile = storeProfileForOrder({ store_db_code: link.store_code, store_name: link.store_name });
   const invoiceNumber = invoiceNumberText(link);
   const name = String(link.customer_name || "").trim();
@@ -94,9 +128,10 @@ function paymentRequestHtml(link: JsonRecord, url: string, expiresAt: number): s
           <div style="color:#708078;font-size:13px;">Amount due</div>
           <div style="margin-top:4px;font-size:30px;font-weight:900;">${money(link.amount)}</div>
         </div>
-        <div style="text-align:center;">
-          <a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 34px;border-radius:8px;background:#07896f;color:#ffffff;font-weight:800;font-size:16px;text-decoration:none;">Pay now</a>
-        </div>
+        ${paymentButtonHtml(url, `Pay by card ${money(link.amount)}`, true)}
+        ${afterpay ? `
+        ${paymentButtonHtml(afterpay.url, `Pay with Afterpay ${money(Number(link.amount) + afterpay.fee)}`, false)}
+        <p style="margin:0;color:#708078;font-size:12px;line-height:1.5;text-align:center;">Afterpay includes a ${money(afterpay.fee)} processing fee, which is added to your invoice.</p>` : ""}
         <p style="margin:22px 0 0;color:#708078;font-size:13px;line-height:1.6;text-align:center;">Payment is processed securely by Stripe. This link expires ${escapeHtml(expiryText(expiresAt))}.<br>Your tax invoice will be emailed to you once payment is received.</p>
       </div>
       <div style="padding:22px 30px;background:#f5f8f7;color:#687870;font-size:12px;line-height:1.6;text-align:center;">
@@ -156,6 +191,47 @@ async function createLink(link: JsonRecord): Promise<JsonRecord> {
     success_url: `${siteUrl}/?payment=complete`,
   }, { idempotencyKey: `pos-payment-link-${linkCode}` });
 
+  // A second button for Afterpay, at the invoice amount plus the fee. Stripe
+  // refuses amounts outside Afterpay's limits; the customer then gets card only.
+  let afterpay: { session: Stripe.Checkout.Session; fee: number } | null = null;
+  try {
+    const fee = await afterpayFeeFor(Number(link.amount));
+    if (fee !== null) {
+      const afterpaySession = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["afterpay_clearpay"],
+        customer_email: email,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "aud",
+              unit_amount: cents,
+              product_data: { name: `Invoice #${invoiceNumberText(link)} - ${String(link.store_name || "TechM8")}` },
+            },
+          },
+          ...(fee > 0
+            ? [{
+              quantity: 1,
+              price_data: {
+                currency: "aud",
+                unit_amount: Math.round(fee * 100),
+                product_data: { name: "Afterpay processing fee" },
+              },
+            }]
+            : []),
+        ],
+        metadata,
+        payment_intent_data: { metadata, description: `TechM8 POS invoice #${invoiceNumberText(link)} (Afterpay)` },
+        expires_at: expiresAt,
+        success_url: `${siteUrl}/?payment=complete`,
+      }, { idempotencyKey: `pos-payment-link-${linkCode}-afterpay` });
+      afterpay = { session: afterpaySession, fee };
+    }
+  } catch (error) {
+    console.error("Afterpay option could not be added to the payment link", error);
+  }
+
   let emailSent = false;
   let emailError = "";
   try {
@@ -164,7 +240,12 @@ async function createLink(link: JsonRecord): Promise<JsonRecord> {
       email,
       profile.email,
       `Payment request for invoice #${invoiceNumberText(link)} from ${profile.name}`,
-      paymentRequestHtml(link, String(session.url), session.expires_at || expiresAt),
+      paymentRequestHtml(
+        link,
+        String(session.url),
+        session.expires_at || expiresAt,
+        afterpay ? { url: String(afterpay.session.url), fee: afterpay.fee } : null,
+      ),
     );
     emailSent = true;
   } catch (error) {
@@ -176,6 +257,9 @@ async function createLink(link: JsonRecord): Promise<JsonRecord> {
     ok: true,
     session_id: session.id,
     url: session.url,
+    afterpay_session_id: afterpay ? afterpay.session.id : null,
+    afterpay_url: afterpay ? afterpay.session.url : null,
+    afterpay_fee: afterpay ? afterpay.fee : null,
     expires_at: new Date((session.expires_at || expiresAt) * 1000).toISOString(),
     email_sent: emailSent,
     email_error: emailError || null,
@@ -196,7 +280,8 @@ async function posEvent(body: JsonRecord): Promise<JsonRecord> {
 }
 
 async function stripeEvent(type: string, sessionId: string): Promise<JsonRecord> {
-  const session = await stripeClient().checkout.sessions.retrieve(sessionId);
+  const stripe = stripeClient();
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
   if (session.metadata?.source !== POS_LINK_SOURCE) throw new Error("Not a POS payment link session.");
 
   if (type === "checkout.session.expired") {
@@ -214,6 +299,15 @@ async function stripeEvent(type: string, sessionId: string): Promise<JsonRecord>
       : session.payment_intent?.id ?? null,
     amount: (session.amount_total ?? 0) / 100,
   });
+  // The customer chose one button; the other must not take a second payment.
+  if (result.other_session_id) {
+    try {
+      const other = await stripe.checkout.sessions.retrieve(String(result.other_session_id));
+      if (other.status === "open") await stripe.checkout.sessions.expire(other.id);
+    } catch (error) {
+      console.error("Unused payment button could not be closed", result.other_session_id, error);
+    }
+  }
   if (result.already_recorded || !result.applied) return { ok: true, applied: Boolean(result.applied) };
 
   // The payment is safely recorded; a failed invoice email must not make

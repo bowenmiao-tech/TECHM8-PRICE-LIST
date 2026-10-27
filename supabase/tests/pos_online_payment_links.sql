@@ -12,6 +12,7 @@ declare
   staff_row public.staff_directory%rowtype;
   link_sale_code text := 'TEST-LINK-SALE-' || gen_random_uuid()::text;
   split_sale_code text := 'TEST-LINK-SPLIT-' || gen_random_uuid()::text;
+  afterpay_sale_code text := 'TEST-LINK-AFTERPAY-' || gen_random_uuid()::text;
   result jsonb;
   link jsonb;
   second_link jsonb;
@@ -166,6 +167,45 @@ begin
 
   result := public.list_pos_payment_links_for_store(token, store_row.store_code, split_sale_code, null);
   assert jsonb_array_length(result->'payment_links') = 1, 'Listing by invoice failed';
+
+  -- Afterpay: the customer pays $100 + $6.30 fee; the fee becomes part of the sale.
+  result := public.save_pos_sales_order_with_payment_link_for_store(token, sale || jsonb_build_object(
+    'id', afterpay_sale_code, 'total', 100,
+    'items', jsonb_build_array(jsonb_build_object(
+      'product_id', 'special-link-test', 'sku', 'SPECIAL', 'name', 'Afterpay test item',
+      'category', 'Special Products', 'qty', 1, 'unit_price', 100, 'line_total', 100, 'is_special', true)),
+    'payment_link', jsonb_build_object('email', 'afterpay@example.com', 'amount', 100)
+  ));
+  link := result->'payment_link';
+  perform public.attach_pos_payment_link(jsonb_build_object(
+    'link_code', link->>'link_code', 'stripe_checkout_session_id', 'cs_test_ap_card',
+    'afterpay_session_id', 'cs_test_ap_afterpay', 'afterpay_fee', 6.30, 'email_sent', true));
+
+  failed := false;
+  begin
+    perform public.complete_pos_payment_link(jsonb_build_object(
+      'link_code', link->>'link_code', 'stripe_checkout_session_id', 'cs_test_ap_afterpay', 'amount', 100));
+  exception when others then failed := sqlerrm like '%does not match%'; end;
+  assert failed, 'Afterpay without its fee was accepted';
+
+  result := public.complete_pos_payment_link(jsonb_build_object(
+    'link_code', link->>'link_code', 'stripe_checkout_session_id', 'cs_test_ap_afterpay', 'amount', 106.30));
+  assert (result->>'applied')::boolean, 'Afterpay payment not applied';
+  assert result->>'other_session_id' = 'cs_test_ap_card', 'Card button not handed back for closing';
+  assert (result #>> '{order,total}')::numeric = 106.30, 'Fee not added to the invoice total';
+  assert (result #>> '{order,amount_paid}')::numeric = 106.30, 'Afterpay amount not paid in full';
+  assert result #>> '{order,payment_status}' = 'paid', 'Afterpay invoice not paid';
+  assert result #>> '{order,payment_method}' = 'Online Afterpay', 'Afterpay method not recorded';
+  assert exists (
+    select 1 from jsonb_array_elements(result #> '{order,items}') item
+    where item->>'name' = 'Afterpay processing fee' and (item->>'line_total')::numeric = 6.30
+  ), 'Fee line missing from the invoice';
+  assert result #>> '{payment_link,paid_method}' = 'Online Afterpay', 'Link does not say how it was paid';
+
+  -- Closing the unused card button afterwards changes nothing.
+  perform public.expire_pos_payment_link(jsonb_build_object('stripe_checkout_session_id', 'cs_test_ap_card'));
+  assert (select status from public.pos_payment_links where link_code = link->>'link_code') = 'paid',
+    'Closing the other button undid the payment';
 end;
 $test$;
 rollback;

@@ -51,12 +51,14 @@ const {chromium} = require('playwright');
     });
     await page.goto(`http://127.0.0.1:${server.address().port}/pos.html?dashboard-test`);
 
-    // The modal: email prefilled from the customer, wording changes, bad input is caught.
+    // The modal: a customer is required, the email comes from their record,
+    // and the one button says exactly what will be sent.
     await page.evaluate(() => {
       localStorage.removeItem(POS_PAYMENT_LINKS_SEEN_KEY);
       state.storeId = 'toowong';
       state.selectedStaffName = 'Andy';
-      state.selectedCustomerId = 'CUS-TEST';
+      state.selectedCustomerId = '';
+      els.customerInput.value = '';
       state.customers = [{id: 'CUS-TEST', name: 'Test Buyer', phone: '0412345678', email: 'Buyer@Example.com'}];
       state.cart = [{id: 'TEST', name: 'Test item', sale_price: 80, qty: 1, is_special: true}];
       state.exchangeReturn = null;
@@ -68,23 +70,41 @@ const {chromium} = require('playwright');
     assert.match(await page.locator('#paymentMethodList').innerText(), /Online Payment/);
     await page.locator('[data-payment-method="Online Payment"]').click();
     assert.equal(await page.locator('#paymentLinkFields').isVisible(), true);
-    assert.equal(await page.locator('#paymentLinkEmail').inputValue(), 'Buyer@Example.com');
-    assert.equal(await page.locator('#paymentConfirmBtn').innerText(), 'Send Payment Link');
-    assert.equal(await page.locator('#paymentFullBtn').innerText(), 'Send Link for $80.00');
+    assert.match(await page.locator('#paymentLinkCustomer').innerText(), /Select or add the customer/);
+    assert.equal(await page.locator('#paymentConfirmBtn').isDisabled(), true);
+    assert.equal(await page.locator('#paymentQuickGrid').isVisible(), false);
+    assert.equal(await page.locator('#paymentFullBtn').isVisible(), false);
+    assert.equal(await page.locator('.payment-link-fields small').count(), 0);
 
+    await page.evaluate(() => {
+      closePaymentModal();
+      state.selectedCustomerId = 'CUS-TEST';
+      els.customerInput.value = 'Test Buyer';
+      openPaymentModal();
+      selectPaymentMethod('Online Payment');
+    });
+    assert.match(await page.locator('#paymentLinkCustomer').innerText(), /Test Buyer[\s\S]*0412345678/);
+    assert.equal(await page.locator('#paymentLinkEmail').inputValue(), 'Buyer@Example.com');
+    assert.equal(await page.locator('#paymentConfirmBtn').innerText(), 'Send link for $80.00');
+    assert.match(await page.locator('#paymentLinkSplit').innerText(), /Full amount: link for \$80\.00/);
+
+    await page.locator('#paymentAmountInput').fill('50');
+    assert.match(await page.locator('#paymentLinkSplit').innerText(), /Deposit: link for \$50\.00 · \$30\.00 stays owing/);
+    assert.equal(await page.locator('#paymentConfirmBtn').innerText(), 'Send link for $50.00');
+    await page.locator('#paymentAmountInput').fill('0.20');
+    assert.equal(await page.locator('#paymentConfirmBtn').isDisabled(), true);
+    await page.locator('#paymentAmountInput').fill('81');
+    assert.equal(await page.locator('#paymentConfirmBtn').isDisabled(), true);
+
+    await page.locator('#paymentAmountInput').fill('80');
     await page.locator('#paymentLinkEmail').fill('not-an-email');
     await page.locator('#paymentConfirmBtn').click();
     assert.match(await page.locator('#paymentError').innerText(), /email address/);
-    await page.locator('#paymentLinkEmail').fill('buyer@example.com');
-    await page.locator('#paymentAmountInput').fill('0.20');
-    await page.locator('#paymentConfirmBtn').click();
-    assert.match(await page.locator('#paymentError').innerText(), /at least \$0\.50/);
-    await page.locator('#paymentAmountInput').fill('81');
-    await page.locator('#paymentConfirmBtn').click();
-    assert.match(await page.locator('#paymentError').innerText(), /cannot exceed \$80\.00/);
     assert.equal(await page.evaluate(() => window.__checkoutCalls.length), 0);
 
-    await page.locator('#paymentFullBtn').click();
+    await page.locator('#paymentLinkEmail').fill('buyer@example.com');
+    await page.locator('#paymentConfirmBtn').click();
+    await page.waitForFunction(() => window.__checkoutCalls.length === 1);
     assert.deepEqual(await page.evaluate(() => window.__checkoutCalls), [
       {payments: [], options: {paymentLink: {email: 'buyer@example.com', amount: 80}}}
     ]);
@@ -97,7 +117,7 @@ const {chromium} = require('playwright');
       openPaymentModal();
       selectPaymentMethod('Online Payment');
     });
-    await page.locator('#paymentFullBtn').click();
+    await page.locator('#paymentConfirmBtn').click();
     assert.match(await page.locator('#paymentError').innerText(), /Used devices/);
     assert.equal(await page.evaluate(() => window.__checkoutCalls.length), 0);
 

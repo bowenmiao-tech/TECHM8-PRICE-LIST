@@ -7263,10 +7263,20 @@
     .refund-credit-create button { min-height: 40px; padding: 0 10px; border: 1px solid var(--tm-green); border-radius: 7px; color: var(--tm-green-dark); background: #fff; font-weight: 850; cursor: pointer; }
     .payment-credit-info { padding: 8px 0 3px; color: var(--tm-green-dark); font-size: 12px; font-weight: 850; }
     .payment-credit-info[hidden] { display: none; }
-    .payment-link-fields { display: grid; gap: 6px; padding: 10px 0 2px; font-size: 12px; font-weight: 850; color: var(--tm-green-dark); }
+    .payment-link-fields { display: grid; gap: 10px; padding: 10px 0 12px; font-size: 12px; font-weight: 850; color: var(--tm-green-dark); }
     .payment-link-fields[hidden] { display: none; }
+    .payment-link-fields label { display: grid; gap: 6px; }
     .payment-link-fields input { min-height: 42px; padding: 0 12px; border: 1px solid var(--tm-line-strong); border-radius: 8px; background: #fff; font-size: 15px; font-weight: 700; }
-    .payment-link-fields small { color: #5d6f68; font-size: 11px; font-weight: 650; line-height: 1.4; }
+    .payment-link-split { padding: 9px 12px; border: 1px solid #bfe5d8; border-radius: 8px; background: #eef9f5; color: var(--tm-green-dark); font-size: 13px; font-weight: 850; text-align: center; }
+    .payment-link-split.is-deposit { border-color: #efb76f; background: #fff8ee; color: #8a4300; }
+    .payment-link-customer { display: grid; gap: 2px; padding: 9px 12px; border: 1px solid var(--tm-line); border-radius: 8px; background: #fff; color: #33473f; font-size: 13px; font-weight: 800; }
+    .payment-link-customer small { color: #708078; font-size: 11px; font-weight: 700; }
+    .payment-link-customer.missing { border-color: #e7a19a; background: #fff3f1; color: #a2271b; }
+    .payment-link-customer button { justify-self: start; margin-top: 6px; min-height: 32px; padding: 0 12px; border: 1px solid currentColor; border-radius: 7px; background: #fff; color: inherit; font-weight: 850; cursor: pointer; }
+    .payment-modal.online-link .payment-quick-grid,
+    .payment-modal.online-link #paymentFullBtn { display: none; }
+    .payment-modal.online-link .payment-action-row { grid-template-columns: 1fr; }
+    .payment-modal .payment-confirm:disabled { opacity: .45; cursor: not-allowed; }
     .cart-return-credit { display: grid; gap: 7px; padding: 13px; border: 1px solid #efb76f; border-left: 4px solid #dc7b17; border-radius: 8px; background: #fff8ee; }
     .cart-return-credit-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .cart-return-credit-title { display: flex; align-items: center; gap: 7px; color: #8a4300; font-weight: 950; }
@@ -9471,11 +9481,14 @@
             </div>
             <input id="paymentAmountInput" class="payment-amount-input" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off" placeholder="0.00">
             <div id="paymentCreditInfo" class="payment-credit-info" role="status" hidden></div>
-            <label id="paymentLinkFields" class="payment-link-fields" hidden>
-              <span>Customer email</span>
-              <input id="paymentLinkEmail" type="email" inputmode="email" autocomplete="off" placeholder="customer@example.com">
-              <small>The customer gets a secure Stripe link by email. The sale is saved now with this amount owing, and is marked paid automatically when they pay. Their tax invoice is emailed after payment.</small>
-            </label>
+            <div id="paymentLinkFields" class="payment-link-fields" hidden>
+              <div id="paymentLinkSplit" class="payment-link-split" role="status" aria-live="polite"></div>
+              <div id="paymentLinkCustomer" class="payment-link-customer"></div>
+              <label>
+                <span>Customer email</span>
+                <input id="paymentLinkEmail" type="email" inputmode="email" autocomplete="off" placeholder="customer@example.com">
+              </label>
+            </div>
             <div id="paymentChangePreview" class="payment-change-preview" role="status" aria-live="polite" hidden></div>
             <div id="paymentQuickGrid" class="payment-quick-grid"></div>
             <div class="payment-action-row">
@@ -10814,6 +10827,8 @@
       paymentCreditInfo: document.getElementById('paymentCreditInfo'),
       paymentLinkFields: document.getElementById('paymentLinkFields'),
       paymentLinkEmail: document.getElementById('paymentLinkEmail'),
+      paymentLinkSplit: document.getElementById('paymentLinkSplit'),
+      paymentLinkCustomer: document.getElementById('paymentLinkCustomer'),
       paymentChangePreview: document.getElementById('paymentChangePreview'),
       paymentQuickGrid: document.getElementById('paymentQuickGrid'),
       paymentConfirmBtn: document.getElementById('paymentConfirmBtn'),
@@ -12534,7 +12549,7 @@
       if (['cnypay', 'cnypayment', 'cny'].includes(normalized)) return 'cnyPay';
       if (['bank', 'banktransfer', 'transfer'].includes(normalized)) return 'bankTransfer';
       if (normalized === 'storecredit') return 'storeCredit';
-      if (normalized === 'onlinepayment') return 'onlinePayment';
+      if (['onlinepayment', 'onlineafterpay'].includes(normalized)) return 'onlinePayment';
       return 'card';
     }
 
@@ -23380,8 +23395,7 @@
           els.paymentLinkEmail.value = state.paymentSession.linkEmail || '';
         }
       }
-      if (els.paymentConfirmBtn) els.paymentConfirmBtn.textContent = online ? 'Send Payment Link' : 'Confirm Amount';
-      if (els.paymentFullBtn) els.paymentFullBtn.textContent = online ? `Send Link for ${money(remaining)}` : 'Full Payment';
+      renderPaymentLinkPanel();
       renderDepositAction(remaining);
       renderPaymentMethods();
       renderPaymentQuickAmounts();
@@ -23458,19 +23472,66 @@
       }, 0);
     }
 
+    // A payment link is always for a known customer: name and phone from the
+    // customer chosen at the top right, email from their record when it has one.
+    function paymentLinkCustomer() {
+      const customer = selectedRepairCustomer({ notify: false, focus: false });
+      if (!customer) return null;
+      return { ...customer, record: customerDetailsForOrder(customer.name) };
+    }
+
     function paymentLinkDefaultEmail() {
-      const customer = selectedCustomerRecord();
-      return String((customer && (customer.email || customer.customer_email)) || '').trim();
+      const customer = paymentLinkCustomer();
+      const record = customer && customer.record;
+      return String((record && (record.email || record.customer_email)) || '').trim();
+    }
+
+    function renderPaymentLinkPanel() {
+      const online = state.paymentSession.method === 'Online Payment';
+      const modal = els.paymentModal && els.paymentModal.querySelector('.payment-modal');
+      if (modal) modal.classList.toggle('online-link', online);
+      if (!online) {
+        if (els.paymentConfirmBtn) {
+          els.paymentConfirmBtn.textContent = 'Confirm Amount';
+          els.paymentConfirmBtn.disabled = false;
+        }
+        return;
+      }
+      const customer = paymentLinkCustomer();
+      els.paymentLinkCustomer.classList.toggle('missing', !customer);
+      els.paymentLinkCustomer.innerHTML = customer
+        ? `<span>${escapeHtml(customer.name)}</span><small>${escapeHtml(customer.phone)}</small>`
+        : `<span>Select or add the customer first (name and phone).</span>
+           <button type="button" data-payment-link-choose-customer>Choose customer</button>`;
+
+      const remaining = paymentRemaining();
+      const rawAmount = String(els.paymentAmountInput.value || '').trim();
+      const amount = roundedMoneyValue(rawAmount);
+      const validAmount = rawAmount !== '' && Number.isFinite(amount) && amount >= 0.5 && amount <= remaining;
+      const deposit = validAmount && amount < remaining;
+      els.paymentLinkSplit.classList.toggle('is-deposit', deposit);
+      els.paymentLinkSplit.textContent = !validAmount
+        ? `Enter an amount from $0.50 to ${money(remaining)}`
+        : deposit
+        ? `Deposit: link for ${money(amount)} · ${money(roundedMoneyValue(remaining - amount))} stays owing`
+        : `Full amount: link for ${money(amount)}`;
+      els.paymentConfirmBtn.textContent = validAmount ? `Send link for ${money(amount)}` : 'Send link';
+      els.paymentConfirmBtn.disabled = !customer || !validAmount;
     }
 
     // Online Payment does not take money now: it finishes the sale owing the
     // link amount and emails the customer a Stripe link for it.
-    function sendPaymentLinkFromModal(useFullAmount) {
+    async function sendPaymentLinkFromModal(useFullAmount) {
       const session = state.paymentSession;
       const remaining = paymentRemaining();
       const amount = useFullAmount ? remaining : roundedMoneyValue(els.paymentAmountInput.value);
       const email = String(els.paymentLinkEmail.value || '').trim().toLowerCase();
       session.linkEmail = email;
+      const customer = paymentLinkCustomer();
+      if (!customer) {
+        els.paymentError.textContent = 'Select or add the customer first (name and phone).';
+        return;
+      }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         els.paymentError.textContent = 'Enter the customer\'s email address.';
         els.paymentLinkEmail.focus();
@@ -23503,7 +23564,27 @@
       const payments = session.payments.slice();
       closePaymentModal();
       showToast(`Saving sale and sending payment link to ${email}...`);
+      await savePaymentLinkEmailToCustomer(customer.record, email);
       checkout(payments, { paymentLink: { email, amount } });
+    }
+
+    // A new or corrected email is kept on the customer, so the next link,
+    // receipt or repair update finds it.
+    async function savePaymentLinkEmailToCustomer(record, email) {
+      if (!record || !record.id || !record.first_name) return;
+      if (String(record.email || '').trim().toLowerCase() === email) return;
+      try {
+        const payload = await postSharedState('customer', 'save', {
+          ...record,
+          email,
+          store_code: repairTicketStoreCode(),
+          staff_name: state.selectedStaffName
+        });
+        Object.assign(record, payload.customer || { email });
+        saveCustomers();
+      } catch (error) {
+        console.error('Customer email could not be saved', error);
+      }
     }
 
     function confirmPaymentAmount(useFullAmount = false) {
@@ -25990,8 +26071,9 @@
         customer_email: receiptCustomerEmail({
           customer_email: customer ? (customer.email || '') : '',
           customer_phone: customerPhone
-        }, [...state.customers, ...readLocalArray(POS_CUSTOMERS_KEY)]) || (paymentLink ? paymentLink.email : ''),
+        }, [...state.customers, ...readLocalArray(POS_CUSTOMERS_KEY)]),
         payment_link: paymentLink || undefined,
+        ...(paymentLink ? { customer_email: paymentLink.email } : {}),
         payment_method: paymentSummary,
         payments: salePayments,
         total: orderTotal,
@@ -26243,7 +26325,7 @@
         seen[link.link_code] = link.paid_at || new Date().toISOString();
         if (firstRun) return;
         notices.push(link.status === 'paid'
-          ? `Online payment received: ${money(link.paid_amount)} on invoice ${invoiceNumberText(link)} (${link.customer_name || link.customer_email}).`
+          ? `${link.paid_method === 'Online Afterpay' ? 'Afterpay' : 'Online'} payment received: ${money(link.paid_amount)} on invoice ${invoiceNumberText(link)} (${link.customer_name || link.customer_email}).`
           : `Invoice ${invoiceNumberText(link)} was already settled when ${link.customer_email} paid ${money(link.paid_amount)} online. Refund it in Stripe.`);
       });
       Object.keys(seen).forEach(code => {
@@ -27594,12 +27676,18 @@
     els.paymentAmountInput.addEventListener('input', event => {
       state.paymentSession.amount = event.target.value;
       renderPaymentChangePreview();
+      renderPaymentLinkPanel();
     });
     els.paymentAmountInput.addEventListener('keydown', event => {
       if (event.key === 'Enter') {
         event.preventDefault();
         confirmPaymentAmount(false);
       }
+    });
+    els.paymentLinkCustomer.addEventListener('click', event => {
+      if (!event.target.closest('[data-payment-link-choose-customer]')) return;
+      closePaymentModal();
+      flagRepairCustomer('Select or add the customer, then press Pay again.');
     });
     els.paymentLinkEmail.addEventListener('input', event => {
       state.paymentSession.linkEmail = event.target.value;
