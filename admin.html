@@ -629,6 +629,11 @@
     .board-count { color: var(--muted); font-weight: 900; }
     .ticket-card { width: 100%; display: grid; gap: 7px; padding: 12px; border: 1px solid #d8e3e8; border-radius: 12px; background: #fff; box-shadow: 0 8px 18px rgba(16,30,38,.04); margin-bottom: 10px; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
     .ticket-card:hover { border-color: var(--green); }
+    .ticket-payment-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-top: 7px; border-top: 1px solid var(--line); }
+    .ticket-payment-figures > span { display: grid; gap: 3px; min-width: 0; }
+    .ticket-payment-figures small { font-size: 10px; color: var(--muted); font-weight: 750; }
+    .ticket-payment-figures strong { font-size: 12px; font-weight: 900; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .ticket-payment-figures .owing strong { color: #9a580b; }
     .ticket-card { cursor: grab; }
     .ticket-card.dragging { opacity: .55; cursor: grabbing; }
     /* Box-shadow rather than a border so nothing shifts while dragging over. */
@@ -2512,6 +2517,14 @@
             .some(value => String(value || '').toLocaleLowerCase().includes(search));
         });
       }
+      function repairPaymentFigures(ticket) {
+        const value = amount => amount == null ? '—' : money(amount);
+        return `<span class="ticket-payment-figures">
+          <span><small>Total</small><strong>${value(ticket.payment_total)}</strong></span>
+          <span><small>Paid</small><strong>${value(ticket.amount_paid)}</strong></span>
+          <span class="${number(ticket.outstanding_total) > 0 ? 'owing' : ''}"><small>Balance</small><strong>${value(ticket.outstanding_total)}</strong></span>
+        </span>`;
+      }
       function repairTags(ticket) {
         return [
           ticket.special_order ? '<span class="ticket-tag">Special</span>' : '',
@@ -2545,6 +2558,7 @@
               <span class="ticket-meta">${escapeHtml(ticket.ticket_code)} · ${escapeHtml(ticket.issue || 'Repair')}</span>
               <span class="ticket-meta">${escapeHtml(ticket.customer_name || '')} · ${escapeHtml(ticket.customer_phone || ticket.customer_contact || 'Phone missing')}</span>
               <span class="ticket-tags">${repairTags(ticket)}</span>
+              ${repairPaymentFigures(ticket)}
               <span class="ticket-device-sub">${repairDays(ticket.status_days)} in status · ${repairDays(ticket.open_days)} open</span>
             </button>`).join('') || '<div class="ticket-meta">No tickets</div>'}
           </section>`;
@@ -2567,6 +2581,7 @@
             <div><dt>Last updated</dt><dd>${escapeHtml(formatDateTime(ticket.updated_at))}<br>${escapeHtml(ticket.updated_by || ticket.created_by || '')}</dd></div>
             <div><dt>Payment</dt><dd>${ticket.payment_status === 'paid' ? 'Paid' : ticket.payment_status === 'deposit' ? `${money(ticket.balance_due)} remaining on linked invoice(s)` : 'Not invoiced'}</dd></div>
           </dl>
+          ${repairPaymentFigures(ticket)}
           <h3>Repair jobs / Parts</h3>
           <ul class="repair-detail-jobs">
             <li><strong>${escapeHtml(ticket.issue || 'Base repair')}</strong> · ${money(ticket.price)}</li>
