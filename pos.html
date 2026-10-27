@@ -24056,7 +24056,14 @@
       }
 
       els.invoiceList.innerHTML = orders.map(order => {
-        const itemCount = Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + Number(item.qty || 1), 0) : 0;
+        const items = Array.isArray(order.items) ? order.items : [];
+        const itemCount = items.reduce((sum, item) => sum + Number(item.qty || 1), 0);
+        const productSummary = items.map(item => {
+          const name = String(item.name || '').trim();
+          const device = String(item.line_type || '').toLowerCase() === 'repair' ? repairDeviceName(item) : '';
+          const label = [device, name].filter(Boolean).join(' · ');
+          return label ? `${Number(item.qty || 1) > 1 ? `${Number(item.qty)} × ` : ''}${label}` : '';
+        }).filter(Boolean).join(', ') || 'No products recorded';
         const refundable = Number(order.refundable_total ?? order.total ?? 0) > 0;
         const balance = orderBalanceDue(order);
         return `
@@ -24068,7 +24075,7 @@
               ${balance > 0 ? `<span class="invoice-balance-tag"><i class="bi bi-piggy-bank"></i> Deposit ${money(order.amount_paid)} &middot; ${money(balance)} owing</span>` : ''}
             </div>
             <div class="invoice-row-meta">
-              <strong>${escapeHtml(order.staff_name || 'Staff unavailable')}</strong>
+              <strong title="${escapeHtml(productSummary)}">${escapeHtml(productSummary)}</strong>
               <span>${escapeHtml(formatDateTime(order.created_at))} &middot; ${escapeHtml(invoiceRefundLabel(order.refund_status))}</span>
             </div>
             <div class="invoice-total">${money(order.total)}</div>
