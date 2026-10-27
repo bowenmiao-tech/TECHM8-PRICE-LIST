@@ -7147,9 +7147,29 @@
     }
 
     .invoice-total {
-      font-size: 16px;
+      display: grid;
+      gap: 3px;
+      font-size: 12px;
       font-weight: 950;
       text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .invoice-total > span {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 0 6px;
+    }
+
+    .invoice-total small {
+      color: var(--tm-muted);
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .invoice-total .invoice-amount-due {
+      color: #8a4f10;
     }
 
     .invoice-actions {
@@ -7243,6 +7263,10 @@
     .refund-credit-create button { min-height: 40px; padding: 0 10px; border: 1px solid var(--tm-green); border-radius: 7px; color: var(--tm-green-dark); background: #fff; font-weight: 850; cursor: pointer; }
     .payment-credit-info { padding: 8px 0 3px; color: var(--tm-green-dark); font-size: 12px; font-weight: 850; }
     .payment-credit-info[hidden] { display: none; }
+    .payment-link-fields { display: grid; gap: 6px; padding: 10px 0 2px; font-size: 12px; font-weight: 850; color: var(--tm-green-dark); }
+    .payment-link-fields[hidden] { display: none; }
+    .payment-link-fields input { min-height: 42px; padding: 0 12px; border: 1px solid var(--tm-line-strong); border-radius: 8px; background: #fff; font-size: 15px; font-weight: 700; }
+    .payment-link-fields small { color: #5d6f68; font-size: 11px; font-weight: 650; line-height: 1.4; }
     .cart-return-credit { display: grid; gap: 7px; padding: 13px; border: 1px solid #efb76f; border-left: 4px solid #dc7b17; border-radius: 8px; background: #fff8ee; }
     .cart-return-credit-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .cart-return-credit-title { display: flex; align-items: center; gap: 7px; color: #8a4300; font-weight: 950; }
@@ -9447,6 +9471,11 @@
             </div>
             <input id="paymentAmountInput" class="payment-amount-input" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off" placeholder="0.00">
             <div id="paymentCreditInfo" class="payment-credit-info" role="status" hidden></div>
+            <label id="paymentLinkFields" class="payment-link-fields" hidden>
+              <span>Customer email</span>
+              <input id="paymentLinkEmail" type="email" inputmode="email" autocomplete="off" placeholder="customer@example.com">
+              <small>The customer gets a secure Stripe link by email. The sale is saved now with this amount owing, and is marked paid automatically when they pay. Their tax invoice is emailed after payment.</small>
+            </label>
             <div id="paymentChangePreview" class="payment-change-preview" role="status" aria-live="polite" hidden></div>
             <div id="paymentQuickGrid" class="payment-quick-grid"></div>
             <div class="payment-action-row">
@@ -10783,6 +10812,8 @@
       paymentRemainingLarge: document.getElementById('paymentRemainingLarge'),
       paymentAmountInput: document.getElementById('paymentAmountInput'),
       paymentCreditInfo: document.getElementById('paymentCreditInfo'),
+      paymentLinkFields: document.getElementById('paymentLinkFields'),
+      paymentLinkEmail: document.getElementById('paymentLinkEmail'),
       paymentChangePreview: document.getElementById('paymentChangePreview'),
       paymentQuickGrid: document.getElementById('paymentQuickGrid'),
       paymentConfirmBtn: document.getElementById('paymentConfirmBtn'),
@@ -11248,9 +11279,12 @@
       { key: 'afterpay', label: 'Afterpay' },
       { key: 'cnyPay', label: 'CNYpay' },
       { key: 'bankTransfer', label: 'Bank Transfer' },
-      { key: 'storeCredit', label: 'Store Credit' }
+      { key: 'storeCredit', label: 'Store Credit' },
+      { key: 'onlinePayment', label: 'Online Payment' }
     ];
-    const POS_TENDER_METHODS = POS_PAYMENT_METHODS.filter(method => method.key !== 'storeCredit');
+    // Store Credit and online payments never pass through the till.
+    const POS_TENDER_METHODS = POS_PAYMENT_METHODS.filter(method => !['storeCredit', 'onlinePayment'].includes(method.key));
+    const POS_PAYMENT_LINKS_SEEN_KEY = 'techm8_pos_payment_links_seen';
 
     const posStores = [
       { id: 'park-ridge', code: 'PR', dbCode: 'parkridge', name: 'TechM8 Park Ridge' },
@@ -12500,6 +12534,7 @@
       if (['cnypay', 'cnypayment', 'cny'].includes(normalized)) return 'cnyPay';
       if (['bank', 'banktransfer', 'transfer'].includes(normalized)) return 'bankTransfer';
       if (normalized === 'storecredit') return 'storeCredit';
+      if (normalized === 'onlinepayment') return 'onlinePayment';
       return 'card';
     }
 
@@ -12550,7 +12585,7 @@
       if (state.shiftPaymentTotals && Array.isArray(state.shiftPaymentTotals.payment_totals)) {
         state.shiftPaymentTotals.payment_totals.forEach(payment => {
           const key = paymentKeyForMethod(payment.method);
-          totals[key] = roundedMoneyValue(payment.amount);
+          if (key in totals) totals[key] = roundedMoneyValue(payment.amount);
         });
         return totals;
       }
@@ -12561,12 +12596,12 @@
           if (Array.isArray(order.payments) && order.payments.length) {
             order.payments.forEach(payment => {
               const key = paymentKeyForMethod(payment.method);
-              totals[key] = roundedMoneyValue(totals[key] + numberValue(payment.amount));
+              if (key in totals) totals[key] = roundedMoneyValue(totals[key] + numberValue(payment.amount));
             });
             return;
           }
           const key = paymentKeyForMethod(order.payment_method);
-          totals[key] = roundedMoneyValue(totals[key] + numberValue(order.total));
+          if (key in totals) totals[key] = roundedMoneyValue(totals[key] + numberValue(order.total));
         });
 
       return totals;
@@ -23338,6 +23373,15 @@
           ? 'Checking Store Credit balance...'
           : session.creditError || `${session.creditCustomerName || 'Customer'}: ${money(paymentCreditAvailable())} available`;
       }
+      const online = state.paymentSession.method === 'Online Payment';
+      if (els.paymentLinkFields) {
+        els.paymentLinkFields.hidden = !online;
+        if (online && document.activeElement !== els.paymentLinkEmail) {
+          els.paymentLinkEmail.value = state.paymentSession.linkEmail || '';
+        }
+      }
+      if (els.paymentConfirmBtn) els.paymentConfirmBtn.textContent = online ? 'Send Payment Link' : 'Confirm Amount';
+      if (els.paymentFullBtn) els.paymentFullBtn.textContent = online ? `Send Link for ${money(remaining)}` : 'Full Payment';
       renderDepositAction(remaining);
       renderPaymentMethods();
       renderPaymentQuickAmounts();
@@ -23400,16 +23444,73 @@
         state.paymentSession.creditBalance = 0;
         state.paymentSession.creditError = '';
       }
+      if (state.paymentSession.method === 'Online Payment' && !state.paymentSession.linkEmail) {
+        state.paymentSession.linkEmail = paymentLinkDefaultEmail();
+      }
       setPaymentAmountToRemaining();
       renderPaymentModal();
       if (state.paymentSession.method === 'Store Credit') loadStoreCreditForPayment();
       setTimeout(() => {
-        els.paymentAmountInput.focus();
-        els.paymentAmountInput.select();
+        const emailFirst = state.paymentSession.method === 'Online Payment' && !state.paymentSession.linkEmail;
+        const target = emailFirst ? els.paymentLinkEmail : els.paymentAmountInput;
+        target.focus();
+        target.select();
       }, 0);
     }
 
+    function paymentLinkDefaultEmail() {
+      const customer = selectedCustomerRecord();
+      return String((customer && (customer.email || customer.customer_email)) || '').trim();
+    }
+
+    // Online Payment does not take money now: it finishes the sale owing the
+    // link amount and emails the customer a Stripe link for it.
+    function sendPaymentLinkFromModal(useFullAmount) {
+      const session = state.paymentSession;
+      const remaining = paymentRemaining();
+      const amount = useFullAmount ? remaining : roundedMoneyValue(els.paymentAmountInput.value);
+      const email = String(els.paymentLinkEmail.value || '').trim().toLowerCase();
+      session.linkEmail = email;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        els.paymentError.textContent = 'Enter the customer\'s email address.';
+        els.paymentLinkEmail.focus();
+        return;
+      }
+      if (!Number.isFinite(amount) || amount < 0.5) {
+        els.paymentError.textContent = 'An online payment must be at least $0.50.';
+        return;
+      }
+      if (amount > remaining) {
+        els.paymentError.textContent = `Amount cannot exceed ${money(remaining)}.`;
+        return;
+      }
+      if (cartBalanceItems().length) {
+        els.paymentError.textContent = 'An earlier invoice balance is in the cart. Send its link from the invoice list instead.';
+        return;
+      }
+      if (state.exchangeReturn) {
+        els.paymentError.textContent = 'An exchange cannot be paid by payment link.';
+        return;
+      }
+      if (state.cart.some(item => item.is_used_device)) {
+        els.paymentError.textContent = 'Used devices must be paid in full in store.';
+        return;
+      }
+      if (session.payments.some(payment => ['Store Credit', 'Exchange Credit'].includes(paymentMethodLabel(payment.method)))) {
+        els.paymentError.textContent = 'Store Credit cannot be combined with a payment link.';
+        return;
+      }
+      const payments = session.payments.slice();
+      closePaymentModal();
+      showToast(`Saving sale and sending payment link to ${email}...`);
+      checkout(payments, { paymentLink: { email, amount } });
+    }
+
     function confirmPaymentAmount(useFullAmount = false) {
+      if (state.paymentSession.method === 'Online Payment') {
+        sendPaymentLinkFromModal(useFullAmount);
+        return;
+      }
       const remaining = paymentRemaining();
       const isCredit = state.paymentSession.method === 'Store Credit';
       const creditAvailable = isCredit ? paymentCreditAvailable() : 0;
@@ -24066,21 +24167,29 @@
         }).filter(Boolean).join(', ') || 'No products recorded';
         const refundable = Number(order.refundable_total ?? order.total ?? 0) > 0;
         const balance = orderBalanceDue(order);
+        const paid = numberValue(order.amount_paid ?? roundedMoneyValue(numberValue(order.total) - balance));
         return `
           <article class="invoice-row ${balance > 0 ? 'has-balance' : ''}" data-invoice-id="${escapeHtml(order.id)}">
             <div class="invoice-number">#${escapeHtml(invoiceNumberText(order))}</div>
             <div class="invoice-row-main">
               <strong>${escapeHtml(order.customer_name || 'Walk-in Customer')}</strong>
               <span>${escapeHtml(order.customer_phone || order.id)} &middot; ${itemCount} item${itemCount === 1 ? '' : 's'}</span>
-              ${balance > 0 ? `<span class="invoice-balance-tag"><i class="bi bi-piggy-bank"></i> Deposit ${money(order.amount_paid)} &middot; ${money(balance)} owing</span>` : ''}
+              ${balance > 0 ? (numberValue(order.amount_paid) > 0 || !/online payment/i.test(order.payment_method || '')
+                ? `<span class="invoice-balance-tag"><i class="bi bi-piggy-bank"></i> Deposit ${money(order.amount_paid)} &middot; ${money(balance)} owing</span>`
+                : `<span class="invoice-balance-tag"><i class="bi bi-envelope-at"></i> Awaiting online payment &middot; ${money(balance)} owing</span>`) : ''}
             </div>
             <div class="invoice-row-meta">
               <strong title="${escapeHtml(productSummary)}">${escapeHtml(productSummary)}</strong>
               <span>${escapeHtml(formatDateTime(order.created_at))} &middot; ${escapeHtml(invoiceRefundLabel(order.refund_status))}</span>
             </div>
-            <div class="invoice-total">${money(order.total)}</div>
+            <div class="invoice-total">
+              <span><small>Total</small><strong>${money(order.total)}</strong></span>
+              <span><small>Paid</small><strong>${money(paid)}</strong></span>
+              <span class="${balance > 0 ? 'invoice-amount-due' : ''}"><small>Balance</small><strong>${money(balance)}</strong></span>
+            </div>
             <div class="invoice-actions">
               ${balance > 0 ? `<button class="repair-action balance-action" type="button" data-balance-invoice="${escapeHtml(order.id)}" title="Take balance payment"><i class="bi bi-cash-coin"></i></button>` : ''}
+              ${balance > 0 ? `<button class="repair-action" type="button" data-payment-link-invoice="${escapeHtml(order.id)}" title="Email an online payment link"><i class="bi bi-envelope-at"></i></button>` : ''}
               <button class="repair-action primary" type="button" data-view-invoice="${escapeHtml(order.id)}" title="View invoice"><i class="bi bi-eye"></i></button>
               <button class="repair-action" type="button" data-refund-invoice="${escapeHtml(order.id)}" title="Refund" ${refundable ? '' : 'disabled'}><i class="bi bi-arrow-counterclockwise"></i></button>
             </div>
@@ -24479,6 +24588,11 @@
         }
         if (payload.order && typeof payload.order === 'object') {
           Object.assign(order, payload.order);
+        }
+        if (order.payment_link) {
+          // Saved: a retry must find the sale, never open another link.
+          order.payment_link_result = payload.payment_link || null;
+          delete order.payment_link;
         }
         if (payload.exchange_refund_id) {
           order.exchange_refund_id = payload.exchange_refund_id;
@@ -25673,9 +25787,18 @@
         })).filter(payment => payment.amount > 0)
         : (total > 0 ? [{ method: state.payment, amount: total }] : []);
       const paymentTotal = roundedMoneyValue(normalizedPayments.reduce((sum, payment) => sum + payment.amount, 0));
-      const isDeposit = Boolean(options && options.deposit) && paymentTotal > 0 && paymentTotal < total;
+      // A payment link leaves its amount owing until the customer pays online.
+      const paymentLink = options && options.paymentLink ? options.paymentLink : null;
+      const isDeposit = paymentTotal < total && (paymentLink
+        ? true
+        : Boolean(options && options.deposit) && paymentTotal > 0);
       if (paymentTotal > total + 0.005) {
         showToast('Payment cannot be more than the order total.');
+        return;
+      }
+      if (paymentLink && (cartBalanceItems().length || state.exchangeReturn
+        || roundedMoneyValue(paymentTotal + paymentLink.amount) > total)) {
+        showToast('This sale cannot be finished with a payment link. The cart is unchanged.');
         return;
       }
       if (paymentTotal < total && !isDeposit) {
@@ -25701,7 +25824,9 @@
       }
       const allocation = balanceItems.length ? allocateBalanceCheckoutPayments(normalizedPayments, saleTotal, balanceItems) : null;
       const salePayments = allocation ? allocation.sale : normalizedPayments;
-      const paymentSummary = (allocation ? saleTotal : total) === 0 ? 'No Charge' : summarizePayments(salePayments);
+      const paymentSummary = (allocation ? saleTotal : total) === 0
+        ? 'No Charge'
+        : (paymentLink && !salePayments.length ? 'Online Payment' : summarizePayments(salePayments));
       const usesStoreCredit = normalizedPayments.some(payment => ['Store Credit', 'Exchange Credit'].includes(payment.method));
       const creditCustomerCode = state.paymentSession.creditCustomerCode
         || (state.exchangeReturn && state.exchangeReturn.customer_code)
@@ -25865,7 +25990,8 @@
         customer_email: receiptCustomerEmail({
           customer_email: customer ? (customer.email || '') : '',
           customer_phone: customerPhone
-        }, [...state.customers, ...readLocalArray(POS_CUSTOMERS_KEY)]),
+        }, [...state.customers, ...readLocalArray(POS_CUSTOMERS_KEY)]) || (paymentLink ? paymentLink.email : ''),
+        payment_link: paymentLink || undefined,
         payment_method: paymentSummary,
         payments: salePayments,
         total: orderTotal,
@@ -25994,6 +26120,8 @@
           : `Exchange completed on invoice ${invoiceNumberText(order)}.`);
       } else if (total === 0) {
         showToast(`$0.00 invoice ${invoiceNumberText(order)} saved.`);
+      } else if (paymentLink) {
+        showToast(paymentLinkResultMessage(order.payment_link_result, order));
       } else if (isDeposit) {
         showToast(`Deposit ${money(paymentTotal)} taken. ${money(total - paymentTotal)} still owing on invoice ${invoiceNumberText(order)}.`);
       } else {
@@ -26019,6 +26147,117 @@
             if (result.status === 'rejected') console.error('Post-payment refresh failed:', result.reason);
           });
         });
+    }
+
+    function paymentLinkResultMessage(link, order) {
+      const invoice = `invoice ${invoiceNumberText(order || link || {})}`;
+      if (!link) return `Sale saved on ${invoice}, but the payment link status is unknown. Check the invoice list.`;
+      if (link.status === 'sent' && link.email_sent_at) {
+        return `Payment link for ${money(link.amount)} emailed to ${link.customer_email}. ${invoice} stays owing until they pay.`;
+      }
+      if (link.status === 'sent') {
+        return `Payment link created for ${invoice}, but the email failed (${link.send_error || 'unknown error'}). Send it again from the invoice list.`;
+      }
+      return `Sale saved on ${invoice}, but the payment link could not be sent: ${link.send_error || 'unknown error'}. Send it again from the invoice list.`;
+    }
+
+    // A fresh link for an invoice that is still owing (first link expired,
+    // went to the wrong address, or a deposit balance paid from home).
+    async function sendInvoicePaymentLink(orderId) {
+      let order = null;
+      try {
+        order = await invoiceOrderById(orderId);
+      } catch (error) {
+        showToast(error.message || 'Invoice could not be loaded.');
+        return;
+      }
+      const balance = orderBalanceDue(order);
+      if (!order || balance <= 0) {
+        showToast('This invoice has nothing owing.');
+        return;
+      }
+      const activeShift = await resolveCheckoutShift();
+      if (!activeShift) {
+        showToast('Start today\'s shift before sending a payment link.');
+        return;
+      }
+      const email = String(window.prompt(
+        `Email a payment link for ${money(balance)} on invoice ${invoiceNumberText(order)} to:`,
+        order.customer_email || ''
+      ) || '').trim().toLowerCase();
+      if (!email) return;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast('That email address is not valid.');
+        return;
+      }
+      try {
+        showToast(`Sending payment link to ${email}...`);
+        const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+        url.searchParams.set('mode', 'payment-link');
+        const response = await fetch(url.toString(), {
+          method: 'POST',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify({
+            store_code: repairTicketStoreCode(),
+            staff_name: state.selectedStaffName,
+            shift_id: activeShift.id,
+            order_id: order.id,
+            email,
+            amount: balance
+          })
+        });
+        const result = await parsePosApiResponse(response, 'The payment link could not be sent.');
+        showToast(paymentLinkResultMessage(result.payment_link, result.order || order));
+      } catch (error) {
+        showToast(error.message || 'The payment link could not be sent.');
+      }
+    }
+
+    // The till hears about online payments by asking every minute: the
+    // customer may pay hours later, long after the sale left the screen.
+    async function checkPaymentLinkUpdates() {
+      if (!state.selectedStaffName || document.visibilityState !== 'visible') return;
+      if (typeof localShiftTestMode !== 'undefined' && localShiftTestMode) return;
+      let seen = {};
+      try {
+        seen = JSON.parse(localStorage.getItem(POS_PAYMENT_LINKS_SEEN_KEY) || '{}') || {};
+      } catch (error) {
+        seen = {};
+      }
+      const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+      url.searchParams.set('mode', 'payment-links');
+      url.searchParams.set('store_code', repairTicketStoreCode());
+      url.searchParams.set('since', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      let links = [];
+      try {
+        const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
+        links = (await parsePosApiResponse(response, 'Payment links could not be checked.')).payment_links || [];
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+      const firstRun = !Object.keys(seen).length;
+      const notices = [];
+      links.forEach(link => {
+        if (!['paid', 'paid_unapplied'].includes(link.status) || seen[link.link_code]) return;
+        seen[link.link_code] = link.paid_at || new Date().toISOString();
+        if (firstRun) return;
+        notices.push(link.status === 'paid'
+          ? `Online payment received: ${money(link.paid_amount)} on invoice ${invoiceNumberText(link)} (${link.customer_name || link.customer_email}).`
+          : `Invoice ${invoiceNumberText(link)} was already settled when ${link.customer_email} paid ${money(link.paid_amount)} online. Refund it in Stripe.`);
+      });
+      Object.keys(seen).forEach(code => {
+        if (Date.parse(seen[code]) < Date.now() - 3 * 24 * 60 * 60 * 1000) delete seen[code];
+      });
+      try {
+        localStorage.setItem(POS_PAYMENT_LINKS_SEEN_KEY, JSON.stringify(seen));
+      } catch (error) {
+        console.error(error);
+      }
+      if (!notices.length) return;
+      showToast(notices.join(' '));
+      if (state.activeView === 'orders') loadInvoiceHistory();
+      loadRepairTickets().then(renderRepairWorkspace).catch(console.error);
     }
 
     function orderBalanceDue(order) {
@@ -26918,7 +27157,9 @@
       const viewButton = event.target.closest('[data-view-invoice]');
       const refundButton = event.target.closest('[data-refund-invoice]');
       const balanceButton = event.target.closest('[data-balance-invoice]');
+      const linkButton = event.target.closest('[data-payment-link-invoice]');
       if (balanceButton) addBalanceToCart(balanceButton.dataset.balanceInvoice);
+      if (linkButton) sendInvoicePaymentLink(linkButton.dataset.paymentLinkInvoice);
       if (viewButton) viewInvoiceById(viewButton.dataset.viewInvoice);
       if (refundButton) openRefundModalById(refundButton.dataset.refundInvoice);
     });
@@ -27355,6 +27596,15 @@
       renderPaymentChangePreview();
     });
     els.paymentAmountInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        confirmPaymentAmount(false);
+      }
+    });
+    els.paymentLinkEmail.addEventListener('input', event => {
+      state.paymentSession.linkEmail = event.target.value;
+    });
+    els.paymentLinkEmail.addEventListener('keydown', event => {
       if (event.key === 'Enter') {
         event.preventDefault();
         confirmPaymentAmount(false);
@@ -28120,6 +28370,11 @@
         loadStocktakeContext({ silent: true });
       }
     }, 30000);
+    window.setInterval(() => {
+      if (!localDashboardTestMode && !localTransferTestMode && !localCatalogTestMode) {
+        checkPaymentLinkUpdates().catch(console.error);
+      }
+    }, 60000);
   </script>
 </body>
 </html>

@@ -103,6 +103,45 @@ async function syncSavedOrder(
   return sync.body;
 }
 
+// The website project holds the Stripe keys and the mailer, so it opens the
+// Checkout session and emails the customer; this project only keeps the record.
+async function sendPaymentLink(link: JsonRecord): Promise<JsonRecord> {
+  const websiteUrl = (Deno.env.get("WEBSITE_FUNCTIONS_URL") || "https://fwlronvmgqzkleofriis.supabase.co/functions/v1")
+    .replace(/\/+$/, "");
+  const secret = Deno.env.get("USED_DEVICE_PUBLISH_SECRET") || "";
+  let answer: JsonRecord = {};
+  try {
+    if (!secret) throw new Error("Online payments are not configured.");
+    const response = await fetch(`${websiteUrl}/pos-payment-link`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-publish-secret": secret },
+      body: JSON.stringify({ action: "create", link }),
+    });
+    answer = await response.json().catch(() => ({})) as JsonRecord;
+    if (!response.ok || answer.ok === false) {
+      throw new Error(String(answer.message || "The payment link could not be created."));
+    }
+  } catch (error) {
+    console.error("Payment link send failed", error);
+    answer = { send_error: error instanceof Error ? error.message : "The payment link could not be created." };
+  }
+  const attached = await callRpc("attach_pos_payment_link", {
+    payload: {
+      link_code: link.link_code,
+      stripe_checkout_session_id: answer.session_id || null,
+      checkout_url: answer.url || null,
+      expires_at: answer.expires_at || null,
+      email_sent: answer.email_sent === true,
+      send_error: answer.send_error || answer.email_error || null,
+    },
+  });
+  if (attached.status >= 400 || !attached.body.ok) {
+    console.error("Payment link record update failed", attached.body);
+    return { ...link, status: answer.session_id ? "sent" : "failed", send_error: answer.send_error || null };
+  }
+  return attached.body.payment_link as JsonRecord;
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
@@ -156,6 +195,48 @@ Deno.serve(async (request) => {
       }
 
       await requireStoreAccess(sessionToken, storeCode);
+
+      // A new payment link for an invoice that already exists (balance owing,
+      // or the first link expired or never arrived).
+      if ((url.searchParams.get("mode") || "") === "payment-link") {
+        const result = await callRpc("create_pos_payment_link_for_store", {
+          session_token: sessionToken,
+          payload: record,
+        });
+        if (result.status >= 400 || !result.body.ok) return jsonResponse(result.body, result.status);
+        const link = await sendPaymentLink(result.body.payment_link as JsonRecord);
+        return jsonResponse({ ...result.body, payment_link: link });
+      }
+
+      // Checkout finished by emailing the customer a payment link: the sale is
+      // saved owing the link amount, then the link is sent.
+      if (record.payment_link && typeof record.payment_link === "object" && !Array.isArray(record.payment_link)) {
+        if (String(record.order_note || "").length > 1000) {
+          return jsonResponse({ ok: false, message: "Order note cannot exceed 1000 characters." }, 400);
+        }
+        const linkItems = Array.isArray(record.items) ? record.items as JsonRecord[] : [];
+        if (linkItems.some((item) => String(item?.note || "").length > 500)) {
+          return jsonResponse({ ok: false, message: "Item note cannot exceed 500 characters." }, 400);
+        }
+        const saved = await callRpc("save_pos_sales_order_with_payment_link_for_store", {
+          session_token: sessionToken,
+          payload: record,
+        });
+        if (saved.status >= 400 || !saved.body.ok) return jsonResponse(saved.body, saved.status);
+        const order = (saved.body.order && typeof saved.body.order === "object")
+          ? saved.body.order as JsonRecord
+          : {};
+        const inventory = await syncSavedOrder(sessionToken, storeCode, order);
+        const link = saved.body.payment_link && typeof saved.body.payment_link === "object"
+          ? await sendPaymentLink(saved.body.payment_link as JsonRecord)
+          : null;
+        return jsonResponse({
+          ...saved.body,
+          payment_link: link,
+          inventory,
+          inventory_sync_pending: !inventory.ok,
+        });
+      }
 
       // An earlier invoice's balance checked out together with new cart items:
       // one payment, the balance on the old invoice, the items on a new one.
@@ -321,6 +402,16 @@ Deno.serve(async (request) => {
           session_token: sessionToken,
           target_store_code: storeCode,
           target_customer_code: url.searchParams.get("customer_code") || "",
+        });
+        return jsonResponse(result.body, result.status);
+      }
+
+      if (mode === "payment-links") {
+        const result = await callRpc("list_pos_payment_links_for_store", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          target_order_code: url.searchParams.get("order_id") || null,
+          changed_since: url.searchParams.get("since") || null,
         });
         return jsonResponse(result.body, result.status);
       }
