@@ -104,7 +104,7 @@
       <div class="page-head">
         <div>
           <h1 class="page-title">库存总览 / 下单</h1>
-          <div class="page-sub">家里 + 各门店实时库存，红色 = 0。下单数只存在这台电脑的浏览器里，复制清单发给供应商。</div>
+          <div class="page-sub">家里 + 各门店 iPhone / iPad 实时库存，红色 = 0。下单数只存在这台电脑的浏览器里，复制清单发给供应商。</div>
         </div>
         <div>
           <el-button icon="el-icon-refresh" @click="loadInventory" :loading="loading">刷新</el-button>
@@ -117,6 +117,7 @@
         <el-radio-group v-model="kind" size="small">
           <el-radio-button label="screen">屏幕</el-radio-button>
           <el-radio-button label="battery">电池</el-radio-button>
+          <el-radio-button label="glass">后玻璃</el-radio-button>
         </el-radio-group>
         <el-radio-group v-model="familyFilter" size="small">
           <el-radio-button label="">全部</el-radio-button>
@@ -140,7 +141,7 @@
           <thead>
             <tr>
               <th class="left">型号</th>
-              <th class="left">类型</th>
+              <th class="left">{{ kind === 'glass' ? '颜色' : '类型' }}</th>
               <th v-for="store in stores" :key="'th-' + store.store_code">{{ store.label }}</th>
               <th>门店合计</th>
               <th>总数</th>
@@ -154,7 +155,7 @@
               </tr>
               <tr v-else :key="entry.row.key" :class="{ 'model-start': entry.firstOfModel }">
                 <td class="left model">{{ entry.firstOfModel ? entry.row.model_name : '' }}</td>
-                <td class="left">{{ entry.row.variant_name }}</td>
+                <td class="left">{{ entry.row.part_label }}</td>
                 <td v-for="store in stores" :key="entry.row.key + '-' + store.store_code" :class="{ zero: cellQty(entry.row, store) === 0 }">
                   {{ cellQty(entry.row, store) === null ? '–' : cellQty(entry.row, store) }}
                 </td>
@@ -203,6 +204,9 @@
       brassall: 'Brassall'
     };
     const STORE_ORDER = ['warehouse', 'parkridge', 'fairfield', 'northlakes', 'toowong', 'brassall'];
+    // Only Apple parts are ordered from the China supplier.
+    const SHOWN_FAMILIES = ['iphone', 'ipad'];
+    const BACK_GLASS_PREFIX = 'Back Glass';
 
     const authReady = window.Techm8StaffAuth.init({
       rootSelector: '#app',
@@ -260,6 +264,7 @@
           const map = new Map();
           this.items.forEach(item => {
             if (item.active === false) return;
+            if (!SHOWN_FAMILIES.includes(this.lcdFamilyInfo(item).key)) return;
             const key = this.rowKey(item);
             if (!map.has(key)) {
               map.set(key, {
@@ -267,7 +272,8 @@
                 category_key: item.category_key,
                 model_name: String(item.model_name || '').trim(),
                 variant_name: String(item.variant_name || '').trim(),
-                is_battery: this.isBattery(item),
+                part_kind: this.partKind(item),
+                part_label: this.partLabel(item),
                 qty: {},
                 store_total: 0,
                 total: 0
@@ -282,7 +288,7 @@
           return Array.from(map.values()).sort((a, b) => this.compareLcdRows(a, b));
         },
         kindRows() {
-          return this.pivotRows.filter(row => (this.kind === 'battery') === row.is_battery);
+          return this.pivotRows.filter(row => row.part_kind === this.kind);
         },
         familyOptions() {
           const seen = new Map();
@@ -302,7 +308,8 @@
             }
             if (this.lowOnly && row.total > this.lowThreshold) return false;
             // Keep rows that have a draft order even when they would otherwise be hidden.
-            if (this.hideEmpty && row.total === 0 && !this.lowOnly && !this.orderQty(row) && this.isAllZeroModel(row)) return false;
+            // Back glass only covers current models, so nothing there counts as an old model.
+            if (this.hideEmpty && row.part_kind !== 'glass' && row.total === 0 && !this.lowOnly && !this.orderQty(row) && this.isAllZeroModel(row)) return false;
             return true;
           });
         },
@@ -353,18 +360,19 @@
           return this.orderLines.reduce((sum, line) => sum + line.qty, 0);
         },
         orderText() {
-          const screens = this.orderLines.filter(line => !line.row.is_battery);
-          const batteries = this.orderLines.filter(line => line.row.is_battery);
+          const sections = [
+            { kind: 'screen', title: '【屏幕】', format: row => row.model_name + ' ' + row.part_label },
+            { kind: 'battery', title: '【电池】', format: row => row.model_name + ' 电池' },
+            { kind: 'glass', title: '【后玻璃】', format: row => row.model_name + ' 后玻璃 ' + row.part_label }
+          ];
           const parts = [];
-          if (screens.length) {
-            parts.push('【屏幕】');
-            screens.forEach(line => parts.push(line.row.model_name + ' ' + line.row.variant_name + ' x' + line.qty));
-          }
-          if (batteries.length) {
+          sections.forEach(section => {
+            const lines = this.orderLines.filter(line => line.row.part_kind === section.kind);
+            if (!lines.length) return;
             if (parts.length) parts.push('');
-            parts.push('【电池】');
-            batteries.forEach(line => parts.push(line.row.model_name + ' 电池 x' + line.qty));
-          }
+            parts.push(section.title);
+            lines.forEach(line => parts.push(section.format(line.row) + ' x' + line.qty));
+          });
           return parts.join('\n');
         }
       },
@@ -383,8 +391,16 @@
             String(item.variant_name || '').trim().toLowerCase()
           ].join('|');
         },
-        isBattery(item) {
-          return String(item.variant_name || '').trim().toLowerCase() === 'battery';
+        partKind(item) {
+          const variant = String(item.variant_name || '').trim().toLowerCase();
+          if (variant === 'battery') return 'battery';
+          if (variant.startsWith(BACK_GLASS_PREFIX.toLowerCase())) return 'glass';
+          return 'screen';
+        },
+        partLabel(item) {
+          const variant = String(item.variant_name || '').trim();
+          // "Back Glass Blue" -> "Blue"; the tab already says it is back glass.
+          return this.partKind(item) === 'glass' ? variant.slice(BACK_GLASS_PREFIX.length).trim() : variant;
         },
         isAllZeroModel(row) {
           return !this.zeroModels.get(row.category_key + '|' + row.model_name.toLowerCase());
