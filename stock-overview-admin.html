@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECHM8 库存总览 / 下单</title>
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js?v=20260904.1"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    :root {
+      --tm-dark: #163129;
+      --tm-orange: #ef7204;
+      --tm-bg: #f4f7f9;
+      --tm-border: #dfe7eb;
+      --tm-muted: #667781;
+      --tm-zero-bg: #fdecec;
+      --tm-zero-text: #c0392b;
+      --tm-low-bg: #fff6e0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--tm-bg);
+      color: #17252d;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    [v-cloak] { display: none; }
+
+    .page { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    .page-head {
+      display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+      gap: 12px; margin-bottom: 14px;
+    }
+    .page-title { font-size: 22px; font-weight: 800; color: var(--tm-dark); margin: 0; }
+    .page-sub { color: var(--tm-muted); font-size: 13px; margin-top: 4px; }
+
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      background: #fff; border: 1px solid var(--tm-border); border-radius: 14px;
+      padding: 12px; margin-bottom: 12px;
+    }
+    .toolbar .grow { flex: 1 1 200px; min-width: 180px; }
+    .toolbar-label { font-size: 13px; color: var(--tm-muted); }
+
+    .updated-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; font-size: 12px; }
+    .updated-chip { background: #fff; border: 1px solid var(--tm-border); border-radius: 999px; padding: 4px 10px; color: var(--tm-muted); }
+    .updated-chip b { color: var(--tm-dark); }
+    .updated-chip.stale { border-color: #f3c27a; background: var(--tm-low-bg); }
+
+    .table-wrap {
+      background: #fff; border: 1px solid var(--tm-border); border-radius: 14px;
+      overflow: auto; max-height: calc(100vh - 230px);
+    }
+    table.stock { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 14px; }
+    table.stock th, table.stock td {
+      padding: 6px 10px; border-bottom: 1px solid #edf1f3; text-align: center; white-space: nowrap;
+    }
+    table.stock thead th {
+      position: sticky; top: 0; z-index: 2; background: var(--tm-dark); color: #fff;
+      font-weight: 700; font-size: 13px;
+    }
+    table.stock th.left, table.stock td.left { text-align: left; }
+    table.stock td.model { font-weight: 700; color: var(--tm-dark); }
+    table.stock tr.model-start td { border-top: 2px solid #d5dee2; }
+    table.stock tr.family-row td {
+      background: #eef3f1; color: var(--tm-dark); font-weight: 800; text-align: left;
+      position: sticky; top: 33px; z-index: 1;
+    }
+    table.stock td.zero { background: var(--tm-zero-bg); color: var(--tm-zero-text); }
+    table.stock td.sum-col { background: #f6f9fa; font-weight: 700; }
+    table.stock td.total-col { background: #eef4f1; font-weight: 800; color: var(--tm-dark); }
+    table.stock td.total-col.zero { background: var(--tm-zero-bg); color: var(--tm-zero-text); }
+    table.stock td.total-col.low { background: var(--tm-low-bg); color: #9a6400; }
+    table.stock th.order-col, table.stock td.order-col { background: #fff7ef; }
+    table.stock thead th.order-col { background: var(--tm-orange); }
+    table.stock tr:hover td:not(.zero) { filter: brightness(0.98); }
+    .order-input { width: 64px; padding: 4px 6px; border: 1px solid #e3c9ae; border-radius: 6px; text-align: center; font-size: 14px; }
+    .order-input.has-qty { border-color: var(--tm-orange); background: #fff; font-weight: 800; color: var(--tm-orange); }
+    table.stock tfoot td { position: sticky; bottom: 0; background: var(--tm-dark); color: #fff; font-weight: 800; }
+
+    .order-panel {
+      margin-top: 14px; background: #fff; border: 1px solid var(--tm-border); border-radius: 14px; padding: 14px;
+    }
+    .order-panel h3 { margin: 0 0 8px; font-size: 16px; color: var(--tm-dark); }
+    .order-text {
+      width: 100%; min-height: 120px; font-family: ui-monospace, Consolas, monospace; font-size: 13px;
+      border: 1px solid var(--tm-border); border-radius: 10px; padding: 10px; resize: vertical;
+    }
+    .order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .empty-note { padding: 30px; text-align: center; color: var(--tm-muted); }
+    .error-note { color: var(--tm-zero-text); margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="page">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">库存总览 / 下单</h1>
+          <div class="page-sub">家里 + 各门店实时库存，红色 = 0。下单数只存在这台电脑的浏览器里，复制清单发给供应商。</div>
+        </div>
+        <div>
+          <el-button icon="el-icon-refresh" @click="loadInventory" :loading="loading">刷新</el-button>
+        </div>
+      </div>
+
+      <div class="error-note" v-if="loadError">{{ loadError }}</div>
+
+      <div class="toolbar">
+        <el-radio-group v-model="kind" size="small">
+          <el-radio-button label="screen">屏幕</el-radio-button>
+          <el-radio-button label="battery">电池</el-radio-button>
+        </el-radio-group>
+        <el-radio-group v-model="familyFilter" size="small">
+          <el-radio-button label="">全部</el-radio-button>
+          <el-radio-button v-for="family in familyOptions" :key="family.key" :label="family.key">{{ family.label }}</el-radio-button>
+        </el-radio-group>
+        <el-input class="grow" size="small" v-model.trim="keyword" clearable placeholder="搜索型号，例如 13 pro"></el-input>
+        <span class="toolbar-label">只看总数 ≤</span>
+        <el-input-number size="small" v-model="lowThreshold" :min="0" :max="99" controls-position="right" style="width:90px;"></el-input-number>
+        <el-switch v-model="lowOnly" active-text="开"></el-switch>
+        <el-switch v-model="hideEmpty" active-text="隐藏全 0 的老型号"></el-switch>
+      </div>
+
+      <div class="updated-strip" v-if="stores.length">
+        <span class="updated-chip" v-for="store in stores" :key="'upd-' + store.store_code" :class="{ stale: isStale(store.last_updated) }">
+          <b>{{ store.label }}</b> 最后更新 {{ formatDateTime(store.last_updated) }}
+        </span>
+      </div>
+
+      <div class="table-wrap" v-loading="loading">
+        <table class="stock" v-if="visibleRows.length">
+          <thead>
+            <tr>
+              <th class="left">型号</th>
+              <th class="left">类型</th>
+              <th v-for="store in stores" :key="'th-' + store.store_code">{{ store.label }}</th>
+              <th>门店合计</th>
+              <th>总数</th>
+              <th class="order-col">下单</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="entry in displayEntries">
+              <tr v-if="entry.type === 'family'" class="family-row" :key="'fam-' + entry.key">
+                <td :colspan="stores.length + 5">{{ entry.label }}</td>
+              </tr>
+              <tr v-else :key="entry.row.key" :class="{ 'model-start': entry.firstOfModel }">
+                <td class="left model">{{ entry.firstOfModel ? entry.row.model_name : '' }}</td>
+                <td class="left">{{ entry.row.variant_name }}</td>
+                <td v-for="store in stores" :key="entry.row.key + '-' + store.store_code" :class="{ zero: cellQty(entry.row, store) === 0 }">
+                  {{ cellQty(entry.row, store) === null ? '–' : cellQty(entry.row, store) }}
+                </td>
+                <td class="sum-col" :class="{ zero: entry.row.store_total === 0 }">{{ entry.row.store_total }}</td>
+                <td class="total-col" :class="{ zero: entry.row.total === 0, low: entry.row.total > 0 && entry.row.total <= lowThreshold }">{{ entry.row.total }}</td>
+                <td class="order-col">
+                  <input class="order-input" :class="{ 'has-qty': orderQty(entry.row) > 0 }" type="number" min="0" inputmode="numeric"
+                    :value="orderQty(entry.row) || ''" @input="setOrderQty(entry.row, $event.target.value)">
+                </td>
+              </tr>
+            </template>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="left" colspan="2">合计（当前筛选 {{ visibleRows.length }} 行）</td>
+              <td v-for="store in stores" :key="'tf-' + store.store_code">{{ footerTotals.stores[store.store_code] || 0 }}</td>
+              <td>{{ footerTotals.store_total }}</td>
+              <td>{{ footerTotals.total }}</td>
+              <td>{{ footerTotals.order }}</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="empty-note" v-else-if="!loading">没有符合条件的型号。</div>
+      </div>
+
+      <div class="order-panel">
+        <h3>下单清单（{{ orderLines.length }} 项，共 {{ orderTotalQty }} 件）</h3>
+        <textarea class="order-text" readonly :value="orderText" placeholder="在上面表格的「下单」列填数量，这里会自动生成清单。"></textarea>
+        <div class="order-actions">
+          <el-button type="warning" icon="el-icon-document-copy" :disabled="!orderLines.length" @click="copyOrderText">复制清单</el-button>
+          <el-button plain icon="el-icon-delete" :disabled="!orderLines.length" @click="clearOrder">清空下单数</el-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ORDER_DRAFT_KEY = 'techm8_stock_order_draft_v1';
+    // Column order mirrors the old home tracker sheet: home first, then the stores.
+    const STORE_LABELS = {
+      warehouse: '家里',
+      parkridge: 'Park Ridge',
+      fairfield: 'Fairfield',
+      northlakes: 'North Lakes',
+      toowong: 'Toowong',
+      brassall: 'Brassall'
+    };
+    const STORE_ORDER = ['warehouse', 'parkridge', 'fairfield', 'northlakes', 'toowong', 'brassall'];
+
+    const authReady = window.Techm8StaffAuth.init({
+      rootSelector: '#app',
+      title: 'Admin Login',
+      subtitle: 'Sign in with the admin account and password to open the stock overview.',
+      requireLoginEmail: true,
+      loginInputType: 'text',
+      loginPlaceholder: 'Admin account',
+      sessionKey: 'techm8_admin_session_token',
+      createRpc: 'create_admin_session',
+      verifyRpc: 'verify_admin_session',
+      revokeRpc: 'revoke_admin_session'
+    });
+
+    authReady.then(() => new Vue({
+      el: '#app',
+      data() {
+        return {
+          items: [],
+          loading: false,
+          loadError: '',
+          kind: 'screen',
+          familyFilter: 'iphone',
+          keyword: '',
+          lowOnly: false,
+          lowThreshold: 2,
+          hideEmpty: true,
+          orderDraft: this.readOrderDraft()
+        };
+      },
+      computed: {
+        stores() {
+          const map = new Map();
+          this.items.forEach(item => {
+            if (!item.store_code) return;
+            if (!map.has(item.store_code)) {
+              map.set(item.store_code, {
+                store_code: item.store_code,
+                label: STORE_LABELS[item.store_code] || item.store_name || item.store_code,
+                last_updated: null
+              });
+            }
+            const store = map.get(item.store_code);
+            if (item.updated_at && (!store.last_updated || item.updated_at > store.last_updated)) {
+              store.last_updated = item.updated_at;
+            }
+          });
+          const rank = code => {
+            const index = STORE_ORDER.indexOf(code);
+            return index === -1 ? 99 : index;
+          };
+          return Array.from(map.values()).sort((a, b) => rank(a.store_code) - rank(b.store_code));
+        },
+        pivotRows() {
+          const map = new Map();
+          this.items.forEach(item => {
+            if (item.active === false) return;
+            const key = this.rowKey(item);
+            if (!map.has(key)) {
+              map.set(key, {
+                key,
+                category_key: item.category_key,
+                model_name: String(item.model_name || '').trim(),
+                variant_name: String(item.variant_name || '').trim(),
+                is_battery: this.isBattery(item),
+                qty: {},
+                store_total: 0,
+                total: 0
+              });
+            }
+            const row = map.get(key);
+            const qty = Number(item.current_qty) || 0;
+            row.qty[item.store_code] = (row.qty[item.store_code] || 0) + qty;
+            row.total += qty;
+            if (item.store_code !== 'warehouse') row.store_total += qty;
+          });
+          return Array.from(map.values()).sort((a, b) => this.compareLcdRows(a, b));
+        },
+        kindRows() {
+          return this.pivotRows.filter(row => (this.kind === 'battery') === row.is_battery);
+        },
+        familyOptions() {
+          const seen = new Map();
+          this.kindRows.forEach(row => {
+            const family = this.lcdFamilyInfo(row);
+            if (!seen.has(family.key)) seen.set(family.key, family);
+          });
+          return Array.from(seen.values()).sort((a, b) => a.rank - b.rank);
+        },
+        visibleRows() {
+          const words = this.keyword.toLowerCase().split(/\s+/).filter(Boolean);
+          return this.kindRows.filter(row => {
+            if (this.familyFilter && this.lcdFamilyInfo(row).key !== this.familyFilter) return false;
+            if (words.length) {
+              const text = (row.model_name + ' ' + row.variant_name).toLowerCase();
+              if (!words.every(word => text.includes(word))) return false;
+            }
+            if (this.lowOnly && row.total > this.lowThreshold) return false;
+            // Keep rows that have a draft order even when they would otherwise be hidden.
+            if (this.hideEmpty && row.total === 0 && !this.lowOnly && !this.orderQty(row) && this.isAllZeroModel(row)) return false;
+            return true;
+          });
+        },
+        zeroModels() {
+          // Screens and batteries together: a current model with 0 batteries left must stay visible.
+          const totals = new Map();
+          this.pivotRows.forEach(row => {
+            const key = row.category_key + '|' + row.model_name.toLowerCase();
+            totals.set(key, (totals.get(key) || 0) + row.total);
+          });
+          return totals;
+        },
+        displayEntries() {
+          const entries = [];
+          let lastFamily = null;
+          let lastModel = null;
+          this.visibleRows.forEach(row => {
+            const family = this.lcdFamilyInfo(row);
+            if (!this.familyFilter && family.key !== lastFamily) {
+              entries.push({ type: 'family', key: family.key, label: family.label });
+              lastModel = null;
+            }
+            lastFamily = family.key;
+            const modelKey = row.model_name.toLowerCase();
+            entries.push({ type: 'row', row, firstOfModel: modelKey !== lastModel });
+            lastModel = modelKey;
+          });
+          return entries;
+        },
+        footerTotals() {
+          const result = { stores: {}, store_total: 0, total: 0, order: 0 };
+          this.visibleRows.forEach(row => {
+            Object.keys(row.qty).forEach(code => {
+              result.stores[code] = (result.stores[code] || 0) + row.qty[code];
+            });
+            result.store_total += row.store_total;
+            result.total += row.total;
+            result.order += this.orderQty(row);
+          });
+          return result;
+        },
+        orderLines() {
+          return this.pivotRows
+            .filter(row => this.orderQty(row) > 0)
+            .map(row => ({ row, qty: this.orderQty(row) }));
+        },
+        orderTotalQty() {
+          return this.orderLines.reduce((sum, line) => sum + line.qty, 0);
+        },
+        orderText() {
+          const screens = this.orderLines.filter(line => !line.row.is_battery);
+          const batteries = this.orderLines.filter(line => line.row.is_battery);
+          const parts = [];
+          if (screens.length) {
+            parts.push('【屏幕】');
+            screens.forEach(line => parts.push(line.row.model_name + ' ' + line.row.variant_name + ' x' + line.qty));
+          }
+          if (batteries.length) {
+            if (parts.length) parts.push('');
+            parts.push('【电池】');
+            batteries.forEach(line => parts.push(line.row.model_name + ' 电池 x' + line.qty));
+          }
+          return parts.join('\n');
+        }
+      },
+      watch: {
+        kind() {
+          if (this.familyFilter && !this.familyOptions.some(family => family.key === this.familyFilter)) {
+            this.familyFilter = '';
+          }
+        }
+      },
+      methods: {
+        rowKey(item) {
+          return [
+            String(item.category_key || '').toLowerCase(),
+            String(item.model_name || '').trim().toLowerCase(),
+            String(item.variant_name || '').trim().toLowerCase()
+          ].join('|');
+        },
+        isBattery(item) {
+          return String(item.variant_name || '').trim().toLowerCase() === 'battery';
+        },
+        isAllZeroModel(row) {
+          return !this.zeroModels.get(row.category_key + '|' + row.model_name.toLowerCase());
+        },
+        cellQty(row, store) {
+          return Object.prototype.hasOwnProperty.call(row.qty, store.store_code) ? row.qty[store.store_code] : null;
+        },
+        orderQty(row) {
+          return Number(this.orderDraft[row.key]) || 0;
+        },
+        setOrderQty(row, value) {
+          const qty = Math.max(0, Math.floor(Number(value) || 0));
+          const next = Object.assign({}, this.orderDraft);
+          if (qty) next[row.key] = qty;
+          else delete next[row.key];
+          this.orderDraft = next;
+          this.writeOrderDraft();
+        },
+        readOrderDraft() {
+          try {
+            const parsed = JSON.parse(window.localStorage.getItem(ORDER_DRAFT_KEY) || '{}');
+            return parsed && typeof parsed === 'object' ? parsed : {};
+          } catch (error) {
+            return {};
+          }
+        },
+        writeOrderDraft() {
+          try {
+            window.localStorage.setItem(ORDER_DRAFT_KEY, JSON.stringify(this.orderDraft));
+          } catch (error) {
+            // Draft just won't survive a reload.
+          }
+        },
+        clearOrder() {
+          this.$confirm('清空所有下单数？', '确认', { type: 'warning' })
+            .then(() => {
+              this.orderDraft = {};
+              this.writeOrderDraft();
+            })
+            .catch(() => {});
+        },
+        async copyOrderText() {
+          try {
+            await navigator.clipboard.writeText(this.orderText);
+            this.$message.success('已复制，可以直接粘贴到微信');
+          } catch (error) {
+            this.$message.error('复制失败，请手动选中文字复制');
+          }
+        },
+        isStale(value) {
+          if (!value) return true;
+          return Date.now() - new Date(value).getTime() > 7 * 24 * 3600 * 1000;
+        },
+        formatDateTime(value) {
+          if (!value) return '无数据';
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return value;
+          const pad = n => String(n).padStart(2, '0');
+          return (date.getMonth() + 1) + '/' + date.getDate() + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+        },
+        async loadInventory() {
+          this.loading = true;
+          this.loadError = '';
+          try {
+            const result = await window.Techm8StaffAuth.callRpc('get_lcd_inventory', {
+              session_token: window.Techm8StaffAuth.getToken(),
+              target_store_code: ''
+            });
+            if (!result || !result.ok) {
+              throw new Error((result && result.message) || '读取库存失败');
+            }
+            this.items = Array.isArray(result.items) ? result.items : [];
+          } catch (error) {
+            console.error(error);
+            this.loadError = error.message || '读取库存失败';
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        // Sorting helpers copied from lcd-inventory-admin.html so both pages list models in the same order.
+        naturalSort(a, b) {
+          return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+        },
+        lcdFamilyInfo(itemOrModelName, explicitCategoryKey) {
+          const item = (itemOrModelName && typeof itemOrModelName === 'object') ? itemOrModelName : null;
+          const modelName = item ? item.model_name : itemOrModelName;
+          const categoryKey = String(explicitCategoryKey || (item && item.category_key) || '').trim().toLowerCase();
+          const categoryLabels = {
+            'iphone': 'iPhone',
+            'samsung': 'Samsung',
+            'pixel': 'Google Pixel',
+            'ipad': 'iPad',
+            'oppo': 'Oppo',
+            'other': 'Other Models'
+          };
+          const categoryRanks = {
+            'iphone': 1,
+            'samsung': 2,
+            'pixel': 4,
+            'ipad': 5,
+            'oppo': 6,
+            'other': 99
+          };
+          if (categoryKey && categoryLabels[categoryKey]) {
+            return {
+              key: categoryKey,
+              label: categoryLabels[categoryKey],
+              rank: categoryRanks[categoryKey]
+            };
+          }
+
+          const text = String(modelName || '').trim();
+          const lower = text.toLowerCase();
+
+          if (/^iphone\b/.test(lower)) return { key: 'iphone', label: 'iPhone', rank: 1 };
+          if (/^(galaxy\s*)?s\d{1,2}(\+|\s|$|fe\b|plus\b|ultra\b)/i.test(text) || /^galaxy s\b/i.test(lower)) {
+            return { key: 'samsung', label: 'Samsung', rank: 2 };
+          }
+          if (/^(galaxy\s*)?note\s*\d+\b/i.test(text) || /^galaxy note\b/i.test(lower)) {
+            return { key: 'samsung', label: 'Samsung', rank: 2 };
+          }
+          if (/^pixel\b/i.test(text)) return { key: 'pixel', label: 'Google Pixel', rank: 4 };
+          if (/^ipad\b/i.test(lower)) return { key: 'ipad', label: 'iPad', rank: 5 };
+          if (/^oppo\b/i.test(text)) return { key: 'oppo', label: 'Oppo', rank: 6 };
+          return { key: 'other', label: 'Other Models', rank: 99 };
+        },
+        extractLcdSeriesNumber(modelName, familyKey) {
+          const text = String(modelName || '');
+          if (familyKey === 'iphone') {
+            if (/iphone\s*xr/i.test(text)) return 10.1;
+            if (/iphone\s*xs\s*max/i.test(text)) return 10.3;
+            if (/iphone\s*xs/i.test(text)) return 10.2;
+            if (/iphone\s*x\b/i.test(text)) return 10.0;
+            const match = text.match(/iphone\s+(\d+)/i);
+            return match ? Number(match[1]) : 999;
+          }
+          if (familyKey === 'samsung') {
+            const match = text.match(/s(\d{1,2})/i);
+            if (match) return Number(match[1]);
+            const noteMatch = text.match(/note\s*(\d{1,2})/i);
+            return noteMatch ? 100 + Number(noteMatch[1]) : 999;
+          }
+          if (familyKey === 'pixel') {
+            const match = text.match(/pixel\s*(\d+)/i);
+            return match ? Number(match[1]) : 999;
+          }
+          if (familyKey === 'ipad') {
+            const tenth = text.match(/(\d+)(st|nd|rd|th)/i);
+            if (tenth) return Number(tenth[1]);
+            const gen = text.match(/mini\s*(\d+)/i);
+            if (gen) return 200 + Number(gen[1]);
+            return 999;
+          }
+          return 999;
+        },
+        extractLcdVariantRank(modelName, familyKey) {
+          const text = String(modelName || '').toLowerCase();
+          if (familyKey === 'iphone') {
+            if (text.includes('mini')) return 1;
+            if (text.includes('plus')) return 2;
+            if (text.includes('pro max')) return 4;
+            if (text.includes('pro')) return 3;
+            if (/\b16e\b/.test(text) || /iphone\s+se\b/.test(text)) return 0;
+            if (text.includes('ultra')) return 5;
+          }
+          if (familyKey === 'samsung' || familyKey === 'pixel') {
+            if (text.includes('fe')) return 1;
+            if (text.includes('plus')) return 2;
+            if (text.includes('pro xl')) return 4;
+            if (text.includes('pro')) return 3;
+            if (text.includes('ultra')) return 5;
+            if (/\b5g\b/i.test(modelName)) return 6;
+            if (/\ba\b/i.test(modelName)) return 7;
+          }
+          return 0;
+        },
+        lcdVariantTypeRank(variantName) {
+          const text = String(variantName || '').trim().toLowerCase();
+          const ranks = {
+            'black': 1,
+            'white': 2,
+            'black touch': 3,
+            'white touch': 4,
+            'touch': 5,
+            'mini 1 lcd': 6,
+            'mini 2/3 lcd': 7,
+            'lcd': 8,
+            'lcd(9.7)': 9,
+            'oled': 10,
+            'ori': 11,
+            'standard': 12,
+            'battery': 20
+          };
+          return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
+        },
+        compareLcdModels(a, b) {
+          const familyA = this.lcdFamilyInfo(a, a && typeof a === 'object' ? a.category_key : '');
+          const familyB = this.lcdFamilyInfo(b, b && typeof b === 'object' ? b.category_key : '');
+          const modelNameA = a && typeof a === 'object' ? a.model_name : a;
+          const modelNameB = b && typeof b === 'object' ? b.model_name : b;
+          if (familyA.rank !== familyB.rank) return familyA.rank - familyB.rank;
+
+          const seriesA = this.extractLcdSeriesNumber(modelNameA, familyA.key);
+          const seriesB = this.extractLcdSeriesNumber(modelNameB, familyB.key);
+          if (seriesA !== seriesB) return seriesA - seriesB;
+
+          const variantA = this.extractLcdVariantRank(modelNameA, familyA.key);
+          const variantB = this.extractLcdVariantRank(modelNameB, familyB.key);
+          if (variantA !== variantB) return variantA - variantB;
+
+          return this.naturalSort(modelNameA, modelNameB);
+        },
+        compareLcdRows(a, b) {
+          // Pass the whole row so category_key decides the family, not just the model name.
+          const modelCompare = this.compareLcdModels(a, b);
+          if (modelCompare !== 0) return modelCompare;
+
+          const variantCompare = this.lcdVariantTypeRank(a.variant_name) - this.lcdVariantTypeRank(b.variant_name);
+          if (variantCompare !== 0) return variantCompare;
+
+          return this.naturalSort(a.variant_name, b.variant_name);
+        }
+      },
+      mounted() {
+        this.loadInventory();
+      }
+    })).catch(error => {
+      console.error(error);
+    });
+  </script>
+</body>
+</html>
