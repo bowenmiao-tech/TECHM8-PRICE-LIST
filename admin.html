@@ -560,6 +560,12 @@
     .sales-event-item strong { display: block; font-size: 11px; }
     .sales-event-item small { display: block; margin-top: 4px; color: #788991; font-size: 9px; line-height: 1.45; }
     .sales-event-item-amount { font-weight: 900; }
+    .sales-repair-context { display: grid; gap: 8px; }
+    .sales-repair-context[hidden] { display: none; }
+    .sales-repair-card { padding: 12px; border: 1px solid #bfe0d7; border-radius: 8px; background: #f5fbf9; white-space: normal; }
+    .sales-repair-card strong { display: block; font-size: 12px; }
+    .sales-repair-card p { margin: 5px 0 0; color: #53666e; font-size: 10px; line-height: 1.5; }
+    .sales-repair-card .sales-repair-progress { margin-top: 9px; font-weight: 800; }
     .sales-event-reason { padding: 0 18px 13px 86px; color: #9b4a28; font-size: 10px; font-weight: 750; white-space: normal; }
     .sales-drilldown-empty { padding: 70px 24px; color: #71828a; text-align: center; font-size: 12px; }
     .sales-drilldown-error { display: none; margin: 12px 20px; padding: 11px 13px; border: 1px solid #f0cbc7; border-radius: 8px; color: #96362e; background: #fff4f2; font-size: 11px; }
@@ -1551,6 +1557,50 @@
         return Array.isArray(row.items) ? row.items : [];
       }
 
+      function salesRepairTicketCodes(row) {
+        return [...new Set(salesDrilldownItems(row)
+          .filter(item => item.category === 'repair' && item.ticket_code)
+          .map(item => String(item.ticket_code).trim())
+          .filter(Boolean))];
+      }
+
+      async function loadSalesRepairContext(row, detailRow) {
+        const host = detailRow?.querySelector('[data-sales-repair-context]');
+        const codes = salesRepairTicketCodes(row);
+        if (!host || !codes.length) return;
+        host.hidden = false;
+        host.textContent = 'Loading repair card details…';
+        const config = window.TECHM8_SUPABASE || {};
+        const cards = await Promise.all(codes.map(async code => {
+          try {
+            const url = new URL(`${config.url}/functions/v1/pos-repair-tickets`);
+            url.searchParams.set('store_code', row.store_code);
+            url.searchParams.set('ticket_code', code);
+            const response = await fetch(url, {
+              headers: { apikey: config.anonKey || '', 'x-staff-session': window.Techm8StaffAuth.getToken() }
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.ok === false || !result.ticket) {
+              throw new Error(result.message || 'Repair card details are unavailable.');
+            }
+            const ticket = result.ticket;
+            const status = REPAIR_STATUS[ticket.status]?.label || String(ticket.status || 'Unknown').replaceAll('_', ' ');
+            const jobs = Array.isArray(ticket.jobs) ? ticket.jobs.filter(job => job.status !== 'cancelled') : [];
+            const jobLabels = { proposed: 'Waiting approval', approved: 'Approved', in_progress: 'In progress', completed: 'Completed' };
+            return `<div class="sales-repair-card"><strong>${escapeHtml(ticket.title || 'Repair device')}</strong>
+              <p>Repair card ${escapeHtml(code)} · ${escapeHtml(status)}</p>
+              <p>Reported issue: ${escapeHtml(ticket.issue || 'Not recorded')}</p>
+              <p class="sales-repair-progress">Additional repair jobs: ${jobs.length
+                ? jobs.map(job => `${escapeHtml(job.name || 'Repair job')} — ${escapeHtml(jobLabels[job.status] || job.status || 'Not recorded')}`).join('; ')
+                : 'None recorded'}</p>
+              <p>Items charged on this transaction are listed below; payment does not mean every repair is complete.</p></div>`;
+          } catch (error) {
+            return `<div class="sales-repair-card"><strong>Repair card ${escapeHtml(code)}</strong><p>${escapeHtml(error.message || 'Repair card details are unavailable.')}</p></div>`;
+          }
+        }));
+        if (host.isConnected) host.innerHTML = cards.join('');
+      }
+
       function renderSalesDrilldownRows() {
         const rows = salesDrilldownState.rows;
         els.salesDrilldownEmpty.hidden = rows.length > 0;
@@ -1565,7 +1615,7 @@
             const details = [item.sku, item.ticket_code, salesCategoryLabel(item.category), quantityText, item.note].filter(Boolean).join(' · ');
             return `<div class="sales-event-item"><div><strong>${escapeHtml(item.name || 'Sale item')}</strong><small>${escapeHtml(details)}</small></div><div class="sales-event-item-amount ${number(item.amount) < 0 ? 'value-refund' : ''}">${money(item.amount)}</div></div>`;
           }).join('');
-          return `<tr data-sales-event="${escapeHtml(row.event_key)}" tabindex="0" aria-expanded="false" aria-controls="${detailId}"><td><span class="sales-event-badge ${isRefund ? 'refund' : ''}">${isRefund ? 'Refund' : 'Sale'}</span></td><td><span class="sales-person">#${escapeHtml(row.invoice_number)}</span><span class="sales-subline">${escapeHtml(row.store_name || '')}${row.ticket_codes ? ` · ${escapeHtml(row.ticket_codes)}` : ''}</span></td><td>${escapeHtml(formatDateTime(row.transaction_at))}</td><td><span class="sales-person">${escapeHtml(row.customer_name || 'Walk-in Customer')}</span><span class="sales-subline">${escapeHtml(row.customer_phone || row.customer_email || '')}</span></td><td>${escapeHtml(row.staff_name || '—')}</td><td><span class="sales-person">${escapeHtml(itemNames || 'Sale item')}</span>${extraItems ? `<span class="sales-subline">+${extraItems} more</span>` : ''}</td><td><span class="sales-person">${escapeHtml(row.payment_method || '—')}</span><span class="sales-subline">${escapeHtml(row.payment_status || '')}</span></td><td><span class="sales-event-amount ${number(row.amount) < 0 ? 'negative' : ''}">${money(row.amount)}</span></td></tr><tr class="sales-event-detail" id="${detailId}" hidden><td colspan="8"><div class="sales-event-items">${itemRows}</div>${row.reason ? `<div class="sales-event-reason">Refund reason: ${escapeHtml(row.reason)}</div>` : ''}</td></tr>`;
+          return `<tr data-sales-event="${escapeHtml(row.event_key)}" tabindex="0" aria-expanded="false" aria-controls="${detailId}"><td><span class="sales-event-badge ${isRefund ? 'refund' : ''}">${isRefund ? 'Refund' : 'Sale'}</span></td><td><span class="sales-person">#${escapeHtml(row.invoice_number)}</span><span class="sales-subline">${escapeHtml(row.store_name || '')}${row.ticket_codes ? ` · ${escapeHtml(row.ticket_codes)}` : ''}</span></td><td>${escapeHtml(formatDateTime(row.transaction_at))}</td><td><span class="sales-person">${escapeHtml(row.customer_name || 'Walk-in Customer')}</span><span class="sales-subline">${escapeHtml(row.customer_phone || row.customer_email || '')}</span></td><td>${escapeHtml(row.staff_name || '—')}</td><td><span class="sales-person">${escapeHtml(itemNames || 'Sale item')}</span>${extraItems ? `<span class="sales-subline">+${extraItems} more</span>` : ''}</td><td><span class="sales-person">${escapeHtml(row.payment_method || '—')}</span><span class="sales-subline">${escapeHtml(row.payment_status || '')}</span></td><td><span class="sales-event-amount ${number(row.amount) < 0 ? 'negative' : ''}">${money(row.amount)}</span></td></tr><tr class="sales-event-detail" id="${detailId}" hidden><td colspan="8"><div class="sales-event-items">${salesRepairTicketCodes(row).length ? '<div class="sales-repair-context" data-sales-repair-context hidden></div>' : ''}${itemRows}</div>${row.reason ? `<div class="sales-event-reason">Refund reason: ${escapeHtml(row.reason)}</div>` : ''}</td></tr>`;
         }).join('');
       }
 
@@ -2689,6 +2739,10 @@
         const open = row.getAttribute('aria-expanded') === 'true';
         row.setAttribute('aria-expanded', String(!open));
         if (details) details.hidden = open;
+        if (!open && details) {
+          const movement = salesDrilldownState.rows.find(item => String(item.event_key) === row.dataset.salesEvent);
+          if (movement) loadSalesRepairContext(movement, details);
+        }
       });
       els.salesDrilldownBody.addEventListener('keydown', event => {
         if ((event.key !== 'Enter' && event.key !== ' ') || !event.target.matches('[data-sales-event]')) return;
