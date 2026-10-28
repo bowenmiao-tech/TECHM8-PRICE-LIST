@@ -595,6 +595,12 @@
             'standard': 12,
             'battery': 20
           };
+          // Back glass colours follow the 后玻璃 sheet's column order.
+          const glassColours = ['black', 'white', 'red', 'green', 'blue', 'purple', 'gold', 'orange', 'yellow', 'pink', 'grey'];
+          if (text.startsWith('back glass ')) {
+            const colourIndex = glassColours.indexOf(text.slice('back glass '.length).split(' ')[0]);
+            return 30 + (colourIndex === -1 ? glassColours.length : colourIndex);
+          }
           return Object.prototype.hasOwnProperty.call(ranks, text) ? ranks[text] : 50;
         },
         compareLcdModels(a, b) {
