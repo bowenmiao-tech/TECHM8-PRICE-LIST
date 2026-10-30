@@ -7686,6 +7686,23 @@
       }
     }
 
+    .payment-notices { position: fixed; right: 18px; bottom: 18px; z-index: 20040; display: grid; gap: 10px; width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 36px); overflow-y: auto; }
+    .payment-notices[hidden] { display: none; }
+    .payment-notice { display: grid; gap: 6px; padding: 14px 16px; border: 2px solid var(--tm-green); border-radius: 12px; background: #fff; box-shadow: 0 14px 34px rgba(20,35,30,.22); color: #14231e; }
+    .payment-notice.deposit { border-color: #dc7b17; }
+    .payment-notice.warning { border-color: #c0392b; }
+    .payment-notice-head { display: flex; align-items: center; gap: 8px; }
+    .payment-notice-head i { color: var(--tm-green); }
+    .payment-notice.deposit .payment-notice-head i { color: #dc7b17; }
+    .payment-notice.warning .payment-notice-head i { color: #c0392b; }
+    .payment-notice-head strong { font-size: 16px; font-weight: 950; }
+    .payment-notice-head span { margin-left: auto; color: #708078; font-size: 11px; font-weight: 750; }
+    .payment-notice-invoice { font-size: 13px; font-weight: 850; }
+    .payment-notice-amount { font-size: 15px; font-weight: 950; }
+    .payment-notice-items { color: #5d6f68; font-size: 12px; font-weight: 700; line-height: 1.35; }
+    .payment-notice-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+    .payment-notice-actions button { min-height: 36px; padding: 0 14px; border: 1px solid var(--tm-line-strong); border-radius: 8px; background: #fff; font-weight: 850; cursor: pointer; }
+    .payment-notice-actions button.primary { border-color: var(--tm-green); background: var(--tm-green); color: #fff; }
     .toast {
       position: fixed;
       right: 18px;
@@ -10256,6 +10273,7 @@
     </div>
   </div>
 
+  <div id="paymentNotices" class="payment-notices" hidden></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -10828,6 +10846,7 @@
       paymentLinkFields: document.getElementById('paymentLinkFields'),
       paymentLinkEmail: document.getElementById('paymentLinkEmail'),
       paymentLinkSplit: document.getElementById('paymentLinkSplit'),
+      paymentNotices: document.getElementById('paymentNotices'),
       paymentLinkCustomer: document.getElementById('paymentLinkCustomer'),
       paymentChangePreview: document.getElementById('paymentChangePreview'),
       paymentQuickGrid: document.getElementById('paymentQuickGrid'),
@@ -11299,7 +11318,6 @@
     ];
     // Store Credit and online payments never pass through the till.
     const POS_TENDER_METHODS = POS_PAYMENT_METHODS.filter(method => !['storeCredit', 'onlinePayment'].includes(method.key));
-    const POS_PAYMENT_LINKS_SEEN_KEY = 'techm8_pos_payment_links_seen';
 
     const posStores = [
       { id: 'park-ridge', code: 'PR', dbCode: 'parkridge', name: 'TechM8 Park Ridge' },
@@ -26296,20 +26314,16 @@
     }
 
     // The till hears about online payments by asking every minute: the
-    // customer may pay hours later, long after the sale left the screen.
+    // customer may pay hours later, long after the sale left the screen. A
+    // notice stays on every till of the store until someone presses Got it.
     async function checkPaymentLinkUpdates() {
       if (!state.selectedStaffName || document.visibilityState !== 'visible') return;
       if (typeof localShiftTestMode !== 'undefined' && localShiftTestMode) return;
-      let seen = {};
-      try {
-        seen = JSON.parse(localStorage.getItem(POS_PAYMENT_LINKS_SEEN_KEY) || '{}') || {};
-      } catch (error) {
-        seen = {};
-      }
+      const storeCode = repairTicketStoreCode();
       const url = new URL(POS_SALES_ORDERS_ENDPOINT);
       url.searchParams.set('mode', 'payment-links');
-      url.searchParams.set('store_code', repairTicketStoreCode());
-      url.searchParams.set('since', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      url.searchParams.set('store_code', storeCode);
+      url.searchParams.set('unacknowledged', '1');
       let links = [];
       try {
         const response = await fetch(url.toString(), { headers: posOrderApiHeaders() });
@@ -26318,28 +26332,100 @@
         console.error(error);
         return;
       }
-      const firstRun = !Object.keys(seen).length;
-      const notices = [];
-      links.forEach(link => {
-        if (!['paid', 'paid_unapplied'].includes(link.status) || seen[link.link_code]) return;
-        seen[link.link_code] = link.paid_at || new Date().toISOString();
-        if (firstRun) return;
-        notices.push(link.status === 'paid'
-          ? `${link.paid_method === 'Online Afterpay' ? 'Afterpay' : 'Online'} payment received: ${money(link.paid_amount)} on invoice ${invoiceNumberText(link)} (${link.customer_name || link.customer_email}).`
-          : `Invoice ${invoiceNumberText(link)} was already settled when ${link.customer_email} paid ${money(link.paid_amount)} online. Refund it in Stripe.`);
-      });
-      Object.keys(seen).forEach(code => {
-        if (Date.parse(seen[code]) < Date.now() - 3 * 24 * 60 * 60 * 1000) delete seen[code];
-      });
+      if (storeCode !== repairTicketStoreCode()) return;
+      const known = state.paymentNoticeCodes || new Set();
+      const fresh = links.filter(link => !known.has(link.link_code));
+      state.paymentNotices = links;
+      state.paymentNoticeCodes = new Set(links.map(link => link.link_code));
+      renderPaymentNotices();
+      if (!fresh.length) return;
+      playPaymentNoticeChime();
+      if (state.activeView === 'orders') loadInvoiceHistory();
+      loadRepairTickets().then(renderRepairWorkspace).catch(console.error);
+    }
+
+    function paymentNoticeSummary(link) {
+      const paid = numberValue(link.paid_amount);
+      const owing = numberValue(link.order_balance_due);
+      const fee = link.paid_method === 'Online Afterpay' ? numberValue(link.afterpay_fee) : 0;
+      const feeText = fee > 0 ? ` (incl. ${money(fee)} Afterpay fee)` : '';
+      if (link.status === 'paid_unapplied') {
+        return { title: 'Paid after the invoice was settled', tone: 'warning',
+          line: `${money(paid)} paid online, but nothing was owing. Refund it in Stripe.` };
+      }
+      const earlier = roundedMoneyValue(numberValue(link.order_amount_paid) - paid) > 0;
+      if (owing > 0) {
+        return { title: earlier ? 'Part payment received' : 'Deposit paid', tone: 'deposit',
+          line: `${money(paid)} paid${feeText} · ${money(owing)} still owing of ${money(link.order_total)}` };
+      }
+      return { title: earlier ? 'Balance paid - invoice paid in full' : 'Paid in full', tone: 'paid',
+        line: `${money(paid)} paid${feeText} · invoice total ${money(link.order_total)}` };
+    }
+
+    function renderPaymentNotices() {
+      if (!els.paymentNotices) return;
+      const notices = state.paymentNotices || [];
+      els.paymentNotices.hidden = !notices.length;
+      els.paymentNotices.innerHTML = notices.map(link => {
+        const summary = paymentNoticeSummary(link);
+        const method = link.paid_method === 'Online Afterpay' ? 'Afterpay' : 'Card';
+        const customer = [link.customer_name, link.customer_phone].filter(Boolean).join(' · ') || link.customer_email || '';
+        return `
+          <article class="payment-notice ${summary.tone}" role="alert">
+            <div class="payment-notice-head">
+              <i class="bi bi-bell-fill"></i>
+              <strong>${escapeHtml(summary.title)}</strong>
+              <span>${escapeHtml(method)} · ${escapeHtml(formatDateTime(link.paid_at))}</span>
+            </div>
+            <div class="payment-notice-invoice">Invoice #${escapeHtml(invoiceNumberText(link))} · ${escapeHtml(customer)}</div>
+            <div class="payment-notice-amount">${escapeHtml(summary.line)}</div>
+            ${link.order_items ? `<div class="payment-notice-items">${escapeHtml(link.order_items)}</div>` : ''}
+            <div class="payment-notice-actions">
+              <button type="button" data-payment-notice-view="${escapeHtml(link.order_id)}">View invoice</button>
+              <button type="button" class="primary" data-payment-notice-ack="${escapeHtml(link.link_code)}">Got it</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function acknowledgePaymentNotice(linkCode) {
+      const url = new URL(POS_SALES_ORDERS_ENDPOINT);
+      url.searchParams.set('mode', 'payment-link-acknowledge');
       try {
-        localStorage.setItem(POS_PAYMENT_LINKS_SEEN_KEY, JSON.stringify(seen));
+        const response = await fetch(url.toString(), {
+          method: 'POST',
+          headers: posOrderApiHeaders(),
+          body: JSON.stringify({ store_code: repairTicketStoreCode(), link_code: linkCode, staff_name: state.selectedStaffName })
+        });
+        await parsePosApiResponse(response, 'The notice could not be cleared.');
+        state.paymentNotices = (state.paymentNotices || []).filter(link => link.link_code !== linkCode);
+        renderPaymentNotices();
+      } catch (error) {
+        showToast(error.message || 'The notice could not be cleared.');
+      }
+    }
+
+    function playPaymentNoticeChime() {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        const context = playPaymentNoticeChime.context || (playPaymentNoticeChime.context = new AudioContextClass());
+        [880, 1320].forEach((frequency, index) => {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          const start = context.currentTime + index * 0.18;
+          oscillator.frequency.value = frequency;
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35);
+          oscillator.connect(gain).connect(context.destination);
+          oscillator.start(start);
+          oscillator.stop(start + 0.4);
+        });
       } catch (error) {
         console.error(error);
       }
-      if (!notices.length) return;
-      showToast(notices.join(' '));
-      if (state.activeView === 'orders') loadInvoiceHistory();
-      loadRepairTickets().then(renderRepairWorkspace).catch(console.error);
     }
 
     function orderBalanceDue(order) {
@@ -27684,6 +27770,12 @@
         confirmPaymentAmount(false);
       }
     });
+    els.paymentNotices.addEventListener('click', event => {
+      const ack = event.target.closest('[data-payment-notice-ack]');
+      const view = event.target.closest('[data-payment-notice-view]');
+      if (ack) acknowledgePaymentNotice(ack.dataset.paymentNoticeAck);
+      if (view) viewInvoiceById(view.dataset.paymentNoticeView);
+    });
     els.paymentLinkCustomer.addEventListener('click', event => {
       if (!event.target.closest('[data-payment-link-choose-customer]')) return;
       closePaymentModal();
@@ -28463,6 +28555,11 @@
         checkPaymentLinkUpdates().catch(console.error);
       }
     }, 60000);
+    window.setTimeout(() => {
+      if (!localDashboardTestMode && !localTransferTestMode && !localCatalogTestMode) {
+        checkPaymentLinkUpdates().catch(console.error);
+      }
+    }, 8000);
   </script>
 </body>
 </html>

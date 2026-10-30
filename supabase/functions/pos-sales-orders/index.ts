@@ -217,6 +217,17 @@ Deno.serve(async (request) => {
 
       await requireStoreAccess(sessionToken, storeCode);
 
+      // A staff member at the store has seen the "customer paid online" notice.
+      if ((url.searchParams.get("mode") || "") === "payment-link-acknowledge") {
+        const result = await callRpc("acknowledge_pos_payment_link_for_store", {
+          session_token: sessionToken,
+          target_store_code: storeCode,
+          target_link_code: String(record.link_code || ""),
+          target_staff_name: String(record.staff_name || ""),
+        });
+        return jsonResponse(result.body, result.status);
+      }
+
       // A new payment link for an invoice that already exists (balance owing,
       // or the first link expired or never arrived).
       if ((url.searchParams.get("mode") || "") === "payment-link") {
@@ -436,6 +447,7 @@ Deno.serve(async (request) => {
           target_store_code: storeCode,
           target_order_code: url.searchParams.get("order_id") || null,
           changed_since: url.searchParams.get("since") || null,
+          unacknowledged_only: url.searchParams.get("unacknowledged") === "1",
         });
         return jsonResponse(result.body, result.status);
       }

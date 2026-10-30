@@ -23,6 +23,7 @@ const {chromium} = require('playwright');
     const errors = [];
     const savedOrders = [];
     let linkPolls = 0;
+    const acknowledged = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.route('https://**/*', route => route.abort());
     await page.route('https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-sales-orders*', route => {
@@ -41,11 +42,22 @@ const {chromium} = require('playwright');
       }
       if (request.method() === 'GET' && mode === 'payment-links') {
         linkPolls += 1;
-        const links = [{link_code: 'PL-OLD', status: 'paid', paid_amount: 10, invoice_number: 400,
-          paid_at: new Date().toISOString(), customer_email: 'old@example.com'}];
-        if (linkPolls > 1) links.push({link_code: 'PL-TEST', status: 'paid', paid_amount: 80, invoice_number: 501,
+        assert.equal(new URL(request.url()).searchParams.get('unacknowledged'), '1');
+        const links = [{link_code: 'PL-DEP', status: 'paid', paid_method: 'Online Payment', paid_amount: 20,
+          invoice_number: 400, order_id: 'POS-400', order_total: 189, order_amount_paid: 20, order_balance_due: 169,
+          order_items: 'Screen replacement', paid_at: new Date().toISOString(),
+          customer_name: 'Repair Buyer', customer_phone: '0400000000', customer_email: 'repair@example.com'}]
+          .filter(link => !acknowledged.includes(link.link_code));
+        if (linkPolls > 1) links.push({link_code: 'PL-TEST', status: 'paid', paid_method: 'Online Afterpay',
+          afterpay_fee: 5.1, paid_amount: 85.1, invoice_number: 501, order_id: 'POS-501',
+          order_total: 85.1, order_amount_paid: 85.1, order_balance_due: 0, order_items: 'Test item, Afterpay processing fee',
           paid_at: new Date().toISOString(), customer_name: 'Test Buyer', customer_email: 'buyer@example.com'});
         return route.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify({ok: true, payment_links: links})});
+      }
+      if (request.method() === 'POST' && mode === 'payment-link-acknowledge') {
+        const body = JSON.parse(request.postData());
+        acknowledged.push(body.link_code);
+        return route.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify({ok: true})});
       }
       return route.abort();
     });
@@ -54,7 +66,6 @@ const {chromium} = require('playwright');
     // The modal: a customer is required, the email comes from their record,
     // and the one button says exactly what will be sent.
     await page.evaluate(() => {
-      localStorage.removeItem(POS_PAYMENT_LINKS_SEEN_KEY);
       state.storeId = 'toowong';
       state.selectedStaffName = 'Andy';
       state.selectedCustomerId = '';
@@ -144,12 +155,28 @@ const {chromium} = require('playwright');
     const stored = await page.evaluate(() => readLocalArray(POS_ORDERS_KEY).find(order => order.invoice_number === 501));
     assert.equal(stored.payment_link, undefined, 'A saved sale must not ask for another link on retry');
 
-    // The till announces a link paid since it last looked, and only once.
+    // Paid links stay on screen as notices until someone at the store presses Got it.
     await page.evaluate(() => checkPaymentLinkUpdates());
+    const deposit = page.locator('.payment-notice').filter({hasText: 'Invoice #400'});
+    await deposit.waitFor();
+    assert.match(await deposit.innerText(), /Deposit paid/);
+    assert.match(await deposit.innerText(), /\$20\.00 paid · \$169\.00 still owing of \$189\.00/);
+    assert.match(await deposit.innerText(), /Repair Buyer · 0400000000/);
+    assert.match(await deposit.innerText(), /Screen replacement/);
+
     await page.evaluate(() => checkPaymentLinkUpdates());
-    await page.locator('.toast, #toast, [role="status"]').filter({hasText: 'Online payment received: $80.00 on invoice 501'}).first().waitFor();
-    const seen = await page.evaluate(() => JSON.parse(localStorage.getItem(POS_PAYMENT_LINKS_SEEN_KEY)));
-    assert.ok(seen['PL-OLD'] && seen['PL-TEST']);
+    const full = page.locator('.payment-notice').filter({hasText: 'Invoice #501'});
+    await full.waitFor();
+    assert.match(await full.innerText(), /Paid in full/);
+    assert.match(await full.innerText(), /\$85\.10 paid \(incl\. \$5\.10 Afterpay fee\)/);
+    assert.match(await full.innerText(), /Afterpay/);
+    assert.equal(await page.locator('.payment-notice').count(), 2);
+
+    await deposit.getByRole('button', {name: 'Got it'}).click();
+    await page.waitForFunction(() => document.querySelectorAll('.payment-notice').length === 1);
+    assert.deepEqual(acknowledged, ['PL-DEP']);
+    await page.evaluate(() => checkPaymentLinkUpdates());
+    assert.equal(await page.locator('.payment-notice').count(), 1, 'An acknowledged notice came back');
 
     assert.equal(errors.length, 0, errors.join('\n'));
     console.log('PASS: online payment link checkout, validation and paid notice work.');
