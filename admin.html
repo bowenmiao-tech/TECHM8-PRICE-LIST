@@ -2605,8 +2605,6 @@
             <h2 class="board-column-title"><span>${escapeHtml(meta.label)}</span><span class="board-count">${columnTickets.length}</span></h2>
             ${columnTickets.map(ticket => `<button class="ticket-card" type="button" draggable="true" data-ticket-code="${escapeHtml(ticket.ticket_code)}" aria-label="Open repair ${escapeHtml(ticket.ticket_code)}">
               <span class="ticket-title">${escapeHtml(repairDisplayName(ticket))}</span>
-              ${ticket.display_label ? `<span class="ticket-device-sub">${escapeHtml(ticket.title || '')}</span>` : ''}
-              <span class="ticket-meta">${escapeHtml(ticket.ticket_code)} · ${escapeHtml(ticket.issue || 'Repair')}</span>
               <span class="ticket-meta">${escapeHtml(ticket.customer_name || '')} · ${escapeHtml(ticket.customer_phone || ticket.customer_contact || 'Phone missing')}</span>
               <span class="ticket-tags">${repairTags(ticket)}</span>
               ${repairPaymentFigures(ticket)}
