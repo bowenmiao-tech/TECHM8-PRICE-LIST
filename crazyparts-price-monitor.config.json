@@ -2,6 +2,7 @@
   "baseUrl": "https://www.crazyparts.com.au",
   "outputDir": "outputs/crazyparts-price-monitor",
   "expectedMemberTier": "Diamond",
+  "memberTierPriceKey": "10009",
   "dispatchWarehouse": "Sydney Warehouse",
   "gstRate": 0.1,
   "labourCharge": 110,

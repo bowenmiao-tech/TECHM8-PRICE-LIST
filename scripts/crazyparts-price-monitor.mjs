@@ -8,6 +8,7 @@ import { SpreadsheetFile, Workbook } from '@oai/artifact-tool';
 import { reportCrazyPartsStatus, trackedFamilyFromArgs } from './crazyparts-status.mjs';
 import { assertSupplierPage, assertProductResult } from './crazyparts-page-validation.mjs';
 import { openCheckpoint } from './crazyparts-checkpoint.mjs';
+import { readEmbeddedCollection, productsFromCollection } from './crazyparts-page-data.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const configPath = path.join(projectRoot, 'crazyparts-price-monitor.config.json');
@@ -640,24 +641,49 @@ async function waitForMemberPrices(page, config, family) {
   return false;
 }
 
-async function waitForProductList(page, expectedCount, config) {
-  if (!expectedCount) return;
-  const timeout = Math.max(1000, Number(config.productListWaitMs || 8000));
-  await page.waitForFunction((expected) => {
-    const links = new Set(
-      [...document.querySelectorAll('a[href^="/products/detail/"], a[href^="/product/"]')]
-        .map((anchor) => (anchor.getAttribute('href') || '').split('&')[0])
-        .filter(Boolean),
-    );
-    return links.size >= expected;
-  }, expectedCount, { timeout }).catch(() => {});
+// The tier price key in the page data is confirmed once per run against the
+// member price the logged-in page displays.
+let memberTierConfirmed = false;
+
+function confirmMemberTierKey(config, model, products, cardsByHref) {
+  let matched = 0;
+  for (const product of products) {
+    const card = cardsByHref.get(product.href);
+    if (product.promotional || product.memberPrice == null || !card?.memberPriceVerified) continue;
+    const shown = parseMoney(card.memberPriceLine);
+    if (Math.abs(shown - product.memberPrice) > 0.005) {
+      const error = new Error(`The ${config.expectedMemberTier} price shown for ${product.title} ($${shown}) does not match page data tier ${config.memberTierPriceKey} ($${product.memberPrice}). Update memberTierPriceKey before running again.`);
+      error.code = 'CRAZYPARTS_TIER_MISMATCH';
+      throw error;
+    }
+    matched += 1;
+  }
+  if (!matched) {
+    const error = new Error(`Could not confirm the ${config.expectedMemberTier} tier price on ${model.name}.`);
+    error.code = 'CRAZYPARTS_PRICES_UNAVAILABLE';
+    throw error;
+  }
+  memberTierConfirmed = true;
+  console.log(`Confirmed ${config.expectedMemberTier} prices use page data tier ${config.memberTierPriceKey} (${matched} product(s) checked).`);
+}
+
+async function readPageData(page) {
+  return page.evaluate(() => {
+    const flight = (self.__next_f || []).map((entry) => (typeof entry?.[1] === 'string' ? entry[1] : '')).join('');
+    const hrefByVariant = {};
+    for (const anchor of document.querySelectorAll('a[href^="/product/"]')) {
+      const href = anchor.getAttribute('href') || '';
+      const variantId = href.match(/[?&]variant_id=(\d+)/)?.[1];
+      if (variantId && !hrefByVariant[variantId]) hrefByVariant[variantId] = href.split('&')[0];
+    }
+    return { flight, hrefByVariant };
+  });
 }
 
 async function scrapeModel(page, model, config) {
   const productMap = new Map();
   let pageNumber = 1;
   let totalPages = 1;
-  let itemCount = 0;
   let heading = model.name;
 
   do {
@@ -668,7 +694,6 @@ async function scrapeModel(page, model, config) {
       timeout: config.navigationTimeoutMs,
     });
     await verifySupplierPage(page, response, config);
-    await waitForMemberPrices(page, config, model.family);
 
     if (page.url().includes('/account/login')) {
       const error = new Error('The Crazy Parts session expired during the run.');
@@ -676,86 +701,94 @@ async function scrapeModel(page, model, config) {
       throw error;
     }
 
-    let bodyText = await page.locator('body').innerText();
+    const collection = readEmbeddedCollection((await readPageData(page)).flight);
+    if (!collection) {
+      const error = new Error(`The product data for ${model.name}, page ${pageNumber} was not found. The Crazy Parts page may have changed.`);
+      error.code = 'CRAZYPARTS_PRICES_UNAVAILABLE';
+      throw error;
+    }
+    // Prices come from page data, but the run still requires a live member
+    // session. Product links render with it, so they are read afterwards.
+    if (collection.items.length) {
+      await page.waitForFunction((label) => (
+        document.querySelector('a[href^="/product/"][href*="variant_id="]')
+        && (document.body?.innerText || '').split(/\r?\n/).some((line) => line.trim().toLowerCase() === label.toLowerCase())
+      ), String(config.expectedMemberTier), { timeout: Math.max(1000, Number(config.memberPriceWaitMs || 4000)) }).catch(() => {});
+    }
+    const loggedInData = await readPageData(page);
+    if (process.env.CRAZYPARTS_DUMP_PAGE_DATA) {
+      await fs.writeFile(`${process.env.CRAZYPARTS_DUMP_PAGE_DATA}-${pageNumber}.json`, JSON.stringify(readEmbeddedCollection(loggedInData.flight), null, 2));
+    }
+    const products = productsFromCollection(collection, config.memberTierPriceKey, loggedInData.hrefByVariant);
+    const bodyText = await page.locator('body').innerText();
     const documentTitle = await page.title();
     if (/Error 1015|rate.?limit|you are being rate limited/i.test(`${documentTitle}\n${bodyText}`)) {
       const error = new Error('Crazy Parts rate limit (Error 1015)');
       error.code = 'CRAZYPARTS_RATE_LIMIT';
       throw error;
     }
-
-    heading = cleanMenuText(await page.locator('h1').first().innerText().catch(() => model.name));
-    if (/Login to see price/i.test(bodyText)) {
+    if (products.length && /Login to see price/i.test(bodyText)) {
       const error = new Error('Member pricing is no longer available in the current session.');
       error.code = 'CRAZYPARTS_SESSION_EXPIRED';
       throw error;
     }
 
-    if (pageNumber === 1) {
-      await page.waitForFunction(() => {
-        const text = (document.body?.innerText || '').replace(/,/g, '').replace(/\s+/g, ' ');
-        return /\b\d+\s*-\s*\d+\s+of\s+\d+\b/i.test(text)
-          || /\bshowing\s+\d+\s+(?:to|-)\s+\d+\s+of\s+\d+\b/i.test(text)
-          || /\b\d+\s+items?\b/i.test(text);
-      }, undefined, { timeout: Math.max(1000, Number(config.productListWaitMs || 8000)) }).catch(() => {});
-      bodyText = await page.locator('body').innerText();
-      itemCount = productCountFromPageText(bodyText);
-      totalPages = Math.max(1, Math.ceil(itemCount / config.pageSize));
-      // A page-size selector can itself say "36 items" before the real
-      // "1-36 of 41" counter hydrates. Probe page 2 when the count equals the
-      // page size so that late counters cannot silently hide the final page.
-      if (itemCount === config.pageSize) totalPages = 2;
-      if (process.env.CRAZYPARTS_DEBUG_PAGINATION === '1') {
-        console.log(`${model.name}: supplier count ${itemCount || 'unknown'}, calculated pages ${totalPages}.`);
-      }
-    }
-
-    const expectedCards = itemCount
-      ? Math.min(config.pageSize, Math.max(0, itemCount - ((pageNumber - 1) * config.pageSize)))
-      : 0;
-    await waitForProductList(page, expectedCards, config);
-    const memberPricingReady = await waitForMemberPrices(page, config, model.family);
-
-    const cards = await extractProductCards(page, config);
-    // Some genuine supplier cards omit any retail reference. Their member
-    // label and price must remain stable over repeated complete-card reads.
-    if (memberPricingReady) {
-      for (const card of cards) if (card.retailPrice === null) card.memberPriceVerified = true;
-    }
-    bodyText = await page.locator('body').innerText();
     heading = cleanMenuText(await page.locator('h1').first().innerText().catch(() => ''));
-    assertSupplierPage({ title: await page.title(), heading, text: bodyText, url: page.url() });
-    const linkCount = await page.locator('a[href^="/products/detail/"], a[href^="/product/"]').count();
-    // The extra probe after an exactly full page is allowed to be empty.
-    if (!(pageNumber > 1 && expectedCards === 0 && linkCount === 0)) {
-      assertProductResult({ heading, text: bodyText, linkCount, cardCount: cards.length, expectedCount: expectedCards });
-    }
-    if (cards.some((card) => isAvailableStock(`${card.syd} ${card.mel}`) && classifyProduct(card.title, model.family, card.href) && !card.memberPriceVerified)) {
-      const error = new Error(`Member prices have not finished loading for ${model.name}, page ${pageNumber}.`);
-      error.code = 'CRAZYPARTS_PRICES_UNAVAILABLE';
-      throw error;
-    }
-    if (process.env.CRAZYPARTS_DEBUG_PAGINATION === '1') {
-      console.log(`${model.name}: page ${pageNumber} yielded ${cards.length} priced product card(s).`);
-    }
-    for (const card of cards) {
-      if (process.env.CRAZYPARTS_DEBUG_PRICES === '1') {
-        console.log(`Price debug: ${card.title} | ${card.priceText} | ${card.memberPriceLine}`);
+    assertSupplierPage({ title: documentTitle, heading, text: bodyText, url: page.url() });
+    if (pageNumber === 1) {
+      const perPage = collection.perPage || config.pageSize;
+      totalPages = Math.max(1, Math.ceil((collection.total || 0) / perPage));
+      if (process.env.CRAZYPARTS_DEBUG_PAGINATION === '1') {
+        console.log(`${model.name}: supplier count ${collection.total ?? 'unknown'}, calculated pages ${totalPages}.`);
       }
-      const price = parseMoney(card.memberPriceLine);
-      if (price == null) continue;
-      const category = classifyProduct(card.title, model.family, card.href);
-      const stock = [card.syd, card.mel].filter(Boolean).join(' | ');
-      productMap.set(card.href, {
+    }
+    const linkCount = await page.locator('a[href^="/products/detail/"], a[href^="/product/"]').count();
+    assertProductResult({
+      heading,
+      text: collection.total === 0 ? `${bodyText}\n0 items` : bodyText,
+      linkCount,
+      cardCount: products.length,
+    });
+    // Displayed prices are only needed to confirm the tier once per run and
+    // for promotional products, whose discounted price is not in the data.
+    const cardsByHref = new Map();
+    if (products.some((product) => product.promotional) || (products.length && !memberTierConfirmed)) {
+      const ready = await waitForMemberPrices(page, config, model.family);
+      for (const card of ready ? await extractProductCards(page, config) : []) cardsByHref.set(card.href, card);
+    }
+    if (products.length && !memberTierConfirmed) confirmMemberTierKey(config, model, products, cardsByHref);
+
+    if (process.env.CRAZYPARTS_DEBUG_PAGINATION === '1') {
+      console.log(`${model.name}: page ${pageNumber} yielded ${products.length} product(s) from page data.`);
+    }
+    for (const product of products) {
+      if (process.env.CRAZYPARTS_DEBUG_PRICES === '1') {
+        console.log(`Price debug: ${product.title} | tier ${config.memberTierPriceKey} | ${product.memberPrice}${product.promotional ? ' | promotional' : ''}`);
+      }
+      const category = classifyProduct(product.title, model.family, product.href);
+      const available = isAvailableStock(`${product.syd} | ${product.mel}`);
+      const card = cardsByHref.get(product.href);
+      const price = product.promotional
+        ? (card?.memberPriceVerified ? parseMoney(card.memberPriceLine) : null)
+        : product.memberPrice;
+      if (price == null) {
+        if (!available || !category) continue;
+        const error = new Error(product.promotional
+          ? `The promotional ${config.expectedMemberTier} price for ${product.title} has not finished loading.`
+          : `${product.title} has no tier ${config.memberTierPriceKey} price in the Crazy Parts page data.`);
+        error.code = 'CRAZYPARTS_PRICES_UNAVAILABLE';
+        throw error;
+      }
+      productMap.set(product.href, {
         category,
-        name: card.title,
+        name: product.title,
         price,
-        sydStock: card.syd.replace(/^SYD:/i, '').trim(),
-        melStock: card.mel.replace(/^MEL:/i, '').trim(),
-        available: isAvailableStock(stock),
-        memberPriceVerified: card.memberPriceVerified,
-        retailPrice: card.retailPrice,
-        url: new URL(card.href, config.baseUrl).toString(),
+        sydStock: product.syd.replace(/^SYD:/i, '').trim(),
+        melStock: product.mel.replace(/^MEL:/i, '').trim(),
+        available,
+        memberPriceVerified: true,
+        retailPrice: product.retailPrice,
+        url: new URL(product.href, config.baseUrl).toString(),
       });
     }
 
