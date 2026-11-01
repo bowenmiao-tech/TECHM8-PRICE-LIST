@@ -25,9 +25,8 @@ export function ipadCategory(name) {
   if (/lcd|oled|screen replacement|display assembly/.test(text) && !/flex cable|backlight|polariz|frame only/.test(text)) return 'screen';
   if (/battery/.test(text) && !/connector|cover|cable|board|tester/.test(text)) return 'battery';
   if (/charging port|charge port|charging connector|dock connector|usb.c port/.test(text)) {
-    if (/no solder|without solder|non.solder|plug.and.play|with (?:circuit )?board/.test(text)) return 'ipad_port_plug';
-    if (/solder|welding/.test(text)) return 'ipad_port_solder';
-    return null; // Unspecified repair method must not be guessed from price or model age.
+    if (/pencil|stylus|magnetic suction/.test(text)) return null;
+    return 'ipad_port_flat';
   }
   if (/front camera/.test(text) && !/glass|lens|bracket|cover/.test(text)) return 'ipad_front_camera';
   if (/rear camera|back camera/.test(text) && !/glass|lens|bracket|cover/.test(text)) return 'ipad_rear_camera';
@@ -36,15 +35,14 @@ export function ipadCategory(name) {
 }
 
 export function ipadLabour(type) {
+  if (type.startsWith('Charging Port')) return 179;
   if (type === 'Screen' || type === 'Battery') return 150;
-  if (type === 'Charging Port (Soldering)') return 199;
-  if (type === 'Charging Port (Plug-in)') return 159;
   return 120;
 }
 
 export function ipadPlan(raw, siteRows) {
   const updates = [];
-  const issues = { Screen: 'Screen Replacement', Battery: 'Battery (ORIGINAL )', 'Front Camera': 'Front Camera', 'Rear Camera': 'Rear Camera', Speaker: 'Speaker', 'Charging Port (Soldering)': 'Charging Socket/Microphone', 'Charging Port (Plug-in)': 'Charging Socket/Microphone' };
+  const issues = { Screen: 'Screen Replacement', Battery: 'Battery (ORIGINAL )', 'Front Camera': 'Front Camera', 'Rear Camera': 'Rear Camera', Speaker: 'Speaker', 'Charging Port': 'Charging Port', 'Charging Port (Soldering)': 'Charging Socket/Microphone', 'Charging Port (Plug-in)': 'Charging Socket/Microphone' };
   for (const row of raw.repairRows || []) {
     if (!/^ipad /i.test(row.family) || protectedIpad(row.model)) continue;
     const key = ipadKey(row.model);
@@ -53,7 +51,7 @@ export function ipadPlan(raw, siteRows) {
     candidates.sort((a,b) => b.length-a.length);
     const model = candidates[0] || row.model;
     if (protectedIpad(model)) throw new Error(`Protected iPad model matched: ${model}`);
-    const defaults = { Screen: ['LCD Replacement (Complete Assembly)', 'LCD Replacement'], Battery: ['Battery', 'Battery (ORIGINAL )'], 'Charging Port (Soldering)': ['Charging Port', 'Charging Socket'], 'Charging Port (Plug-in)': ['Charging Port', 'Charging Socket'] };
+    const defaults = { Screen: ['LCD Replacement (Complete Assembly)', 'LCD Replacement'], Battery: ['Battery', 'Battery (ORIGINAL )'], 'Charging Port': ['Charging Port', 'Charging Socket'], 'Charging Port (Soldering)': ['Charging Port', 'Charging Socket'], 'Charging Port (Plug-in)': ['Charging Port', 'Charging Socket'] };
     const preferred = defaults[row.repairType] || [issues[row.repairType]];
     const issue = preferred.find((issue) => siteRows.some((item) => item.model === model && item.issue === issue)) || preferred[0];
     const existing = siteRows.find((item) => item.model === model && item.issue === issue);

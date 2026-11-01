@@ -9,7 +9,6 @@ import { reportCrazyPartsStatus, trackedFamilyFromArgs } from './crazyparts-stat
 import { assertSupplierPage, assertProductResult } from './crazyparts-page-validation.mjs';
 import { openCheckpoint } from './crazyparts-checkpoint.mjs';
 import { protectedIpad, ipadCategory } from './crazyparts-ipad-rules.mjs';
-import { checkSolderImage } from './crazyparts-solder-badge.mjs';
 import { readEmbeddedCollection, productsFromCollection } from './crazyparts-page-data.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -136,6 +135,7 @@ function categoryLabel(category) {
     fan: 'Fan',
     ipad_port_plug: 'Charging Port (Plug-in)',
     ipad_port_solder: 'Charging Port (Soldering)',
+    ipad_port_flat: 'Charging Port',
     ipad_front_camera: 'Front Camera',
     ipad_rear_camera: 'Rear Camera',
   };
@@ -779,13 +779,8 @@ async function scrapeModel(page, model, config) {
       if (process.env.CRAZYPARTS_DEBUG_PRICES === '1') {
         console.log(`Price debug: ${product.title} | tier ${config.memberTierPriceKey} | ${product.memberPrice}${product.promotional ? ' | promotional' : ''}`);
       }
-      let category = classifyProduct(product.title, model.family, product.href);
-      let solderBadge;
-      if (/^ipad /i.test(model.family) && /charging port|charge port|charging connector|dock connector|usb.c port/i.test(product.title)
-        && !/pencil|stylus|fpc connector|tester|on (?:the )?motherboard/i.test(product.title)) {
-        solderBadge = await checkSolderImage(product.imageUrl);
-        if (solderBadge.requiresSoldering !== null) category = solderBadge.requiresSoldering ? 'ipad_port_solder' : 'ipad_port_plug';
-      }
+      const category = classifyProduct(product.title, model.family, product.href);
+      const solderBadge = undefined; // iPad ports now use the owner's flat $179 labour rule.
       const available = isAvailableStock(`${product.syd} | ${product.mel}`);
       const card = cardsByHref.get(product.href);
       const price = product.promotional
@@ -1118,7 +1113,7 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     const priceEndRow = priceStartRow + values.length - 1;
     prices.getRange(`A${priceStartRow}:L${priceEndRow}`).values = values;
     const standardLabourFormula = `IF($B${priceStartRow}="iMac",'Settings'!$B$5,IF(OR($B${priceStartRow}="Macbook Pro",$B${priceStartRow}="Macbook Air",$B${priceStartRow}="Macbook"),IF(ISNUMBER(SEARCH("Screen",$D${priceStartRow})),'Settings'!$B$6,'Settings'!$B$7),IF(OR($B${priceStartRow}="Tab A Series",$B${priceStartRow}="Tab S Series"),'Settings'!$B$4,'Settings'!$B$3)))`;
-    const labourFormula = `IF(LEFT($B${priceStartRow},5)="iPad ",IF(OR($D${priceStartRow}="Screen",$D${priceStartRow}="Battery"),150,IF($D${priceStartRow}="Charging Port (Soldering)",199,IF($D${priceStartRow}="Charging Port (Plug-in)",159,120))),${standardLabourFormula})`;
+    const labourFormula = `IF(LEFT($B${priceStartRow},5)="iPad ",IF(OR($D${priceStartRow}="Screen",$D${priceStartRow}="Battery"),150,IF($D${priceStartRow}="Charging Port",179,120)),${standardLabourFormula})`;
     prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];
     prices.getRange(`G${priceStartRow}:G${priceEndRow}`).fillDown();
     prices.getRange(`H${priceStartRow}`).formulas = [[`=ROUNDUP((F${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];
