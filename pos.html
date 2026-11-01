@@ -17485,7 +17485,7 @@
     function repairInspectionInvoicePaid(ticket) {
       if (!ticket || !ticket.baseInvoiced) return false;
       const invoice = (ticket.invoiceHistory || []).find(row =>
-        String(row.invoiceNumber || '') === String(ticket.invoiceNumber || ''));
+        String(row.orderId || '') === String(ticket.invoiceOrderId || ''));
       return invoice ? invoice.paymentStatus === 'paid' && numberValue(invoice.balanceDue) <= 0
         : ticket.paymentStatus === 'paid';
     }
