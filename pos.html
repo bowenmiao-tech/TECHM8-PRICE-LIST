@@ -11,6 +11,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="./browser-uuid.js?v=20261001.1"></script>
   <script src="./supabase-config.js"></script>
+  <script src="./ipad-model-labels.js?v=20261102.1"></script>
   <script src="./staff-auth.js?v=20260904.1"></script>
   <link rel="stylesheet" href="./repair-ticket-updates.css?v=20260909.1">
   <script src="./repair-ticket-updates.js?v=20261001.1"></script>
@@ -13112,7 +13113,7 @@
           <div class="target-result-kicker">Quote ready</div>
           <div class="target-result-price">${escapeHtml(dashboardQuotePrice(selectedQuote.price))}</div>
           <div class="target-result-issue">${escapeHtml(selectedQuote.issue)}</div>
-          <div class="target-result-meta">${escapeHtml(selectedQuote.brand)} · ${escapeHtml(selectedQuote.model)}${selectedQuote.time ? ` · ${escapeHtml(selectedQuote.time)}` : ''}</div>
+          <div class="target-result-meta">${escapeHtml(selectedQuote.brand)} · ${escapeHtml(window.Techm8IpadModelLabels.label(selectedQuote.model))}${selectedQuote.time ? ` · ${escapeHtml(selectedQuote.time)}` : ''}</div>
           <div class="target-result-actions">
             <button class="target-quote-primary" type="button" data-quote-continue><i class="bi bi-arrow-right-circle"></i> Next: Create Repair Job</button>
           </div>
@@ -13207,7 +13208,7 @@
           <div class="target-quote-grid">
             <div class="target-quote-form">
               <label class="target-quote-field"><span>Select Brand</span><select data-quote-brand ${quote.loading && !quoteRows.length ? 'disabled' : ''}>${dashboardQuoteOptionHtml(brands, quote.brand, quote.loading && !quoteRows.length ? 'Loading brands...' : 'Choose a brand')}</select></label>
-              <label class="target-quote-field"><span>Select Model</span><select data-quote-model ${!quote.brand ? 'disabled' : ''}>${dashboardQuoteOptionHtml(models, quote.model, 'Choose a model')}</select></label>
+              <label class="target-quote-field"><span>Select Model</span><select data-quote-model ${!quote.brand ? 'disabled' : ''}>${dashboardQuoteOptionHtml(models, quote.model, 'Choose a model', value => value, model => window.Techm8IpadModelLabels.label(model))}</select></label>
               <label class="target-quote-field"><span>Select Repair Type</span><select data-quote-issue ${!quote.model ? 'disabled' : ''}>${dashboardQuoteOptionHtml(issues, quote.issueKey, 'Choose a repair type', item => item.key, item => item.issue)}</select></label>
               <label class="target-quote-field target-a-model"><span>Apple A-model quick search</span><input type="search" data-quote-apple-search value="${escapeHtml(quote.appleSearch)}" placeholder="Example: A2337" autocomplete="off">${appleMatchesHtml}</label>
               <div class="target-manual-row">
@@ -17156,9 +17157,9 @@
       });
     }
 
-    function optionHtml(values, selected, placeholder) {
+    function optionHtml(values, selected, placeholder, labelGetter = value => value) {
       return `<option value="">${placeholder}</option>` + values.map(value => {
-        return `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`;
+        return `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(labelGetter(value))}</option>`;
       }).join('');
     }
 
@@ -17283,7 +17284,7 @@
             <label class="repair-field">
               Select Model
               <select id="repairModelSelect" class="repair-select" ${!state.repair.brand || state.repair.intakeOpen ? 'disabled' : ''}>
-                ${optionHtml(models, state.repair.model, 'Choose model')}
+                ${optionHtml(models, state.repair.model, 'Choose model', model => window.Techm8IpadModelLabels.label(model))}
               </select>
             </label>
             <label class="repair-field">
@@ -18428,7 +18429,7 @@
               <label class="repair-field">
                 Select Model
                 <select id="repairModelSelect" class="repair-select" ${!state.repair.brand || state.repair.intakeOpen ? 'disabled' : ''}>
-                  ${optionHtml(models, state.repair.model, 'Choose model')}
+                  ${optionHtml(models, state.repair.model, 'Choose model', model => window.Techm8IpadModelLabels.label(model))}
                 </select>
               </label>
               <label class="repair-field">
