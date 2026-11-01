@@ -27,6 +27,16 @@ const assert = require('node:assert/strict');
   assert.equal(typeof handler, 'function');
   const unauthenticated = await handler(new Request('https://staff.example/manage', { method: 'GET' }));
   assert.equal(unauthenticated.status, 401);
+  const historical = await handler(new Request('https://staff.example/manage?mode=points&month=2026-10', {
+    method: 'GET', headers: { 'x-admin-session': 'test-admin' }
+  }));
+  assert.equal(historical.status, 200);
+  const historicalCall = calls.find(call => call.url.endsWith('/rpc/get_staff_points_month_report'));
+  assert.equal(JSON.parse(historicalCall.options.body).target_month, '2026-10-01');
+  const badMonth = await handler(new Request('https://staff.example/manage?mode=points&month=2026-13', {
+    method: 'GET', headers: { 'x-admin-session': 'test-admin' }
+  }));
+  assert.equal(badMonth.status, 400);
   const created = await handler(new Request('https://staff.example/manage', {
     method: 'POST', headers: { 'x-admin-session': 'test-admin' },
     body: JSON.stringify({ display_name: 'Ada', email: 'ada@example.com', store_codes: ['toowong'] })

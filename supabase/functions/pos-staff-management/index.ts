@@ -70,11 +70,19 @@ Deno.serve(async (request) => {
 
   try {
     if (request.method === "GET") {
-      const mode = new URL(request.url).searchParams.get("mode") || "";
+      const searchParams = new URL(request.url).searchParams;
+      const mode = searchParams.get("mode") || "";
       if (mode === "reviews" || mode === "points") {
-        const result = await callRpc(mode === "points" ? "get_staff_points_report" : "get_staff_google_review_report", {
+        const month = searchParams.get("month") || "";
+        if (month && (mode !== "points" || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month))) {
+          return jsonResponse({ ok: false, message: "Select a valid month." }, 400);
+        }
+        const result = await callRpc(mode === "points"
+          ? (month ? "get_staff_points_month_report" : "get_staff_points_report")
+          : "get_staff_google_review_report", {
           session_token: sessionToken,
           result_limit: 500,
+          ...(month ? { target_month: `${month}-01` } : {}),
         });
         return jsonResponse(result.body, result.status);
       }

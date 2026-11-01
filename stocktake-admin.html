@@ -72,6 +72,9 @@
       margin-top: 14px;
     }
     .points-panel > .summary { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .points-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .points-controls input[type="month"] { min-height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font: inherit; }
+    .points-controls .search-input { width: 220px; }
     .summary-item {
       min-height: 92px;
       display: grid;
@@ -393,10 +396,14 @@
     <section class="panel points-panel">
       <div class="panel-head">
         <div>
-          <h2>Staff Points · This Month</h2>
+          <h2>Staff Points</h2>
           <p class="subtitle">Google reviews + device bundles + 1% of personal sales. Click a staff member for details.</p>
         </div>
-        <input id="reviewSearch" class="search-input" type="search" placeholder="Search staff" aria-label="Search staff points">
+        <div class="points-controls">
+          <input id="scoreMonth" type="month" aria-label="Staff points month">
+          <button id="scoreCurrentMonth" class="button" type="button">This month</button>
+          <input id="reviewSearch" class="search-input" type="search" placeholder="Search staff" aria-label="Search staff points">
+        </div>
       </div>
 
       <div class="summary" style="margin-bottom:16px;">
@@ -446,6 +453,8 @@
       pageError: document.getElementById('pageError'),
       toast: document.getElementById('toast'),
       reviewSearch: document.getElementById('reviewSearch'),
+      scoreMonth: document.getElementById('scoreMonth'),
+      scoreCurrentMonth: document.getElementById('scoreCurrentMonth'),
       reviewThisMonthPoints: document.getElementById('reviewThisMonthPoints'),
       deviceThisMonthPoints: document.getElementById('deviceThisMonthPoints'),
       commissionThisMonthPoints: document.getElementById('commissionThisMonthPoints'),
@@ -464,6 +473,13 @@
     let stores = [];
     let reviewReport = null;
     let reviewStaffFilter = '';
+    let reviewRequestId = 0;
+    const scoreCurrentMonth = (() => {
+      const parts = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Brisbane', year: 'numeric', month: '2-digit' }).formatToParts(new Date());
+      return `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}`;
+    })();
+    els.scoreMonth.value = scoreCurrentMonth;
+    els.scoreMonth.max = scoreCurrentMonth;
     const pendingStaff = new Set();
     const STAFF_MANAGEMENT_ENDPOINT = 'https://abkjbhmifswfexpjkval.supabase.co/functions/v1/pos-staff-management';
 
@@ -608,6 +624,10 @@
       return `${(Number(value) || 0).toFixed(2)} pts`;
     }
 
+    function scorePeriodLabel() {
+      return reviewDateText(reviewReport?.this_month_start || `${els.scoreMonth.value}-01`).replace(/^\d{2} /, '');
+    }
+
     function renderReviewStaff() {
       if (!reviewReport) return;
       const query = String(els.reviewSearch.value || '').trim().toLowerCase();
@@ -647,7 +667,7 @@
       if (!row) { els.scoreDetail.innerHTML = ''; return; }
       const bundles = (reviewReport.device_events || []).filter(item => item.normalized_staff_name === reviewStaffFilter);
       els.scoreDetail.innerHTML = `
-        <h3>${escapeHtml(row.staff_name)} · This month</h3>
+        <h3>${escapeHtml(row.staff_name)} · ${escapeHtml(scorePeriodLabel())}</h3>
         <div class="score-detail-grid">
           <div><span>Google reviews</span><strong>${Number(row.this_month_points || 0)} pts</strong></div>
           <div><span>Device bundles</span><strong>${Number(row.device_points || 0)} pts</strong></div>
@@ -670,7 +690,7 @@
                    <div class="device-event-items"><span>Accessories:</span> ${formatDeviceEventItems(item.accessories, item.accessory_count, 'accessory')}</div>`}
             </div>
             <strong>${Number(item.points) >= 0 ? '+' : ''}${Number(item.points)} pts</strong>
-          </div>`).join('') : '<div class="empty">No device bundles this month.</div>'}
+          </div>`).join('') : '<div class="empty">No device bundles in this month.</div>'}
       `;
     }
 
@@ -693,7 +713,7 @@
         : null;
       els.reviewEventsTitle.textContent = staffRow ? `${staffRow.staff_name} · Reviews` : 'Review History';
       els.reviewFilterNote.textContent = staffRow
-        ? `${staffRow.this_month_points} pts this month · ${staffRow.last_month_points} pts last month · ${staffRow.total_reviews} reviews all time.`
+        ? `${staffRow.this_month_points} pts in ${scorePeriodLabel()} · ${staffRow.total_reviews} reviews all time.`
         : 'Newest first. Store, customer and date for every recorded review.';
       els.reviewClearFilter.hidden = !reviewStaffFilter;
 
@@ -721,23 +741,37 @@
       els.deviceThisMonthPoints.textContent = `${Number(totals.device_points || 0)} pts`;
       els.commissionThisMonthPoints.textContent = scorePoints(totals.commission_points);
       els.combinedThisMonthPoints.textContent = scorePoints(totals.combined_points);
-      els.scorePeriod.textContent = reviewDateText(reviewReport.this_month_start).replace(/^\d{2} /, '');
+      els.scorePeriod.textContent = scorePeriodLabel();
       renderReviewStaff();
       renderScoreDetail();
       renderReviewEvents();
     }
 
     async function loadReviews() {
+      const requestId = ++reviewRequestId;
+      const month = els.scoreMonth.value || scoreCurrentMonth;
+      els.scoreMonth.value = month;
       els.reviewError.textContent = '';
+      reviewReport = null;
+      els.scorePeriod.textContent = scorePeriodLabel();
+      for (const field of [els.reviewThisMonthPoints, els.deviceThisMonthPoints, els.commissionThisMonthPoints, els.combinedThisMonthPoints]) field.textContent = '—';
+      els.reviewStaffList.innerHTML = '<div class="empty">Loading points...</div>';
+      els.scoreDetail.hidden = true;
+      els.reviewHistory.hidden = true;
       try {
-        const response = await fetch(`${STAFF_MANAGEMENT_ENDPOINT}?mode=points`, {
+        const url = new URL(STAFF_MANAGEMENT_ENDPOINT);
+        url.searchParams.set('mode', 'points');
+        if (month !== scoreCurrentMonth) url.searchParams.set('month', month);
+        const response = await fetch(url, {
           headers: { 'x-admin-session': window.Techm8StaffAuth.getToken() }
         });
         const result = await response.json().catch(() => ({}));
+        if (requestId !== reviewRequestId) return;
         if (!response.ok || !result.ok) throw new Error(result.message || 'Reviews could not be loaded.');
         reviewReport = result;
         renderReviews();
       } catch (error) {
+        if (requestId !== reviewRequestId) return;
         console.error(error);
         reviewReport = null;
         els.reviewStaffList.innerHTML = '<div class="empty">Reviews unavailable.</div>';
@@ -897,6 +931,8 @@
     els.newStaffForm.addEventListener('submit', createStaff);
     els.searchInput.addEventListener('input', renderStaff);
     els.reviewSearch.addEventListener('input', () => { renderReviewStaff(); renderReviewEvents(); });
+    els.scoreMonth.addEventListener('change', loadReviews);
+    els.scoreCurrentMonth.addEventListener('click', () => { els.scoreMonth.value = scoreCurrentMonth; loadReviews(); });
     els.reviewClearFilter.addEventListener('click', () => {
       reviewStaffFilter = '';
       renderReviewStaff();
