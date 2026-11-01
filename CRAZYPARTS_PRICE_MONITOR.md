@@ -88,6 +88,18 @@ The order is Samsung A Series, OPPO, HUAWEI followed by Apple Mac on day 3, XIAO
 
 ## Safety behaviour
 
+Cloudflare verification pages (including Chinese `正在进行安全验证` / `请稍候`), HTTP errors and generic `www.crazyparts.com.au` model headings stop the run immediately. A page with product links but no readable member prices is an error. Empty catalogues must explicitly report no products. An all-empty run cannot replace either the workbook or live prices; publishing independently checks these conditions again.
+
+If Crazy Parts requests human verification, run the updater in visible-browser mode:
+
+```powershell
+.\scripts\run-crazyparts-price-monitor.ps1 -Family 'A Series' -Headful -SyncSupabase
+```
+
+Complete verification in the browser window opened by this updater. It waits up to three minutes per verification page and then continues in the same session. Completing verification in an unrelated browser does not update the scraper's session. Verification is performed manually; scheduled background runs stop with an error while it is required.
+
+Run the validation regression checks with `node scripts/test-crazyparts-page-validation.mjs`.
+
 - The script refuses to run unless `-All` or at least one `-Model` is provided.
 - It verifies that the expected Diamond member tier is present after login.
 - It never places orders or changes the Crazy Parts account.

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { SpreadsheetFile, Workbook } from '@oai/artifact-tool';
 import { reportCrazyPartsStatus, trackedFamilyFromArgs } from './crazyparts-status.mjs';
+import { assertSupplierPage, assertProductResult } from './crazyparts-page-validation.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const configPath = path.join(projectRoot, 'crazyparts-price-monitor.config.json');
@@ -287,14 +288,40 @@ async function selectDispatchWarehouse(page, config) {
   await dialog.waitFor({ state: 'hidden', timeout: 10000 });
 }
 
+async function verifySupplierPage(page, response, config) {
+  let lastError;
+  const deadline = Date.now() + (config.allowManualVerification ? 180000 : 0);
+  do {
+    try {
+      assertSupplierPage({
+        // After a manual challenge the initial response still says 403;
+        // validate the newly loaded document instead of that old response.
+        status: lastError ? 200 : response?.status(),
+        title: await page.title(),
+        heading: await page.locator('h1').first().innerText({ timeout: 1000 }).catch(() => ''),
+        text: await page.locator('body').innerText(),
+        url: page.url(),
+      });
+      return;
+    } catch (error) {
+      if (error.code !== 'CRAZYPARTS_VERIFICATION' || Date.now() >= deadline) throw error;
+      if (!lastError) console.warn('Complete the Crazy Parts security verification in this browser window. Waiting up to 3 minutes.');
+      lastError = error;
+      await sleep(1000);
+    }
+  } while (Date.now() < deadline);
+  throw lastError;
+}
+
 async function login(page, config, email, password) {
   let finalDetail = '';
   const attempts = Math.max(1, config.loginAttempts || 1);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    await page.goto(`${config.baseUrl}/account/login`, {
+    const loginResponse = await page.goto(`${config.baseUrl}/account/login`, {
       waitUntil: 'domcontentloaded',
       timeout: config.navigationTimeoutMs,
     });
+    await verifySupplierPage(page, loginResponse, config);
 
     await page.getByPlaceholder('Enter your email address').fill(email);
     await page.getByPlaceholder('Enter your password').fill(password);
@@ -336,10 +363,11 @@ async function login(page, config, email, password) {
 }
 
 async function discoverModels(page, config) {
-  await page.goto(config.baseUrl, {
+  const menuResponse = await page.goto(config.baseUrl, {
     waitUntil: 'domcontentloaded',
     timeout: config.navigationTimeoutMs,
   });
+  await verifySupplierPage(page, menuResponse, config);
 
   // The navigation menu is hydrated after DOMContentLoaded. Reading it
   // immediately can intermittently return an empty shell, especially just
@@ -604,10 +632,11 @@ async function scrapeModel(page, model, config) {
   do {
     const url = new URL(model.href, config.baseUrl);
     url.searchParams.set('page', String(pageNumber));
-    await page.goto(url.toString(), {
+    const response = await page.goto(url.toString(), {
       waitUntil: 'domcontentloaded',
       timeout: config.navigationTimeoutMs,
     });
+    await verifySupplierPage(page, response, config);
     await waitForMemberPrices(page, config);
 
     if (page.url().includes('/account/login')) {
@@ -656,6 +685,14 @@ async function scrapeModel(page, model, config) {
     await waitForMemberPrices(page, config);
 
     const cards = await extractProductCards(page, config);
+    bodyText = await page.locator('body').innerText();
+    heading = cleanMenuText(await page.locator('h1').first().innerText().catch(() => ''));
+    assertSupplierPage({ title: await page.title(), heading, text: bodyText, url: page.url() });
+    const linkCount = await page.locator('a[href^="/products/detail/"], a[href^="/product/"]').count();
+    // The extra probe after an exactly full page is allowed to be empty.
+    if (!(pageNumber > 1 && expectedCards === 0 && linkCount === 0)) {
+      assertProductResult({ heading, text: bodyText, linkCount, cardCount: cards.length, expectedCount: expectedCards });
+    }
     if (process.env.CRAZYPARTS_DEBUG_PAGINATION === '1') {
       console.log(`${model.name}: page ${pageNumber} yielded ${cards.length} priced product card(s).`);
     }
@@ -682,7 +719,7 @@ async function scrapeModel(page, model, config) {
     if (pageNumber <= totalPages) await sleep(config.pageDelayMs);
   } while (pageNumber <= totalPages);
 
-  return { ...model, heading, products: [...productMap.values()] };
+  return { ...model, heading, validated: true, products: [...productMap.values()] };
 }
 
 async function scrapeModelWithNetworkRetries(page, model, config, recoverSession) {
@@ -1095,6 +1132,7 @@ async function main() {
   }
 
   const config = JSON.parse(await fs.readFile(configPath, 'utf8'));
+  config.allowManualVerification = args.headful;
   const capturedAt = brisbaneTimestamp();
   const runId = safeRunId(capturedAt);
   const outputDir = path.resolve(projectRoot, config.outputDir);
@@ -1167,6 +1205,7 @@ async function main() {
         discovered = await discoverModels(page, config);
         break;
       } catch (error) {
+        if (['CRAZYPARTS_VERIFICATION', 'CRAZYPARTS_INVALID_PAGE'].includes(error.code)) throw error;
         if (attempt === discoveryAttempts) throw error;
         console.warn(`Model menu was not ready; signing in again before retry ${attempt + 1}/${discoveryAttempts}.`);
         await sleep(Math.max(1000, Number(config.loginRetryDelayMs || 5000)) * attempt);
@@ -1269,9 +1308,9 @@ async function main() {
             });
           }
         } catch (error) {
-          if (error.code === 'CRAZYPARTS_RATE_LIMIT') {
+          if (['CRAZYPARTS_RATE_LIMIT', 'CRAZYPARTS_VERIFICATION', 'CRAZYPARTS_INVALID_PAGE'].includes(error.code)) {
             fatalError = error;
-            console.error(`Stopping this run because Crazy Parts is still rate limiting requests.`);
+            console.error(`Stopping this run: ${error.message}`);
             break;
           }
           failures.push({
@@ -1314,6 +1353,9 @@ async function main() {
   }
 
   const summary = summariseModels(scrapedModels, capturedAt);
+  if (!summary.repairRows.length) {
+    throw new Error('No verified repair prices were captured. Existing prices and workbook were kept.');
+  }
   summary.exceptions.push(...failures);
   const previousRun = await loadPreviousSuccessfulRun(historyDir);
   applyPriceChangeChecks(summary, previousRun, config);
@@ -1328,6 +1370,7 @@ async function main() {
     modelsSelected: selectedModels.length,
     modelsProcessed: scrapedModels.length,
     modelCatalog: selectedModels.map(({ brand, family, name, href }) => ({ brand, family, name, href })),
+    modelResults: scrapedModels.map(({ family, name, href, heading, validated, products }) => ({ family, name, href, heading, validated, productCount: products.length })),
     productCatalog: scrapedModels
       .flatMap((model) => model.products.map((product) => ({
         family: model.family,

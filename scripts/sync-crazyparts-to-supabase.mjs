@@ -4,6 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { reportCrazyPartsStatus } from './crazyparts-status.mjs';
+import { assertPublishableRun } from './crazyparts-page-validation.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outputDir = path.join(projectRoot, 'outputs', 'crazyparts-price-monitor');
@@ -377,6 +378,7 @@ function makeReplacementPlan(rawData, siteRows, configs) {
 
 function configsInHistory(rawData) {
   const families = new Set([
+    ...(rawData.requestedFamilies || []).map((family) => String(family).toLowerCase()),
     ...(rawData.repairRows || []).map((row) => String(row.family || '').toLowerCase()),
     ...(rawData.sourceRows || []).map((row) => String(row.family || '').toLowerCase()),
   ]);
@@ -475,6 +477,7 @@ async function main() {
   const configs = configsInHistory(rawData);
   if (!configs.length) throw new Error('The selected history does not contain a supported model family.');
   activeStatusFamilies = [...new Set(configs.map((config) => config.statusFamily))];
+  assertPublishableRun(rawData);
   const affectedBrands = [...new Set(configs.flatMap((config) => [
     config.dbBrand,
     ...(config.aliasBrands || []),
