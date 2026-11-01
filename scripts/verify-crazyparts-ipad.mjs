@@ -1,0 +1,12 @@
+import fs from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { protectedIpad } from './crazyparts-ipad-rules.mjs';
+import { readSiteRows, supabaseConfig } from './sync-crazyparts-to-supabase.mjs';
+const backup = JSON.parse(await fs.readFile(process.argv[2], 'utf8'));
+const after = await readSiteRows(await supabaseConfig(), ['Apple iPad']);
+const map = new Map(after.map((row) => [[row.brand,row.model,row.issue].join('|'),row.price]));
+const protectedRows = backup.rows.filter((row) => protectedIpad(row.model));
+for(const row of protectedRows) assert.equal(map.get([row.brand,row.model,row.issue].join('|')),row.price);
+for(const row of backup.plan.updates) assert.equal(map.get([row.brand,row.model,row.issue].join('|')),row.newPrice);
+for(const row of backup.plan.deleteKeys || []) assert.equal(map.has([row.brand,row.model,row.issue].join('|')),false);
+console.log(JSON.stringify({ protectedPricesUnchanged:protectedRows.length,updatedPricesVerified:backup.plan.updates.length,proGlassRowsRemoved:(backup.plan.deleteKeys||[]).length }));

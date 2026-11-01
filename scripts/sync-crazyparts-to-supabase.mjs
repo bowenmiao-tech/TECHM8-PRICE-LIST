@@ -5,6 +5,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { reportCrazyPartsStatus } from './crazyparts-status.mjs';
 import { assertPublishableRun } from './crazyparts-page-validation.mjs';
+import { ipadPlan, protectedIpad } from './crazyparts-ipad-rules.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outputDir = path.join(projectRoot, 'outputs', 'crazyparts-price-monitor');
@@ -13,6 +14,9 @@ const backupDir = path.join(outputDir, 'supabase-backups');
 const minimumReplacementCoveragePercent = 70;
 
 const familyConfig = new Map([
+  ['ipad pro', { dbBrand: 'Apple iPad', statusFamily: 'iPad', mode: 'ipad' }],
+  ['ipad air', { dbBrand: 'Apple iPad', statusFamily: 'iPad', mode: 'ipad' }],
+  ['ipad mini', { dbBrand: 'Apple iPad', statusFamily: 'iPad', mode: 'ipad' }],
   ['a series', { dbBrand: 'Samsung A Series', displayBrand: 'Samsung', statusFamily: 'A Series', mode: 'samsung', labourCharge: 110 }],
   ['tab a series', { dbBrand: 'Samsung Tab A Series', displayBrand: 'Samsung Tab', statusFamily: 'A Series', mode: 'replace', labourCharge: 150 }],
   ['tab s series', { dbBrand: 'Samsung Tab S Series', displayBrand: 'Samsung Tab', statusFamily: 'A Series', mode: 'replace', labourCharge: 150 }],
@@ -388,6 +392,7 @@ function configsInHistory(rawData) {
 }
 
 function sqlForUpdates(plan) {
+  const deletePayload = JSON.stringify(plan.deleteKeys || []);
   const payload = JSON.stringify(plan.updates.map((item) => ({
     brand: item.brand,
     model: item.model,
@@ -401,6 +406,8 @@ function sqlForUpdates(plan) {
   ]);
   const statusPayload = JSON.stringify(plan.statusRows || []);
   return `begin;
+delete from public.repair_prices p using jsonb_to_recordset($ipad_delete$${deletePayload}$ipad_delete$::jsonb) as d(brand text,model text,issue text)
+where (p.brand,p.model,p.issue)=(d.brand,d.model,d.issue);
 delete from public.repair_prices
 where brand in (
   select value from jsonb_array_elements_text($techm8_replace$${replacementPayload}$techm8_replace$::jsonb)
@@ -495,15 +502,18 @@ async function main() {
   const replacementPlan = replacementConfigs.length
     ? makeReplacementPlan(rawData, beforeRows, replacementConfigs)
     : null;
-  const allUpdates = [...(samsungPlan?.updates || []), ...(replacementPlan?.updates || [])];
+  const ipadResult = configs.some((config) => config.mode === 'ipad') ? ipadPlan(rawData, beforeRows) : null;
+  const ipadUpdates = ipadResult?.updates || [];
+  const allUpdates = [...(samsungPlan?.updates || []), ...(replacementPlan?.updates || []), ...ipadUpdates];
   const plan = {
     updates: allUpdates,
+    deleteKeys: ipadResult?.deleteKeys || [],
     unmatched: samsungPlan?.unmatched || [],
     obsoleteModels: samsungPlan?.obsoleteModels || [],
     replaceBrands: replacementPlan?.replaceBrands || [],
     cleanupBrands: replacementPlan?.cleanupBrands || [],
     supplierModels: (samsungPlan?.supplierModels || 0) + (replacementPlan?.supplierModels || 0),
-    statusRows: [...new Set(configs.map((config) => config.statusFamily))].map((statusFamily) => {
+    statusRows: [...new Set(configs.map((config) => config.statusFamily).filter(Boolean))].map((statusFamily) => {
       const statusBrands = new Set(configs
         .filter((config) => config.statusFamily === statusFamily)
         .map((config) => config.dbBrand));
@@ -543,11 +553,15 @@ async function main() {
 
   const afterRows = await readSiteRows(config, affectedBrands);
   const afterMap = new Map(afterRows.map((row) => [`${row.brand}|${row.model}|${row.issue}`, row.price]));
+  if (ipadResult && beforeRows.filter((row) => protectedIpad(row.model)).some((row) => afterMap.get(`${row.brand}|${row.model}|${row.issue}`) !== row.price)) {
+    throw new Error('A protected iPad price changed during verification.');
+  }
   const failed = plan.updates.filter((item) => (
     afterMap.get(`${item.brand}|${item.model}|${item.issue}`) !== item.newPrice
   ));
   if (failed.length) throw new Error(`${failed.length} price row(s) failed verification.`);
   const obsoleteRemaining = afterRows.filter((row) => plan.obsoleteModels.includes(row.model));
+  if ((plan.deleteKeys || []).some((key) => afterMap.has(`${key.brand}|${key.model}|${key.issue}`))) throw new Error('Obsolete iPad glass rows remain after sync.');
   if (obsoleteRemaining.length) throw new Error(`${obsoleteRemaining.length} obsolete generic row(s) failed deletion verification.`);
   for (const brand of plan.replaceBrands) {
     const expected = plan.updates.filter((row) => row.brand === brand);
@@ -569,7 +583,8 @@ async function main() {
   console.log(`Pre-sync backup: ${backupPath}`);
 }
 
-main().catch((error) => {
+export { readSiteRows, supabaseConfig };
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((error) => {
   for (const family of activeStatusFamilies) {
     reportCrazyPartsStatus(family, {
       status: 'failed',

@@ -58,6 +58,10 @@ if (@($familyValues | Where-Object { $_ -eq 'Apple Mac' }).Count -gt 0) {
     $familyValues = @($familyValues | Where-Object { $_ -ne 'Apple Mac' })
     $familyValues += @('iMac', 'Macbook Pro', 'Macbook Air', 'Macbook')
 }
+if (@($familyValues | Where-Object { $_ -eq 'iPad' }).Count -gt 0) {
+    $familyValues = @($familyValues | Where-Object { $_ -ne 'iPad' })
+    $familyValues += @('iPad Pro','iPad Air','iPad Mini')
+}
 
 foreach ($familyValue in @($familyValues | Select-Object -Unique)) {
     if (-not [string]::IsNullOrWhiteSpace($familyValue)) {

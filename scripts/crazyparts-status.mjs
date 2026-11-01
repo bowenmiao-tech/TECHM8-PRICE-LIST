@@ -8,6 +8,10 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const outputDir = path.join(projectRoot, 'outputs', 'crazyparts-price-monitor');
 
 const canonicalFamilies = new Map([
+  ['ipad', 'iPad'],
+  ['ipad pro', 'iPad'],
+  ['ipad air', 'iPad'],
+  ['ipad mini', 'iPad'],
   ['a series', 'A Series'],
   ['tab a series', 'A Series'],
   ['tab s series', 'A Series'],
@@ -46,6 +50,7 @@ export function trackedFamilyFromArgs(argv) {
   if (values.length === 1) return canonicalStatusFamily(values[0]);
 
   const requested = new Set(values.map((value) => String(value || '').trim().toLowerCase()));
+  if (requested.size === 3 && ['ipad pro','ipad air','ipad mini'].every((family) => requested.has(family))) return 'iPad';
   const samsungBundle = ['a series', 'tab a series', 'tab s series'];
   if (requested.size === samsungBundle.length && samsungBundle.every((family) => requested.has(family))) {
     return 'A Series';

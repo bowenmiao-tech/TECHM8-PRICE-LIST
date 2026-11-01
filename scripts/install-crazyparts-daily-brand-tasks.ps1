@@ -11,7 +11,7 @@ $credentialPath = Join-Path $projectRoot '.secrets\crazyparts-credential.xml'
 $legacyTaskName = 'TECHM8 Crazy Parts Monthly Price Update'
 $schedule = @(
     @{ Day = 1; Family = 'A Series'; Label = 'Samsung A Series' },
-    @{ Day = 2; Family = 'Oppo'; Label = 'OPPO' },
+    @{ Day = 2; Label = 'OPPO + IPAD'; TaskLabel = 'OPPO'; Script = (Join-Path $PSScriptRoot 'run-crazyparts-day2.ps1') },
     @{ Day = 3; Label = 'HUAWEI + APPLE MAC'; TaskLabel = 'HUAWEI'; Script = $day3Script },
     @{ Day = 4; Family = 'Xiaomi'; Label = 'XIAOMI' },
     @{ Day = 5; Family = 'Redmi'; Label = 'REDMI' },

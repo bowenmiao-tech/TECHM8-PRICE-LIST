@@ -8,6 +8,7 @@ import { SpreadsheetFile, Workbook } from '@oai/artifact-tool';
 import { reportCrazyPartsStatus, trackedFamilyFromArgs } from './crazyparts-status.mjs';
 import { assertSupplierPage, assertProductResult } from './crazyparts-page-validation.mjs';
 import { openCheckpoint } from './crazyparts-checkpoint.mjs';
+import { protectedIpad, ipadCategory } from './crazyparts-ipad-rules.mjs';
 import { readEmbeddedCollection, productsFromCollection } from './crazyparts-page-data.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -105,6 +106,7 @@ function normaliseModelHref(input) {
 }
 
 function isEligibleRepairModel(model) {
+  if (/^ipad /i.test(model.family) && protectedIpad(model.name)) return false;
   const family = String(model.family || '').trim().toLowerCase();
   const name = String(model.name || '').trim();
   if (name.toLowerCase() === family) return false;
@@ -131,6 +133,10 @@ function categoryLabel(category) {
     speaker: 'Speaker',
     back_cover: 'Back Cover',
     fan: 'Fan',
+    ipad_port_plug: 'Charging Port (Plug-in)',
+    ipad_port_solder: 'Charging Port (Soldering)',
+    ipad_front_camera: 'Front Camera',
+    ipad_rear_camera: 'Rear Camera',
   };
   if (labels[category]) return labels[category];
   if (String(category || '').startsWith('imac:')) return String(category).slice(5);
@@ -170,6 +176,7 @@ function classifyProduct(name, family, productReference = '') {
   const value = original.toLowerCase();
   const qualityMarker = `${original} ${String(productReference || '')}`;
   const normalizedFamily = String(family || '').trim().toLowerCase();
+  if (normalizedFamily.startsWith('ipad ')) return ipadCategory(name);
 
   if (normalizedFamily === 'imac') return imacPartCategory(original);
 
@@ -469,6 +476,12 @@ async function discoverModels(page, config) {
 
     const appleNav = navs.find((nav) => /apple/i.test(nav.getAttribute('aria-label') || ''));
     const appleFamilyNames = new Map([
+      ['ipad pro', 'iPad Pro'],
+      ['ipad air', 'iPad Air'],
+      ['ipad mini', 'iPad Mini'],
+      ['ipad', ''],
+      ['watch', ''],
+      ['airpods', ''],
       ['imac', 'iMac'],
       ['macbook pro', 'Macbook Pro'],
       ['macbook air', 'Macbook Air'],
@@ -478,7 +491,7 @@ async function discoverModels(page, config) {
     for (const anchor of appleNav?.querySelectorAll(':scope > a') || []) {
       const name = (anchor.textContent || '').trim();
       const family = appleFamilyNames.get(name.toLowerCase());
-      if (family) {
+      if (appleFamilyNames.has(name.toLowerCase())) {
         appleFamily = family;
         continue;
       }
@@ -1095,7 +1108,8 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     ]));
     const priceEndRow = priceStartRow + values.length - 1;
     prices.getRange(`A${priceStartRow}:L${priceEndRow}`).values = values;
-    const labourFormula = `IF($B${priceStartRow}="iMac",'Settings'!$B$5,IF(OR($B${priceStartRow}="Macbook Pro",$B${priceStartRow}="Macbook Air",$B${priceStartRow}="Macbook"),IF(ISNUMBER(SEARCH("Screen",$D${priceStartRow})),'Settings'!$B$6,'Settings'!$B$7),IF(OR($B${priceStartRow}="Tab A Series",$B${priceStartRow}="Tab S Series"),'Settings'!$B$4,'Settings'!$B$3)))`;
+    const standardLabourFormula = `IF($B${priceStartRow}="iMac",'Settings'!$B$5,IF(OR($B${priceStartRow}="Macbook Pro",$B${priceStartRow}="Macbook Air",$B${priceStartRow}="Macbook"),IF(ISNUMBER(SEARCH("Screen",$D${priceStartRow})),'Settings'!$B$6,'Settings'!$B$7),IF(OR($B${priceStartRow}="Tab A Series",$B${priceStartRow}="Tab S Series"),'Settings'!$B$4,'Settings'!$B$3)))`;
+    const labourFormula = `IF(LEFT($B${priceStartRow},5)="iPad ",IF(OR($D${priceStartRow}="Screen",$D${priceStartRow}="Battery"),150,IF($D${priceStartRow}="Charging Port (Soldering)",199,IF($D${priceStartRow}="Charging Port (Plug-in)",159,120))),${standardLabourFormula})`;
     prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];
     prices.getRange(`G${priceStartRow}:G${priceEndRow}`).fillDown();
     prices.getRange(`H${priceStartRow}`).formulas = [[`=ROUNDUP((F${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];

@@ -4,6 +4,8 @@ This tool logs into Crazy Parts, reads the account's member prices, and creates 
 
 ## Pricing rule
 
+iPad Pro / Air / Mini updates run after OPPO on monthly day 2 at 05:00. The updater preserves Pro 9.7 / 10.5, Air 1–5, and Mini 1–3. Other menu models reuse existing names where available. Pro pricing includes complete display replacements only, never touch glass alone. Screens and batteries add GST and $150; front/rear cameras and speakers add GST and $120. Charging ports add GST and $199 for explicitly soldered parts, or $159 for explicitly plug-in parts. Unspecified port repair methods retain existing prices pending confirmation. All results round upward to $5. Use `scripts/run-crazyparts-ipad.ps1` to run this bundle manually; the Admin iPad Run Now action uses the same bundle. Protected prices are checked after publishing, and iPad updates never replace the entire Apple iPad brand.
+
 ```text
 raw repair price = part price excluding GST × 1.10 + the repair-category labour charge
 internal repair price = round the raw repair price up to the nearest $5
