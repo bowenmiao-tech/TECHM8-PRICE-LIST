@@ -1,0 +1,35 @@
+import fs from 'node:fs/promises';
+import { Workbook, SpreadsheetFile } from '@oai/artifact-tool';
+const dir='D:/program/TECHM8 PRICE LIST/outputs/01a0d8a7-a557-7002-8750-b5f8cbd770ab';
+const data=JSON.parse(await fs.readFile(dir+'/october_missing_costs.json','utf8'));
+const wb=Workbook.create();
+function make(name,items,type){
+ const sh=wb.worksheets.add(name); sh.showGridLines=false;
+ sh.getRange('A2').values=[[type+'｜2026 年 10 月 TW、FF、NL 待补成本']];
+ sh.getRange('A3').values=[['只填黄色两栏：单件实际成本（不含 GST）及货币 AUD/CNY；没有成本填 0。人民币按 1 AUD = 4.7 CNY。']];
+ sh.getRange('A4').values=[['同一行有多件时，填写每件成本；若成本不同，请在备注中逐件说明。杂项请按 POS 备注核对。']];
+ sh.getRange('A6:K6').values=[['编号','门店','日期','项目','POS 明细/备注','数量','销售额(含GST)','单件成本(不含GST)','货币 AUD/CNY','补充说明','POS 行号']];
+ const rows=items.map(x=>[x.no,x.store,x.date,x.item,x.detail,x.qty,x.sales,null,null,'',x.ids]);
+ const end=6+rows.length; sh.getRange('A7:K'+end).values=rows;
+ sh.getRange('A2:K'+end).format.font={name:'Arial',size:10,color:'#1F2937'};
+ sh.getRange('A2').format.font={name:'Arial',size:15,bold:true,color:'#17324D'};
+ sh.getRange('A3:A4').format.font={name:'Arial',size:10,italic:true,color:'#526274'};
+ sh.getRange('A6:K6').format={fill:'#243B53',font:{name:'Arial',size:10,bold:true,color:'#FFFFFF'}};
+ sh.getRange('H7:J'+end).format.fill='#FFF2C6';
+ sh.getRange('G7:H'+end).setNumberFormat('"$"#,##0.00');
+ sh.getRange('F7:F'+end).setNumberFormat('0');
+ sh.getRange('A7:K'+end).format.rowHeight=30;
+ sh.getRange('A6:K6').format.rowHeight=34;
+ for(const [c,w] of Object.entries({A:8,B:9,C:25,D:48,E:48,F:9,G:19,H:24,I:18,J:42,K:22}))sh.getRange(c+':'+c).format.columnWidth=w;
+ sh.getRange('I7:I'+end).dataValidation={rule:{type:'list',values:['AUD','CNY']}};
+ sh.freezePanes.freezeRows(6);
+ return sh;
+}
+make('维修待补',data.repairs,'维修配件');
+make('商品待补',data.retail,'商品及杂项');
+wb.recalculate();
+const out=await SpreadsheetFile.exportXlsx(wb);
+await out.save(dir+'/TW-FF-NL-2026-10-待补成本.xlsx');
+const preview=await wb.render({sheetName:'维修待补',range:'A2:J12',scale:1.2,format:'png'});
+await fs.writeFile(dir+'/2026-10-待补成本预览.png',new Uint8Array(await preview.arrayBuffer()));
+console.log('saved',data.repairs.length,data.retail.length);

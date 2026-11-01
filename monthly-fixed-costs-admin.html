@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TECHM8 每月固定费用</title>
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js?v=20260904.1"></script>
+  <style>
+    :root{--ink:#193038;--muted:#61747c;--line:#dae5e9;--green:#087c64;--bg:#f3f7f8}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--ink)}
+    main{max-width:1240px;margin:auto;padding:26px 20px 48px}
+    .hero{background:linear-gradient(120deg,#173b32,#087c64);color:white;border-radius:22px;padding:26px 30px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+    h1{font-size:30px;line-height:1.2;margin:0 0 8px}h2{font-size:18px;margin:0 0 14px}.hero p{margin:0;color:#dcece7}.month-control{display:grid;gap:5px;font-weight:700;white-space:nowrap}
+    input[type=month]{font:inherit;border:1px solid #a8c9c0;border-radius:9px;padding:10px 12px;background:white;color:var(--ink)}
+    .intro{color:var(--muted);margin:18px 2px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .card,.panel{background:white;border:1px solid var(--line);border-radius:17px;box-shadow:0 6px 22px #1631290b}
+    .card{padding:20px}.card .label{color:var(--muted);font-weight:700}.card strong{display:block;font-size:26px;line-height:1.2;margin:6px 0}.card small{color:var(--muted)}
+    .panel{margin-top:16px;padding:20px;overflow:auto}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:780px}th,td{text-align:right;padding:12px;border-bottom:1px solid #e8eef0;white-space:nowrap}th:first-child,td:first-child{text-align:left}thead th{background:#eaf3f0;color:#245549}tbody tr:last-child{font-weight:800;background:#f1f8f5}td:nth-child(5){font-weight:700}
+    .tag{display:inline-block;border-radius:30px;padding:2px 8px;background:#e6f5ee;color:#12634f;font-size:11px;font-weight:700;margin-left:7px}.tag.estimate{background:#fff3d8;color:#8b5d08}
+    .loss{color:#b42318}.snapshot-note{color:var(--muted);margin:-6px 0 14px}
+    .notes{margin:0;padding-left:20px;color:var(--muted)}.notes li{margin:6px 0}
+    .detail{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.detail article{border:1px solid var(--line);border-radius:12px;padding:14px}.detail h3{margin:0 0 8px}.detail p{margin:4px 0;color:var(--muted)}
+    @media(max-width:760px){main{padding:14px 10px 30px}.hero{display:block;padding:20px}.month-control{margin-top:18px}.cards,.detail{grid-template-columns:1fr}.card strong{font-size:23px}}
+  </style>
+</head>
+<body>
+  <main data-auth-protected>
+    <section class="hero">
+      <div><h1>每月固定费用</h1><p>TW · FF · NL · PR｜租金、营业工时工资与日常费用</p></div>
+      <label class="month-control" for="month">查看月份<input id="month" type="month" value="2026-10"></label>
+    </section>
+    <p class="intro">营业工时按每天一人计算，时薪 AUD $30，不加 super 或 leave。所有汇总金额均为 AUD、不含 GST。</p>
+    <section class="cards" aria-label="月度汇总">
+      <div class="card"><span class="label">四店固定费用合计</span><strong id="allTotal">—</strong><small>工资 + 租金及商场费 + 电费 + 网费</small></div>
+      <div class="card"><span class="label">工资合计</span><strong id="allPayroll">—</strong><small id="allHours">—</small></div>
+      <div class="card"><span class="label">租金及商场费合计</span><strong id="allMall">—</strong><small>含 GST 金额已换算为不含 GST</small></div>
+    </section>
+    <section class="panel">
+      <h2 id="tableTitle">各店明细</h2>
+      <div class="table-wrap"><table><thead><tr><th>门店</th><th>工时</th><th>工资</th><th>租金及商场费<br>含 GST</th><th>电费 + 网费<br>含 GST</th><th>固定费用合计<br>不含 GST</th></tr></thead><tbody id="costRows"></tbody></table></div>
+    </section>
+    <section class="panel" id="profitSnapshot" hidden>
+      <h2>2026 年 10 月利润估算</h2>
+      <p class="snapshot-note">已完成核算的历史快照，切换到其他月份时不会沿用十月利润。销售额和费用均为不含 GST 的估算。</p>
+      <div class="table-wrap"><table><thead><tr><th>门店</th><th>销售净额</th><th>总费用及成本</th><th>估算经营利润</th></tr></thead><tbody id="profitRows"></tbody></table></div>
+      <p class="snapshot-note" style="margin-top:14px">PR 使用 RepairDesk 十月收款；维修、商品及部分二手机成本为估算，租金按十一月发票经常性项目暂估。其余三店沿用此前核算。PR 新 POS 流水未另外叠加。</p>
+    </section>
+    <section class="panel"><h2>计算依据</h2><div class="detail" id="storeDetails"></div></section>
+    <section class="panel"><h2>口径与来源</h2><ul class="notes" id="notes"></ul></section>
+  </main>
+  <script>
+    (() => {
+      const stores = [
+        {code:'TW',name:'Toowong',rent:7376,hours:[8.5,8.5,8.5,10.5,8.5,7.5,5.5]},
+        {code:'FF',name:'Fairfield',rent:5154,hours:[8.5,8.5,8.5,9.5,8.5,7.5,5.5]},
+        {code:'NL',name:'North Lakes',rent:16500,hours:[7.5,7.5,7.5,11,7.5,7.5,5.5]},
+        {code:'PR',name:'Park Ridge',rent:7573.885,hours:[8.5,8.5,8.5,10.5,8.5,7.5,6.5]}
+      ];
+      const rentActuals = {'2026-10':{NL:{amount:15829.26,source:'NL 十月租金及商场费发票 12668636'}}};
+      const octoberProfit = [
+        {code:'TW',sales:22840.381818181813,cost:19890.310251450675},
+        {code:'FF',sales:16006.072727272725,cost:15327.870464216634},
+        {code:'NL',sales:26979.92727272727,cost:29263.396324951642},
+        {code:'PR',sales:40532.04545454545,cost:22418.363135884327}
+      ];
+      const hourlyRate = 30, electricity = 130, internet = 120, gstFactor = 1.1;
+      const fmt = new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'});
+      const esc = value => String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      const $ = id => document.getElementById(id);
+      function hoursForMonth(year,month,hours){
+        let total=0;
+        const days=new Date(Date.UTC(year,month,0)).getUTCDate();
+        for(let day=1;day<=days;day++)total+=hours[new Date(Date.UTC(year,month-1,day)).getUTCDay()===0?6:new Date(Date.UTC(year,month-1,day)).getUTCDay()-1];
+        return total;
+      }
+      function render(){
+        const selected=$('month').value;
+        if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(selected))return;
+        const [year,month]=selected.split('-').map(Number);
+        const monthLabel=year+' 年 '+month+' 月';
+        $('tableTitle').textContent=monthLabel+'各店明细';
+        let total=0,payroll=0,mall=0,hoursTotal=0;
+        const rows=stores.map(store=>{
+          const hours=hoursForMonth(year,month,store.hours);
+          const wage=hours*hourlyRate;
+          const actual=rentActuals[selected]?.[store.code];
+          const rent=actual?.amount??store.rent;
+          const fixed=wage+(rent+electricity+internet)/gstFactor;
+          total+=fixed;payroll+=wage;mall+=rent/gstFactor;hoursTotal+=hours;
+          const source=actual?'已核对发票':'预算值';
+          return '<tr><td><strong>'+store.code+'</strong> · '+store.name+' <span class="tag '+(actual?'':'estimate')+'">'+source+'</span></td><td>'+hours.toFixed(1)+' h</td><td>'+fmt.format(wage)+'</td><td>'+fmt.format(rent)+'</td><td>'+fmt.format(electricity+internet)+'</td><td>'+fmt.format(fixed)+'</td></tr>';
+        });
+        rows.push('<tr><td>四店合计</td><td>'+hoursTotal.toFixed(1)+' h</td><td>'+fmt.format(payroll)+'</td><td>'+fmt.format(mall*gstFactor)+'</td><td>'+fmt.format(stores.length*(electricity+internet))+'</td><td>'+fmt.format(total)+'</td></tr>');
+        $('costRows').innerHTML=rows.join('');
+        $('allTotal').textContent=fmt.format(total);
+        $('allPayroll').textContent=fmt.format(payroll);
+        $('allHours').textContent=hoursTotal.toFixed(1)+' 小时 × $30';
+        $('allMall').textContent=fmt.format(mall);
+        $('profitSnapshot').hidden=selected!=='2026-10';
+        if(selected==='2026-10'){
+          let salesSum=0,costSum=0;
+          const profitRows=octoberProfit.map(row=>{
+            salesSum+=row.sales;costSum+=row.cost;
+            const profit=row.sales-row.cost;
+            return '<tr><td>'+row.code+'</td><td>'+fmt.format(row.sales)+'</td><td>'+fmt.format(row.cost)+'</td><td class="'+(profit<0?'loss':'')+'">'+fmt.format(profit)+'</td></tr>';
+          });
+          profitRows.push('<tr><td>四店合计</td><td>'+fmt.format(salesSum)+'</td><td>'+fmt.format(costSum)+'</td><td>'+fmt.format(salesSum-costSum)+'</td></tr>');
+          $('profitRows').innerHTML=profitRows.join('');
+        }
+        $('storeDetails').innerHTML=stores.map(store=>{
+          const actual=rentActuals[selected]?.[store.code];
+          const source=actual?actual.source:store.code==='PR'?'按 2026 年 11 月 WillCom 发票的经常性项目暂估，十月发票未取得':'按已提供的每月预算金额';
+          return '<article><h3>'+store.code+' · '+store.name+'</h3><p>租金及商场费：'+fmt.format(actual?.amount??store.rent)+'（含 GST）</p><p>电费：'+fmt.format(electricity)+'；网费：'+fmt.format(internet)+'（各含 GST）</p><p>'+esc(source)+'</p></article>';
+        }).join('');
+        $('notes').innerHTML=[
+          '工资按你提供的每周营业工时计算；月份中的周一至周日逐日相加，每个营业时段按一人计算。',
+          'TW $7,376、FF $5,154、NL $16,500 为此前提供的每月租金及商场费预算（含 GST）。只有 NL 2026 年 10 月替换为发票金额 $15,829.26。',
+          'PR 经常性租金及商场费约 $7,573.89（含 GST），根据 2026 年 11 月 WillCom 发票的 retail rent、airconditioning、general outgoings 和 promotion 估算；不含旧期间水电及一次性调整。十月实际发票未取得。',
+          '电费每店每月约 $130、网费每店每月约 $120，均含 GST。POS 费 $0，另计水费 $0；NL 十月发票中的 water rates 已包含在租金及商场费。',
+          '商品、维修配件、二手机进货成本按销售发生，不属于本页固定费用。所示金额为经营估算，其他月份租金未取得发票时使用预算值。PR 今后使用自家 POS 时，销售数据须从新 POS 单独接入利润计算；本页没有叠加 RepairDesk 与新 POS 的流水。'
+        ].map(note=>'<li>'+esc(note)+'</li>').join('');
+      }
+      window.Techm8StaffAuth.init({
+        rootSelector:'[data-auth-protected]',title:'Admin Login',
+        subtitle:'Enter the admin password to view monthly fixed costs.',
+        requireLoginEmail:true,loginInputType:'text',loginPlaceholder:'Admin account',
+        sessionKey:'techm8_admin_session_token',
+        createRpc:'create_admin_session',verifyRpc:'verify_admin_session',revokeRpc:'revoke_admin_session'
+      }).then(()=>{$('month').addEventListener('change',render);render();});
+    })();
+  </script>
+</body>
+</html>

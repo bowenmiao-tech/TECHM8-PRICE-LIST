@@ -42,6 +42,7 @@ Admin pages:
 - The admin Repair Board drags cards the same way the POS board does, between columns and up and down inside a column, for the store selected in its picker. It runs on the admin session through `move_admin_repair_ticket`, which is gated on `is_valid_admin_session` and only ever writes status, its timestamps, and board position. A failed move puts the board back rather than leaving the screen disagreeing with the database.
 - `price-admin.html` - price admin
 - `daily-report-admin.html` - report review page
+- `monthly-fixed-costs-admin.html` - monthly fixed-cost view for TW, FF, NL, and PR; computes wages from store hours at $30/hour and shows rent, electricity, and internet costs. NL October 2026 uses its invoice; PR rent is estimated from the recurring items on its November invoice until an October invoice is supplied. The page includes a labelled October 2026 four-store estimated-profit snapshot; it does not combine RepairDesk and POS sales or automatically calculate profit for later months.
 - `nl-report-admin.html` - North Lakes product cost, payable, temporary save, and upload admin
 - `lcd-inventory-admin.html` - LCD inventory admin
 - `schedule-admin.html` - POS roster and staff PIN admin
