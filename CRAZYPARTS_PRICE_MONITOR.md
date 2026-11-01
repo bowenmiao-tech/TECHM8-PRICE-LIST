@@ -11,7 +11,7 @@ internal repair price = round the raw repair price up to the nearest $5
 
 For every model and repair type, the workbook uses the lowest and highest eligible in-stock or low-stock part price. All genuine camera modules are combined into one camera range. Camera glass, lenses, frames, covers and protectors are excluded.
 
-iMac keeps every available repair part, adds GST and $130 labour, then rounds up to the nearest $5. MacBook combines Macbook Pro, Macbook Air and Macbook under the `MacBook` Admin brand. It keeps screens, speakers, batteries, charging ports, back covers and fans; keyboards are excluded. AMPLUS/AMP screens are `Aftermarket Screen`, BQ7 screens are `Premium Aftermarket Screen`, and PULL-A screens are `Original Screen`. MacBook screens add $150 labour and the other MacBook repairs add $120.
+iMac keeps every available repair part, adds GST and $130 labour, then rounds up to the nearest $5. MacBook combines Macbook Pro, Macbook Air and Macbook under the `Apple MacBook` Admin brand; iMac uses `Apple iMac`. It keeps screens, speakers, batteries, charging ports, back covers and fans; keyboards are excluded. AMPLUS/AMP screens are `Aftermarket Screen`, BQ7 screens are `Premium Aftermarket Screen`, and PULL-A screens are `Original Screen`. MacBook screens add $150 labour and the other MacBook repairs add $120.
 
 ## Files
 
@@ -98,7 +98,15 @@ If Crazy Parts requests human verification, run the updater in visible-browser m
 
 Complete verification in the browser window opened by this updater. It waits up to three minutes per verification page and then continues in the same session. Completing verification in an unrelated browser does not update the scraper's session. Verification is performed manually; scheduled background runs stop with an error while it is required.
 
+`browserHeadless` defaults to `false` because Crazy Parts currently challenges windowless Chrome while standard Chrome completes the same requests. Admin requests and scheduled tasks therefore open a standard browser controlled entirely by the script. No manual product lookup is required. If the website presents a human verification, the script waits up to three minutes and fails safely if it remains unresolved. The computer must have an active signed-in Windows desktop. Setting `browserHeadless` to `true` restores windowless mode; `-Headful` always explicitly opens a browser.
+
 Run the validation regression checks with `node scripts/test-crazyparts-page-validation.mjs`.
+
+Product cards are identified by their product link, stock information and member tier, including out-of-stock cards that have no Add To Cart button. Out-of-stock products are read for completeness but remain excluded from repair price calculations. The loader waits for stable member prices and accepts the site's RRP, Retail Price (Ex. Tax), and Was reference-price labels. Available repair parts must have a verified member discount before they can be quoted; the initial retail-price placeholder is rejected. Temporary unreadable prices are retried before a model is marked failed. Captures record `priceValidationVersion: 2` and the sync step independently checks the member-price flags.
+
+Verified model captures are checkpointed locally under `.runtime/checkpoints` for up to six hours. A failed capture can resume only with the same account, script version, settings and model selection. Completed captures clear their checkpoint after the workbook is saved. This requires no AI calls or tokens. Checkpoints contain supplier product information, not passwords.
+
+Additional checks: `node scripts/test-crazyparts-product-cards.mjs` and `node scripts/test-crazyparts-checkpoint.mjs`.
 
 - The script refuses to run unless `-All` or at least one `-Model` is provided.
 - It verifies that the expected Diamond member tier is present after login.

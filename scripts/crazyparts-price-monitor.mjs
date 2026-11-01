@@ -1,11 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { SpreadsheetFile, Workbook } from '@oai/artifact-tool';
 import { reportCrazyPartsStatus, trackedFamilyFromArgs } from './crazyparts-status.mjs';
 import { assertSupplierPage, assertProductResult } from './crazyparts-page-validation.mjs';
+import { openCheckpoint } from './crazyparts-checkpoint.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const configPath = path.join(projectRoot, 'crazyparts-price-monitor.config.json');
@@ -105,6 +107,7 @@ function isEligibleRepairModel(model) {
   const family = String(model.family || '').trim().toLowerCase();
   const name = String(model.name || '').trim();
   if (name.toLowerCase() === family) return false;
+  if (/\b(?:xbox|nintendo|playstation|steam deck)\b|^(?:PS[345]|Switch|Wii|GameCube|Game Boy|DS Lite|[23]DS)\b/i.test(name)) return false;
   if (family === 'sony' && (/playstation/i.test(name) || /^sony\s+xperia$/i.test(name))) return false;
   return true;
 }
@@ -254,7 +257,7 @@ function isAvailableStock(stock) {
 
 async function launchBrowser(config, headful) {
   const baseOptions = {
-    headless: !headful,
+    headless: !headful && config.browserHeadless !== false,
     args: ['--disable-blink-features=AutomationControlled'],
   };
 
@@ -501,7 +504,16 @@ async function discoverModels(page, config) {
     for (const anchor of otherNav?.querySelectorAll(':scope > a') || []) {
       const name = (anchor.textContent || '').trim();
       if (/^all nintendo$/i.test(name)) {
-        otherFamily = 'Oppo';
+        otherFamily = '';
+        continue;
+      }
+      // Gaming links now sit between All Nintendo and the OPPO models.
+      // Start the phone family at an actual OPPO model, not that gaming menu.
+      if (!otherFamily && /^(?:Oppo\b|Reno\b|Find\b|R\d+\b|A\d+\b)/i.test(name)) otherFamily = 'Oppo';
+      const familyHeading = ['Oppo', 'Huawei', 'Xiaomi', 'Redmi', 'Motorola', 'Nokia', 'Oneplus', 'Realme', 'Vivo', 'Sony']
+        .find((family) => family.toLowerCase() === name.toLowerCase());
+      if (familyHeading) {
+        otherFamily = familyHeading;
         continue;
       }
       if (otherFamily === 'Oppo' && /^(?:pura\b|p\d)/i.test(name)) otherFamily = 'Huawei';
@@ -546,7 +558,11 @@ async function discoverModels(page, config) {
 
 async function extractProductCards(page, config) {
   const tier = config.expectedMemberTier;
-  return page.locator('a[href^="/products/detail/"], a[href^="/product/"]').evaluateAll((anchors, expectedTier) => {
+  return page.locator('a[href^="/products/detail/"], a[href^="/product/"]').evaluateAll(readProductCards, tier);
+}
+
+// Runs inside the page. Out-of-stock cards have no Add To Cart button.
+export function readProductCards(anchors, expectedTier) {
     const uniqueAnchors = new Map();
     for (const anchor of anchors) {
       const href = anchor.getAttribute('href')?.split('&')[0];
@@ -563,9 +579,10 @@ async function extractProductCards(page, config) {
             .map((link) => link.getAttribute('href')?.split('&')[0])
             .filter(Boolean),
         );
-        const hasCartButton = [...node.querySelectorAll('button')]
-          .some((button) => /Add To Cart/i.test(button.innerText || ''));
-        if (hasCartButton && uniqueDetailLinks.size === 1) {
+        const cardText = node.innerText || '';
+        const hasMemberTier = cardText.split(/\r?\n/).some((line) => line.trim().toLowerCase() === String(expectedTier).toLowerCase());
+        const hasStock = /(?:SYD|MEL)\s*:/i.test(cardText);
+        if (hasMemberTier && hasStock && /\$\s*[\d,]+/.test(cardText) && uniqueDetailLinks.size === 1) {
           card = node;
           break;
         }
@@ -581,32 +598,46 @@ async function extractProductCards(page, config) {
       const tierIndex = lines.findIndex((line) => line.toLowerCase() === String(expectedTier).toLowerCase());
       const priceText = tierIndex >= 0 ? lines.slice(tierIndex + 1, tierIndex + 7).join(' ') : '';
       const splitPrice = priceText.match(/\$\s*([\d,]+)\.\s*(\d{2})\b/);
-      const wholePrice = priceText.match(/\$\s*([\d,]+)\b/);
+      const wholePrice = priceText.match(/\$\s*([\d,]+)\s*(?:\+\s*GST|GST)/i);
       const memberPriceLine = splitPrice
         ? `$${splitPrice[1]}.${splitPrice[2]}`
         : (wholePrice ? `$${wholePrice[1]}` : null);
       const syd = lines.find((line) => /^SYD:/i.test(line)) || '';
       const mel = lines.find((line) => /^MEL:/i.test(line)) || '';
+      const retailMatch = (card.innerText || '').replace(/\s+/g, ' ')
+        .match(/(?:RRP|Retail Price(?:\s*\(Ex\.\s*Tax\))?|Was)\s*:\s*\$\s*([\d,]+(?:\.\d+)?)/i);
+      const retailPrice = retailMatch ? Number(retailMatch[1].replace(/,/g, '')) : null;
+      const memberAmount = memberPriceLine ? Number(memberPriceLine.replace(/[$,]/g, '')) : null;
+      const memberPriceVerified = retailPrice > 0 && memberAmount > 0 && memberAmount <= retailPrice * 0.95;
 
       if (title && memberPriceLine) {
-        products.push({ title, href, memberPriceLine, priceText, syd, mel });
+        products.push({ title, href, memberPriceLine, priceText, syd, mel, retailPrice, memberPriceVerified });
       }
     }
     return products;
-  }, tier);
 }
 
-async function waitForMemberPrices(page, config) {
+async function waitForMemberPrices(page, config, family) {
   const timeout = Math.max(1000, Number(config.memberPriceWaitMs || 4000));
-  await page.waitForFunction((expectedTier) => {
-    const text = (document.body?.innerText || '').replace(/\s+/g, ' ');
-    const escapedTier = String(expectedTier).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const match = text.match(new RegExp(`${escapedTier}\\s*\\$\\s*([\\d,]+)\\.\\s*(\\d{2}).{0,160}?RRP:\\s*\\$\\s*([\\d,]+(?:\\.\\d{2})?)`, 'i'));
-    if (!match) return false;
-    const memberPrice = Number(`${match[1].replace(/,/g, '')}.${match[2]}`);
-    const retailPrice = Number(match[3].replace(/,/g, ''));
-    return Number.isFinite(memberPrice) && Number.isFinite(retailPrice) && memberPrice <= retailPrice * 0.95;
-  }, config.expectedMemberTier, { timeout }).catch(() => {});
+  const deadline = Date.now() + timeout;
+  let previous = '';
+  let stableSamples = 0;
+  do {
+    const linkCount = await page.locator('a[href^="/products/detail/"], a[href^="/product/"]').evaluateAll((anchors) => (
+      new Set(anchors.map((anchor) => (anchor.getAttribute('href') || '').split('&')[0])).size
+    ));
+    const cards = await extractProductCards(page, config);
+    const active = cards.filter((card) => isAvailableStock(`${card.syd} ${card.mel}`) && classifyProduct(card.title, family, card.href));
+    const ready = linkCount && cards.length >= linkCount && active.every((card) => card.retailPrice === null || card.memberPriceVerified);
+    const signature = JSON.stringify(cards.map((card) => [card.href, card.memberPriceLine, card.syd, card.mel]));
+    stableSamples = ready && signature === previous ? stableSamples + 1 : 0;
+    previous = signature;
+    if (ready && stableSamples >= 3) return true;
+    const text = await page.locator('body').innerText();
+    if (/Login to see price/i.test(text) || (!linkCount && /\b0\s+items\b|no products found/i.test(text))) return false;
+    await sleep(400);
+  } while (Date.now() < deadline);
+  return false;
 }
 
 async function waitForProductList(page, expectedCount, config) {
@@ -637,7 +668,7 @@ async function scrapeModel(page, model, config) {
       timeout: config.navigationTimeoutMs,
     });
     await verifySupplierPage(page, response, config);
-    await waitForMemberPrices(page, config);
+    await waitForMemberPrices(page, config, model.family);
 
     if (page.url().includes('/account/login')) {
       const error = new Error('The Crazy Parts session expired during the run.');
@@ -664,7 +695,8 @@ async function scrapeModel(page, model, config) {
       await page.waitForFunction(() => {
         const text = (document.body?.innerText || '').replace(/,/g, '').replace(/\s+/g, ' ');
         return /\b\d+\s*-\s*\d+\s+of\s+\d+\b/i.test(text)
-          || /\bshowing\s+\d+\s+(?:to|-)\s+\d+\s+of\s+\d+\b/i.test(text);
+          || /\bshowing\s+\d+\s+(?:to|-)\s+\d+\s+of\s+\d+\b/i.test(text)
+          || /\b\d+\s+items?\b/i.test(text);
       }, undefined, { timeout: Math.max(1000, Number(config.productListWaitMs || 8000)) }).catch(() => {});
       bodyText = await page.locator('body').innerText();
       itemCount = productCountFromPageText(bodyText);
@@ -682,9 +714,14 @@ async function scrapeModel(page, model, config) {
       ? Math.min(config.pageSize, Math.max(0, itemCount - ((pageNumber - 1) * config.pageSize)))
       : 0;
     await waitForProductList(page, expectedCards, config);
-    await waitForMemberPrices(page, config);
+    const memberPricingReady = await waitForMemberPrices(page, config, model.family);
 
     const cards = await extractProductCards(page, config);
+    // Some genuine supplier cards omit any retail reference. Their member
+    // label and price must remain stable over repeated complete-card reads.
+    if (memberPricingReady) {
+      for (const card of cards) if (card.retailPrice === null) card.memberPriceVerified = true;
+    }
     bodyText = await page.locator('body').innerText();
     heading = cleanMenuText(await page.locator('h1').first().innerText().catch(() => ''));
     assertSupplierPage({ title: await page.title(), heading, text: bodyText, url: page.url() });
@@ -692,6 +729,11 @@ async function scrapeModel(page, model, config) {
     // The extra probe after an exactly full page is allowed to be empty.
     if (!(pageNumber > 1 && expectedCards === 0 && linkCount === 0)) {
       assertProductResult({ heading, text: bodyText, linkCount, cardCount: cards.length, expectedCount: expectedCards });
+    }
+    if (cards.some((card) => isAvailableStock(`${card.syd} ${card.mel}`) && classifyProduct(card.title, model.family, card.href) && !card.memberPriceVerified)) {
+      const error = new Error(`Member prices have not finished loading for ${model.name}, page ${pageNumber}.`);
+      error.code = 'CRAZYPARTS_PRICES_UNAVAILABLE';
+      throw error;
     }
     if (process.env.CRAZYPARTS_DEBUG_PAGINATION === '1') {
       console.log(`${model.name}: page ${pageNumber} yielded ${cards.length} priced product card(s).`);
@@ -711,6 +753,8 @@ async function scrapeModel(page, model, config) {
         sydStock: card.syd.replace(/^SYD:/i, '').trim(),
         melStock: card.mel.replace(/^MEL:/i, '').trim(),
         available: isAvailableStock(stock),
+        memberPriceVerified: card.memberPriceVerified,
+        retailPrice: card.retailPrice,
         url: new URL(card.href, config.baseUrl).toString(),
       });
     }
@@ -741,11 +785,12 @@ async function scrapeModelWithNetworkRetries(page, model, config, recoverSession
         attempt -= 1;
         continue;
       }
-      const transient = /ERR_NETWORK|ERR_CONNECTION|ERR_INTERNET_DISCONNECTED|Timeout/i.test(error.message || '');
+      const transient = error.code === 'CRAZYPARTS_PRICES_UNAVAILABLE'
+        || /ERR_NETWORK|ERR_CONNECTION|ERR_INTERNET_DISCONNECTED|Timeout/i.test(error.message || '');
       if (!transient || attempt === attempts) throw error;
       const waitMs = Math.max(1000, config.modelRetryDelayMs || 5000) * attempt;
       console.warn(
-        `${model.name}: temporary network error; waiting ${Math.round(waitMs / 1000)} seconds before retry ${attempt + 1}/${attempts}.`,
+        `${model.name}: page data not ready (${error.message}); waiting ${Math.round(waitMs / 1000)} seconds before retry ${attempt + 1}/${attempts}.`,
       );
       await sleep(waitMs);
     }
@@ -887,6 +932,8 @@ function modelsFromSourceRows(sourceRows) {
       sydStock: row.sydStock,
       melStock: row.melStock,
       available: row.available,
+      memberPriceVerified: row.memberPriceVerified,
+      retailPrice: row.retailPrice,
       url: row.url,
     });
   }
@@ -1132,7 +1179,7 @@ async function main() {
   }
 
   const config = JSON.parse(await fs.readFile(configPath, 'utf8'));
-  config.allowManualVerification = args.headful;
+  config.allowManualVerification = args.headful || config.browserHeadless === false;
   const capturedAt = brisbaneTimestamp();
   const runId = safeRunId(capturedAt);
   const outputDir = path.resolve(projectRoot, config.outputDir);
@@ -1187,6 +1234,7 @@ async function main() {
   const failures = [];
   let selectedModels = [];
   const scrapedModels = [];
+  let checkpoint;
 
   try {
     const context = await browser.newContext({
@@ -1248,6 +1296,9 @@ async function main() {
       }
     }
     if (args.maxModels > 0) selectedModels = selectedModels.slice(0, args.maxModels);
+    const codeVersion = createHash('sha256').update(await fs.readFile(fileURLToPath(import.meta.url))).digest('hex');
+    checkpoint = await openCheckpoint(path.join(outputDir, '.runtime', 'checkpoints'),
+      JSON.stringify({ account: email, codeVersion, config, selection: selectedModels.map((model) => model.href) }), selectedModels);
     console.log(`Selected ${selectedModels.length} model page(s).`);
     if (trackedFamily) {
       reportCrazyPartsStatus(trackedFamily, {
@@ -1281,10 +1332,12 @@ async function main() {
         nextIndex += 1;
         if (index >= selectedModels.length) break;
         const model = selectedModels[index];
+        const cachedResult = checkpoint.get(model.href);
         try {
-          let result;
+          let result = cachedResult;
+          if (result) console.log(`Resuming verified local capture: ${model.name}`);
           const rateLimitAttempts = Math.max(1, config.rateLimitRetryAttempts || 1);
-          for (let attempt = 1; attempt <= rateLimitAttempts; attempt += 1) {
+          for (let attempt = 1; !result && attempt <= rateLimitAttempts; attempt += 1) {
             try {
               result = await scrapeModelWithNetworkRetries(workerPage, model, config, recoverSession);
               break;
@@ -1295,6 +1348,7 @@ async function main() {
               await sleep(waitMs);
             }
           }
+          await checkpoint.put(result);
           scrapedModels.push(result);
           completed += 1;
           console.log(`[${completed}/${selectedModels.length}] ${result.heading}: ${result.products.length} products read`);
@@ -1310,7 +1364,7 @@ async function main() {
         } catch (error) {
           if (['CRAZYPARTS_RATE_LIMIT', 'CRAZYPARTS_VERIFICATION', 'CRAZYPARTS_INVALID_PAGE'].includes(error.code)) {
             fatalError = error;
-            console.error(`Stopping this run: ${error.message}`);
+            console.error(`Stopping this run at ${model.name} (${workerPage.url()}): ${error.message}`);
             break;
           }
           failures.push({
@@ -1333,7 +1387,7 @@ async function main() {
             });
           }
         }
-        if (nextIndex < selectedModels.length) await sleep(config.pageDelayMs);
+        if (nextIndex < selectedModels.length && !cachedResult) await sleep(config.pageDelayMs);
       }
       if (workerIndex !== 0) await workerPage.close();
     });
@@ -1363,6 +1417,7 @@ async function main() {
     ? 'All discovered models'
     : [...args.families.map((value) => `Family: ${value}`), ...args.models.map((value) => `Model: ${value}`)].join(', ');
   const rawData = {
+    priceValidationVersion: 2,
     capturedAt,
     scope,
     selectionComplete: args.maxModels === 0 && args.models.length === 0,
@@ -1408,11 +1463,14 @@ async function main() {
   }
 
   const savedWorkbookPath = await buildWorkbook(rawData, config, workbookPath, previewDir);
+  await checkpoint.clear();
   console.log(`Workbook updated: ${savedWorkbookPath}`);
   console.log(`Raw run history: ${historyPath}`);
 }
 
-main().catch((error) => {
+export { launchBrowser, login, discoverModels, scrapeModel, extractProductCards, productCountFromPageText, isEligibleRepairModel };
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((error) => {
   const trackedFamily = trackedFamilyFromArgs(process.argv.slice(2));
   if (trackedFamily) {
     reportCrazyPartsStatus(trackedFamily, {

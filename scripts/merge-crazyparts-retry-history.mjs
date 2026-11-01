@@ -25,18 +25,22 @@ async function main() {
   const failedModels = (base.exceptions || []).filter((row) => row.issue === 'Model page failed');
   if (!failedModels.length) throw new Error('The base history has no failed model pages to retry.');
 
-  const family = (base.requestedFamilies || [])[0]
-    || (base.sourceRows || []).find((row) => row.family)?.family;
-  const brand = (base.sourceRows || []).find((row) => row.brand)?.brand;
-  if (!family || !brand) throw new Error('Could not determine the original brand and family.');
-
   const matchedFailures = new Set();
+  const matchFailure = (row) => failedModels.find((item) => (
+    normalise(row.model || row.heading || row.name).endsWith(normalise(item.model))
+    || ((row.href || row.modelUrl) && new URL(item.url).pathname === (row.href || row.modelUrl))
+  ));
+  for (const row of retry.modelResults || []) {
+    const failed = matchFailure(row);
+    if (!failed || row.validated !== true) throw new Error(`Retry page was not a verified failed model: ${row.heading}`);
+    matchedFailures.add(normalise(failed.model));
+  }
   const correctedRows = (retry.sourceRows || []).map((row) => {
-    const rowKey = normalise(row.model);
-    const failed = failedModels.find((item) => rowKey.endsWith(normalise(item.model)));
+    const failed = matchFailure(row);
     if (!failed) throw new Error(`Retry model did not match a failed page: ${row.model}`);
     matchedFailures.add(normalise(failed.model));
-    return { ...row, brand, family };
+    const catalog = (base.modelCatalog || []).find((model) => model.href === new URL(failed.url).pathname);
+    return { ...row, brand: catalog?.brand || row.brand, family: catalog?.family || row.family };
   });
 
   if (matchedFailures.size !== failedModels.length) {
@@ -47,6 +51,9 @@ async function main() {
     ...base,
     capturedAt: retry.capturedAt || base.capturedAt,
     modelsProcessed: Number(base.modelsProcessed || 0) + matchedFailures.size,
+    modelResults: [...(base.modelResults || []), ...(retry.modelResults || [])],
+    productCatalog: [...(base.productCatalog || []), ...(retry.productCatalog || [])],
+    repairRows: [...(base.repairRows || []), ...(retry.repairRows || [])],
     sourceRows: [...(base.sourceRows || []), ...correctedRows],
     exceptions: [
       ...(base.exceptions || []).filter((row) => (

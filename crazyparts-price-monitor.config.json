@@ -12,7 +12,7 @@
   "roundingIncrement": 5,
   "pageSize": 36,
   "pageDelayMs": 7000,
-  "memberPriceWaitMs": 4000,
+  "memberPriceWaitMs": 12000,
   "productListWaitMs": 8000,
   "loginAttempts": 3,
   "loginRetryDelayMs": 5000,
@@ -26,5 +26,6 @@
   "navigationTimeoutMs": 30000,
   "maxFailureRatePercent": 10,
   "maxPriceChangePercent": 30,
-  "browserChannel": "chrome"
+  "browserChannel": "chrome",
+  "browserHeadless": false
 }

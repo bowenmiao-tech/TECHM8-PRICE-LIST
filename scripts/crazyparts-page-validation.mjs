@@ -28,14 +28,19 @@ export function assertProductResult({ heading, text, linkCount, cardCount, expec
     throw failure('The model heading did not load. Existing prices were kept.', 'CRAZYPARTS_INVALID_PAGE');
   }
   if (!cardCount && (linkCount > 0 || expectedCount > 0)) {
-    throw failure('Products were listed but member prices could not be read. Existing prices were kept.', 'CRAZYPARTS_INVALID_PAGE');
+    throw failure('Products were listed but member prices could not be read. Existing prices were kept.', 'CRAZYPARTS_PRICES_UNAVAILABLE');
   }
-  if (!cardCount && !/\b0\s+(?:items?|products?|results?)\b|no products (?:found|available)|no results found|暂无商品|没有商品/i.test(text)) {
+  const confirmedEmpty = /\b0\s+(?:items?|products?|results?)\b|no products (?:found|available)|no results found|暂无商品|没有商品/i.test(text)
+    || /(?:^|\n)\s*No data\s*(?:\n|$)/i.test(text);
+  if (!cardCount && !confirmedEmpty) {
     throw failure('The page has no readable products and no confirmed empty catalogue message. Existing prices were kept.', 'CRAZYPARTS_INVALID_PAGE');
   }
 }
 
 export function assertPublishableRun(data) {
+  if (data.priceValidationVersion >= 2 && (data.sourceRows || []).some((row) => row.available && row.memberPriceVerified !== true)) {
+    throw new Error('Price sync refused: a supplier price was captured before member pricing finished loading.');
+  }
   if (!data.repairRows?.length || !data.sourceRows?.length) {
     throw new Error('Price sync refused: no verified repair prices were captured. Existing prices were kept.');
   }

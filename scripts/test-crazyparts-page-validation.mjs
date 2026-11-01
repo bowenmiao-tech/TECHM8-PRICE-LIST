@@ -11,9 +11,12 @@ for (const snapshot of [
 
 assert.doesNotThrow(() => assertSupplierPage({ heading: 'A17 5G (A176)', text: 'Diamond $48.90 +GST' }));
 assert.doesNotThrow(() => assertProductResult({ heading: 'iMac A2438', text: '0 items', linkCount: 0, cardCount: 0 }));
+assert.doesNotThrow(() => assertProductResult({ heading: 'A8 (A810/2016)', text: 'Sort By\nFeatured\nNo data\nSite Information', linkCount: 0, cardCount: 0 }));
+assert.throws(() => assertProductResult({ heading: 'A8', text: 'No data has loaded yet', linkCount: 0, cardCount: 0 }));
 assert.throws(() => assertProductResult({ heading: 'A17', text: '36 items', linkCount: 36, cardCount: 0, expectedCount: 36 }));
 assert.throws(() => assertProductResult({ heading: 'A17', text: 'Loading...', linkCount: 0, cardCount: 0 }));
 assert.throws(() => assertPublishableRun({ modelsSelected: 145, modelsProcessed: 145, repairRows: [], sourceRows: [] }));
+assert.throws(() => assertPublishableRun({ priceValidationVersion: 2, modelsSelected: 1, modelsProcessed: 1, repairRows: [{ model: 'A71' }], sourceRows: [{ model: 'A71', available: true, memberPriceVerified: false }] }));
 assert.throws(() => assertPublishableRun({ modelsSelected: 1, modelsProcessed: 1, repairRows: [{ model: 'www.crazyparts.com.au' }], sourceRows: [{ model: 'www.crazyparts.com.au' }] }));
 
 // Verify compatibility with a previously published run and rejection of the
