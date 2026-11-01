@@ -59,7 +59,12 @@ export function ipadPlan(raw, siteRows) {
     const existing = siteRows.find((item) => item.model === model && item.issue === issue);
     const price = (cost) => Math.ceil((Math.round(cost * 100) * 11 + ipadLabour(row.repairType) * 1000) / 5000) * 5;
     const min = price(row.minPartPrice), max = price(row.maxPartPrice);
-    updates.push({ brand: 'Apple iPad', model, issue, newPrice: min === max ? String(min) : `${min} - ${max}`, oldPrice: existing?.price ?? null });
+    const prior = updates.find((update) => update.model === model && update.issue === issue);
+    if (prior) {
+      const amounts = prior.newPrice.match(/\d+(?:\.\d+)?/g).map(Number);
+      const low = Math.min(min, ...amounts), high = Math.max(max, ...amounts);
+      prior.newPrice = low === high ? String(low) : `${low} - ${high}`;
+    } else updates.push({ brand: 'Apple iPad', model, issue, newPrice: min === max ? String(min) : `${min} - ${max}`, oldPrice: existing?.price ?? null });
   }
   if (!updates.length) throw new Error('No eligible iPad prices. Existing prices were kept.');
   const deleteKeys = siteRows.filter((row) => !protectedIpad(row.model) && /^pro:/.test(ipadKey(row.model))

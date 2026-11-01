@@ -9,6 +9,7 @@ import { reportCrazyPartsStatus, trackedFamilyFromArgs } from './crazyparts-stat
 import { assertSupplierPage, assertProductResult } from './crazyparts-page-validation.mjs';
 import { openCheckpoint } from './crazyparts-checkpoint.mjs';
 import { protectedIpad, ipadCategory } from './crazyparts-ipad-rules.mjs';
+import { checkSolderImage } from './crazyparts-solder-badge.mjs';
 import { readEmbeddedCollection, productsFromCollection } from './crazyparts-page-data.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -778,7 +779,13 @@ async function scrapeModel(page, model, config) {
       if (process.env.CRAZYPARTS_DEBUG_PRICES === '1') {
         console.log(`Price debug: ${product.title} | tier ${config.memberTierPriceKey} | ${product.memberPrice}${product.promotional ? ' | promotional' : ''}`);
       }
-      const category = classifyProduct(product.title, model.family, product.href);
+      let category = classifyProduct(product.title, model.family, product.href);
+      let solderBadge;
+      if (/^ipad /i.test(model.family) && /charging port|charge port|charging connector|dock connector|usb.c port/i.test(product.title)
+        && !/pencil|stylus|fpc connector|tester|on (?:the )?motherboard/i.test(product.title)) {
+        solderBadge = await checkSolderImage(product.imageUrl);
+        if (solderBadge.requiresSoldering !== null) category = solderBadge.requiresSoldering ? 'ipad_port_solder' : 'ipad_port_plug';
+      }
       const available = isAvailableStock(`${product.syd} | ${product.mel}`);
       const card = cardsByHref.get(product.href);
       const price = product.promotional
@@ -801,6 +808,8 @@ async function scrapeModel(page, model, config) {
         available,
         memberPriceVerified: true,
         retailPrice: product.retailPrice,
+        imageUrl: product.imageUrl,
+        solderBadge,
         url: new URL(product.href, config.baseUrl).toString(),
       });
     }
@@ -1480,6 +1489,8 @@ async function main() {
         modelUrl: model.href,
         category: product.category ? categoryLabel(product.category) : '',
         name: product.name,
+        imageUrl: product.imageUrl,
+        solderBadge: product.solderBadge,
         price: product.price,
         sydStock: product.sydStock,
         melStock: product.melStock,

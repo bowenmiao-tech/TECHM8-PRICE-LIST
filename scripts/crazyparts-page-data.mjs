@@ -80,6 +80,7 @@ export function productsFromCollection(collection, tierKey, hrefByVariant = {}) 
         title: String((variants.length > 1 ? variant.title || variant.name : item.name) || '').trim(),
         href: hrefByVariant[variant.id] || `/product/${item.id}?variant_id=${variant.id}`,
         variantId: variant.id,
+        imageUrl: variant.images?.[0]?.url || item.images?.[0]?.url || null,
         memberPrice: Number.isFinite(memberPrice) && memberPrice > 0 ? memberPrice : null,
         retailPrice: Number.isFinite(retailPrice) && retailPrice > 0 ? retailPrice : null,
         // Promotions (for example "Parts Clearance 70% OFF") discount the tier
