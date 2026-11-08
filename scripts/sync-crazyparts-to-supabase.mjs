@@ -33,6 +33,7 @@ const familyConfig = new Map([
   ['imac', { dbBrand: 'Apple iMac', displayBrand: 'iMac', aliasBrands: ['iMac'], statusFamily: 'Apple Mac', mode: 'replace', labourCharge: 130, directIssues: true }],
   ['macbook pro', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
   ['macbook air', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
+  ['pixel', { dbBrand: 'Google', displayBrand: 'Google', statusFamily: 'Pixel', mode: 'replace', screenLabourCharge: 150, screenRepairTypes: ['Screen Replacement', 'Outer Screen Replacement'], labourCharge: 130, directIssues: true }],
   ['macbook', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
 ]);
 
@@ -88,6 +89,9 @@ function issuesForRepairType(repairType, directIssues = false) {
 }
 
 function labourForRepairType(config, repairType) {
+  if (config.screenRepairTypes) {
+    return config.screenRepairTypes.includes(repairType) ? config.screenLabourCharge : config.labourCharge;
+  }
   if (config.screenLabourCharge && /screen/i.test(repairType || '')) return config.screenLabourCharge;
   return config.labourCharge;
 }

@@ -25,6 +25,7 @@ const canonicalFamilies = new Map([
   ['realme', 'Realme'],
   ['vivo', 'Vivo'],
   ['sony', 'Sony'],
+  ['pixel', 'Pixel'],
   ['apple mac', 'Apple Mac'],
   ['imac', 'Apple Mac'],
   ['macbook pro', 'Apple Mac'],

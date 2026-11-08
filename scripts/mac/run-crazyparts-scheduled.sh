@@ -11,7 +11,7 @@ run="$MAC_SCRIPT_DIR/run-crazyparts-price-monitor.sh"
 case "$day" in
   1) steps=('A Series') ;;
   2) steps=('Oppo' 'iPad') ;;
-  3) steps=('Huawei' 'Apple Mac') ;;
+  3) steps=('Huawei' 'Apple Mac' 'Pixel') ;;
   4) steps=('Xiaomi') ;;
   5) steps=('Redmi') ;;
   6) steps=('Motorola') ;;

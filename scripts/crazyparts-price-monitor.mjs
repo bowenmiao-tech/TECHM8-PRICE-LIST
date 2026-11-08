@@ -141,7 +141,59 @@ function categoryLabel(category) {
   };
   if (labels[category]) return labels[category];
   if (String(category || '').startsWith('imac:')) return String(category).slice(5);
+  if (String(category || '').startsWith('pixel:')) return String(category).slice(6);
   return '';
+}
+
+// Google Pixel keeps every available repair part. Screens use the screen
+// labour; every other part uses the small-part labour (see sync config).
+function pixelPartCategory(name) {
+  const original = String(name || '').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
+  if (!original) return null;
+  if (/screen protector|tempered glass|privacy glass|hydrogel|protector film|\bfilm\b|\bcase\b|cover case|ring holder|wallet|wall charger|car charger|power adapter|charging cable|data cable|usb cable|adhesive|glue|sticker|\btape\b|tool kit|opening tool|screwdriver|stylus/i.test(original)) return null;
+  // Parts of other brands occasionally appear on a Pixel page.
+  if (/\b(?:samsung|galaxy|iphone|ipad|huawei|xiaomi|redmi|oppo|motorola|oneplus|nokia|sony|vivo|realme)\b/i.test(original)) return null;
+
+  const pick = (label) => `pixel:${label}`;
+  const isScreen = /\b(?:oled|amoled|lcd|display|screen)\b/i.test(original)
+    && /(assembly|replacement|digitizer)/i.test(original)
+    && !/(bracket|connector|flex|sidebar|frame only|glass only|digitizer only)/i.test(original);
+  if (isScreen) return pick(/\bouter\b/i.test(original) ? 'Outer Screen Replacement' : 'Screen Replacement');
+  if (/\bbattery\b/i.test(original) && !/(connector|flex|cover|door)/i.test(original)) return pick('Battery Replacement');
+  if (/wireless charging/i.test(original)) return pick('Wireless Charging Coil');
+  if (/(charging port|charge port|charging board|usb[- ]?c (?:port|board)|sub ?board)/i.test(original)) return pick('Charging Port');
+  if (/(rear|back) housing/i.test(original)) return pick('Back Housing');
+  if (/cover top glass/i.test(original)) return pick('Back Top Glass');
+  if (/(rear|back) (?:cover|door)(?: glass)?/i.test(original)) return pick('Back Glass');
+  if (/camera/i.test(original) && /(lens|bezel|glass)/i.test(original)) return pick('Rear Camera Lens');
+  if (/front camera|selfie camera/i.test(original)) return pick('Front Camera');
+  if (/rear camera|back camera|main camera/i.test(original)) return pick('Rear Camera');
+  if (/main ?board flex|motherboard flex/i.test(original)) return pick('Main Board Flex');
+  if (/mid(?:dle)? frame|frame only|lcd frame|housing bezel/i.test(original)) return pick('Mid Frame');
+  if (/earpiece/i.test(original)) return pick('Earpiece Speaker');
+  if (/speaker|buzzer|ringer/i.test(original)) return pick('Loud Speaker');
+  if (/(power|volume).*flex/i.test(original)) return pick('Power / Volume Flex');
+  if (/side button|power button|volume button/i.test(original)) return pick('Side Buttons');
+  if (/sim card (?:reader|slot)/i.test(original)) return pick('SIM Card Reader');
+  if (/sim (?:card )?tray/i.test(original)) return pick('SIM Card Tray');
+  if (/vibrat/i.test(original)) return pick('Vibrator');
+  if (/fingerprint/i.test(original)) return pick('Fingerprint Sensor');
+  if (/microphone/i.test(original)) return pick('Microphone');
+  if (/antenna/i.test(original)) return pick('Antenna');
+
+  // Anything else must look like a real part listing; bare colour names are
+  // accessory variants (cases) whose title only shows the colour.
+  if (!/\s(?:for|compatible)\b/i.test(original)
+    && !/\b(?:flex|cable|board|bracket|frame|module|sensor|connector|antenna|glass|housing|reader|motor|coil|button)\b/i.test(original)) return null;
+  const generic = original
+    .replace(/^(?:AMPLUS|AMP|BQ7|PULL-A|REFURB)\s+/i, '')
+    .split(/\s+(?:for|compatible)\b/i)[0]
+    .replace(/\b[A-Z]\d{3}-\d{5}-\d{2}\b/g, '')
+    .replace(/\((?:PULL-A|Service Pack|AU Version)\)/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!generic || /^(?:google|pixel)$/i.test(generic)) return null;
+  return pick(generic.slice(0, 60));
 }
 
 function imacPartCategory(name) {
@@ -180,6 +232,7 @@ function classifyProduct(name, family, productReference = '') {
   if (normalizedFamily.startsWith('ipad ')) return ipadCategory(name);
 
   if (normalizedFamily === 'imac') return imacPartCategory(original);
+  if (normalizedFamily === 'pixel') return pixelPartCategory(original);
 
   if (isMacbookFamily(normalizedFamily)) {
     if (/keyboard|keycap|keyboard backlight|top case with keyboard/i.test(original)) return null;
@@ -514,6 +567,13 @@ async function discoverModels(page, config) {
       addModel('Samsung', samsungFamily, anchor);
     }
 
+    const googleNav = navs.find((nav) => /^google$/i.test((nav.getAttribute('aria-label') || '').trim()));
+    for (const anchor of googleNav?.querySelectorAll(':scope > a') || []) {
+      const name = (anchor.textContent || '').trim();
+      if (/^pixel$/i.test(name)) continue;
+      if (/^pixel\b/i.test(name)) addModel('Google', 'Pixel', anchor);
+    }
+
     const otherNav = navs.find((nav) => /other models/i.test(nav.getAttribute('aria-label') || ''));
     let otherFamily = '';
     for (const anchor of otherNav?.querySelectorAll(':scope > a') || []) {
@@ -638,9 +698,29 @@ async function waitForMemberPrices(page, config, family) {
   let previous = '';
   let stableSamples = 0;
   do {
-    const linkCount = await page.locator('a[href^="/products/detail/"], a[href^="/product/"]').evaluateAll((anchors) => (
-      new Set(anchors.map((anchor) => (anchor.getAttribute('href') || '').split('&')[0])).size
-    ));
+    // Out-of-stock cards that show no price at all (e.g. a sold-out case) never
+    // render a member price, so they are not waited for.
+    const linkCount = await page.locator('a[href^="/products/detail/"], a[href^="/product/"]').evaluateAll((anchors) => {
+      const priced = new Set();
+      for (const anchor of anchors) {
+        const href = (anchor.getAttribute('href') || '').split('&')[0];
+        if (!href || priced.has(href)) continue;
+        let node = anchor;
+        let cardText = null;
+        while (node && node !== document.body) {
+          const links = new Set([...node.querySelectorAll('a[href^="/products/detail/"], a[href^="/product/"]')]
+            .map((link) => (link.getAttribute('href') || '').split('&')[0]));
+          if (links.size > 1) break;
+          if (/(?:SYD|MEL)\s*:/i.test(node.innerText || '')) { cardText = node.innerText || ''; break; }
+          node = node.parentElement;
+        }
+        const soldOutWithoutPrice = cardText !== null
+          && !/\$\s*[\d,]+/.test(cardText)
+          && !/(?:SYD|MEL)\s*:\s*(?:In|Low) Stock/i.test(cardText);
+        if (!soldOutWithoutPrice) priced.add(href);
+      }
+      return priced.size;
+    });
     const cards = await extractProductCards(page, config);
     const active = cards.filter((card) => isAvailableStock(`${card.syd} ${card.mel}`) && classifyProduct(card.title, family, card.href));
     const ready = linkCount && cards.length >= linkCount && active.every((card) => card.retailPrice === null || card.memberPriceVerified);
@@ -883,8 +963,28 @@ function summariseModels(models, capturedAt) {
     });
     for (const category of categories) {
       const matching = relevant.filter((product) => product.category === category);
-      const active = matching.filter((product) => product.available).sort((a, b) => a.price - b.price);
+      let active = matching.filter((product) => product.available).sort((a, b) => a.price - b.price);
       if (!matching.length) continue;
+      // Pixel original screens: PULL-A and Service Pack are both genuine.
+      // Use PULL-A when it is in stock, otherwise Service Pack; never REFURB,
+      // FULL ORIGINAL or aftermarket screens.
+      if (/^pixel:(?:Outer )?Screen Replacement$/.test(category)) {
+        const pullA = active.filter((product) => /\bpull-?a\b/i.test(`${product.name} ${product.url}`));
+        const servicePack = active.filter((product) => /service[- ]pack/i.test(`${product.name} ${product.url}`));
+        const chosen = pullA.length ? pullA : servicePack;
+        if (!chosen.length) {
+          exceptions.push({
+            brand: model.brand,
+            model: model.heading || model.name,
+            repairType: categoryLabel(category),
+            issue: 'No PULL-A or Service Pack screen in stock',
+            details: `${active.length} other in-stock screen(s) ignored`,
+            url: new URL(model.href, 'https://www.crazyparts.com.au').toString(),
+          });
+          continue;
+        }
+        active = chosen;
+      }
       if (!active.length) {
         exceptions.push({
           brand: model.brand,
@@ -1094,7 +1194,7 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     rowHeight: 30,
   };
   prices.getRange('A2:L2').merge();
-  prices.getRange('A2').values = [[`Formula: round up to nearest $${config.roundingIncrement} after part price + GST, then add the configured labour: $${config.labourCharge} phone, $${config.tabletLabourCharge} Samsung tablet, $${config.imacLabourCharge} iMac, $${config.macbookScreenLabourCharge} MacBook screen, or $${config.macbookOtherLabourCharge} other MacBook repairs.`]];
+  prices.getRange('A2').values = [[`Formula: round up to nearest $${config.roundingIncrement} after part price + GST, then add the configured labour: $${config.labourCharge} phone, $${config.tabletLabourCharge} Samsung tablet, $${config.imacLabourCharge} iMac, $${config.macbookScreenLabourCharge} MacBook screen, or $${config.macbookOtherLabourCharge} other MacBook repairs; Google Pixel screens $150 and other Pixel parts $130.`]];
   prices.getRange('A2:L2').format = { fill: '#EAF2F8', font: { color: '#234E6F' }, wrapText: true, rowHeight: 34 };
   prices.getRange('A4:L4').merge();
   prices.getRange('A4').values = [[
@@ -1113,7 +1213,8 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     const priceEndRow = priceStartRow + values.length - 1;
     prices.getRange(`A${priceStartRow}:L${priceEndRow}`).values = values;
     const standardLabourFormula = `IF($B${priceStartRow}="iMac",'Settings'!$B$5,IF(OR($B${priceStartRow}="Macbook Pro",$B${priceStartRow}="Macbook Air",$B${priceStartRow}="Macbook"),IF(ISNUMBER(SEARCH("Screen",$D${priceStartRow})),'Settings'!$B$6,'Settings'!$B$7),IF(OR($B${priceStartRow}="Tab A Series",$B${priceStartRow}="Tab S Series"),'Settings'!$B$4,'Settings'!$B$3)))`;
-    const labourFormula = `IF(LEFT($B${priceStartRow},5)="iPad ",IF(OR($D${priceStartRow}="Screen",$D${priceStartRow}="Battery"),150,IF($D${priceStartRow}="Charging Port",179,120)),${standardLabourFormula})`;
+    const ipadLabourFormula = `IF(LEFT($B${priceStartRow},5)="iPad ",IF(OR($D${priceStartRow}="Screen",$D${priceStartRow}="Battery"),150,IF($D${priceStartRow}="Charging Port",179,120)),${standardLabourFormula})`;
+    const labourFormula = `IF($B${priceStartRow}="Pixel",IF(OR($D${priceStartRow}="Screen Replacement",$D${priceStartRow}="Outer Screen Replacement"),150,130),${ipadLabourFormula})`;
     prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];
     prices.getRange(`G${priceStartRow}:G${priceEndRow}`).fillDown();
     prices.getRange(`H${priceStartRow}`).formulas = [[`=ROUNDUP((F${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];

@@ -30,6 +30,10 @@ iMac keeps every available repair part, adds GST and $130 labour, then rounds up
 
 Credentials and generated price outputs are ignored by Git.
 
+## Google Pixel
+
+Pixel runs on day 3 after Apple Mac and replaces the Admin `Google` brand. Screens (including foldable outer screens) add GST and $150; every other available repair part adds GST and $130; results round up to $5. Screen prices use only genuine screens: PULL-A when one is in stock, otherwise Service Pack. REFURB, FULL ORIGINAL and aftermarket screens are ignored, so a model without either gets no screen price. Screen protectors, cases, adhesive and parts listed for other brands are excluded.
+
 ## Running on the shop Mac (current host)
 
 The always-on Mac now runs the monthly brand sequence and the Admin Run Now queue. The Windows scheduled tasks are retired. The scripts in `scripts/mac/` mirror the PowerShell ones:
