@@ -2700,12 +2700,7 @@
             }
           },
           resetInventoryCount() {
-            this.inventoryCountLines = this.makeInventoryCountLines(this.lcdItems.map(item => ({
-              inventory_item_id: item.id,
-              model_name: item.model_name,
-              variant_name: item.variant_name,
-              current_qty: item.current_qty
-            })));
+            this.inventoryCountLines = this.inventoryCountLines.map(line => ({ ...line, counted_qty: line.system_qty }));
             this.inventoryCountNotes = '';
           },
           addRepairLine() { this.repairLines.push(this.makeRepairLine()); },

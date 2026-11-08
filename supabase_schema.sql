@@ -3298,6 +3298,8 @@ declare
   items_payload jsonb;
   existing_submission jsonb;
   week_start_value date;
+  today_value date := (now() at time zone 'Australia/Brisbane')::date;
+  glass_counted_this_month boolean;
 begin
   if not public.is_valid_staff_session(session_token) then
     raise exception 'Invalid session';
@@ -3313,7 +3315,19 @@ begin
     raise exception 'Store not found';
   end if;
 
-  week_start_value := current_date - ((extract(dow from current_date)::integer + 1) % 7);
+
+  select exists (
+    select 1
+    from public.lcd_inventory_count_submissions submission
+    join public.lcd_inventory_count_lines line on line.submission_id = submission.id
+    where submission.store_id = selected_store.id
+      and submission.status in ('pending', 'approved')
+      and submission.count_date >= date_trunc('month', today_value)::date
+      and submission.count_date < (date_trunc('month', today_value) + interval '1 month')::date
+      and line.variant_name ilike 'Back Glass %'
+  ) into glass_counted_this_month;
+
+  week_start_value := today_value - ((extract(dow from today_value)::integer + 1) % 7);
 
   select coalesce(
     jsonb_agg(
@@ -3331,7 +3345,8 @@ begin
   into items_payload
   from public.lcd_inventory_items lcd
   where lcd.store_id = selected_store.id
-    and lcd.active = true;
+    and lcd.active = true
+    and (lcd.variant_name not ilike 'Back Glass %' or not glass_counted_this_month);
 
   select to_jsonb(submission_row)
   into existing_submission
@@ -3352,6 +3367,7 @@ begin
     where submission.store_id = selected_store.id
       and submission.week_start = week_start_value
       and submission.status in ('pending', 'approved')
+      and (glass_counted_this_month or submission.count_date >= date_trunc('month', today_value)::date)
     order by submission.id desc
     limit 1
   ) submission_row;
@@ -3381,6 +3397,8 @@ declare
   line_payload jsonb;
   count_date_value date;
   week_start_value date;
+  today_value date := (now() at time zone 'Australia/Brisbane')::date;
+  glass_counted_this_month boolean;
   notes_value text;
   confirmed_value boolean;
   inventory_row public.lcd_inventory_items%rowtype;
@@ -3421,7 +3439,21 @@ begin
     raise exception 'Staff member not found';
   end if;
 
-  count_date_value := coalesce(nullif(payload->>'count_date', '')::date, current_date);
+  -- Serialize store submissions, including concurrent monthly counts.
+  perform 1 from public.store_locations where id = selected_store.id for update;
+
+  select exists (
+    select 1
+    from public.lcd_inventory_count_submissions submission
+    join public.lcd_inventory_count_lines line on line.submission_id = submission.id
+    where submission.store_id = selected_store.id
+      and submission.status in ('pending', 'approved')
+      and submission.count_date >= date_trunc('month', today_value)::date
+      and submission.count_date < (date_trunc('month', today_value) + interval '1 month')::date
+      and line.variant_name ilike 'Back Glass %'
+  ) into glass_counted_this_month;
+
+  count_date_value := today_value;
   week_start_value := count_date_value - ((extract(dow from count_date_value)::integer + 1) % 7);
   notes_value := coalesce(trim(payload->>'notes'), '');
   confirmed_value := coalesce((payload->>'confirmed')::boolean, false);
@@ -3437,6 +3469,7 @@ begin
     where submission.store_id = selected_store.id
       and submission.week_start = week_start_value
       and submission.status in ('pending', 'approved')
+      and (glass_counted_this_month or submission.count_date >= date_trunc('month', today_value)::date)
   ) then
     raise exception 'This store already has a weekly screen and battery count submitted';
   end if;
@@ -3467,7 +3500,8 @@ begin
     from public.lcd_inventory_items lcd
     where lcd.id = (line_payload->>'inventory_item_id')::bigint
       and lcd.store_id = selected_store.id
-      and lcd.active = true;
+      and lcd.active = true
+    and (lcd.variant_name not ilike 'Back Glass %' or not glass_counted_this_month);
 
     if not found then
       raise exception 'Inventory item not found for this store';
@@ -3495,6 +3529,7 @@ begin
   from public.lcd_inventory_items lcd
   where lcd.store_id = selected_store.id
     and lcd.active = true
+    and (lcd.variant_name not ilike 'Back Glass %' or not glass_counted_this_month)
     and not exists (
       select 1
       from jsonb_array_elements(lines_payload) line_item
@@ -3557,7 +3592,8 @@ begin
     from public.lcd_inventory_items lcd
     where lcd.id = (line_payload->>'inventory_item_id')::bigint
       and lcd.store_id = selected_store.id
-      and lcd.active = true;
+      and lcd.active = true
+    and (lcd.variant_name not ilike 'Back Glass %' or not glass_counted_this_month);
 
     if not found then
       continue;
