@@ -30,7 +30,19 @@ iMac keeps every available repair part, adds GST and $130 labour, then rounds up
 
 Credentials and generated price outputs are ignored by Git.
 
-## First-time credential setup
+## Running on the shop Mac (current host)
+
+The always-on Mac now runs the monthly brand sequence and the Admin Run Now queue. The Windows scheduled tasks are retired. The scripts in `scripts/mac/` mirror the PowerShell ones:
+
+- `setup-crazyparts-credential.sh` saves the login in the macOS login Keychain (service `techm8-crazyparts`).
+- `run-crazyparts-price-monitor.sh --family 'A Series' --sync` replaces `run-crazyparts-price-monitor.ps1 -Family 'A Series' -SyncSupabase`. `--family iPad` and `--family 'Apple Mac'` expand the same way.
+- `run-crazyparts-scheduled.sh [day]` runs the day 1–11 sequence (day 2 OPPO then iPad, day 3 HUAWEI then Apple Mac).
+- `process-crazyparts-run-queue.sh` claims one Admin Run Now request.
+- `install-crazyparts-launchd.sh [HH:MM]` installs the LaunchAgents `com.techm8.crazyparts.monthly` (05:00 on days 1–11) and `com.techm8.crazyparts.queue` (every minute). `--uninstall` removes them.
+
+Scheduled and queued runs share one lock, so only one Crazy Parts run happens at a time. Logs are in `outputs/crazyparts-price-monitor/logs/`. Requirements: Google Chrome, Node, Supabase CLI 2.x (`supabase login` once, project already linked in `supabase/.temp`), a signed-in desktop session and sleep disabled, because Chrome runs with a visible window.
+
+## First-time credential setup (Windows, retired)
 
 From PowerShell in the project directory:
 

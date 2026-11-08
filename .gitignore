@@ -13,3 +13,4 @@ node_modules/
 # WeChat purchasing helper: token, chat state and logs stay on the shop PC
 scripts/wechat-purchase-bot/local/
 scripts/wechat-purchase-bot/.venv/
+.runtime/
