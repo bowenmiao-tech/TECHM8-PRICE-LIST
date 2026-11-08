@@ -32,7 +32,7 @@ Credentials and generated price outputs are ignored by Git.
 
 ## Google Pixel
 
-Pixel runs on day 3 after Apple Mac and replaces the Admin `Google` brand. Screens (including foldable outer screens) add GST and $150; every other available repair part adds GST and $130; results round up to $5. Screen prices use only genuine screens: PULL-A when one is in stock, otherwise Service Pack. REFURB, FULL ORIGINAL and aftermarket screens are ignored, so a model without either gets no screen price. Screen protectors, cases, adhesive and parts listed for other brands are excluded.
+Pixel runs on day 3 after Apple Mac and replaces the Admin `Google` brand. Screens (including foldable outer screens) add GST and $150; every other available repair part adds GST and $130; results round up to $5. Screen prices use only genuine screens: PULL-A when one is in stock, otherwise Service Pack, listed as `Screen Replacement`. When neither is in stock, REFURB or FULL ORIGINAL screens are listed as `Screen Repair` with the same $150 labour. Aftermarket screens are never used. Screen protectors, cases, adhesive and parts listed for other brands are excluded.
 
 ## Running on the shop Mac (current host)
 

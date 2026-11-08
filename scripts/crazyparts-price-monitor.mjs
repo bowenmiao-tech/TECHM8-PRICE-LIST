@@ -965,19 +965,26 @@ function summariseModels(models, capturedAt) {
       const matching = relevant.filter((product) => product.category === category);
       let active = matching.filter((product) => product.available).sort((a, b) => a.price - b.price);
       if (!matching.length) continue;
-      // Pixel original screens: PULL-A and Service Pack are both genuine.
-      // Use PULL-A when it is in stock, otherwise Service Pack; never REFURB,
-      // FULL ORIGINAL or aftermarket screens.
+      let repairType = categoryLabel(category);
+      // Pixel screens: PULL-A and Service Pack are both genuine. Use PULL-A
+      // when it is in stock, otherwise Service Pack ("Screen Replacement").
+      // With neither, REFURB or FULL ORIGINAL screens are priced as
+      // "Screen Repair". Aftermarket screens are never used.
       if (/^pixel:(?:Outer )?Screen Replacement$/.test(category)) {
         const pullA = active.filter((product) => /\bpull-?a\b/i.test(`${product.name} ${product.url}`));
         const servicePack = active.filter((product) => /service[- ]pack/i.test(`${product.name} ${product.url}`));
-        const chosen = pullA.length ? pullA : servicePack;
+        const fallback = active.filter((product) => /\brefurb|full[- ]original/i.test(`${product.name} ${product.url}`));
+        let chosen = pullA.length ? pullA : servicePack;
+        if (!chosen.length && fallback.length) {
+          chosen = fallback;
+          repairType = repairType.replace('Screen Replacement', 'Screen Repair');
+        }
         if (!chosen.length) {
           exceptions.push({
             brand: model.brand,
             model: model.heading || model.name,
-            repairType: categoryLabel(category),
-            issue: 'No PULL-A or Service Pack screen in stock',
+            repairType,
+            issue: 'No PULL-A, Service Pack, REFURB or FULL ORIGINAL screen in stock',
             details: `${active.length} other in-stock screen(s) ignored`,
             url: new URL(model.href, 'https://www.crazyparts.com.au').toString(),
           });
@@ -1005,7 +1012,7 @@ function summariseModels(models, capturedAt) {
         brand: model.brand,
         family: model.family,
         model: model.heading || model.name,
-        repairType: categoryLabel(category),
+        repairType,
         minPartPrice: minimum.price,
         maxPartPrice: maximum.price,
         optionCount: active.length,
@@ -1214,7 +1221,7 @@ async function buildWorkbook(data, config, workbookPath, previewDir) {
     prices.getRange(`A${priceStartRow}:L${priceEndRow}`).values = values;
     const standardLabourFormula = `IF($B${priceStartRow}="iMac",'Settings'!$B$5,IF(OR($B${priceStartRow}="Macbook Pro",$B${priceStartRow}="Macbook Air",$B${priceStartRow}="Macbook"),IF(ISNUMBER(SEARCH("Screen",$D${priceStartRow})),'Settings'!$B$6,'Settings'!$B$7),IF(OR($B${priceStartRow}="Tab A Series",$B${priceStartRow}="Tab S Series"),'Settings'!$B$4,'Settings'!$B$3)))`;
     const ipadLabourFormula = `IF(LEFT($B${priceStartRow},5)="iPad ",IF(OR($D${priceStartRow}="Screen",$D${priceStartRow}="Battery"),150,IF($D${priceStartRow}="Charging Port",179,120)),${standardLabourFormula})`;
-    const labourFormula = `IF($B${priceStartRow}="Pixel",IF(OR($D${priceStartRow}="Screen Replacement",$D${priceStartRow}="Outer Screen Replacement"),150,130),${ipadLabourFormula})`;
+    const labourFormula = `IF($B${priceStartRow}="Pixel",IF(ISNUMBER(SEARCH("Screen Re",$D${priceStartRow})),150,130),${ipadLabourFormula})`;
     prices.getRange(`G${priceStartRow}`).formulas = [[`=ROUNDUP((E${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];
     prices.getRange(`G${priceStartRow}:G${priceEndRow}`).fillDown();
     prices.getRange(`H${priceStartRow}`).formulas = [[`=ROUNDUP((F${priceStartRow}*(1+'Settings'!$B$2)+${labourFormula})/'Settings'!$B$8,0)*'Settings'!$B$8`]];
