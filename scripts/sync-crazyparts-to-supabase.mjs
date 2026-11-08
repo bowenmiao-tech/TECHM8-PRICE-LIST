@@ -33,7 +33,7 @@ const familyConfig = new Map([
   ['imac', { dbBrand: 'Apple iMac', displayBrand: 'iMac', aliasBrands: ['iMac'], statusFamily: 'Apple Mac', mode: 'replace', labourCharge: 130, directIssues: true }],
   ['macbook pro', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
   ['macbook air', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
-  ['pixel', { dbBrand: 'Google', displayBrand: 'Google', statusFamily: 'Pixel', mode: 'replace', screenLabourCharge: 150, screenRepairTypes: ['Screen Replacement', 'Outer Screen Replacement', 'Screen Repair', 'Outer Screen Repair'], labourCharge: 130, directIssues: true }],
+  ['pixel', { dbBrand: 'Google', displayBrand: 'Google', statusFamily: 'Pixel', mode: 'replace', screenLabourCharge: 150, screenRepairTypes: ['Screen Replacement', 'Outer Screen Replacement', 'Screen Repair', 'Outer Screen Repair'], labourCharge: 130, directIssues: true, priceEndings: [29, 49, 69, 99], fixedPrices: { 'SIM Card Tray': '29', 'SIM Card Reader': '29' }, keepHigherSitePrices: true }],
   ['macbook', { dbBrand: 'Apple MacBook', displayBrand: 'MacBook', aliasBrands: ['MacBook'], statusFamily: 'Apple Mac', mode: 'replace', screenLabourCharge: 150, labourCharge: 120, directIssues: true }],
 ]);
 
@@ -43,11 +43,30 @@ function parseArgs(argv) {
   return {
     apply: argv.includes('--apply'),
     history: argv.includes('--history') ? argv[argv.indexOf('--history') + 1] : '',
+    planOut: argv.includes('--plan-out') ? argv[argv.indexOf('--plan-out') + 1] : '',
   };
 }
 
 function priceForPart(partPrice, labourCharge = 110) {
   return Math.ceil(((Number(partPrice) * 1.10) + labourCharge) / 5) * 5;
+}
+
+// Raise a price to the next amount with one of the shop's usual endings,
+// e.g. [29, 49, 69, 99]: 280 -> 299, 300 -> 329, 135 -> 149.
+function withPriceEnding(amount, endings) {
+  if (!endings?.length) return amount;
+  const base = Math.floor(amount / 100) * 100;
+  for (const hundred of [base, base + 100]) {
+    for (const ending of [...endings].sort((a, b) => a - b)) {
+      if (hundred + ending >= amount) return hundred + ending;
+    }
+  }
+  return amount;
+}
+
+function highestAmount(price) {
+  const amounts = String(price || '').match(/\d+(?:\.\d+)?/g) || [];
+  return amounts.length ? Math.max(...amounts.map(Number)) : null;
 }
 
 function cleanModel(value) {
@@ -323,6 +342,7 @@ function makeReplacementPlan(rawData, siteRows, configs) {
       repairType: row.repairType,
       labourCharge: labourForRepairType(config, row.repairType),
       directIssues: config.directIssues,
+      pricing: config,
       sources: [],
     });
     groups.get(key).sources.push(row);
@@ -331,17 +351,25 @@ function makeReplacementPlan(rawData, siteRows, configs) {
   const siteMap = new Map(siteRows.map((row) => [`${row.brand}|${row.model}|${row.issue}`, row]));
   const updates = [];
   for (const group of groups.values()) {
-    const minimum = priceForPart(
+    const endings = group.pricing.priceEndings;
+    const minimum = withPriceEnding(priceForPart(
       Math.min(...group.sources.map((source) => source.minPartPrice)),
       group.labourCharge,
-    );
-    const maximum = priceForPart(
+    ), endings);
+    const maximum = withPriceEnding(priceForPart(
       Math.max(...group.sources.map((source) => source.maxPartPrice)),
       group.labourCharge,
-    );
-    const newPrice = minimum === maximum ? String(minimum) : `${minimum} - ${maximum}`;
+    ), endings);
+    const fixedPrice = group.pricing.fixedPrices?.[group.repairType];
+    const calculatedPrice = fixedPrice || (minimum === maximum ? String(minimum) : `${minimum} - ${maximum}`);
     for (const issue of issuesForRepairType(group.repairType, group.directIssues)) {
       const existing = siteMap.get(`${group.brand}|${group.model}|${issue}`);
+      // A price set by hand in Admin is never lowered by the monthly update;
+      // it is only replaced when the supplier-based price becomes higher.
+      const keepSitePrice = !fixedPrice && group.pricing.keepHigherSitePrices && existing
+        && highestAmount(existing.price) !== null
+        && highestAmount(existing.price) >= highestAmount(calculatedPrice);
+      const newPrice = keepSitePrice ? existing.price : calculatedPrice;
       updates.push({
         brand: group.brand,
         model: group.model,
@@ -544,6 +572,10 @@ async function main() {
   if (plan.unmatched.length) {
     const unmatchedRows = plan.unmatched.map((item) => `${item.model} / ${item.issue}`);
     console.log(`Existing rows without eligible supplier data (kept unchanged): ${unmatchedRows.join('; ')}`);
+  }
+  if (args.planOut) {
+    await fs.writeFile(path.resolve(args.planOut), JSON.stringify(plan, null, 2), 'utf8');
+    console.log(`Price plan written to ${args.planOut}`);
   }
   if (!args.apply) {
     console.log('Preview only. Add --apply to update Supabase.');

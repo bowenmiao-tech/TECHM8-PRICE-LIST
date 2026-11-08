@@ -267,6 +267,7 @@
             <div class="button-row">
               <el-button icon="el-icon-refresh" @click="loadFromSupabase" :loading="loading">Load From Supabase</el-button>
               <el-button icon="el-icon-document" @click="loadFromJson" :loading="loading">Load From data.json</el-button>
+              <el-button type="primary" icon="el-icon-folder-checked" @click="saveAllRows" :loading="savingAllRows" :disabled="!modifiedRows.length">Save All Changes ({{ modifiedRows.length }})</el-button>
               <el-button type="success" plain icon="el-icon-plus" @click="addRow">Add Row</el-button>
               <el-button plain icon="el-icon-s-home" onclick="window.location.href='./admin.html'">Back To Admin Portal</el-button>
             </div>
@@ -343,7 +344,10 @@
                 Edit retail price freely. Edit CNY cost or AUD ex GST cost, and the system will recalculate the linked values before saving.
               </div>
             </div>
-            <div class="table-subtitle">{{ filteredRows.length }} visible row(s)</div>
+            <div class="button-row" style="align-items:center;">
+              <div class="table-subtitle">{{ filteredRows.length }} visible row(s)</div>
+              <el-button type="primary" size="small" icon="el-icon-folder-checked" @click="saveAllRows" :loading="savingAllRows" :disabled="!modifiedRows.length">Save All Changes ({{ modifiedRows.length }})</el-button>
+            </div>
           </div>
 
           <div class="table-wrap">
@@ -463,6 +467,7 @@
           issueFilter: '',
           loadError: '',
           loading: false,
+          savingAllRows: false,
           lastLoadedAt: null,
           fxRateCnyToAud: null,
           fxSource: 'Frankfurter (ECB reference data)',
@@ -471,6 +476,9 @@
         };
       },
       computed: {
+        modifiedRows() {
+          return this.rows.filter(row => row._savedSnapshot !== this.rowSnapshot(row));
+        },
         brandOptions() {
           return Array.from(new Set(this.rows.map(row => row.brand).filter(Boolean)))
             .sort(this.naturalSort);
@@ -551,6 +559,11 @@
         }
       },
       mounted() {
+        window.addEventListener('beforeunload', (event) => {
+          if (!this.modifiedRows.length) return;
+          event.preventDefault();
+          event.returnValue = '';
+        });
         this.refreshFxRate();
         this.loadFromSupabase();
       },
@@ -600,8 +613,21 @@
             _originalIssue: hasOriginalKey ? String(item._originalIssue || '').trim() : (shouldTrackOriginal ? issue : ''),
             _originalCnyCostPrice: cnyCost,
             _originalAudCostPriceExGst: audExGst,
-            _lastEditedCostField: ''
+            _lastEditedCostField: '',
+            _savedSnapshot: shouldTrackOriginal ? String(item._savedSnapshot || '') : ''
           };
+        },
+        // What a row looked like when it was loaded or last saved; a row whose
+        // current values differ is listed by "Save All Changes".
+        rowSnapshot(row) {
+          return JSON.stringify([
+            String(row.brand || '').trim(),
+            String(row.model || '').trim(),
+            String(row.issue || '').trim(),
+            String(row.price || '').trim(),
+            String(row.cny_cost_price || '').trim(),
+            String(row.aud_cost_price_ex_gst || '').trim()
+          ]);
         },
         applyData(data) {
           this.rows = (Array.isArray(data) ? data : []).map(item => this.normalizeRow(item)).sort((a, b) => {
@@ -611,6 +637,7 @@
               this.naturalSort(a.issue, b.issue)
             );
           });
+          this.rows.forEach(row => { row._savedSnapshot = this.rowSnapshot(row); });
           this.lastLoadedAt = Date.now();
         },
         authToken() {
@@ -846,9 +873,9 @@
             fx_updated_at: row.fx_updated_at
           };
         },
-        async saveRow(row) {
+        async saveRow(row, options = {}) {
           const cleaned = this.validateRow(row);
-          if (!cleaned) return;
+          if (!cleaned) return false;
           const originalKey = this.getOriginalKey(row);
 
           try {
@@ -891,12 +918,34 @@
             row._originalCnyCostPrice = row.cny_cost_price;
             row._originalAudCostPriceExGst = row.aud_cost_price_ex_gst;
             row._lastEditedCostField = '';
+            row._savedSnapshot = this.rowSnapshot(row);
 
-            this.$message.success('Row saved to database.');
+            if (!options.quiet) this.$message.success('Row saved to database.');
+            return true;
           } catch (error) {
             console.error(error);
-            this.$message.error(error.message || 'Could not save row.');
+            this.$message.error(`${row.brand} ${row.model} / ${row.issue}: ${error.message || 'Could not save row.'}`);
+            return false;
           }
+        },
+        async saveAllRows() {
+          const rows = this.modifiedRows.slice();
+          if (!rows.length) {
+            this.$message.info('No changes to save.');
+            return;
+          }
+          this.savingAllRows = true;
+          let saved = 0;
+          try {
+            for (const row of rows) {
+              if (await this.saveRow(row, { quiet: true })) saved += 1;
+            }
+          } finally {
+            this.savingAllRows = false;
+          }
+          const failed = rows.length - saved;
+          if (failed) this.$message.warning(`${saved} row(s) saved, ${failed} row(s) not saved. Check the highlighted messages.`);
+          else this.$message.success(`${saved} row(s) saved to database.`);
         },
         async deleteRow(row) {
           const cleaned = this.normalizeRow(row);
