@@ -17,6 +17,12 @@ export function assertSupplierPage({ status = 200, title = '', heading = '', tex
   if (status >= 400) {
     throw failure(`Crazy Parts returned HTTP ${status} at ${url}. Existing prices were kept.`, 'CRAZYPARTS_INVALID_PAGE');
   }
+  // A model link in Crazy Parts' own menu that opens their normal
+  // "Page not found" page is a dead supplier link, not an outage.
+  if (status < 400 && /^\s*page not found\s*$/i.test(heading) && /\/collection\//i.test(url)
+    && /wholesaler|crazy parts/i.test(`${title}\n${text}`)) {
+    throw failure(`Crazy Parts menu link ${url} opens "Page not found".`, 'CRAZYPARTS_MODEL_NOT_FOUND');
+  }
   if (/^\s*(?:https?:\/\/)?(?:www\.)?crazyparts\.com\.au\/?\s*$/i.test(heading)
     || /access denied|attention required|temporarily unavailable|bad gateway|page not found/i.test(`${title}\n${heading}`)) {
     throw failure('Crazy Parts returned a verification or error page instead of a model page. Existing prices were kept.', 'CRAZYPARTS_INVALID_PAGE');

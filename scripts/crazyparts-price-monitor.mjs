@@ -1391,6 +1391,7 @@ async function main() {
 
   const browser = await launchBrowser(config, args.headful);
   const failures = [];
+  const deadLinks = [];
   let selectedModels = [];
   const scrapedModels = [];
   let checkpoint;
@@ -1521,6 +1522,13 @@ async function main() {
             });
           }
         } catch (error) {
+          if (error.code === 'CRAZYPARTS_MODEL_NOT_FOUND') {
+            deadLinks.push(model);
+            completed += 1;
+            console.warn(`[${completed}/${selectedModels.length}] ${model.name}: skipped, ${error.message}`);
+            if (nextIndex < selectedModels.length) await sleep(config.pageDelayMs);
+            continue;
+          }
           if (['CRAZYPARTS_RATE_LIMIT', 'CRAZYPARTS_VERIFICATION', 'CRAZYPARTS_INVALID_PAGE'].includes(error.code)) {
             fatalError = error;
             console.error(`Stopping this run at ${model.name} (${workerPage.url()}): ${error.message}`);
@@ -1558,6 +1566,13 @@ async function main() {
     await browser.close();
   }
 
+  // Dead menu links are dropped from the selection, but only a few: many at
+  // once would look like a site problem and could delete real models.
+  if (deadLinks.length > Math.max(1, Math.floor(selectedModels.length * 0.05))) {
+    throw new Error(`${deadLinks.length} Crazy Parts menu links opened "Page not found" (${deadLinks.map((model) => model.name).join(', ')}). Existing prices were kept.`);
+  }
+  const deadHrefs = new Set(deadLinks.map((model) => model.href));
+  selectedModels = selectedModels.filter((model) => !deadHrefs.has(model.href));
   const failureRate = selectedModels.length ? (failures.length / selectedModels.length) * 100 : 100;
   if (failureRate > config.maxFailureRatePercent) {
     const failedRunPath = path.join(historyDir, `${runId}-failed.json`);
@@ -1569,7 +1584,14 @@ async function main() {
   if (!summary.repairRows.length) {
     throw new Error('No verified repair prices were captured. Existing prices and workbook were kept.');
   }
-  summary.exceptions.push(...failures);
+  summary.exceptions.push(...failures, ...deadLinks.map((model) => ({
+    brand: model.brand,
+    model: model.name,
+    repairType: '',
+    issue: 'Supplier menu link not found',
+    details: 'Crazy Parts lists this model in its menu, but the page says "Page not found". The model was skipped.',
+    url: new URL(model.href, config.baseUrl).toString(),
+  })));
   const previousRun = await loadPreviousSuccessfulRun(historyDir);
   applyPriceChangeChecks(summary, previousRun, config);
   const scope = args.all
