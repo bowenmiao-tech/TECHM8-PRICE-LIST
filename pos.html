@@ -3947,6 +3947,8 @@
       gap: 8px;
     }
 
+    .invoice-detail-payments.multiple-checkouts { grid-template-columns: 1fr; }
+
     .invoice-detail-payment {
       display: flex;
       justify-content: space-between;
@@ -15810,7 +15812,7 @@
     // One customer, both sides of the counter: what they bought on the left,
     // what the shop bought from them on the right.
     function renderCustomerHistorySummary() {
-      const orders = Array.isArray(state.customerHistoryOrders) ? state.customerHistoryOrders : [];
+      const orders = uniqueInvoiceOrders(Array.isArray(state.customerHistoryOrders) ? state.customerHistoryOrders : []).map(receiptInvoice);
       const buybacks = Array.isArray(state.customerHistoryBuybacks) ? state.customerHistoryBuybacks : [];
       if (!orders.length && !buybacks.length) {
         els.customerHistorySummary.innerHTML = '';
@@ -15873,6 +15875,7 @@
         els.customerHistoryList.innerHTML = '<div class="customer-history-empty">Loading purchase history...</div>';
         return;
       }
+      orders = uniqueInvoiceOrders(orders).map(receiptInvoice);
       renderCustomerHistorySummary();
       if (!orders.length) {
         els.customerHistoryList.innerHTML = `
@@ -15901,12 +15904,12 @@
             <span class="customer-history-status">${customerHistoryStatusTag(order)}</span>
             <span class="customer-history-total">${money(order.total)}</span>
             <span class="customer-history-actions">
-              ${balance > 0 ? `
-                <button class="customer-history-pay-button" type="button" data-history-balance="${escapeHtml(order.id)}" title="Pay balance for invoice #${escapeHtml(invoice)}">
+              ${(order.checkouts || [order]).filter(part => orderBalanceDue(part) > 0).map(part => `
+                <button class="customer-history-pay-button" type="button" data-history-balance="${escapeHtml(part.id)}" title="Pay balance for invoice #${escapeHtml(invoice)}">
                   <i class="bi bi-cash-coin"></i>
-                  <span>Pay ${money(balance)}</span>
+                  <span>Pay ${money(orderBalanceDue(part))}</span>
                 </button>
-              ` : ''}
+              `).join('')}
               <button class="customer-history-view-button" type="button" data-history-invoice="${escapeHtml(order.id)}" title="View invoice #${escapeHtml(invoice)}" aria-label="View invoice #${escapeHtml(invoice)}">
                 <i class="bi bi-eye"></i>
               </button>
@@ -24237,10 +24240,27 @@
       setTimeout(() => printWindow.print(), 250);
     }
 
+    // Receipt views combine checkouts; checkout objects stay intact for stock,
+    // refunds, balance collection and the original day's takings.
+    function receiptInvoice(order) {
+      return order && Array.isArray(order.invoice?.checkouts) ? order.invoice : order;
+    }
+
+    function uniqueInvoiceOrders(orders) {
+      const seen = new Set();
+      return orders.filter(order => {
+        const number = invoiceNumberText(order);
+        const key = number === 'Pending' ? order.id : `${order.store_db_code || order.store_id}:${number}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
     function renderInvoiceHistory() {
       if (!els.invoiceList) return;
       renderInvoiceDateControls();
-      const orders = state.invoiceOrders;
+      const orders = uniqueInvoiceOrders(state.invoiceOrders);
       els.invoiceResultCount.textContent = state.invoiceLoading
         ? 'Loading...'
         : `${orders.length} invoice${orders.length === 1 ? '' : 's'}`;
@@ -24256,7 +24276,9 @@
         return;
       }
 
-      els.invoiceList.innerHTML = orders.map(order => {
+      els.invoiceList.innerHTML = orders.map(checkout => {
+        const order = receiptInvoice(checkout);
+        const checkouts = order.checkouts || [checkout];
         const items = Array.isArray(order.items) ? order.items : [];
         const itemCount = items.reduce((sum, item) => sum + Number(item.qty || 1), 0);
         const productSummary = items.map(item => {
@@ -24273,7 +24295,7 @@
             <div class="invoice-number">#${escapeHtml(invoiceNumberText(order))}</div>
             <div class="invoice-row-main">
               <strong>${escapeHtml(order.customer_name || 'Walk-in Customer')}</strong>
-              <span>${escapeHtml(order.customer_phone || order.id)} &middot; ${itemCount} item${itemCount === 1 ? '' : 's'}</span>
+              <span>${escapeHtml(order.customer_phone || order.id)} &middot; ${itemCount} item${itemCount === 1 ? '' : 's'}${checkouts.length > 1 ? ` &middot; ${checkouts.length} checkouts` : ''}</span>
               ${balance > 0 ? (numberValue(order.amount_paid) > 0 || !/online payment/i.test(order.payment_method || '')
                 ? `<span class="invoice-balance-tag"><i class="bi bi-piggy-bank"></i> Deposit ${money(order.amount_paid)} &middot; ${money(balance)} owing</span>`
                 : `<span class="invoice-balance-tag"><i class="bi bi-envelope-at"></i> Awaiting online payment &middot; ${money(balance)} owing</span>`) : ''}
@@ -24288,10 +24310,10 @@
               <span class="${balance > 0 ? 'invoice-amount-due' : ''}"><small>Balance</small><strong>${money(balance)}</strong></span>
             </div>
             <div class="invoice-actions">
-              ${balance > 0 ? `<button class="repair-action balance-action" type="button" data-balance-invoice="${escapeHtml(order.id)}" title="Take balance payment"><i class="bi bi-cash-coin"></i></button>` : ''}
-              ${balance > 0 ? `<button class="repair-action" type="button" data-payment-link-invoice="${escapeHtml(order.id)}" title="Email an online payment link"><i class="bi bi-envelope-at"></i></button>` : ''}
-              <button class="repair-action primary" type="button" data-view-invoice="${escapeHtml(order.id)}" title="View invoice"><i class="bi bi-eye"></i></button>
-              <button class="repair-action" type="button" data-refund-invoice="${escapeHtml(order.id)}" title="Refund" ${refundable ? '' : 'disabled'}><i class="bi bi-arrow-counterclockwise"></i></button>
+              ${checkouts.filter(part => orderBalanceDue(part) > 0).map(part => `<button class="repair-action balance-action" type="button" data-balance-invoice="${escapeHtml(part.id)}" title="Take balance payment"><i class="bi bi-cash-coin"></i></button>`).join('')}
+              ${checkouts.filter(part => orderBalanceDue(part) > 0).map(part => `<button class="repair-action" type="button" data-payment-link-invoice="${escapeHtml(part.id)}" title="Email an online payment link"><i class="bi bi-envelope-at"></i></button>`).join('')}
+              <button class="repair-action primary" type="button" data-view-invoice="${escapeHtml(checkout.id)}" title="View invoice"><i class="bi bi-eye"></i></button>
+              <button class="repair-action" type="button" ${checkouts.length > 1 ? `data-view-invoice="${escapeHtml(checkout.id)}"` : `data-refund-invoice="${escapeHtml(checkout.id)}"`} title="Refund" ${refundable ? '' : 'disabled'}><i class="bi bi-arrow-counterclockwise"></i></button>
             </div>
           </article>
         `;
@@ -24819,6 +24841,7 @@
     }
 
     function thermalReceiptContent(order) {
+      order = receiptInvoice(order);
       const profile = receiptProfileForOrder(order);
       const items = Array.isArray(order.items) ? order.items : [];
       const payments = Array.isArray(order.payments) ? order.payments : [];
@@ -24832,6 +24855,7 @@
       const itemRows = items.map(item => `
         <div class="receipt-item">
           <div class="receipt-item-name">${escapeHtml(receiptItemDisplayName(item))}</div>
+          ${item.checkout_number ? `<div class="receipt-item-note">Checkout ${Number(item.checkout_number)} · ${escapeHtml(receiptDateTime(item.checkout_at))}</div>` : ''}
           ${usableSku(item.sku) ? `<div class="receipt-item-sku">SKU: ${escapeHtml(usableSku(item.sku))}</div>` : ''}
           ${item.note ? `<div class="receipt-item-note">Note: ${escapeHtml(noteText(item.note, 500).trim())}</div>` : ''}
           ${numberValue(item.inspection_credit) ? `<div class="receipt-item-note">Repair price ${money(numberValue(item.original_unit_price))} · inspection fee credit −${money(numberValue(item.inspection_credit))}${item.inspection_credit_source && item.inspection_credit_source.invoice_number ? ` (invoice #${escapeHtml(String(item.inspection_credit_source.invoice_number))})` : ''}</div>` : ''}
@@ -24842,7 +24866,7 @@
         </div>
       `).join('');
       const paymentRows = (payments.length ? payments : [{ method: order.payment_method || 'No Charge', amount: 0 }]).map(payment => `
-        <div class="receipt-total-row"><span>${escapeHtml(paymentMethodLabel(payment.method))}</span><strong>${money(payment.amount)}</strong></div>
+        <div class="receipt-total-row"><span>${escapeHtml(paymentMethodLabel(payment.method))}${payment.checkout_number ? ` · Checkout ${Number(payment.checkout_number)}<br>${escapeHtml(receiptDateTime(payment.taken_at))}` : ''}</span><strong>${money(payment.amount)}</strong></div>
       `).join('');
       const exchangeSource = order.exchange_source && typeof order.exchange_source === 'object'
         ? order.exchange_source
@@ -25204,7 +25228,7 @@
     async function claimInvoiceWarranty(lineId, button) {
       const order = state.lastCompletedOrder;
       if (!order || button.disabled) return;
-      const item = (order.items || []).find(item => String(item.line_id) === String(lineId));
+      const item = (receiptInvoice(order).items || []).find(item => String(item.line_id) === String(lineId));
       if (!item?.warranty?.can_claim) return;
       const key = `${order.id}:${lineId}`;
       if (!warrantyClaimRequests.has(key)) warrantyClaimRequests.set(key, window.techm8RandomUUID());
@@ -25215,7 +25239,7 @@
           method: 'POST',
           headers: posOrderApiHeaders(),
           body: JSON.stringify({
-            store_code: order.store_db_code, order_id: order.id,
+            store_code: order.store_db_code, order_id: item.checkout_order_id || order.id,
             line_id: lineId, request_id: warrantyClaimRequests.get(key)
           })
         });
@@ -25256,10 +25280,11 @@
         && correctablePaymentMethod(payment.method);
     }
 
-    async function correctPaymentMethod(paymentNumber) {
+    async function correctPaymentMethod(paymentNumber, checkoutOrderId) {
       const order = state.lastCompletedOrder;
       if (!order || !paymentNumber) return;
-      const payment = (order.payments || []).find(entry => Number(entry.payment_number) === Number(paymentNumber));
+      const payment = (receiptInvoice(order).payments || []).find(entry => Number(entry.payment_number) === Number(paymentNumber)
+        && (!checkoutOrderId || (entry.checkout_order_id || order.id) === checkoutOrderId));
       if (!payment) return;
 
       const choices = POS_TENDER_METHODS.filter(entry => entry.label !== payment.method);
@@ -25287,7 +25312,7 @@
           method: 'PUT',
           headers: posOrderApiHeaders(),
           body: JSON.stringify({
-            order_id: order.id,
+            order_id: payment.checkout_order_id || order.id,
             store_code: storeById(state.storeId).dbCode,
             staff_name: state.selectedStaffName,
             payment_number: Number(paymentNumber),
@@ -25324,6 +25349,7 @@
     }
 
     function invoiceDetailsHtml(order, options = {}) {
+      order = receiptInvoice(order);
       const compact = Boolean(options.compact);
       const items = Array.isArray(order.items) ? order.items : [];
       const payments = Array.isArray(order.payments) ? order.payments : [];
@@ -25345,6 +25371,16 @@
 
       return `
         ${invoiceRepairOverviewHtml(items)}
+        ${Array.isArray(order.checkouts) && order.checkouts.length > 1 ? `<section class="invoice-detail-section">
+          <div class="invoice-detail-section-title">Checkout history</div>
+          ${order.checkouts.map((part, index) => `<article class="invoice-detail-line">
+            <div><strong>Checkout ${index + 1} · ${escapeHtml(formatDateTime(part.created_at))}</strong>
+              <div class="invoice-line-meta">${escapeHtml(part.staff_name || '')} · ${(part.items || []).map(item => escapeHtml(item.name || 'Item')).join(', ')}</div>
+              <div class="invoice-line-meta">Total ${money(part.total)} · Paid ${money(part.amount_paid)} · Balance ${money(orderBalanceDue(part))}</div>
+            </div>
+            ${numberValue(part.refundable_total ?? part.total) > 0 ? `<button class="repair-action" type="button" data-refund-checkout="${escapeHtml(part.id)}">Refund checkout ${index + 1}</button>` : ''}
+          </article>`).join('')}
+        </section>` : ''}
         ${detailFields ? `<div class="invoice-detail-grid${compact ? ' compact' : ''}">${detailFields}</div>` : ''}
         <section class="invoice-detail-section">
           <div class="invoice-detail-section-title">Items</div>
@@ -25359,6 +25395,7 @@
               <article class="invoice-detail-line">
                 <div>
                   <strong>${escapeHtml(item.name || 'Item')}</strong>
+                  ${item.checkout_number ? `<div class="invoice-line-meta">Checkout ${Number(item.checkout_number)} · ${escapeHtml(formatDateTime(item.checkout_at))}</div>` : ''}
                   <div class="invoice-line-meta">${escapeHtml(!isRepair && usableSku(item.sku) ? `SKU ${usableSku(item.sku)} · ` : '')}${escapeHtml(`${qty} × ${money(unitPrice)}`)}${!isRepair && item.category ? ` · ${escapeHtml(item.category)}` : ''}</div>
                   ${numberValue(item.inspection_credit) ? `<div class="invoice-line-meta">Repair price ${money(numberValue(item.original_unit_price))} · inspection fee credit −${money(numberValue(item.inspection_credit))}${item.inspection_credit_source && item.inspection_credit_source.invoice_number ? ` from invoice #${escapeHtml(String(item.inspection_credit_source.invoice_number))}` : ''}</div>` : ''}
                   ${note ? `<div class="invoice-line-note">${escapeHtml(note)}</div>` : ''}
@@ -25374,8 +25411,8 @@
         ${(fallbackPayments.length || refunds.length) ? `
           <section class="invoice-detail-section">
             <div class="invoice-detail-section-title">Payments and refunds</div>
-            <div class="invoice-detail-payments">
-              ${fallbackPayments.map(payment => `<div class="invoice-detail-payment"><span>${escapeHtml(payment.method || 'Payment')}${payment.staff_name ? ` · ${escapeHtml(payment.staff_name)}` : ''}</span><span class="invoice-detail-payment-right"><strong>${money(numberValue(payment.amount))}</strong>${canCorrectInvoicePayment(order, payment) ? `<button class="invoice-payment-correct" type="button" data-correct-payment="${Number(payment.payment_number)}" title="Correct the payment method" aria-label="Change payment method for ${money(numberValue(payment.amount))}"><i class="bi bi-pencil" aria-hidden="true"></i> Edit method</button>` : ''}</span></div>`).join('')}
+            <div class="invoice-detail-payments${order.checkouts?.length > 1 ? ' multiple-checkouts' : ''}">
+              ${fallbackPayments.map(payment => `<div class="invoice-detail-payment"><span>${escapeHtml(payment.method || 'Payment')}${payment.checkout_number ? ` · Checkout ${Number(payment.checkout_number)} · ${escapeHtml(formatDateTime(payment.taken_at))}` : ''}${payment.staff_name ? ` · ${escapeHtml(payment.staff_name)}` : ''}</span><span class="invoice-detail-payment-right"><strong>${money(numberValue(payment.amount))}</strong>${canCorrectInvoicePayment(order, payment) ? `<button class="invoice-payment-correct" type="button" data-correct-payment="${Number(payment.payment_number)}" data-payment-order="${escapeHtml(payment.checkout_order_id || order.id)}" title="Correct the payment method" aria-label="Change payment method for ${money(numberValue(payment.amount))}"><i class="bi bi-pencil" aria-hidden="true"></i> Edit method</button>` : ''}</span></div>`).join('')}
               ${refunds.map(refund => `<div class="invoice-detail-payment"><span>Refund · ${escapeHtml(refund.method || '')}${refund.staff_name ? ` · ${escapeHtml(refund.staff_name)}` : ''}</span><strong>-${money(numberValue(refund.amount))}</strong></div>`).join('')}
             </div>
           </section>
@@ -25445,14 +25482,21 @@
       els.receiptSyncNote.hidden = !syncPending;
       const modal = els.receiptCompleteModal.querySelector('.receipt-complete-modal');
       if (modal) modal.classList.toggle('invoice-history-view', historyView);
-      const showDetails = historyView
+      const invoice = receiptInvoice(order);
+      if (invoice !== order) {
+        els.receiptCompleteTotal.textContent = historyView ? `${money(invoice.amount_paid)} paid` : `${money(amountPaid)} paid this checkout`;
+        els.receiptCompleteMeta.textContent += ` · Invoice total ${money(invoice.total)} · Total paid ${money(invoice.amount_paid)} · Balance ${money(orderBalanceDue(invoice))}`;
+      }
+      const showDetails = invoice !== order || historyView
         || (order.items || []).some(item => item.warranty?.eligible)
         || (order.payments || []).some(payment => canCorrectInvoicePayment(order, payment));
       if (!els.receiptInvoiceDetails.dataset.correctionBound) {
         els.receiptInvoiceDetails.dataset.correctionBound = '1';
         els.receiptInvoiceDetails.addEventListener('click', event => {
           const button = event.target.closest('[data-correct-payment]');
-          if (button) correctPaymentMethod(Number(button.dataset.correctPayment));
+          if (button) correctPaymentMethod(Number(button.dataset.correctPayment), button.dataset.paymentOrder);
+          const refundButton = event.target.closest('[data-refund-checkout]');
+          if (refundButton) openRefundModalById(refundButton.dataset.refundCheckout);
         });
       }
       els.receiptInvoiceDetails.hidden = !showDetails;
