@@ -7199,8 +7199,8 @@
 
     .refund-line {
       display: grid;
-      grid-template-columns: 26px minmax(0, 1fr) 130px;
-      gap: 10px;
+      grid-template-columns: 26px minmax(0, 1fr) 240px;
+      gap: 12px;
       align-items: center;
       padding: 11px;
       border: 1px solid var(--tm-line);
@@ -7209,11 +7209,15 @@
     }
 
     .refund-line-name {
+      display: block;
       font-size: 13px;
       font-weight: 900;
+      overflow-wrap: anywhere;
     }
 
     .refund-line-meta {
+      display: block;
+      margin-top: 3px;
       color: var(--tm-muted);
       font-size: 11px;
       font-weight: 750;
@@ -7236,9 +7240,10 @@
 
     .refund-line-controls label {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) 112px;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      text-align: right;
       color: var(--tm-muted);
       font-size: 10px;
       font-weight: 850;
@@ -7295,6 +7300,7 @@
     .cart-balance-amount { color: #1d4f86; font-size: 18px; font-weight: 950; white-space: nowrap; }
     .cart-balance-meta { color: #4a5d72; font-size: 11px; font-weight: 750; line-height: 1.35; }
     .cart-balance-line .icon-action { flex: 0 0 auto; }
+    @media (max-width: 620px) { .refund-line { grid-template-columns: 26px minmax(0, 1fr); } .refund-line-controls { grid-column: 2; } }
     @media (max-width: 620px) { .refund-credit-create { grid-template-columns: 1fr 1fr; } .refund-credit-create button { grid-column: 1 / -1; } }
 
     .ticket-detail-modal {
