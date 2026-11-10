@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Taking a Deposit - TECHM8 POS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+  <script src="./supabase-config.js"></script>
+  <script src="./staff-auth.js?v=20260904.1"></script>
+  <style>
+  /* Layout: single reading column, a sticky "jump to situation" bar, each situation a section of numbered steps with real POS screenshots. */
+  :root {
+    --bg: #f3f6f5;
+    --surface: #ffffff;
+    --ink: #13201d;
+    --muted: #55655f;
+    --line: #d9e2df;
+    --teal: #0a8a6c;
+    --teal-soft: #e3f3ee;
+    --amber: #a85a08;
+    --amber-soft: #fdf1e2;
+    --amber-line: #efb76f;
+    --stop: #b42318;
+    --stop-soft: #fdecea;
+    --shot-bg: #e9eeec;
+    --display: "Lexend", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1614; --surface: #17211e; --ink: #e6efec; --muted: #9db0aa; --line: #2a3834;
+      --teal: #3fc39f; --teal-soft: #15302a; --amber: #f2a54a; --amber-soft: #2e2214; --amber-line: #7a5222;
+      --stop: #f2877c; --stop-soft: #2f1a18; --shot-bg: #0b1110; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1614; --surface: #17211e; --ink: #e6efec; --muted: #9db0aa; --line: #2a3834;
+    --teal: #3fc39f; --teal-soft: #15302a; --amber: #f2a54a; --amber-soft: #2e2214; --amber-line: #7a5222;
+    --stop: #f2877c; --stop-soft: #2f1a18; --shot-bg: #0b1110; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg); color: var(--ink);
+    font-family: var(--body); font-size: 17px; line-height: 1.55;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0 64px;
+  }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+  h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: clamp(22px, 3.4vw, 28px); font-weight: 600; }
+  h3 { font-size: 18px; font-weight: 600; }
+  p { margin: 0; }
+  .btn-name {
+    font-family: var(--display); font-weight: 600; font-size: 0.92em;
+    background: var(--teal-soft); color: var(--teal);
+    padding: 1px 7px; border-radius: 6px; white-space: nowrap;
+  }
+  .btn-name.dep { background: var(--amber-soft); color: var(--amber); }
+  .money { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  header.top { padding-block: 28px 24px; display: grid; gap: 14px; }
+  .back-row { display: flex; }
+  .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--teal); text-decoration: none; font-weight: 700; padding: 8px 14px; border-radius: 999px; background: var(--teal-soft); }
+  .eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); }
+  .lede { font-size: 19px; color: var(--muted); max-width: 62ch; }
+  .demo-note { font-size: 14px; color: var(--muted); }
+
+  .basics {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px 22px; display: grid; gap: 12px;
+  }
+  .basics ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+
+  nav.jump {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+    background: var(--bg); padding-block: 12px; margin-top: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  nav.jump .label { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  nav.jump .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+  nav.jump a {
+    flex: none; text-decoration: none; color: var(--ink); font-weight: 600; font-size: 15px;
+    border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px;
+  }
+  nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--teal); color: var(--teal); outline: none; }
+
+  section.case { padding-top: 44px; display: grid; gap: 18px; scroll-margin-top: 90px; }
+  .case-head { display: grid; gap: 8px; }
+  .case-tag { font-family: var(--mono); font-size: 13px; color: var(--amber); letter-spacing: 0.06em; text-transform: uppercase; }
+  .when { color: var(--muted); max-width: 64ch; }
+
+  ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; counter-reset: step; }
+  ol.steps > li { counter-increment: step; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; }
+  ol.steps > li::before {
+    content: counter(step); font-family: var(--display); font-weight: 700; font-size: 16px;
+    width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--teal); color: var(--surface);
+  }
+  .step-body { display: grid; gap: 12px; min-width: 0; }
+
+  figure { margin: 0; display: grid; gap: 6px; }
+  figure img {
+    display: block; max-width: 100%; height: auto; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--shot-bg);
+  }
+  figure.narrow img { max-width: min(100%, 360px); }
+  figure.mid img { max-width: min(100%, 640px); }
+  figcaption { font-size: 14px; color: var(--muted); }
+
+  .note, .stop {
+    border-radius: 10px; padding: 12px 16px; font-size: 16px; display: grid; gap: 4px;
+  }
+  .note { background: var(--amber-soft); border: 1px solid var(--amber-line); }
+  .note strong:first-child { color: var(--amber); }
+  .stop { background: var(--stop-soft); border: 1px solid var(--stop); }
+  .stop strong:first-child { color: var(--stop); }
+
+  .ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .way { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+  .way h3 { font-size: 16px; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 16px; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--display); font-weight: 600; font-size: 14px; color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  td q { font-style: italic; quotes: "\201C" "\201D"; }
+
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+  @media (max-width: 480px) {
+    body { font-size: 16px; }
+    ol.steps > li { grid-template-columns: 28px minmax(0, 1fr); gap: 10px; }
+    ol.steps > li::before { width: 28px; height: 28px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+  <div data-auth-protected>
+<div class="wrap">
+  <header class="top">
+    <div class="back-row"><a class="back-link" href="./problem-solving.html"><i class="bi bi-arrow-left"></i> Problem Solving</a></div>
+    <div class="eyebrow">Staff training · POS</div>
+    <h1>Taking a deposit at TECHM8</h1>
+    <p class="lede">A deposit means the customer pays part of the price today. The invoice is saved with the rest still owing, and you collect that balance later through the cart.</p>
+    <p class="demo-note">All screenshots come from the POS test screen with made-up customers and invoices. Your screen looks the same with real data.</p>
+  </header>
+
+  <div class="basics">
+    <h2 style="font-size:20px">Three rules for every deposit</h2>
+    <ul>
+      <li><strong>Pick the customer first.</strong> Type their name or phone in the customer field at the top right. Without a name and phone you cannot find the invoice again when they come back.</li>
+      <li><strong>Use <span class="btn-name">Confirm Amount</span>, never <span class="btn-name">Full Payment</span>.</strong> Full Payment takes the whole total.</li>
+      <li><strong>Finish with the orange button</strong> <span class="btn-name dep">Finish as Deposit</span>. If you close the payment window instead, nothing is saved.</li>
+    </ul>
+  </div>
+
+  <nav class="jump" aria-label="Jump to a situation">
+    <div class="label">Jump to your situation</div>
+    <div class="chips">
+      <a href="#sale">Sale or special order</a>
+      <a href="#split">Two payment methods</a>
+      <a href="#repair">Repair card</a>
+      <a href="#link">Online payment link</a>
+      <a href="#balance">Customer pays the rest</a>
+      <a href="#extra">Balance + new items</a>
+      <a href="#blocked">When it's blocked</a>
+    </div>
+  </nav>
+
+  <!-- 1 -->
+  <section class="case" id="sale">
+    <div class="case-head">
+      <div class="case-tag">Situation 1</div>
+      <h2>Deposit on a sale or special order</h2>
+      <p class="when">Use this when a customer orders a part or product and pays some of it now. Example: a $499 Galaxy S24 Ultra screen, $100 deposit today.</p>
+    </div>
+    <ol class="steps">
+      <li><div class="step-body">
+        <p>Select the customer at the top right, add the item to the cart, then tap <span class="btn-name">Checkout</span>.</p>
+        <figure class="narrow"><img src="./assets/guides/deposits/01-cart.png" alt="Cart with Alex Customer selected, one special order screen for $499, and the Checkout button" width="390" height="820" loading="lazy"><figcaption>Customer chosen, item in cart, total $499.</figcaption></figure>
+      </div></li>
+      <li><div class="step-body">
+        <p>Choose how they are paying (Cash, Card, Bank Transfer and so on) on the left. Delete the full amount in the box and type the deposit, for example <span class="money">100</span>.</p>
+        <figure><img src="./assets/guides/deposits/03-amount-typed.png" alt="Payment window with Card selected and 100 typed in the amount box" width="980" height="680" loading="lazy"><figcaption>The amount box starts at the full total. Replace it with the deposit.</figcaption></figure>
+      </div></li>
+      <li><div class="step-body">
+        <p>Take the money (tap the card on the terminal, or count the cash), then tap <span class="btn-name">Confirm Amount</span>.</p>
+        <p>The right side now shows <strong>Paid $100</strong> and <strong>Due $399</strong>, and an orange button appears.</p>
+        <figure><img src="./assets/guides/deposits/04-finish-deposit.png" alt="Payment window after confirming $100: Paid $100, Due $399, and the orange Finish as Deposit $399.00 owing button" width="980" height="680" loading="lazy"><figcaption>Check the owing amount on the orange button before you tap it.</figcaption></figure>
+      </div></li>
+      <li><div class="step-body">
+        <p>Tap <span class="btn-name dep">Finish as Deposit · $399.00 owing</span>. The POS saves the invoice and shows <strong>Deposit Taken</strong>.</p>
+        <figure class="mid"><img src="./assets/guides/deposits/06-deposit-taken.png" alt="Deposit Taken window: $100.00 deposit paid, Invoice #2481, $399.00 balance due" width="580" height="340" loading="lazy"><figcaption>Print or email the receipt. It is marked "DEPOSIT ONLY - BALANCE PAYABLE ON PICKUP".</figcaption></figure>
+      </div></li>
+      <li><div class="step-body">
+        <p>Tell the customer the balance (<span class="money">$399</span>) and the invoice number. When they come back, follow <a href="#balance">Customer pays the rest</a>.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <!-- 2 -->
+  <section class="case" id="split">
+    <div class="case-head">
+      <div class="case-tag">Situation 2</div>
+      <h2>Deposit paid with two methods</h2>
+      <p class="when">Example: the customer gives $50 cash and puts $50 on card for a $100 deposit.</p>
+    </div>
+    <ol class="steps">
+      <li><div class="step-body"><p>In the payment window choose <span class="btn-name">Cash</span>, type <span class="money">50</span>, tap <span class="btn-name">Confirm Amount</span>.</p></div></li>
+      <li><div class="step-body"><p>Choose <span class="btn-name">Card</span>, type <span class="money">50</span>, take the card payment, tap <span class="btn-name">Confirm Amount</span>.</p></div></li>
+      <li><div class="step-body">
+        <p>Both payments are listed on the right. Tap <span class="btn-name dep">Finish as Deposit</span>.</p>
+        <figure><img src="./assets/guides/deposits/05-split-deposit.png" alt="Payment window listing Cash $50 and Card $50, Paid $100, Due $399, with the Finish as Deposit button" width="980" height="680" loading="lazy"><figcaption>Cash $50 + Card $50 = $100 paid, $399 owing.</figcaption></figure>
+      </div></li>
+    </ol>
+    <div class="note"><strong>Store Credit as a deposit</strong><span>Store Credit works the same way, but only when a customer with a credit account is selected.</span></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="case" id="repair">
+    <div class="case-head">
+      <div class="case-tag">Situation 3</div>
+      <h2>Deposit on a repair card</h2>
+      <p class="when">Use this when the customer pays part of a repair up front, for example for a part that has to be ordered.</p>
+    </div>
+    <ol class="steps">
+      <li><div class="step-body"><p>On the repair board, tap the cart button on the card (top right of the card) to put the repair in the cart. The card must have the customer's name and phone.</p></div></li>
+      <li><div class="step-body"><p>Tap <span class="btn-name">Checkout</span> and take the deposit exactly as in <a href="#sale">Situation 1</a>: type the amount, <span class="btn-name">Confirm Amount</span>, then <span class="btn-name dep">Finish as Deposit</span>.</p></div></li>
+      <li><div class="step-body">
+        <p>The card now shows an orange <strong>Deposit · $X owing</strong> tag. Its cart button is hidden until the balance is paid, and the card is not finished yet.</p>
+        <figure><img src="./assets/guides/deposits/08-repair-list-deposit.png" alt="Repair board with an iPhone 15 Pro card showing the orange tag Deposit $25.00 owing" width="880" height="440" loading="lazy"><figcaption>A repair card with a deposit owing.</figcaption></figure>
+      </div></li>
+    </ol>
+    <div class="note"><strong>When the repair is ready</strong><span>Open the card and tap <span class="btn-name dep">Take balance</span> next to the invoice that is owing (see <a href="#balance">Customer pays the rest</a>). When the balance is paid in full, the POS takes you through finishing the card.</span></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="case" id="link">
+    <div class="case-head">
+      <div class="case-tag">Situation 4</div>
+      <h2>Deposit by online payment link</h2>
+      <p class="when">Use this when the customer is not in the shop, or wants to pay the deposit from their phone by card or Afterpay. The POS emails them a payment link.</p>
+    </div>
+    <ol class="steps">
+      <li><div class="step-body"><p>Select the customer (name and phone are required), add the items, tap <span class="btn-name">Checkout</span>.</p></div></li>
+      <li><div class="step-body">
+        <p>Choose <span class="btn-name">Online Payment</span>. Type the deposit amount (at least <span class="money">$0.50</span>). The orange line confirms it: <q>Deposit: link for $100.00 · $399.00 stays owing</q>.</p>
+        <figure><img src="./assets/guides/deposits/07-online-deposit.png" alt="Online Payment selected with 100 typed, orange line reading Deposit link for $100.00, $399.00 stays owing, customer email filled in, Send link for $100.00 button" width="980" height="680" loading="lazy"><figcaption>Check the email address before sending.</figcaption></figure>
+      </div></li>
+      <li><div class="step-body"><p>Check the customer email, then tap <span class="btn-name">Send link for $100.00</span>. The invoice is saved owing the full amount until the customer pays the link; the link amount comes off when they pay.</p></div></li>
+    </ol>
+    <div class="note"><strong>Can't send a link?</strong><span>A payment link can't be used when the cart has an earlier invoice balance or an exchange in it. Take those payments in the shop instead.</span></div>
+  </section>
+
+  <!-- 5 -->
+  <section class="case" id="balance">
+    <div class="case-head">
+      <div class="case-tag">Situation 5</div>
+      <h2>Customer comes back to pay the rest</h2>
+      <p class="when">Find the invoice that is owing and put its balance in the cart. There are three ways to find it; use whichever is quickest.</p>
+    </div>
+    <div class="ways">
+      <div class="way">
+        <h3>From the repair card</h3>
+        <p>Open the card. Under <strong>Invoices</strong>, tap <span class="btn-name dep">Take balance</span>.</p>
+      </div>
+      <div class="way">
+        <h3>From the invoice list</h3>
+        <p>Open Sales Performance, search under <strong>Find an Invoice</strong>, tap the orange cash button on the owing invoice.</p>
+      </div>
+      <div class="way">
+        <h3>From the customer's history</h3>
+        <p>Select the customer, tap the person button beside their name, then tap <span class="btn-name dep">Pay $X</span> on the owing invoice.</p>
+      </div>
+    </div>
+    <figure><img src="./assets/guides/deposits/09-repair-take-balance.png" alt="Repair card window, Invoices panel: Invoice #102 with Balance owing $25.00 and an orange Take balance button" width="1366" height="820" loading="lazy"><figcaption>On a repair card: Invoice #102 has $25 owing, so it has a Take balance button.</figcaption></figure>
+    <figure><img src="./assets/guides/deposits/14-invoice-history.png" alt="Find an Invoice list: invoice #2481 for Alex Customer, Deposit $100 and $399 owing, with an orange cash button" width="870" height="272" loading="lazy"><figcaption>In the invoice list, owing invoices are orange. The orange button on the right adds the balance to the cart.</figcaption></figure>
+    <ol class="steps">
+      <li><div class="step-body">
+        <p>The balance shows in the cart as <strong>Balance · Invoice #…</strong>, with what was already paid.</p>
+        <figure class="narrow"><img src="./assets/guides/deposits/10-balance-in-cart.png" alt="Cart showing Balance Invoice #2481, invoice total $499, already paid $100, $399.00, Checkout button" width="390" height="820" loading="lazy"><figcaption>$399 balance in the cart.</figcaption></figure>
+      </div></li>
+      <li><div class="step-body"><p>Tap <span class="btn-name">Checkout</span>. If they pay it all, use <span class="btn-name">Full Payment</span> or confirm the full amount as normal.</p></div></li>
+      <li><div class="step-body">
+        <p>If they can only pay some of it again, type that amount, tap <span class="btn-name">Confirm Amount</span>, then <span class="btn-name dep">Finish as Part Payment</span>. The rest stays owing on the same invoice.</p>
+        <figure><img src="./assets/guides/deposits/11-part-payment.png" alt="Payment window for the balance: Card $200 paid, $199 due, orange Finish as Part Payment $199.00 owing button" width="980" height="680" loading="lazy"><figcaption>On a balance the orange button says Part Payment instead of Deposit.</figcaption></figure>
+      </div></li>
+    </ol>
+  </section>
+
+  <!-- 6 -->
+  <section class="case" id="extra">
+    <div class="case-head">
+      <div class="case-tag">Situation 6</div>
+      <h2>Paying a balance and buying something new</h2>
+      <p class="when">Put the balance in the cart as in Situation 5, then add the new items as normal. One checkout covers both.</p>
+    </div>
+    <figure class="narrow"><img src="./assets/guides/deposits/12-balance-plus-item.png" alt="Cart with Balance Invoice #2481 $399 and a Tempered Glass Screen Protector $30, total $429" width="390" height="820" loading="lazy"><figcaption>$399 balance + $30 screen protector = $429.</figcaption></figure>
+    <div class="note"><strong>How a part payment is split</strong><span>New items are paid first, and whatever is left goes to the old balance. So a part payment must be <em>more</em> than the new items. Here it must be more than <span class="money">$30</span>; if they pay $100, $30 pays the screen protector and $70 comes off the balance.</span></div>
+    <figure class="narrow"><img src="./assets/guides/deposits/13-part-payment-too-small.png" alt="Message: A part payment must be more than the new items ($30.00). They are paid first; the rest goes to the invoice balance." width="390" height="820" loading="lazy"><figcaption>The message you get if the part payment is too small.</figcaption></figure>
+  </section>
+
+  <!-- 7 -->
+  <section class="case" id="blocked">
+    <div class="case-head">
+      <div class="case-tag">Situation 7</div>
+      <h2>When the POS won't take a deposit</h2>
+      <p class="when">These are on purpose. Read the message, fix the cart, and try again.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Situation</th><th scope="col">Message</th><th scope="col">What to do</th></tr></thead>
+        <tbody>
+          <tr><td>Used device in the cart</td><td><q>Used devices must be paid in full.</q></td><td>Take full payment for the device. Sell anything that needs a deposit in a separate checkout.</td></tr>
+          <tr><td>Exchange or refund in the cart together with an old invoice balance</td><td><q>Finish or remove the exchange in the cart before taking an invoice balance.</q></td><td>Finish the exchange first, then take the balance in a second checkout.</td></tr>
+          <tr><td>Balances for two different customers</td><td><q>Balances for different customers must be paid separately.</q></td><td>One customer per checkout.</td></tr>
+          <tr><td>Repair card that already has a deposit owing</td><td>Cart button is hidden on the card</td><td>Open the card and use <span class="btn-name dep">Take balance</span>.</td></tr>
+          <tr><td>Paying with Store Credit and no customer selected</td><td><q>Select a customer account before using Store Credit.</q></td><td>Select the customer at the top right.</td></tr>
+          <tr><td>Closed the payment window without tapping the orange button</td><td>Nothing is saved</td><td>Open <span class="btn-name">Checkout</span> again and confirm the amount again. If you already took the money, enter the same amount.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure class="narrow"><img src="./assets/guides/deposits/15-used-device-blocked.png" alt="Cart with a used iPhone 13 for $650 and the message: Used devices must be paid in full. Remove the device to take a deposit." width="390" height="820" loading="lazy"><figcaption>Used device: deposit refused.</figcaption></figure>
+  </section>
+
+  <footer>Based on the TECHM8 POS as of 11 Nov 2026. If a button looks different on your screen, ask the manager before taking the money.</footer>
+</div>
+
+  </div>
+
+  <script>
+    window.Techm8StaffAuth.init({
+      rootSelector: '[data-auth-protected]',
+      title: 'Problem Solving Access',
+      subtitle: 'Enter the staff password to open problem solving guides.'
+    });
+  </script>
+</body>
+</html>
