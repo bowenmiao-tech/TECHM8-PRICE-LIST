@@ -24687,9 +24687,11 @@
       showToast(`Refund ${money(total)} added to the cart. Add any new items, then checkout.`);
     }
 
-    // An exchange spends part of the return as Store Credit, which lives on a
-    // customer account. The cart's selected customer may supply it.
-    function ensureReturnCustomer() {
+    // With the invoice's customer account, an exchange spends the return as
+    // Store Credit. Without one (a walk-in) the server nets it as a matching
+    // Cash refund and Cash payment, so an account is only required when part
+    // of the return must stay on the account as Store Credit.
+    function ensureReturnCustomer({ required = false } = {}) {
       const ret = state.exchangeReturn;
       if (!ret) return true;
       if (ret.customer_code) return true;
@@ -24701,7 +24703,8 @@
         ret.customer_phone = customerSearchPhone(customer);
         return true;
       }
-      showToast(`Netting new items against a refund needs the customer account from invoice #${ret.invoice_number}. Select that customer in the customer box first.`);
+      if (!required) return true;
+      showToast(`Store Credit needs the customer account from invoice #${ret.invoice_number}. Select that customer in the customer box first.`);
       els.customerInput.focus();
       return false;
     }
@@ -24782,10 +24785,8 @@
       const payout = roundedMoneyValue(ret.total - saleTotal);
       if (payout <= 0) return closeRefundPayoutModal();
       const isStoreCredit = method === 'Store Credit';
-      if ((isStoreCredit || saleTotal > 0) && !ret.customer_code && !ensureReturnCustomer()) {
-        els.refundPayoutError.textContent = isStoreCredit
-          ? 'Store Credit needs the customer account. Select the customer in the customer box first.'
-          : 'Select the customer account in the customer box first.';
+      if (!ensureReturnCustomer({ required: isStoreCredit })) {
+        els.refundPayoutError.textContent = 'Store Credit needs the customer account. Select the customer in the customer box first.';
         return;
       }
       if (!state.selectedStaffName) {
@@ -26171,10 +26172,13 @@
       const paymentSummary = (allocation ? saleTotal : total) === 0
         ? 'No Charge'
         : (paymentLink && !salePayments.length ? 'Online Payment' : summarizePayments(salePayments));
-      const usesStoreCredit = normalizedPayments.some(payment => ['Store Credit', 'Exchange Credit'].includes(payment.method));
       const creditCustomerCode = state.paymentSession.creditCustomerCode
         || (state.exchangeReturn && state.exchangeReturn.customer_code)
         || '';
+      // Exchange Credit on a walk-in exchange is netted as Cash by the server
+      // and needs no account; real Store Credit always does.
+      const usesStoreCredit = normalizedPayments.some(payment => payment.method === 'Store Credit'
+        || (payment.method === 'Exchange Credit' && state.exchangeReturn && state.exchangeReturn.customer_code));
       if (usesStoreCredit && !creditCustomerCode) {
         showToast('Select a customer account before using Store Credit.');
         return;
