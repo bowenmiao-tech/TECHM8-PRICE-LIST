@@ -7254,6 +7254,9 @@
       font-weight: 950;
     }
 
+    .refund-payout-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid var(--tm-line); border-radius: 8px; background: #f7fbfa; }
+    .refund-payout-row > span { display: grid; gap: 3px; min-width: 0; }
+    .refund-payout-row strong { flex: none; font-size: 15px; }
     .refund-credit-fields { display: grid; gap: 9px; padding: 12px; border: 1px solid var(--tm-line); border-radius: 8px; background: #f7fbfa; }
     .refund-credit-fields[hidden] { display: none; }
     .refund-credit-fields > label { display: grid; gap: 5px; font-size: 11px; font-weight: 850; }
@@ -9457,7 +9460,7 @@
           <div class="summary-line"><span>Items</span><strong id="summaryItems">0</strong></div>
           <div class="summary-line"><span>Subtotal</span><strong id="summarySubtotal">$0.00</strong></div>
           <div id="summaryBalanceRow" class="summary-line" hidden><span>Earlier invoice balance</span><strong id="summaryBalance">$0.00</strong></div>
-          <div id="summaryReturnCreditRow" class="summary-line" hidden><span>Return credit</span><strong id="summaryReturnCredit">-$0.00</strong></div>
+          <div id="summaryReturnCreditRow" class="summary-line" hidden><span>Refund</span><strong id="summaryReturnCredit">-$0.00</strong></div>
           <div class="summary-line"><span>GST Included</span><strong id="summaryGst">$0.00</strong></div>
           <div class="summary-line total"><span>Total</span><strong id="summaryTotal">$0.00</strong></div>
         </div>
@@ -9997,20 +10000,8 @@
       <div id="refundLines" class="refund-lines"></div>
       <div class="refund-total"><span>Refund total</span><strong id="refundTotal">$0.00</strong></div>
       <div class="special-fields customer-field-grid">
-        <label>
-          Refund method *
-          <select id="refundMethod" class="repair-select" required>
-            <option value="Cash">Cash</option>
-            <option value="Card">Card</option>
-            <option value="Afterpay">Afterpay</option>
-            <option value="CNYpay">CNYpay</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-            <option value="Store Credit">Store Credit</option>
-            <option value="Exchange">Exchange - add return to cart</option>
-          </select>
-        </label>
-        <div id="refundCreditFields" class="refund-credit-fields span-2" hidden>
-          <label>Credit customer *<input id="refundCreditSearch" type="search" autocomplete="off" placeholder="Search name or phone"></label>
+        <div id="refundCreditFields" class="refund-credit-fields span-2">
+          <label>Customer account (needed for an exchange or Store Credit)<input id="refundCreditSearch" type="search" autocomplete="off" placeholder="Search name or phone"></label>
           <div id="refundCreditSelected" class="refund-credit-selected" hidden></div>
           <div id="refundCreditResults" class="refund-credit-results"></div>
           <div class="refund-credit-create">
@@ -10027,7 +10018,40 @@
       <div id="refundError" class="special-error"></div>
       <div class="special-actions">
         <button id="refundCancelBtn" class="soft-action" type="button">Cancel</button>
-        <button id="refundSubmitBtn" class="pay-action" type="submit">Confirm Refund</button>
+        <button id="refundSubmitBtn" class="pay-action" type="submit">Add Refund to Cart</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="refundPayoutModal" class="modal-backdrop" aria-hidden="true">
+    <form id="refundPayoutForm" class="special-modal refund-modal" role="dialog" aria-modal="true" aria-labelledby="refundPayoutTitle">
+      <div class="customer-modal-header">
+        <div class="customer-modal-icon"><i class="bi bi-cash-coin"></i></div>
+        <div>
+          <h2 id="refundPayoutTitle" class="customer-modal-title">Refund to Customer</h2>
+          <div id="refundPayoutMeta" class="customer-modal-subtitle"></div>
+        </div>
+        <button id="refundPayoutCloseBtn" class="customer-close" type="button" title="Close"><i class="bi bi-x"></i></button>
+      </div>
+      <div id="refundPayoutBreakdown" class="refund-lines"></div>
+      <div class="refund-total"><span>Pay back to customer</span><strong id="refundPayoutTotal">$0.00</strong></div>
+      <div class="special-fields customer-field-grid">
+        <label class="span-2">
+          Refund method *
+          <select id="refundPayoutMethod" class="repair-select" required>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="Afterpay">Afterpay</option>
+            <option value="CNYpay">CNYpay</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Store Credit">Store Credit</option>
+          </select>
+        </label>
+      </div>
+      <div id="refundPayoutError" class="special-error"></div>
+      <div class="special-actions">
+        <button id="refundPayoutCancelBtn" class="soft-action" type="button">Back to Cart</button>
+        <button id="refundPayoutSubmitBtn" class="pay-action" type="submit">Confirm Refund</button>
       </div>
     </form>
   </div>
@@ -10978,7 +11002,16 @@
       refundInvoiceMeta: document.getElementById('refundInvoiceMeta'),
       refundLines: document.getElementById('refundLines'),
       refundTotal: document.getElementById('refundTotal'),
-      refundMethod: document.getElementById('refundMethod'),
+      refundPayoutModal: document.getElementById('refundPayoutModal'),
+      refundPayoutForm: document.getElementById('refundPayoutForm'),
+      refundPayoutCloseBtn: document.getElementById('refundPayoutCloseBtn'),
+      refundPayoutCancelBtn: document.getElementById('refundPayoutCancelBtn'),
+      refundPayoutMeta: document.getElementById('refundPayoutMeta'),
+      refundPayoutBreakdown: document.getElementById('refundPayoutBreakdown'),
+      refundPayoutTotal: document.getElementById('refundPayoutTotal'),
+      refundPayoutMethod: document.getElementById('refundPayoutMethod'),
+      refundPayoutError: document.getElementById('refundPayoutError'),
+      refundPayoutSubmitBtn: document.getElementById('refundPayoutSubmitBtn'),
       refundCreditFields: document.getElementById('refundCreditFields'),
       refundCreditSearch: document.getElementById('refundCreditSearch'),
       refundCreditResults: document.getElementById('refundCreditResults'),
@@ -21812,10 +21845,10 @@
               <div class="cart-return-credit">
                 <div class="cart-return-credit-head">
                   <div>
-                    <div class="cart-return-credit-title"><i class="bi bi-arrow-left-right"></i>Return for exchange</div>
+                    <div class="cart-return-credit-title"><i class="bi bi-arrow-counterclockwise"></i>Refund</div>
                     <div class="cart-return-credit-meta">Invoice #${escapeHtml(String(exchangeReturn.invoice_number || exchangeReturn.order_id || ''))} · ${escapeHtml(exchangeReturn.customer_name || '')}</div>
                   </div>
-                  <button class="icon-action" type="button" data-remove-exchange title="Remove return credit" aria-label="Remove return credit"><i class="bi bi-x-lg"></i></button>
+                  <button class="icon-action" type="button" data-remove-exchange title="Remove refund" aria-label="Remove refund"><i class="bi bi-x-lg"></i></button>
                 </div>
                 <div class="cart-return-credit-head">
                   <div class="cart-return-credit-meta">${escapeHtml((exchangeReturn.lines || []).map(line => `${line.name || 'Returned item'} × ${line.quantity || 0}`).join(' · '))}</div>
@@ -21898,7 +21931,8 @@
       const balanceTotal = cartBalanceTotal();
       const subtotal = itemSubtotal + balanceTotal;
       const returnCredit = exchangeReturn ? numberValue(exchangeReturn.total) : 0;
-      const amountDue = Math.max(0, roundedMoneyValue(subtotal - returnCredit));
+      const netTotal = roundedMoneyValue(subtotal - returnCredit);
+      const amountDue = Math.max(0, netTotal);
       const gst = subtotal / 11;
       els.summaryItems.textContent = itemCount;
       els.summarySubtotal.textContent = money(itemSubtotal);
@@ -21907,9 +21941,9 @@
       els.summaryReturnCreditRow.hidden = returnCredit <= 0;
       els.summaryReturnCredit.textContent = `-${money(returnCredit)}`;
       els.summaryGst.textContent = money(gst);
-      els.summaryTotal.textContent = money(amountDue);
-      els.payBtn.textContent = `${money(amountDue)} Checkout`;
-      els.payBtn.disabled = state.cart.length === 0;
+      els.summaryTotal.textContent = netTotal < 0 ? `-${money(-netTotal)}` : money(amountDue);
+      els.payBtn.textContent = netTotal < 0 ? `Refund ${money(-netTotal)}` : `${money(amountDue)} Checkout`;
+      els.payBtn.disabled = state.cart.length === 0 && !exchangeReturn;
     }
 
     function renderAll() {
@@ -23098,7 +23132,7 @@
       if (!state.exchangeReturn) return;
       state.exchangeReturn = null;
       renderCart();
-      showToast('Return credit removed. The original invoice was not changed.');
+      showToast('Refund removed from the cart. The original invoice was not changed.');
     }
 
     function resetCartState() {
@@ -23446,11 +23480,16 @@
     }
 
     function openPaymentModal() {
-      if (!state.cart.length) return;
+      if (!state.cart.length && !state.exchangeReturn) return;
       if (!state.selectedStaffName) {
         openStaffModal({ canCancel: false });
         return;
       }
+      if (state.exchangeReturn && cartTotal() < exchangeReturnTotal()) {
+        openRefundPayoutModal();
+        return;
+      }
+      if (state.exchangeReturn && !ensureReturnCustomer()) return;
       state.paymentSession = {
         method: 'Card',
         payments: exchangeCreditApplied() > 0
@@ -24458,12 +24497,16 @@
     let refundCreditSearchTimer = null;
     let refundCreditSearchRequest = 0;
 
+    function customerMatchesInvoiceCustomer(customer, phoneValue, nameValue) {
+      const phone = String(phoneValue || '').trim();
+      if (phone) return customerMatchesPhone(customer, phone);
+      const name = String(nameValue || '').trim().toLowerCase();
+      return !name || name === 'walk-in customer' || customerSearchName(customer).toLowerCase() === name;
+    }
+
     function refundCreditCustomerMatchesOrder(customer) {
       const order = state.refundOrder || {};
-      const phone = String(order.customer_phone || '').trim();
-      if (phone) return customerMatchesPhone(customer, phone);
-      const name = String(order.customer_name || '').trim().toLowerCase();
-      return !name || name === 'walk-in customer' || customerSearchName(customer).toLowerCase() === name;
+      return customerMatchesInvoiceCustomer(customer, order.customer_phone, order.customer_name);
     }
 
     function renderRefundCreditCustomers() {
@@ -24502,15 +24545,6 @@
       } catch (error) {
         if (requestId === refundCreditSearchRequest) els.refundError.textContent = error.message || 'Customer search failed.';
       }
-    }
-
-    function updateRefundCreditMethod() {
-      const credit = els.refundMethod.value === 'Store Credit' || els.refundMethod.value === 'Exchange';
-      els.refundCreditFields.hidden = !credit;
-      els.refundSubmitBtn.textContent = els.refundMethod.value === 'Exchange'
-        ? 'Add Return to Cart'
-        : (credit ? 'Issue Store Credit' : 'Confirm Refund');
-      if (credit && !refundCreditCustomer) searchRefundCreditCustomers();
     }
 
     async function createRefundCreditCustomer() {
@@ -24567,7 +24601,6 @@
         state.refundOrder = await invoiceOrderById(orderId);
         els.refundInvoiceMeta.textContent = `Invoice #${invoiceNumberText(state.refundOrder)} · ${money(state.refundOrder.total)}`;
         els.refundReason.value = '';
-        els.refundMethod.value = 'Card';
         els.refundError.textContent = '';
         refundCreditCustomer = null;
         refundCreditMatches = [];
@@ -24575,7 +24608,7 @@
         els.refundCreditName.value = state.refundOrder.customer_name === 'Walk-in Customer' ? '' : state.refundOrder.customer_name || '';
         els.refundCreditPhone.value = state.refundOrder.customer_phone || '';
         renderRefundCreditCustomers();
-        updateRefundCreditMethod();
+        if (els.refundCreditSearch.value.trim()) searchRefundCreditCustomers();
         renderRefundLines();
         closeTicketDetailModal();
         els.refundModal.classList.add('show');
@@ -24594,7 +24627,9 @@
       state.refundOrder = null;
     }
 
-    async function submitInvoiceRefund() {
+    // A refund never pays out from this modal. It becomes a negative line in
+    // the cart, so new items can be netted against it before money moves.
+    function submitInvoiceRefund() {
       const order = state.refundOrder;
       if (!order) return;
       const lines = refundSelectedLines();
@@ -24608,85 +24643,233 @@
         els.refundReason.focus();
         return;
       }
-      const isExchange = els.refundMethod.value === 'Exchange';
-      const isStoreCredit = els.refundMethod.value === 'Store Credit';
-      if ((isStoreCredit || isExchange) && (!refundCreditCustomer || !refundCreditCustomer.id)) {
-        els.refundError.textContent = 'Select or create the customer account that will receive Store Credit.';
-        els.refundCreditSearch.focus();
+      if (state.exchangeReturn) {
+        els.refundError.textContent = 'The cart already contains a refund. Finish or remove it before adding another invoice.';
         return;
       }
-      if (isExchange) {
-        if (state.exchangeReturn) {
-          els.refundError.textContent = 'This cart already contains a return. Remove it before adding another invoice.';
-          return;
-        }
-        if (cartBalanceItems().length) {
-          els.refundError.textContent = 'This cart has an invoice balance. Check it out or remove it before starting an exchange.';
-          return;
-        }
-        const selectedCustomer = selectedCustomerRecord();
-        if (state.cart.length && selectedCustomer
-          && String(selectedCustomer.id) !== String(refundCreditCustomer.id)) {
-          els.refundError.textContent = 'The current cart belongs to another customer. Hold or clear it before starting this exchange.';
-          return;
-        }
-        const exchangeTotal = roundedMoneyValue(lines.reduce((sum, line) => sum + line.amount, 0));
-        state.exchangeReturn = {
-          order_id: order.id,
-          invoice_number: invoiceNumberText(order),
-          customer_code: refundCreditCustomer.id,
-          customer_name: customerSearchName(refundCreditCustomer),
-          customer_phone: customerSearchPhone(refundCreditCustomer),
+      if (cartBalanceItems().length) {
+        els.refundError.textContent = 'This cart has an invoice balance. Check it out or remove it before adding a refund.';
+        return;
+      }
+      const customer = refundCreditCustomer && refundCreditCustomer.id ? refundCreditCustomer : null;
+      const selectedCustomer = selectedCustomerRecord();
+      if (customer && state.cart.length && selectedCustomer
+        && String(selectedCustomer.id) !== String(customer.id)) {
+        els.refundError.textContent = 'The current cart belongs to another customer. Hold or clear it before adding this refund.';
+        return;
+      }
+      const total = roundedMoneyValue(lines.reduce((sum, line) => sum + line.amount, 0));
+      const walkIn = !order.customer_name || order.customer_name === 'Walk-in Customer';
+      state.exchangeReturn = {
+        order_id: order.id,
+        invoice_number: invoiceNumberText(order),
+        original_customer_name: order.customer_name || '',
+        original_customer_phone: order.customer_phone || '',
+        customer_code: customer ? customer.id : '',
+        customer_name: customer ? customerSearchName(customer) : (walkIn ? 'Walk-in Customer' : order.customer_name),
+        customer_phone: customer ? customerSearchPhone(customer) : (order.customer_phone || ''),
+        reason,
+        lines: lines.map(line => {
+          const original = (order.items || []).find(item => String(item.line_id) === String(line.line_id)) || {};
+          return { ...line, name: original.name || 'Returned item' };
+        }),
+        total
+      };
+      if (customer) selectCustomerSearchResult(customer);
+      closeRefundModal();
+      renderCart();
+      showToast(`Refund ${money(total)} added to the cart. Add any new items, then checkout.`);
+    }
+
+    // An exchange spends part of the return as Store Credit, which lives on a
+    // customer account. The cart's selected customer may supply it.
+    function ensureReturnCustomer() {
+      const ret = state.exchangeReturn;
+      if (!ret) return true;
+      if (ret.customer_code) return true;
+      const customer = selectedCustomerRecord();
+      if (customer && customer.id
+        && customerMatchesInvoiceCustomer(customer, ret.original_customer_phone, ret.original_customer_name)) {
+        ret.customer_code = customer.id;
+        ret.customer_name = customerSearchName(customer);
+        ret.customer_phone = customerSearchPhone(customer);
+        return true;
+      }
+      showToast(`Netting new items against a refund needs the customer account from invoice #${ret.invoice_number}. Select that customer in the customer box first.`);
+      els.customerInput.focus();
+      return false;
+    }
+
+    function splitReturnLines(lines, firstAmount) {
+      let remaining = roundedMoneyValue(firstAmount);
+      const first = [];
+      const second = [];
+      lines.forEach(line => {
+        const amount = roundedMoneyValue(line.amount);
+        const take = roundedMoneyValue(Math.min(amount, Math.max(0, remaining)));
+        const rest = roundedMoneyValue(amount - take);
+        const quantity = Math.max(0, Math.floor(numberValue(line.quantity)));
+        remaining = roundedMoneyValue(remaining - take);
+        if (take > 0) first.push({ ...line, amount: take, quantity });
+        if (rest > 0) second.push({ ...line, amount: rest, quantity: take > 0 ? 0 : quantity });
+      });
+      return { first, second };
+    }
+
+    async function postInvoiceRefund({ orderId, method, customerCode, reason, lines }) {
+      const response = await fetch(POS_SALES_ORDERS_ENDPOINT, {
+        method: 'PUT',
+        headers: posOrderApiHeaders(),
+        body: JSON.stringify({
+          order_id: orderId,
+          store_code: repairTicketStoreCode(),
+          staff_name: state.selectedStaffName,
+          shift_id: state.activeShiftId || (readActiveShift() && readActiveShift().id) || '',
+          business_date: brisbaneDateIso(),
+          refund_method: method,
+          customer_code: customerCode || undefined,
           reason,
-          lines: lines.map(line => {
-            const original = (order.items || []).find(item => String(item.line_id) === String(line.line_id)) || {};
-            return { ...line, name: original.name || 'Returned item' };
-          }),
-          total: exchangeTotal
-        };
-        selectCustomerSearchResult(refundCreditCustomer);
-        closeRefundModal();
-        renderCart();
-        showToast(`${money(exchangeTotal)} return credit added. Add the replacement product and checkout.`);
+          lines: lines.map(line => ({
+            line_id: line.line_id,
+            amount: roundedMoneyValue(line.amount),
+            quantity: Math.max(0, Math.floor(numberValue(line.quantity)))
+          }))
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.ok === false || !payload.order) throw new Error(payload.message || 'Refund failed.');
+      const index = state.invoiceOrders.findIndex(item => item.id === payload.order.id);
+      if (index >= 0) state.invoiceOrders[index] = payload.order;
+      updateStoredOrder(payload.order);
+      state.shiftPaymentTotals = null;
+      return payload;
+    }
+
+    function openRefundPayoutModal() {
+      const ret = state.exchangeReturn;
+      if (!ret) return;
+      const saleTotal = cartTotal();
+      const payout = roundedMoneyValue(ret.total - saleTotal);
+      els.refundPayoutMeta.textContent = `Invoice #${ret.invoice_number} · ${ret.customer_name || 'Walk-in Customer'}`;
+      els.refundPayoutBreakdown.innerHTML = `
+        <div class="refund-payout-row"><span><span class="refund-line-name">Refund</span><span class="refund-line-meta">${escapeHtml(ret.lines.map(line => `${line.name || 'Returned item'} × ${line.quantity || 0}`).join(' · '))}</span></span><strong>-${money(ret.total)}</strong></div>
+        ${saleTotal > 0 ? `<div class="refund-payout-row"><span><span class="refund-line-name">New items</span><span class="refund-line-meta">Paid from the refund</span></span><strong>${money(saleTotal)}</strong></div>` : ''}
+      `;
+      els.refundPayoutTotal.textContent = money(payout);
+      els.refundPayoutMethod.value = 'Cash';
+      els.refundPayoutError.textContent = '';
+      els.refundPayoutSubmitBtn.disabled = false;
+      els.refundPayoutModal.classList.add('show');
+      els.refundPayoutModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeRefundPayoutModal() {
+      els.refundPayoutModal.classList.remove('show');
+      els.refundPayoutModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function submitRefundPayout() {
+      const ret = state.exchangeReturn;
+      if (!ret) return closeRefundPayoutModal();
+      const method = els.refundPayoutMethod.value;
+      const saleTotal = cartTotal();
+      const payout = roundedMoneyValue(ret.total - saleTotal);
+      if (payout <= 0) return closeRefundPayoutModal();
+      const isStoreCredit = method === 'Store Credit';
+      if ((isStoreCredit || saleTotal > 0) && !ret.customer_code && !ensureReturnCustomer()) {
+        els.refundPayoutError.textContent = isStoreCredit
+          ? 'Store Credit needs the customer account. Select the customer in the customer box first.'
+          : 'Select the customer account in the customer box first.';
         return;
       }
-      if (isStoreCredit && !window.confirm(
-        `Issue ${money(lines.reduce((sum, line) => sum + line.amount, 0))} Store Credit to ${customerSearchName(refundCreditCustomer)}? No cash or card refund will be made.`
-      )) return;
-      els.refundError.textContent = '';
-      els.refundSubmitBtn.disabled = true;
+      if (!state.selectedStaffName) {
+        closeRefundPayoutModal();
+        openStaffModal({ canCancel: false });
+        return;
+      }
+      els.refundPayoutError.textContent = '';
+      els.refundPayoutSubmitBtn.disabled = true;
       try {
-        const response = await fetch(POS_SALES_ORDERS_ENDPOINT, {
-          method: 'PUT',
-          headers: posOrderApiHeaders(),
-          body: JSON.stringify({
-            order_id: order.id,
-            store_code: repairTicketStoreCode(),
-            staff_name: state.selectedStaffName,
-            shift_id: state.activeShiftId || (readActiveShift() && readActiveShift().id) || '',
-            business_date: brisbaneDateIso(),
-            refund_method: els.refundMethod.value,
-            customer_code: isStoreCredit ? refundCreditCustomer.id : undefined,
-            reason,
-            lines
-          })
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload.ok === false || !payload.order) throw new Error(payload.message || 'Refund failed.');
-        const index = state.invoiceOrders.findIndex(item => item.id === payload.order.id);
-        if (index >= 0) state.invoiceOrders[index] = payload.order;
-        updateStoredOrder(payload.order);
-        state.shiftPaymentTotals = null;
-        closeRefundModal();
-        renderInvoiceHistory();
-        loadProducts({ force: true });
-        showToast(isStoreCredit
-          ? `${money(lines.reduce((sum, line) => sum + line.amount, 0))} Store Credit issued to ${customerSearchName(refundCreditCustomer)}.`
-          : `Refund ${payload.refund_id} recorded.`);
+        if (saleTotal <= 0) {
+          const activeShift = await resolveCheckoutShift();
+          if (!activeShift || activeShift.status !== 'open' || activeShift.date !== brisbaneDateIso() || !state.openingConfirmed) {
+            closeRefundPayoutModal();
+            showToast('Start today\'s shift before a refund.');
+            ensureOpeningCash();
+            return;
+          }
+          const payload = await postInvoiceRefund({
+            orderId: ret.order_id,
+            method,
+            customerCode: isStoreCredit ? ret.customer_code : '',
+            reason: ret.reason,
+            lines: ret.lines
+          });
+          closeRefundPayoutModal();
+          state.exchangeReturn = null;
+          renderCart();
+          renderInvoiceHistory();
+          refreshAfterCheckout({ products: true });
+          showToast(isStoreCredit
+            ? `${money(payout)} Store Credit issued to ${ret.customer_name}.`
+            : `Refund ${payload.refund_id} recorded: ${money(payout)} by ${method}.`);
+          return;
+        }
+        if (isStoreCredit) {
+          // The whole return becomes Store Credit; the new items spend part of
+          // it and the rest stays on the customer's account.
+          state.paymentSession = {
+            method: 'Exchange Credit',
+            payments: [{ method: 'Exchange Credit', amount: saleTotal }],
+            amount: '',
+            creditCustomerCode: ret.customer_code,
+            creditCustomerName: ret.customer_name
+          };
+          closeRefundPayoutModal();
+          await checkout([{ method: 'Exchange Credit', amount: saleTotal }]);
+          return;
+        }
+        // The new items are paid from part of the return. Only that part goes
+        // through Store Credit; the rest is paid back by the chosen method.
+        const original = { lines: ret.lines, total: ret.total };
+        const split = splitReturnLines(ret.lines, saleTotal);
+        ret.lines = split.first;
+        ret.total = saleTotal;
+        state.paymentSession = {
+          method: 'Exchange Credit',
+          payments: [{ method: 'Exchange Credit', amount: saleTotal }],
+          amount: '',
+          creditCustomerCode: ret.customer_code,
+          creditCustomerName: ret.customer_name
+        };
+        closeRefundPayoutModal();
+        const saved = await checkout([{ method: 'Exchange Credit', amount: saleTotal }]);
+        if (!saved) {
+          if (state.exchangeReturn === ret) {
+            ret.lines = original.lines;
+            ret.total = original.total;
+            renderCart();
+          }
+          return;
+        }
+        try {
+          const payload = await postInvoiceRefund({
+            orderId: ret.order_id,
+            method,
+            customerCode: '',
+            reason: ret.reason,
+            lines: split.second
+          });
+          renderInvoiceHistory();
+          showToast(`New items paid from the refund. Pay back ${money(payout)} by ${method} (refund ${payload.refund_id}).`);
+        } catch (error) {
+          console.error(error);
+          showToast(`New items were saved, but the ${money(payout)} ${method} refund failed: ${error.message || 'unknown error'}. Refund the rest from invoice #${ret.invoice_number}.`);
+        }
       } catch (error) {
         console.error(error);
-        els.refundError.textContent = error.message || 'Refund failed.';
-        els.refundSubmitBtn.disabled = false;
+        els.refundPayoutError.textContent = error.message || 'Refund failed.';
+        els.refundPayoutSubmitBtn.disabled = false;
       }
     }
 
@@ -26285,6 +26468,7 @@
           ? `${order.id} paid. Database sync is pending.`
           : `${order.id} paid and saved to the POS database.`);
       }
+      return true;
     }
 
     function refreshAfterCheckout(options = {}) {
@@ -28149,7 +28333,15 @@
     });
     els.refundCloseBtn.addEventListener('click', closeRefundModal);
     els.refundCancelBtn.addEventListener('click', closeRefundModal);
-    els.refundMethod.addEventListener('change', updateRefundCreditMethod);
+    els.refundPayoutCloseBtn.addEventListener('click', closeRefundPayoutModal);
+    els.refundPayoutCancelBtn.addEventListener('click', closeRefundPayoutModal);
+    els.refundPayoutModal.addEventListener('click', event => {
+      if (event.target === els.refundPayoutModal) closeRefundPayoutModal();
+    });
+    els.refundPayoutForm.addEventListener('submit', event => {
+      event.preventDefault();
+      submitRefundPayout();
+    });
     els.refundCreditSearch.addEventListener('input', () => {
       clearTimeout(refundCreditSearchTimer);
       refundCreditSearchTimer = setTimeout(searchRefundCreditCustomers, 250);
