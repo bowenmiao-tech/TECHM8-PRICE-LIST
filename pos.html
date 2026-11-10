@@ -17915,7 +17915,15 @@
           : type === 'none'
             ? (intake.deviceIdUnavailable || 'No reason recorded')
             : (intake.deviceImei || 'Not recorded');
-        return `<h3>Device ID</h3><p><strong>Type:</strong> ${escapeHtml(type)}</p><p>${escapeHtml(value)}</p>`;
+        return `<h3>Device ID</h3><p><strong>Type:</strong> ${escapeHtml(type)}</p><p>${escapeHtml(value)}</p>
+          ${intake.deviceImei && type !== 'imei' ? `<p>IMEI: ${escapeHtml(intake.deviceImei)}</p>` : ''}
+          ${intake.deviceSerial && type !== 'sn' ? `<p>S/N: ${escapeHtml(intake.deviceSerial)}</p>` : ''}
+          ${ticket.active !== false && ticket.cardKind !== 'memo' && (!intake.deviceImei || !intake.deviceSerial) ? `<div class="memo-fields">
+            ${!intake.deviceImei ? '<label class="repair-field">Add IMEI<input id="ticketDeviceImei" class="repair-input" inputmode="numeric" maxlength="15" placeholder="15-digit IMEI"></label>' : ''}
+            ${!intake.deviceSerial ? '<label class="repair-field">Add S/N<input id="ticketDeviceSerial" class="repair-input" maxlength="100" placeholder="Serial number"></label>' : ''}
+            <button id="ticketDeviceIdSave" class="repair-action primary" type="button">Save device ID</button>
+            <div id="ticketDeviceIdError" role="alert" class="ticket-meta"></div>
+          </div>` : ''}`;
       }
       if (section === 'function') {
         if (intake.testable === 'no') {
@@ -25005,7 +25013,8 @@
     }
 
     // Tag stuck on the device at intake. Same 80 mm / 72 mm print spec as the
-    // thermal receipt; no price, password or terms because it travels with
+    // thermal receipt; includes the supplied unlock password for technicians.
+    // No price or terms because it travels with
     // the device. Board repair is only ticked YES when chosen at intake, so a
     // technician can still tick it after diagnosis; send away and the fix
     // result are always left for handwriting.
@@ -25013,6 +25022,7 @@
       const intake = ticket.intake || {};
       const box = on => `<span class="box${on ? ' on' : ''}">${on ? '&#10003;' : ''}</span>`;
       const notes = noteText(intake.deviceNotes || '', 300).trim();
+      const password = intake.passwordType === 'none' ? '' : String(intake.passwordType === 'pattern' ? (intake.patternValue || '') : (intake.password || '')).trim();
       const storeName = ticket.store_name || storeById(ticket.store_id || state.storeId).name || '';
       const device = ticket.specialOrder ? 'Special Order' : (ticket.title || '');
       return `<!doctype html>
@@ -25056,6 +25066,7 @@
     <div class="label-rule"></div>
     <div class="label-rows">
       <div class="label-row"><span>Device</span><strong>${escapeHtml(device)}</strong></div>
+      ${password ? `<div class="label-row"><span>${intake.passwordType === 'pattern' ? 'Pattern' : 'Password'}</span><strong style="white-space:pre-wrap">${escapeHtml(password)}</strong></div>` : ''}
       <div class="label-row"><span>Problem</span>
         <strong>
           <div class="label-problem">${escapeHtml(ticket.issue || '')}</div>
@@ -28022,6 +28033,21 @@
     });
     els.ticketDetailMain.addEventListener('click', event => {
       const ticketForJobs = normalizeRepairTicket(state.repairTickets.find(item => item.id === state.selectedTicketId));
+      if (event.target.closest('#ticketDeviceIdSave') && ticketForJobs) {
+        const button = event.target.closest('#ticketDeviceIdSave');
+        const imei = (document.getElementById('ticketDeviceImei')?.value || '').trim();
+        const serial = (document.getElementById('ticketDeviceSerial')?.value || '').trim();
+        const error = document.getElementById('ticketDeviceIdError');
+        if ((!imei && !serial) || (imei && !/^\d{15}$/.test(imei))) {
+          error.textContent = imei ? 'IMEI must contain exactly 15 digits.' : 'Enter an IMEI or serial number.';
+          return;
+        }
+        button.disabled = true;
+        applyRepairJobChange({action:'device-id', ticket_code:ticketForJobs.id, device_imei:imei, device_serial:serial}, 'Device ID saved.').then(updated => {
+          if (!updated) { button.disabled = false; error.textContent = 'Could not save device ID. Please retry.'; }
+        });
+        return;
+      }
       if (event.target.closest('#memoSave')) { saveMemoCard(event.target.closest('#memoSave')); return; }
       if (event.target.closest('#ticketLabelSave')) {
         saveTicketBoardLabel();

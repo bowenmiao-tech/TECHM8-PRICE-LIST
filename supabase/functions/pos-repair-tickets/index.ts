@@ -138,6 +138,8 @@ Deno.serve(async (request) => {
             ? "finalize_pos_repair_ticket_after_checkout"
           : action === "label"
             ? "set_pos_repair_ticket_label"
+          : action === "device-id"
+            ? "set_pos_repair_ticket_device_id"
           : action === "mainboard"
             ? "set_pos_repair_ticket_mainboard"
           : action === "move"

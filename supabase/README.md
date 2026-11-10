@@ -470,3 +470,17 @@ Deploy both functions without gateway JWT verification. This is intentional: the
 supabase functions deploy pos-staff-password-reset --project-ref <staff-auth-project> --no-verify-jwt
 supabase functions deploy staff-reset-email-relay --project-ref <website-project> --no-verify-jwt
 ```
+
+### Repair tag passwords and missing device IDs
+
+Deploy `migrations/20261110140605_add_repair_device_id_backfill.sql`, then
+`pos-repair-tickets`, then the updated `pos.html`. Repair tags include a supplied
+text password or pattern, and omit the row when none was provided. The repair
+detail IMEI tab allows staff to fill missing IMEI and/or S/N, including after
+completion. Existing identifiers cannot be overwritten; other intake fields,
+pricing and signed records are preserved. The RPC checks the staff session and
+store and is executable only by the service role through the edge endpoint.
+
+Checks: `node tests/repair-device-id.cjs`,
+`node --experimental-strip-types tests/repair-device-id-edge.mjs`, and the
+rollback-only `tests/repair-device-id.sql`.
